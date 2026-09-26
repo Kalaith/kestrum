@@ -3,7 +3,7 @@
 mod compatibility;
 
 use crate::data::{
-    economy::Resources,
+    economy::{Resources, TroopKind},
     rules::Emblem,
     world::{FactionId, MarkerId, Relation, RouteId, SiteId},
     GameData,
@@ -12,7 +12,11 @@ use macroquad_toolkit::rng::SeededRng;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::world::CampaignWorld;
+use super::{
+    military::{Army, ArmyId, EconomyStatement, Formation, FormationId},
+    people::{Person, PersonId},
+    world::CampaignWorld,
+};
 
 pub const STRATEGIC_VERSION: u32 = 2;
 
@@ -43,6 +47,8 @@ pub struct Faction {
     pub deficit: bool,
     pub headquarters: SiteId,
     pub capital: SiteId,
+    #[serde(default)]
+    pub last_economy: Option<EconomyStatement>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -96,12 +102,31 @@ pub struct NextIds {
     pub site: SiteId,
     pub route: RouteId,
     pub fact: FactId,
+    pub army: ArmyId,
+    pub formation: FormationId,
+    pub person: PersonId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DomainFactKind {
-    FactionPassed { faction: FactionId },
+    FactionPassed {
+        faction: FactionId,
+    },
+    FormationRecruited {
+        faction: FactionId,
+        army: ArmyId,
+        formation: FormationId,
+        site: SiteId,
+        troop: TroopKind,
+    },
+    FormationDisbanded {
+        faction: FactionId,
+        army: ArmyId,
+        formation: FormationId,
+        site: SiteId,
+        troop: TroopKind,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -128,6 +153,9 @@ pub struct StrategicCampaign {
     pub round_order: Vec<FactionId>,
     pub acted: BTreeSet<FactionId>,
     pub factions: BTreeMap<FactionId, Faction>,
+    pub armies: BTreeMap<ArmyId, Army>,
+    pub formations: BTreeMap<FormationId, Formation>,
+    pub people: BTreeMap<PersonId, Person>,
     pub world: CampaignWorld,
     pub relations: Vec<Relation>,
     pub accepted_sequence: u64,
@@ -154,6 +182,7 @@ impl StrategicCampaign {
                         deficit: false,
                         headquarters: setup.headquarters,
                         capital: setup.capital,
+                        last_economy: None,
                     },
                 )
             })
@@ -170,6 +199,9 @@ impl StrategicCampaign {
                 site: SiteId(next(scenario.sites.iter().map(|s| s.id.0))?),
                 route: RouteId(next(scenario.routes.iter().map(|r| r.id.0))?),
                 fact: FactId(1),
+                army: ArmyId(1),
+                formation: FormationId(1),
+                person: PersonId(1),
             },
             completed_rounds: 0,
             player: scenario.player,
@@ -177,6 +209,9 @@ impl StrategicCampaign {
             round_order: Vec::new(),
             acted: BTreeSet::new(),
             factions,
+            armies: BTreeMap::new(),
+            formations: BTreeMap::new(),
+            people: BTreeMap::new(),
             world: CampaignWorld::from_scenario(scenario),
             relations: scenario.relations.clone(),
             accepted_sequence: 0,
@@ -188,6 +223,7 @@ impl StrategicCampaign {
         }
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.round_order = campaign.independent_order();
+        campaign.instantiate_starting_military(data)?;
         campaign.reconcile_region_control();
         campaign.validate(data)?;
         Ok(campaign)

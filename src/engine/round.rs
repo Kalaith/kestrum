@@ -1,30 +1,19 @@
 //! Stable-ID faction phases and one atomic seasonal boundary.
 
-use super::{ActionOutcome, RuleError};
-use crate::state::{
-    campaign::{DomainFact, DomainFactKind, FactId},
-    CampaignPhase, StrategicCampaign,
+use super::{actions::record_fact, economy, ActionOutcome, RuleError};
+use crate::{
+    data::GameData,
+    state::{campaign::DomainFactKind, CampaignPhase, StrategicCampaign},
 };
 
 pub(super) fn pass_faction(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     let faction = campaign.active_faction();
-    let fact = DomainFact {
-        id: campaign.next_ids.fact,
-        sequence: campaign.accepted_sequence,
-        completed_rounds: campaign.completed_rounds,
-        kind: DomainFactKind::FactionPassed { faction },
-    };
-    campaign.next_ids.fact = FactId(campaign.next_ids.fact.0.checked_add(1).ok_or(
-        RuleError::Overflow {
-            field: "fact identifiers",
-        },
-    )?);
+    record_fact(campaign, outcome, DomainFactKind::FactionPassed { faction })?;
     campaign.acted.insert(faction);
-    campaign.pending_facts.push(fact.clone());
-    outcome.facts.push(fact);
     let next = campaign
         .round_order
         .iter()
@@ -37,17 +26,18 @@ pub(super) fn pass_faction(
             paused,
         };
     } else {
-        complete_round(campaign, outcome)?;
+        complete_round(campaign, data, outcome)?;
     }
     Ok(())
 }
 
 fn complete_round(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
-    // Only the calendar and phase facts exist in K02. Later packages insert
-    // their real systems in P02 order; passing never invents income or service.
+    // Income and upkeep precede recovery and the new season's calendar.
+    economy::resolve(campaign, data)?;
     campaign.completed_rounds =
         campaign
             .completed_rounds
@@ -60,6 +50,12 @@ fn complete_round(
     campaign.acted.clear();
     campaign.round_order = campaign.independent_order();
     campaign.phase = CampaignPhase::PlayerTurn;
+    for formation in campaign.formations.values_mut() {
+        formation.movement_spent = 0;
+    }
+    for person in campaign.people.values_mut() {
+        person.movement_spent = 0;
+    }
     outcome.round_completed = true;
     Ok(())
 }

@@ -70,6 +70,7 @@ pub enum OrderKind {
 #[serde(deny_unknown_fields)]
 pub struct FormationEconomy {
     pub capacity: u32,
+    pub movement_allowance: u32,
     pub recruit_cost: Resources,
     pub upkeep_gold: i64,
 }
@@ -133,6 +134,8 @@ pub struct Economy {
     pub period: EconomyPeriod,
     pub starting_resources: Resources,
     pub headquarters_income_bonus: Resources,
+    pub facility_failure_damage: u32,
+    pub income_damage_divisor: u32,
     #[serde(deserialize_with = "unique_table")]
     pub settlement_income: BTreeMap<Habitation, Resources>,
     #[serde(deserialize_with = "unique_table")]
@@ -200,6 +203,18 @@ impl Economy {
             .validate(SOURCE, "headquarters_income_bonus")?;
         require(
             SOURCE,
+            "facility_failure_damage",
+            (1..=100).contains(&self.facility_failure_damage),
+            "must be within 1..=100",
+        )?;
+        require(
+            SOURCE,
+            "income_damage_divisor",
+            self.income_damage_divisor > 0,
+            "must be positive",
+        )?;
+        require(
+            SOURCE,
             "settlement_income",
             self.settlement_income.len() == 8,
             "all eight habitation tiers are required",
@@ -226,6 +241,12 @@ impl Economy {
                 &format!("{field}.capacity"),
                 formation.capacity > 0,
                 "must be positive",
+            )?;
+            require(
+                SOURCE,
+                &format!("{field}.movement_allowance"),
+                (1..=100).contains(&formation.movement_allowance),
+                "must be within 1..=100",
             )?;
             formation
                 .recruit_cost

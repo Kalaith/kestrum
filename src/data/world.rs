@@ -47,6 +47,9 @@ pub enum SiteTag {
 #[serde(rename_all = "snake_case")]
 pub enum Facility {
     TrainingGround,
+    Stable,
+    Infirmary,
+    Workshop,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -186,6 +189,7 @@ pub enum FounderClass {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FounderGrant {
+    pub name: String,
     pub age_years: u32,
     pub class: FounderClass,
     pub attached_to: TroopKind,
@@ -197,6 +201,7 @@ pub struct FounderGrant {
 pub struct FactionSetup {
     pub id: FactionId,
     pub name: String,
+    pub army_name: String,
     pub emblem: Emblem,
     pub headquarters: SiteId,
     pub capital: SiteId,

@@ -219,3 +219,24 @@ This deterministic choice does not change local controllers or supply.
 
 These delegated choices implement C02/C06/C07 and P03/P05. Validation and the
 remaining platform limitations are recorded in `docs/verification/k04-geography.md`.
+
+### I04 — Earlier military saves and recruitment receipts
+
+K05 gives founding armies and Officers only to new campaigns. Earlier v2 saves
+never simulated military service, so an absent military group migrates to empty
+army, formation and person collections with fresh ID counters. The saved date,
+resources and RNG remain unchanged; Recruit can establish an army at a legal
+owned site. No founder, past income or service is invented. Partial new groups
+remain invalid. Schema 2/content 1 and catalogue metadata remain compatible,
+and loading leaves source bytes intact.
+
+Current founder records contain only identity, birth/service dates, Officer class,
+assignment and spent movement. Later career packages extend them from real
+evidence. Disbanding retains named people at the same site or in a surviving
+friendly formation, removes empty armies, never refunds costs and never reuses
+destroyed IDs. A last-round economy statement records actual income, paid/due
+upkeep, shortfall and closing resources; it does not promise future income.
+
+These delegated choices implement C02/C03/C06 and P04–P06/P11. The K05 evidence
+records recruitment, upkeep, migration and UI validation. Movement, transfers
+and headcount recovery retain their scheduled K06 dependency.

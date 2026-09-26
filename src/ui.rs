@@ -1,5 +1,6 @@
 //! Kestrum's map-first view layer; rendering returns explicit player intents.
 
+mod army;
 mod atlas;
 mod components;
 mod menus;
@@ -9,19 +10,37 @@ mod typography;
 mod world;
 
 use kestrum::{
-    data::PresentationData,
+    data::{
+        economy::{Economy, TroopKind},
+        world::SiteId,
+        PresentationData,
+    },
     navigation::{MapNavigation, MapSelection, MapView},
-    state::{GameState, Overlay, Preferences, Screen},
+    state::{
+        military::{ArmyId, FormationId},
+        GameState, Overlay, Preferences, Screen,
+    },
 };
 use macroquad::prelude::*;
 use macroquad_toolkit::{assets::AssetManager, ui::Pointer};
 
+pub use army::{ArmyMode, ArmyView};
 pub use atlas::map_controls_contain;
 pub use saves::{SaveMode, SaveRow, SaveView};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenArmies(SiteId),
+    ArmyPage(i32),
+    SelectFormation(FormationId),
+    BeginRecruit(Option<ArmyId>),
+    SelectRecruit(TroopKind),
+    ConfirmRecruit,
+    AskDisband(FormationId),
+    ConfirmDisband(FormationId),
+    CancelArmyAction,
+    HelpPage(i32),
     SelectMap(MapSelection),
     EnterRegion(kestrum::data::world::MarkerId),
     WorldMap,
@@ -65,6 +84,9 @@ pub enum UiAction {
 
 pub struct Context<'a> {
     pub data: &'a PresentationData,
+    pub economy: &'a Economy,
+    pub army: &'a ArmyView,
+    pub help_page: usize,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
     pub view: &'a MapView,
@@ -101,6 +123,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     };
     if ctx.state.overlay == Overlay::Saves {
         saves::draw(ctx)
+    } else if ctx.state.overlay == Overlay::Armies {
+        army::draw(ctx)
     } else if ctx.state.overlay == Overlay::SaveRecovery {
         saves::recovery(ctx, ctx.save_error)
     } else if ctx.state.overlay != Overlay::None {

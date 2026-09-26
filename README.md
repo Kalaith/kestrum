@@ -8,7 +8,7 @@ The campaign foundation is implemented in Rust, Macroquad, and Macroquad Toolkit
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
 Play, Credits, and native Quit Game. New Game starts Rosemarch's strategic state
 over the illustrated atlas, with selectable headquarters and a regional marker.
-There are no demo actions, energy, grid, debug panels, or economy controls.
+Select your headquarters and open Armies to inspect or recruit your forces.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -20,8 +20,9 @@ campaign or its disk/browser save. Starting over requires confirmation.
 
 The save catalogue keeps each round checkpoint and each new named save. It offers
 explicit overwrite/deletion and retries failed writes without replaying the round.
-Enter Region opens Rosemarch's ten connected sites. Armies and economic orders
-remain later packages. Terrain labels are distinct from selectable place markers.
+Enter Region opens Rosemarch's ten connected sites. Six-slot armies, recruitment,
+disbanding, income and upkeep are playable. Movement and battles follow in K06/K07.
+Terrain labels are distinct from selectable place markers.
 
 ### K01 — Typed content and Rosemarch
 
@@ -53,8 +54,8 @@ sequence. Accepted commands commit atomically; rejection preserves state. Player
 observation exposes public places and the player's own faction resources.
 
 The season stays fixed while the player and each eligible rival take their turns.
-Four rounds make one year. Rivals currently pass without income or fabricated
-events from future systems. Menu overlays and errors hold automatic progression.
+Four rounds make one year. Rivals currently pass; all active factions receive
+income and pay upkeep at the common boundary. Menu overlays and errors hold automatic progression.
 Manual saving is available during the player's phase. Old atlas campaigns are
 read-only, with no invented strategic history.
 
@@ -98,13 +99,34 @@ Earlier v2 saves gain these derived fields without changing their original bytes
 All 33 tests, formatting, strict Clippy, native review at both supported sizes and
 Windows/WebGL Preview publishing pass. [K04 evidence](docs/verification/k04-geography.md)
 records browser navigation checks and the inherited minimum-browser display issue.
-K05–K18 remain required before the full release is complete.
+K05 extends this foundation below. K06–K18 remain required before the full release.
+
+### K05 — Armies, recruitment and round economy
+
+New campaigns begin with four authored armies, twelve formations and four Officer
+founders. Each army has six slots. Armies shows headcounts, leadership, commander,
+supply, upkeep and available resources. Recruit or an empty slot opens six troop
+choices with costs and missing requirements. Confirm Recruit creates a full new
+formation that becomes ready next round. New Army creates a separate roster at
+the same site. Previous/Next pages through co-located armies.
+
+Disband requires confirmation, gives no refund and preserves named people at the
+site or in another friendly formation. Removing the last formation removes the
+empty army. A full round grants secure local income and one eligible HQ bonus,
+then pays full formation upkeep. A shortfall clamps Gold to zero and blocks
+recruitment until a later boundary pays upkeep in full. The roster shows the
+actual last-round income, paid/due upkeep and shortfall.
+
+Earlier strategic saves retain their date, resources and RNG without invented
+troops or founders; legal recruitment starts their army roster. The five K05
+behavioral cases and all 38 game tests pass. [K05 evidence](docs/verification/k05-armies.md)
+records visual, browser, save and Windows/WebGL Preview verification and limitations.
 
 ## Screen brief
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Inspect a place and its controller, or enter Rosemarch to examine its sites and entrances. |
+| Current decision | Inspect a place, or open its armies to choose a formation and review recruitment costs. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
 | Primary action | Enter Region opens a regional marker; World Map returns to the previous world camera. End Turn remains separate from selection. |
 | Supporting information | A dismissible inspector shows local control, regional claim and anchor requirements. The top edge shows season, round and active faction. |
@@ -146,7 +168,7 @@ capture, with no additional image processing.
 - `assets/data/game_config.json`: presentation copy and terrain labels.
 - `assets/art/kestrum_atlas.png`: generated original atlas, OpenAI ImageGen.
 - `assets/fonts/`: Cinzel (SIL OFL) and DejaVu Sans (Bitstream Vera license).
-- `assets/data/economy.json`: loaded and validated economy defaults; simulation starts in K05.
+- `assets/data/economy.json`: validated recruitment, upkeep, income and recovery defaults; K05 consumes recruitment and seasonal economy.
 - `assets/data/campaign_rules.json`: supported setup policy and eight botanical emblems.
 - `assets/data/scenarios/rosemarch.json`: versioned small scenario, topology and founding grants.
 

@@ -2,6 +2,7 @@
 
 use crate::ui::{self, UiAction};
 mod campaign;
+mod military;
 mod saves;
 mod storage;
 mod world;
@@ -37,6 +38,8 @@ pub struct Game {
     library: Option<kestrum::state::persistence::SaveLibrary>,
     storage_checked: bool,
     saves: ui::SaveView,
+    army: ui::ArmyView,
+    help_page: usize,
     pending_save: Option<storage::PendingWrite>,
     retry_save_when_ready: bool,
     save_error: String,
@@ -109,6 +112,8 @@ impl Game {
             library: None,
             storage_checked: false,
             saves: ui::SaveView::default(),
+            army: ui::ArmyView::default(),
+            help_page: 0,
             pending_save: None,
             retry_save_when_ready: false,
             save_error: String::new(),
@@ -153,6 +158,8 @@ impl Game {
         self.legacy_save_exists = false;
         self.import_save_exists = false;
         self.saves = ui::SaveView::default();
+        self.army = ui::ArmyView::default();
+        self.help_page = 0;
         self.save_error.clear();
         match scene.trim_end_matches("_minimum") {
             "title" => {}
@@ -181,14 +188,21 @@ impl Game {
                 self.capture_campaign();
                 self.view.zoom(vec2(720.0, 330.0), 2.0);
             }
-            "world_selected" | "region" | "region_selected" | "region_partial"
+            "headquarters" | "world_selected" | "region" | "region_selected" | "region_partial"
             | "region_contested" | "region_long_name" => self.capture_world(scene),
+            "army" | "army_full" | "army_empty" | "army_long_name" | "army_dense"
+            | "army_economy" | "army_deficit" | "recruit" | "recruit_blocked" | "recruit_full"
+            | "disband" | "disband_last" => self.capture_army(scene),
             "menu" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
             }
             "settings" => self.state.overlay = Overlay::Settings,
             "help" => self.state.overlay = Overlay::Help,
+            "help_army" => {
+                self.state.overlay = Overlay::Help;
+                self.help_page = 1;
+            }
             "confirm_new" => self.state.overlay = Overlay::ConfirmNew,
             "save_list" | "save_name" | "save_symbols" | "save_busy" | "save_invalid"
             | "save_delete" | "save_recovery" => self.capture_saves(scene),
@@ -221,6 +235,7 @@ impl Game {
         clear_background(Color::new(0.06, 0.10, 0.10, 1.0));
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
+        self.refresh_army();
         let campaign_view = self
             .state
             .campaign
@@ -229,6 +244,9 @@ impl Game {
             .and_then(|campaign| engine::project(campaign, campaign.player).ok());
         let ctx = ui::Context {
             data: &self.data.presentation,
+            economy: &self.data.economy,
+            army: &self.army,
+            help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,
             view: &self.view,
@@ -350,6 +368,28 @@ impl Game {
 
     fn apply(&mut self, action: UiAction) {
         match action {
+            UiAction::OpenArmies(site) => self.open_armies(site),
+            UiAction::ArmyPage(delta) => self.army_page(delta),
+            UiAction::SelectFormation(id) => self.army.selected = Some(id),
+            UiAction::BeginRecruit(army) => self.begin_recruit(army),
+            UiAction::SelectRecruit(kind) => {
+                if let ui::ArmyMode::Recruit { kind: selected, .. } = &mut self.army.mode {
+                    *selected = Some(kind);
+                }
+            }
+            UiAction::ConfirmRecruit => self.confirm_recruit(),
+            UiAction::AskDisband(id) => {
+                self.army.mode = ui::ArmyMode::Disband(id);
+                self.army.status.clear();
+            }
+            UiAction::ConfirmDisband(id) => self.confirm_disband(id),
+            UiAction::CancelArmyAction => {
+                self.army.mode = ui::ArmyMode::Roster;
+                self.army.status.clear();
+            }
+            UiAction::HelpPage(delta) => {
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(1);
+            }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {
                     self.state.overlay = Overlay::ConfirmNew;
@@ -365,7 +405,12 @@ impl Game {
                     self.load();
                 }
             }
-            UiAction::Open(overlay) => self.state.overlay = overlay,
+            UiAction::Open(overlay) => {
+                self.state.overlay = overlay;
+                if overlay == Overlay::Help {
+                    self.help_page = 0;
+                }
+            }
             UiAction::Back => self.go_back(),
             UiAction::MainMenu => {
                 self.state.main_menu();

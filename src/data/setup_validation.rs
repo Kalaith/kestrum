@@ -66,6 +66,20 @@ impl Scenario {
             rules.valid_kingdom_name(&faction.name),
             "must be trimmed, nonempty and at most 32 Unicode characters",
         )?;
+        for (key, name) in [
+            ("army_name", &faction.army_name),
+            ("founder.name", &faction.founder.name),
+        ] {
+            require(
+                SOURCE,
+                &format!("{field}.{key}"),
+                !name.is_empty()
+                    && name.trim() == name
+                    && name.chars().count() <= 64
+                    && !name.chars().any(char::is_control),
+                "must be trimmed, nonempty and at most 64 characters without controls",
+            )?;
+        }
         require(
             SOURCE,
             &format!("{field}.emblem"),

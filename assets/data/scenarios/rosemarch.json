@@ -570,6 +570,7 @@
     {
       "id": 1,
       "name": "Rose Kingdom",
+      "army_name": "Rose Ward",
       "emblem": "rose",
       "headquarters": 1,
       "capital": 1,
@@ -580,6 +581,7 @@
         "archers"
       ],
       "founder": {
+        "name": "Aveline Rose",
         "age_years": 24,
         "class": "officer",
         "attached_to": "warriors",
@@ -589,6 +591,7 @@
     {
       "id": 2,
       "name": "Oak Kingdom",
+      "army_name": "Oak Guard",
       "emblem": "oak",
       "headquarters": 2,
       "capital": 2,
@@ -599,6 +602,7 @@
         "archers"
       ],
       "founder": {
+        "name": "Rowan Oak",
         "age_years": 24,
         "class": "officer",
         "attached_to": "warriors",
@@ -608,6 +612,7 @@
     {
       "id": 3,
       "name": "Hawthorn Kingdom",
+      "army_name": "Hawthorn Host",
       "emblem": "hawthorn",
       "headquarters": 3,
       "capital": 3,
@@ -618,6 +623,7 @@
         "archers"
       ],
       "founder": {
+        "name": "Mara Hawthorn",
         "age_years": 24,
         "class": "officer",
         "attached_to": "warriors",
@@ -627,6 +633,7 @@
     {
       "id": 4,
       "name": "Fern Kingdom",
+      "army_name": "Fern Watch",
       "emblem": "fern",
       "headquarters": 4,
       "capital": 4,
@@ -637,6 +644,7 @@
         "archers"
       ],
       "founder": {
+        "name": "Bren Fern",
         "age_years": 24,
         "class": "officer",
         "attached_to": "warriors",

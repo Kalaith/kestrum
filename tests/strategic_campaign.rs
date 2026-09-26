@@ -80,20 +80,31 @@ fn four_and_eight_factions_act_in_stable_order_before_one_boundary() {
                 assert_eq!(outcome.consumed_facts.len(), count as usize);
                 assert!(campaign.pending_facts.is_empty());
                 assert_eq!(campaign.consumed_sequence, u64::from(count));
+            } else {
+                assert_eq!(
+                    campaign
+                        .factions
+                        .values()
+                        .map(|faction| faction.resources)
+                        .collect::<Vec<_>>(),
+                    resources,
+                    "income and upkeep wait for the common boundary"
+                );
             }
         }
         assert_eq!(acted, (1..=count).map(FactionId).collect::<Vec<_>>());
         assert_eq!(campaign.phase, CampaignPhase::PlayerTurn);
         assert!(campaign.acted.is_empty());
         assert_eq!(campaign.rng, rng);
-        assert_eq!(
-            campaign
-                .factions
-                .values()
-                .map(|faction| faction.resources)
-                .collect::<Vec<_>>(),
-            resources
-        );
+        for faction in campaign.factions.values() {
+            let statement = faction.last_economy.as_ref().unwrap();
+            assert_eq!(statement.completed_rounds, 1);
+            assert_eq!(statement.closing, faction.resources);
+        }
+        let player = &campaign.factions[&campaign.player];
+        assert_eq!(player.resources.gold, resources[0].gold + 50 - 30);
+        assert_eq!(player.resources.wood, resources[0].wood + 19);
+        assert_eq!(player.resources.stone, resources[0].stone + 12);
     }
 }
 
@@ -131,9 +142,9 @@ fn inactive_mid_round_factions_are_skipped_without_replaying_other_phases() {
             let passed: Vec<_> = result
                 .consumed_facts
                 .iter()
-                .map(|fact| {
-                    let DomainFactKind::FactionPassed { faction } = fact.kind;
-                    faction
+                .map(|fact| match fact.kind {
+                    DomainFactKind::FactionPassed { faction } => faction,
+                    _ => panic!("Passing factions cannot invent military activity"),
                 })
                 .collect();
             assert_eq!(passed, [1, 2, 3, 5, 7, 8].map(FactionId));

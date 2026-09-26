@@ -31,6 +31,18 @@ pub enum Difficulty {
     Normal,
 }
 
+/// The P11 contribution used by the army inspector and later encounter resolver.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LeadershipRules {
+    pub base_permille: u32,
+    pub named_scale_permille: u32,
+    pub diminishing_count: u32,
+    pub officer_commander_bonus_permille: u32,
+    pub field_min_age_years: u32,
+    pub officer_movement_allowance: u32,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignRules {
@@ -42,6 +54,7 @@ pub struct CampaignRules {
     pub kingdom_name_max_chars: usize,
     pub difficulty: Difficulty,
     pub ai_income_bonus_percent: u32,
+    pub leadership: LeadershipRules,
     pub emblems: Vec<EmblemDefinition>,
 }
 
@@ -72,6 +85,17 @@ impl CampaignRules {
                 "must not be empty",
             )?;
         }
+        require(
+            SOURCE,
+            "leadership",
+            self.leadership.base_permille <= 2000
+                && self.leadership.named_scale_permille <= 2000
+                && (1..=100).contains(&self.leadership.diminishing_count)
+                && self.leadership.officer_commander_bonus_permille <= 1000
+                && (1..=100).contains(&self.leadership.field_min_age_years)
+                && (1..=100).contains(&self.leadership.officer_movement_allowance),
+            "invalid contribution or movement rule",
+        )?;
         Ok(())
     }
 

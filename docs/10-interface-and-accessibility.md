@@ -36,6 +36,25 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 
 ## Screen briefs
 
+### Recruitment and army composition (K05)
+
+- **Current decision:** recruit a formation into a free slot or a new army, or
+  disband a selected formation to reduce recurring upkeep.
+- **Dominant focus:** an on-demand roster of six slots at the selected owned site.
+  The map stays behind this focused view and receives no input through it.
+- **Primary action:** Recruit opens six troop choices with costs, capacities,
+  upkeep and missing requirements; Confirm Recruit applies the selected order.
+- **Supporting information:** own resources, supply, leader contribution and the
+  last seasonal income/upkeep statement. Disband confirms the loss and no refund.
+- **Deferred information:** unavailable movement, transfers and battle screens
+  arrive with their systems. Foreign army composition is never exposed here.
+- **Layout and camera:** one focused sheet at the 1280 × 720 logical minimum;
+  roster and recruiting are separate modes. Previous/Next page through any number
+  of local armies. New Army remains available when the site has no formations.
+- **Input and feedback:** tap a slot or recruit type, read the reason beside an
+  unavailable choice, then confirm. Back returns to the roster; Close returns to
+  the map. All required controls remain at least 48 logical pixels high.
+
 ### Selectable geography (K04)
 
 - **Current decision:** inspect a marked place, its controller and its connections,

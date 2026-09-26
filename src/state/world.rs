@@ -34,6 +34,8 @@ pub struct CampaignWorld {
     pub region_control: BTreeMap<MarkerId, RegionControl>,
     /// Public conflict state; these sites cannot provide secure control or supply.
     pub contested_sites: BTreeSet<SiteId>,
+    /// Sparse structural damage; absent entries have zero damage.
+    pub site_damage: BTreeMap<SiteId, u32>,
 }
 
 impl CampaignWorld {
@@ -44,6 +46,7 @@ impl CampaignWorld {
             routes: scenario.routes.clone(),
             region_control: BTreeMap::new(),
             contested_sites: BTreeSet::new(),
+            site_damage: BTreeMap::new(),
         };
         world.markers.sort_by_key(|marker| marker.id);
         world.sites.sort_by_key(|site| site.id);
@@ -53,6 +56,10 @@ impl CampaignWorld {
 
     pub fn site(&self, id: SiteId) -> Option<&Site> {
         self.sites.iter().find(|site| site.id == id)
+    }
+
+    pub fn structural_damage(&self, site: SiteId) -> u32 {
+        self.site_damage.get(&site).copied().unwrap_or(0)
     }
 
     pub fn marker(&self, id: MarkerId) -> Option<&MajorMarker> {

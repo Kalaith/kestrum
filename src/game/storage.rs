@@ -166,6 +166,10 @@ impl Game {
 
     pub(super) fn go_back(&mut self) {
         match self.state.overlay {
+            Overlay::Armies if self.army.mode != ui::ArmyMode::Roster => {
+                self.army.mode = ui::ArmyMode::Roster;
+                self.army.status.clear();
+            }
             Overlay::SaveRecovery => {}
             Overlay::Saves if self.saves.mode != ui::SaveMode::Browse => {
                 self.saves.mode = ui::SaveMode::Browse

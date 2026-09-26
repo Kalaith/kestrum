@@ -32,6 +32,7 @@ impl Game {
         match result {
             Ok(()) => {
                 self.navigation.reset(&mut self.view);
+                self.army = ui::ArmyView::default();
                 self.error = None;
                 self.npc_delay = 0.0;
                 self.save_checkpoint();

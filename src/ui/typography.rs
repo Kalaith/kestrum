@@ -25,12 +25,33 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
                 samples.push((size, name));
             }
             titles.push((24, name));
+            titles.push((28, name));
+        }
+        for name in view
+            .armies
+            .iter()
+            .map(|army| army.name.as_str())
+            .chain(view.people.iter().map(|person| person.name.as_str()))
+        {
+            for size in [16, 18, 20, 21] {
+                samples.push((size, name));
+            }
+            titles.push((24, name));
+            titles.push((28, name));
         }
     }
     if let Some(message) = feedback {
         samples.push((19, message));
     }
     match ctx.state.overlay {
+        Overlay::Armies => {
+            samples.push((18, ctx.army.status.as_str()));
+            for option in &ctx.army.options {
+                if let Some(reason) = &option.blocked {
+                    samples.push((18, reason.as_str()));
+                }
+            }
+        }
         Overlay::Saves => match ctx.saves.mode {
             SaveMode::Browse => {
                 for row in ctx

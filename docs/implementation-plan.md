@@ -156,8 +156,10 @@ K03 is **Done**: unlimited indexed saves, compatibility, retry and touch naming
 pass the checks in [K03 evidence](verification/k03-saves.md).
 K04 is **Done**: selectable nested geography, entrances, supply and territorial
 anchors pass the checks in [K04 evidence](verification/k04-geography.md).
-K05–K18 remain **planned, not implemented**.
+K05 is **Done**: six-slot armies, founding Officers, recruitment/disbanding and
+round economy pass [K05 evidence](verification/k05-armies.md).
+K06–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
-status table. The current atlas has faction-phase controls and selectable places;
-armies begin in K05. Browser fullscreen and physical-touch review remain
+status table. The current atlas has faction-phase controls, selectable places and
+army rosters. Minimum-browser display and physical-touch review remain
 open for K18.

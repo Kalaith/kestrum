@@ -64,6 +64,10 @@ impl Game {
     pub(super) fn capture_world(&mut self, scene: &str) {
         self.capture_campaign();
         let region = MarkerId(5);
+        if scene.starts_with("headquarters") {
+            self.select_map(MapSelection::Marker(MarkerId(1)));
+            return;
+        }
         if scene.starts_with("world_selected") {
             self.select_map(MapSelection::Marker(region));
             return;

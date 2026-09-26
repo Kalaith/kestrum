@@ -34,6 +34,7 @@ impl StrategicCampaign {
         )?;
         self.validate_factions(data)?;
         self.validate_world(data)?;
+        self.validate_military(data)?;
         self.validate_phase()?;
         self.validate_facts()?;
         self.validate_counters()
@@ -244,12 +245,36 @@ impl StrategicCampaign {
                 "pending_facts",
                 "invalid identity, sequence or date",
             )?;
-            let DomainFactKind::FactionPassed { faction } = fact.kind;
-            require(
-                self.acted.contains(&faction) && actors.insert(faction),
-                "pending_facts.faction",
-                "duplicate or unacted faction",
-            )?;
+            match fact.kind {
+                DomainFactKind::FactionPassed { faction } => require(
+                    self.acted.contains(&faction) && actors.insert(faction),
+                    "pending_facts.faction",
+                    "duplicate or unacted faction",
+                )?,
+                DomainFactKind::FormationRecruited {
+                    faction,
+                    army,
+                    formation,
+                    site,
+                    ..
+                }
+                | DomainFactKind::FormationDisbanded {
+                    faction,
+                    army,
+                    formation,
+                    site,
+                    ..
+                } => require(
+                    self.factions.contains_key(&faction)
+                        && self.world.site(site).is_some()
+                        && army.0 > 0
+                        && army < self.next_ids.army
+                        && formation.0 > 0
+                        && formation < self.next_ids.formation,
+                    "pending_facts.formation",
+                    "invalid historical faction, army, formation or site reference",
+                )?,
+            }
             previous_sequence = fact.sequence;
         }
         require(
@@ -280,6 +305,21 @@ impl StrategicCampaign {
                 "route",
                 self.next_ids.route.0,
                 self.world.routes.iter().map(|r| r.id.0).max(),
+            ),
+            (
+                "army",
+                self.next_ids.army.0,
+                self.armies.keys().map(|id| id.0).max(),
+            ),
+            (
+                "formation",
+                self.next_ids.formation.0,
+                self.formations.keys().map(|id| id.0).max(),
+            ),
+            (
+                "person",
+                self.next_ids.person.0,
+                self.people.keys().map(|id| id.0).max(),
             ),
         ] {
             require(

@@ -237,6 +237,7 @@ impl Game {
         match result.and_then(|campaign| self.state.load_campaign(campaign, &self.data)) {
             Ok(()) => {
                 self.navigation.reset(&mut self.view);
+                self.army = ui::ArmyView::default();
                 self.npc_delay = 0.0;
                 self.error = None;
                 self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));

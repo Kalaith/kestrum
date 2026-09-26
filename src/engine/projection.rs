@@ -7,7 +7,12 @@ use crate::{
         rules::Emblem,
         world::{FactionId, SiteId},
     },
-    state::{world::CampaignWorld, CampaignId, CampaignPhase, FactionStatus, StrategicCampaign},
+    state::{
+        military::{Army, EconomyStatement, Formation},
+        people::Person,
+        world::CampaignWorld,
+        CampaignId, CampaignPhase, FactionStatus, StrategicCampaign,
+    },
 };
 use std::collections::BTreeSet;
 
@@ -18,6 +23,8 @@ pub struct VisibleFaction {
     pub emblem: Emblem,
     pub status: FactionStatus,
     pub resources: Option<Resources>,
+    pub deficit: Option<bool>,
+    pub last_economy: Option<EconomyStatement>,
     pub headquarters: Option<SiteId>,
     pub capital: Option<SiteId>,
 }
@@ -36,6 +43,10 @@ pub struct VisibleCampaign {
     pub npc_paused: bool,
     pub factions: Vec<VisibleFaction>,
     pub world: CampaignWorld,
+    /// Exact military and personnel records are visible only to their own faction.
+    pub armies: Vec<Army>,
+    pub formations: Vec<Formation>,
+    pub people: Vec<Person>,
 }
 
 pub fn project(
@@ -72,11 +83,31 @@ pub fn project(
                     emblem: faction.emblem,
                     status: faction.status,
                     resources: owned.then_some(faction.resources),
+                    deficit: owned.then_some(faction.deficit),
+                    last_economy: owned.then(|| faction.last_economy.clone()).flatten(),
                     headquarters: owned.then_some(faction.headquarters),
                     capital: owned.then_some(faction.capital),
                 }
             })
             .collect(),
         world: campaign.world.clone(),
+        armies: campaign
+            .armies
+            .values()
+            .filter(|army| army.faction == observer)
+            .cloned()
+            .collect(),
+        formations: campaign
+            .formations
+            .values()
+            .filter(|formation| formation.faction == observer)
+            .cloned()
+            .collect(),
+        people: campaign
+            .people
+            .values()
+            .filter(|person| person.faction == observer)
+            .cloned()
+            .collect(),
     })
 }

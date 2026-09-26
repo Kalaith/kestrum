@@ -108,6 +108,25 @@ pub fn draw(ctx: &Context<'_>) {
                 }
             }
         }
+        let own_armies = campaign
+            .armies
+            .iter()
+            .filter(|army| match target.selection {
+                MapSelection::Marker(marker) => campaign
+                    .world
+                    .site(army.site)
+                    .is_some_and(|site| site.marker == marker),
+                MapSelection::Site(site) => army.site == site,
+            })
+            .count();
+        if own_armies > 0 {
+            let label = format!("{}: {own_armies}", ctx.text("own_armies"));
+            let width = measure_text(&label, ctx.body_font(), 16, 1.0).width;
+            let x = (target.center.x - width * 0.5).clamp(12.0, 1268.0 - width);
+            let y = target.center.y + 76.0;
+            draw_rectangle(x - 7.0, y - 18.0, width + 14.0, 25.0, INK);
+            body(ctx, &label, vec2(x, y), 16.0, BRASS);
+        }
     }
 }
 

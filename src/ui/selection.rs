@@ -80,6 +80,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     }
     let active = ctx.state.overlay == Overlay::None;
     let is_region = site.is_none() && matches!(marker.location, MarkerLocation::Region { .. });
+    let owned_site = site.filter(|site| site.controller == Some(campaign.observer));
     if is_region
         && button(
             ctx,
@@ -91,7 +92,18 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     {
         return Some(UiAction::EnterRegion(marker.id));
     }
-    let close_rect = if is_region {
+    if let Some(site) = owned_site {
+        if button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
+            &ctx.text("armies"),
+            active,
+            true,
+        ) {
+            return Some(UiAction::OpenArmies(site.id));
+        }
+    }
+    let close_rect = if is_region || owned_site.is_some() {
         Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0)
     } else {
         Rect::new(rect.x + 96.0, rect.y + rect.h - 62.0, 166.0, 48.0)

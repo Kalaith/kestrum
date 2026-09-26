@@ -1,6 +1,8 @@
 //! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
 pub mod campaign;
+pub mod military;
+pub mod people;
 pub mod persistence;
 mod validation;
 pub mod world;
@@ -35,6 +37,7 @@ pub enum Overlay {
     ConfirmNew,
     Saves,
     SaveRecovery,
+    Armies,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -181,7 +184,12 @@ impl GameState {
         data: &GameData,
         command: Command,
     ) -> Result<ActionOutcome, RuleError> {
-        let campaign = self.playing_campaign()?;
+        let military_order = self.overlay == Overlay::Armies
+            && matches!(command, Command::Recruit { .. } | Command::Disband { .. });
+        if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
+            return Err(RuleError::PlayObstructed);
+        }
+        let campaign = self.strategic_campaign()?;
         engine::apply(campaign, data, Actor::Player, command)
     }
 
@@ -194,6 +202,10 @@ impl GameState {
         if self.screen != Screen::Campaign || self.overlay != Overlay::None {
             return Err(RuleError::PlayObstructed);
         }
+        self.strategic_campaign()
+    }
+
+    fn strategic_campaign(&mut self) -> Result<&mut StrategicCampaign, RuleError> {
         match &mut self.campaign {
             Some(Campaign::Strategic(campaign)) => Ok(campaign),
             Some(Campaign::Shell(_)) => Err(RuleError::LegacyReadOnly),

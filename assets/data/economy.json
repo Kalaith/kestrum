@@ -2,6 +2,8 @@
   "schema_version": 1,
   "status": "provisional_defaults",
   "period": "full_round",
+  "facility_failure_damage": 75,
+  "income_damage_divisor": 2,
   "starting_resources": {
     "gold": 500,
     "wood": 200,
@@ -57,6 +59,7 @@
   "formations": {
     "warriors": {
       "capacity": 100,
+      "movement_allowance": 6,
       "recruit_cost": {
         "gold": 60,
         "wood": 10,
@@ -66,6 +69,7 @@
     },
     "spearmen": {
       "capacity": 100,
+      "movement_allowance": 6,
       "recruit_cost": {
         "gold": 70,
         "wood": 10,
@@ -75,6 +79,7 @@
     },
     "archers": {
       "capacity": 80,
+      "movement_allowance": 6,
       "recruit_cost": {
         "gold": 80,
         "wood": 20,
@@ -84,6 +89,7 @@
     },
     "riders": {
       "capacity": 40,
+      "movement_allowance": 8,
       "recruit_cost": {
         "gold": 120,
         "wood": 10,
@@ -93,6 +99,7 @@
     },
     "medics": {
       "capacity": 40,
+      "movement_allowance": 6,
       "recruit_cost": {
         "gold": 60,
         "wood": 10,
@@ -102,6 +109,7 @@
     },
     "siege_engines": {
       "capacity": 20,
+      "movement_allowance": 4,
       "recruit_cost": {
         "gold": 120,
         "wood": 60,

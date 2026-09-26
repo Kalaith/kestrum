@@ -1,4 +1,4 @@
-//! Additive v2 geography upgrade, shared by interim slots and catalogue payloads.
+//! Additive v2 upgrades, shared by interim slots and catalogue payloads.
 
 use super::StrategicCampaign;
 
@@ -6,6 +6,7 @@ impl StrategicCampaign {
     pub(crate) fn decode_compatible(
         mut value: serde_json::Value,
     ) -> Result<Self, serde_json::Error> {
+        initialize_earlier_military(&mut value);
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.
@@ -25,5 +26,45 @@ impl StrategicCampaign {
             campaign.reconcile_region_control();
         }
         Ok(campaign)
+    }
+}
+
+fn initialize_earlier_military(value: &mut serde_json::Value) {
+    let military_absent = ["armies", "formations", "people"]
+        .iter()
+        .all(|key| value.get(*key).is_none());
+    let counters_absent = value
+        .get("next_ids")
+        .and_then(serde_json::Value::as_object)
+        .is_some_and(|ids| {
+            ["army", "formation", "person"]
+                .iter()
+                .all(|key| !ids.contains_key(*key))
+        });
+    if !military_absent || !counters_absent {
+        return;
+    }
+    // Earlier campaigns never simulated troops or people. Granting founders at a
+    // later date would invent military history, so continuation starts with none.
+    if let Some(campaign) = value.as_object_mut() {
+        for key in ["armies", "formations", "people"] {
+            campaign.insert(key.into(), serde_json::json!({}));
+        }
+    }
+    if let Some(ids) = value
+        .get_mut("next_ids")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        for key in ["army", "formation", "person"] {
+            ids.insert(key.into(), serde_json::json!(1));
+        }
+    }
+    if let Some(world) = value
+        .get_mut("world")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        world
+            .entry("site_damage")
+            .or_insert_with(|| serde_json::json!({}));
     }
 }

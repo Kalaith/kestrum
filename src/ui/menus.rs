@@ -130,23 +130,20 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Help => "help_title",
         Overlay::Credits => "credits",
         Overlay::ConfirmNew => "new_title",
-        Overlay::None | Overlay::Saves | Overlay::SaveRecovery => return None,
+        Overlay::None | Overlay::Saves | Overlay::SaveRecovery | Overlay::Armies => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
     let action = match ctx.state.overlay {
         Overlay::Menu => pause(ctx),
         Overlay::Settings => settings(ctx),
-        Overlay::Help => {
-            help(ctx);
-            None
-        }
+        Overlay::Help => help(ctx),
         Overlay::Credits => {
             credits(ctx);
             None
         }
         Overlay::ConfirmNew => confirm(ctx),
-        Overlay::None | Overlay::Saves | Overlay::SaveRecovery => None,
+        Overlay::None | Overlay::Saves | Overlay::SaveRecovery | Overlay::Armies => None,
     };
     if action.is_some() {
         return action;
@@ -256,9 +253,19 @@ fn settings(ctx: &Context<'_>) -> Option<UiAction> {
     None
 }
 
-fn help(ctx: &Context<'_>) {
-    let keys: &[&str] = if ctx.state.campaign.is_some() && ctx.campaign_view.is_none() {
+fn help(ctx: &Context<'_>) -> Option<UiAction> {
+    let legacy = ctx.state.campaign.is_some() && ctx.campaign_view.is_none();
+    let keys: &[&str] = if legacy {
         &["legacy_read_only", "help_pan", "help_zoom", "help_menu"]
+    } else if ctx.help_page == 1 {
+        &[
+            "help_army",
+            "help_recruit",
+            "help_slots",
+            "help_economy",
+            "help_disband",
+            "help_leadership",
+        ]
     } else {
         &[
             "help_select",
@@ -277,6 +284,27 @@ fn help(ctx: &Context<'_>) {
             453.0,
         );
     }
+    if !legacy {
+        if button(
+            ctx,
+            Rect::new(390.0, 548.0, 124.0, 48.0),
+            &ctx.text("previous"),
+            ctx.help_page > 0,
+            false,
+        ) {
+            return Some(UiAction::HelpPage(-1));
+        }
+        if button(
+            ctx,
+            Rect::new(766.0, 548.0, 124.0, 48.0),
+            &ctx.text("next"),
+            ctx.help_page == 0,
+            false,
+        ) {
+            return Some(UiAction::HelpPage(1));
+        }
+    }
+    None
 }
 
 fn credits(ctx: &Context<'_>) {

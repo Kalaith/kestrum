@@ -4,17 +4,17 @@
 
 ## Founding a kingdom
 
-The campaign starts as the player's kingdom forms. Other kingdoms are forming around the same world. Initial setup asks for a kingdom name, emblem, and number of rival factions. More elaborate origins, traits, cultures, and starting bonuses are possible later; early identity should emerge mainly through play.
+The campaign starts as the player's kingdom forms. Other kingdoms are forming around the same world. Initial setup asks for a kingdom name, emblem, and total number of factions. More elaborate origins, traits, cultures, and starting bonuses are possible later; early identity should emerge mainly through play.
 
-The sources recommend 4–8 factions but do not settle whether that means rivals or total factions. **Open:** settle that count before implementing setup. A proposed initial default is four total kingdoms, clearly labelled as one player plus three rivals. It is not a confirmed balance rule.
+**Confirmed decision (O08):** the player chooses 4–8 total factions, including their own kingdom. This produces 3–7 rival kingdoms. Setup must label the total clearly; a default count has not been selected.
 
 Initial play is single-player. Human-controlled additional kingdoms are future scope. Document state ownership so that possibility remains understandable, but do not build networking for the prototype.
 
 ## Victory, defeat, and continuity
 
-The overall conquest objective is that every other faction is conquered or vassalized. Initial diplomacy only supports War and Peace, and vassals are explicitly listed as future scope.
+**Agreed direction (O07):** victory requires every other faction to be conquered or vassalised. Initial diplomacy supports War and Peace. The founding drafts place vassals in future diplomacy, leaving the first version's victory scope to reconcile.
 
-**Working interpretation:** first functional victory requires all rivals to be conquered. The broader conquest-or-vassal objective remains the intended extension once vassalage exists. Do not display an unusable vassal action or require it to finish the initial game.
+**Open (D04):** how vassalisation fits the initial version. The discussion suggests making it a defeat outcome without a full diplomacy system. That remains a proposal; the earlier conquest-only implementation plan was also an interpretation, not a confirmed restriction. Define whether and when a defeated kingdom can become a vassal, and distinguish that outcome from elimination. A playable version must have a reachable victory using its supported actions.
 
 For v1, an eliminated faction is gone. Restoration wars, exiled governments, claimant factions, breakaway successor states, civil wars, separatist commanders, rebel kingdoms, succession disputes, and kingdom splintering are future scope. Individual displaced people may still have historical records; that does not restore their former faction as an active state.
 
@@ -75,23 +75,23 @@ This replaces a conventional abstract technology tree where practical. If the ki
 
 ## Diplomacy and long wars
 
-Initial diplomatic states are War and Peace. Alliances, marriages as diplomatic agreements, tribute, vassals, guarantees, negotiated borders, and prisoner exchanges are future extensions. Family relationships can exist without implementing all diplomatic marriage mechanics.
+Initial diplomatic states are War and Peace. Alliances, marriages as diplomatic agreements, tribute, a full vassal diplomacy system, guarantees, negotiated borders, and prisoner exchanges are future extensions. Whether vassalisation can first appear as a defeat outcome remains D04. Family relationships can exist without implementing all diplomatic marriage mechanics.
 
 Temporary peace or truces can divide a historical conflict into separate active campaigns. The chronicle may group related wars into an era. **Open:** determine how a v1 peace offer is evaluated and whether a truce has a fixed duration. Narrative siege negotiation remains future scope while diplomacy stays minimal.
 
 ## AI parity
 
-AI kingdoms broadly share the player's resources, troop requirements, settlement systems, movement and supply rules, character development, class requirements, and siege rules. Difficulty should not fabricate unavailable units or bypass world requirements.
+**Agreed direction (O21):** AI kingdoms follow the same underlying game rules for resources, troop requirements, settlement systems, movement and supply, character development, classes, and sieges. Difficulty must not fabricate unavailable units or bypass world requirements.
 
-Possible difficulty adjustments are increased gold/resource income and recruitment efficiency. Values, visibility of bonuses, and difficulty presets remain open.
+Difficulty may increase gold/resource income. Exact bonuses, their visibility, and difficulty presets remain open. Recruitment efficiency was another source possibility, not an additional confirmed bonus.
 
 **Proposal — AI decision sequence:** assess threats and supply, protect important anchors, recover or retreat weak forces, choose feasible recruitment and development, select an offensive or local threat, then execute validated orders. Use the same action validation as player commands. Persistent strategic objectives can reduce repeated reversals without requiring an elaborate political simulation.
 
-**Open:** information available to AI needs an explicit policy. The sources require limited player information but do not define symmetrical AI fog of war. Prefer the same knowledge model for believable scouting, and document any chosen exception.
+The remaining strategic design question is how AI evaluates war, peace offers, and truces. Knowledge records and information freshness still need an implementation policy consistent with the agreed rules; the clarification does not specify an exact AI observation algorithm.
 
 ## Fog of war and intelligence
 
-Enemy army details are not freely inspectable. Information comes from encounters, fighting, observed territory, and possibly later scouts or spies. First contact may reveal only presence and rough size. Combat may reveal troop types, composition, commander, notable characters, and approximate strength.
+**Agreed direction (O21):** the player receives little to no information about enemy armies until meeting them in combat. Any pre-combat presence or rough-size cue must preserve that limited knowledge. Combat can reveal troop types, composition, commanders, notable characters, and approximate strength. Scouts and spies remain later possibilities.
 
 **Proposal — knowledge records:** store what a faction observed, when, and where. Distinguish unknown, observed, and last-known information. A force seen years ago should not be shown as currently exact. A biography or event notification must not accidentally reveal a hidden commander, location, or army composition.
 

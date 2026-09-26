@@ -4,8 +4,8 @@
 
 | Term | Meaning in this documentation |
 | --- | --- |
-| Army | Persistent field force with up to six troop-formation slots in the working model |
-| Formation | One troop body in an army slot, with type, headcount, experience, and persistent identity |
+| Army | Persistent field force with six discrete troop-formation slots; variable headcounts per slot are confirmed, while empty-slot rules remain proposed |
+| Formation | One troop body in an army slot, with type, headcount, experience, and identity; zero headcount destroys it and its formation history |
 | Unit | Ambiguous source term: can mean an early six-person company or a troop formation; prefer the explicit term |
 | Company / Host | In-world formation or army names; a name alone does not define mechanical scale |
 | Troop type | Reusable military category such as Warriors, Riders, or Wyverns |
@@ -13,7 +13,7 @@
 | Veteran formation | Surviving formation with accumulated experience; distinct from an aging veteran person |
 | Abstract person | Population or troop member without a full individual simulation record |
 | Tracked person | Individually persistent junior, emerging soldier, heir, or other relevant person |
-| Named / recognized character | Historically significant individual; personal name alone does not imply command bonuses |
+| Named / recognized character | Individually important person who can strengthen an army and later take leadership; exact contribution and appointment rules remain open |
 | Emergence | A person becomes individually important or tracked through service or other relevance |
 | Recognition | Significance earned through meaningful events; can formalize a tracked person's importance |
 | Disposition | Subtle underlying inclination influencing a person's response to experience |
@@ -23,11 +23,11 @@
 | Bond | Relationship arising from shared service; initially subtle in effect |
 | Legacy | Lasting family, students, roles, objects, institutions, or history after a person's active career |
 | Heir | Successor by blood, martial training, religion, politics, adoption, or another supported relationship |
-| Node | Persistent strategic place with geography and evolving state |
+| Node | Strategic place generated at world creation, with fixed graph position and evolving contents |
 | Region | Major world location which may contain an internal node graph |
 | Entrance | Mapping between an external route and a specific internal regional node |
 | Route / edge | A valid connection for movement subject to current traversal rules |
-| Road | Infrastructure improving a route; initially not a new graph connection |
+| Road | Infrastructure improving an existing route for defenders and invaders |
 | Occupancy | Physical army presence at a node |
 | Local control | Faction currently holding a site; can be contested |
 | Political ownership | Regional claim or administration based on strategic control requirements |

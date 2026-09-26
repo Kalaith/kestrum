@@ -34,7 +34,7 @@ The template currently has legacy tests under `src/`. Migrate those as a separat
 | Node | ID, geography, development layers, controller, damage, history links | Stable identity through renaming, decline, and capture |
 | Route | Endpoints, traversal rules, terrain/road condition, boundary mapping if needed | Connectivity consistent across movement and supply |
 | Army | Faction, location, movement state, up to six formation slots, assignments | One physical location and unique formation membership |
-| Formation | Type, headcount/capacity, experience, specialization, origin, attached people | Zero headcount means destroyed; replacement gets a new ID |
+| Formation | Type, headcount/capacity, experience, specialization, origin, attached people | Zero headcount destroys the formation and its history; replacement gets a new ID; world battle facts may remain |
 | Character | Birth date, service dates, roles/classes, evidence, recognition, lifecycle | Chronology valid; at most one incompatible active assignment |
 | Household/dependent | Sparse relationships, approximate or exact dates, place ties | No contradictory ancestry; deepen simulation when relevant |
 | Mentorship | Teacher, learner, discipline, dates, opportunity | Valid participants and feasible active relationship |
@@ -117,7 +117,7 @@ Persist the campaign seed and state-owned RNG. Sort iteration and event applicat
 
 Use integer seasonal dates and deliberate numeric rules. Cross-platform replay precision must be measured if floating point enters combat. Bound combat resolution and graph searches; a stalemate should terminate with an explicit outcome.
 
-Keep ordinary population abstract. Retain enough formation history to ground new people without simulating every soldier. Cache graph calculations only with correct invalidation. Event retention must preserve historical facts and required evidence while preventing UI work from scanning the entire campaign every frame. Performance budgets for large worlds and hundred-year campaigns remain open.
+Keep ordinary population abstract. Retain enough history in surviving formations to ground emerging people without simulating every soldier. When a formation is destroyed, its own history ends under D05; world battle records may remain. Cache graph calculations only with correct invalidation. Event retention must respect that distinction and preserve required evidence while preventing UI work from scanning the entire campaign every frame. Storage policy and performance budgets for large worlds and hundred-year campaigns remain open under O23.
 
 ## Persistence
 

@@ -8,7 +8,7 @@ A kingdom should field a handful of recognizable armies. Commander, composition,
 
 The concept draft described persistent units of approximately six individuals, such as Briar Company: Captain Serai, Brother Edrin, two squires, and two temple neophytes. The kingdom draft instead specifies an army of six troop-formation slots, with named people supporting much larger bodies of troops.
 
-**Working interpretation (D01):** use six troop formations per army as the current implementation baseline. Keep the earlier six-person company as a preserved concept example, not a second simultaneous army-size requirement. Individuals may be tracked within formations, but ordinary headcount is abstract.
+**Confirmed decision (D01):** each army has six discrete troop-formation slots with variable headcounts. The earlier six-person company remains a preserved concept example. Individuals may emerge within formations, but ordinary headcount is abstract.
 
 ## Army composition
 
@@ -42,11 +42,11 @@ The player chooses troop types, character placement, support, specialists, siege
 
 ## Named characters as force multipliers
 
-An army can exist without a named leader and can keep operating after a leader dies or retires. It is substantially weaker. Roughly 50% effectiveness without a named character is a working tuning target, not a fixed formula.
+**Confirmed decision (O06):** an army can exist without a named character and can keep operating after a leader dies or retires. It is substantially weaker. Roughly 50% effectiveness without a named character is a tuning idea, not a fixed formula.
 
 Multiple important characters should improve an otherwise identical army. Concentrating them increases strength; distributing them improves coverage. Exact stacking, role compatibility, command appointment, and whether effects apply to one slot or the entire army are open. The first prototype must make the contribution visible and avoid runaway multiplication.
 
-A newly emerging character may appear within a formation as “Squire Elian + Warriors.” Once sufficiently recognized or qualified, Elian can leave Commander Teresa's Briar Host to lead the Frostmarch Guard. That transfer intentionally reduces Briar Host's concentration of talent.
+A newly emerging character may appear within a formation as “Squire Elian + Warriors” and can later leave Commander Teresa's Briar Host to lead the Frostmarch Guard. That transfer reduces Briar Host's concentration of talent. Exact appointment eligibility and transfer timing/cost remain mechanics to define; they do not reopen the agreed emergence-to-leadership path.
 
 ## Formation persistence
 
@@ -54,9 +54,11 @@ Formations maintain headcount across battles. Warriors at 100/100 may return at 
 
 Veterancy can progress from Warriors to Seasoned Warriors to Veteran Warriors. Restrained improvements may affect effectiveness, morale, resilience, discipline, and rout chance. Repeated survival provides more credible opportunities for individual emergence.
 
-At zero headcount the formation is destroyed. Its active formation history and veteran identity are lost; a newly recruited formation of the same type is a new formation.
+**Confirmed decision (D05):** at zero headcount the formation is destroyed. Its formation history and veteran identity are gone; a newly recruited formation of the same type is a new formation.
 
-**Working interpretation (D05):** destruction prevents reuse of the formation's experience and active identity, while the world chronicle can retain that it existed and was destroyed. Historical records are not a mechanism to transfer its bonuses to replacements. How reinforcement dilutes veterancy is open.
+The wider world can still remember battles involving the lost formation, but there is no requirement to retain its own service archive. Those world events cannot restore the formation or pass its veteran benefits to replacements.
+
+**Open (O16), next design priority:** if Veteran Warriors at 21/100 reinforce to 100/100, do they remain fully veteran? The effect of replacements on a surviving formation's experience and specialization is undecided. Destruction at zero is already settled; it does not answer how partial losses and replenishment affect veterancy.
 
 ## Formation specialization
 
@@ -88,11 +90,11 @@ Do not promise exact information beyond fog of war. The preview can identify kno
 
 Roads improve movement between nodes and help invaders as well as defenders. Damaging or destroying them is possible but should be harder than burning fields or destroying temporary structures.
 
-Under the initial stable-graph interpretation, constructing a road improves an existing route. Road condition affects travel and potentially supply when that rule is defined. A later topological road-building system must explicitly revise graph validation and historical records.
+Under confirmed decision D06, constructing a road improves an existing route. Road condition affects travel and potentially supply when that rule is defined. The current design keeps the graph fixed.
 
 ## Simple supply
 
-An army with a valid supply connection can recover health and troop strength normally. An isolated army cannot recover normally and can be worn down by successive attacks. Initial logistics avoids detailed food inventories and supply-wagon control.
+**Agreed direction (O03):** an army with a valid supply connection can recover health and troop strength normally. A cut-off army cannot normally recover health or headcount and can be worn down by successive attacks. Initial logistics avoids detailed food inventories and supply-wagon control.
 
 **Proposal — connectivity model:** supply queries follow usable routes to an eligible friendly source. Hostile-controlled nodes, blockades, contested boundaries, and siege isolation must be evaluated consistently at both world and regional scales. Cache results only if control and route changes invalidate them correctly.
 
@@ -102,7 +104,7 @@ The v1 rule is restricted normal recovery. Starvation, automatic attrition, and 
 
 ## Outposts
 
-Armies can establish outposts on suitable nodes. Approximately three turns is the source working target. With one complete round per season, **working interpretation:** construction requires approximately three seasonal progress steps, about nine months. This pacing must be tested.
+Armies can establish outposts on suitable nodes. **Agreed direction (O12):** establishment takes roughly three turns. With one complete round per season, **working interpretation:** construction requires approximately three seasonal progress steps, about nine months. This pacing must be tested; the first progress step, completion timing, supply needs, and interruption rules remain open.
 
 Outposts create territorial presence, a forward recovery point, a future settlement seed, a defensive position, and supply extension. They are persistent places. They may become hamlets, villages, fortified settlements, and towns, or become abandoned, ruined, and occupied by bandits.
 
@@ -110,7 +112,7 @@ Outposts create territorial presence, a forward recovery point, a future settlem
 
 ## Stacking and reinforcement
 
-Multiple friendly armies may occupy one node. V1 has no planned hard stacking limit or direct stacking penalty. The cost is the territory left undefended elsewhere.
+**Agreed direction (O05):** multiple friendly armies may occupy one node without a hard stacking limit. V1 has no planned direct stacking penalty. The cost is the territory left undefended elsewhere.
 
 The source does not settle whether every co-located army automatically participates in a battle. Define deterministic participation and relief rules in the [combat system](05-battles-and-sieges.md); do not hide an arbitrary one-army limit behind the six-slot rule.
 

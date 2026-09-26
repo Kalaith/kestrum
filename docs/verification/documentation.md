@@ -4,6 +4,24 @@ Date: 2026-09-26
 
 [Documentation index](../README.md) · [Source coverage](../source-coverage.md) · [Delivery plan](../12-delivery-and-validation.md)
 
+## Discussion clarification update — 2026-09-26
+
+Updated the design index, decision register, owning chapters, glossary, and delivery plan from the supplied discussion. The register now distinguishes six confirmed entries (four D decisions and O06/O08), thirteen agreed directions needing mechanics or tuning, ten unanswered questions, and eleven remaining reconciliation/source-handling notes. All forty original identifiers remain present exactly once as register entries.
+
+The update confirms 4–8 total factions, six formation slots, emergence from abstract troops, fixed graphs, named-character contributions, and loss of a destroyed formation's own history. World battle memory remains possible. Vassalisation as a defeat outcome stays a proposal, and O16's reinforcement effect on veterancy stays unanswered and is marked as the next design priority.
+
+Checks for this update:
+
+- Passed all 321 local links and heading fragments across 18 authored Markdown files; none depends on a root design draft.
+- Matched all four archived references against their preservation manifest and existing Git objects; all three founding archives also match their root originals byte for byte.
+- Rechecked all 200 source headings and their contiguous coverage spans.
+- Checked register identifiers and the confirmed/agreed/unanswered grouping against the discussion; reviewed dependent chapters for stale faction-count, army-scale, graph, and formation-archive rules.
+- Confirmed changes are confined to authored Markdown under `docs/`; runtime code, configuration, source archives, assets, and screenshots are unchanged.
+- Directly counted all ten unchanged Rust files against the 800-line limit; the largest remains `src/ui.rs` at 563 lines.
+- Passed `git diff --check` for the documentation changes.
+
+Formatting, Clippy, Cargo tests, publishing, and UI review were not rerun for this documentation-only update. The checkout validation results and onboarding blockers below record the initial milestone; they are not new runtime validation claims.
+
 ## Scope
 
 The initial Kestrum milestone adds a consolidated design set, source preservation, a project README, and a newline-preservation rule for archived Markdown. The supplied template source, assets, configuration, scripts, tests, thumbnail, and existing screenshots are retained. No game behavior or game screen was changed.

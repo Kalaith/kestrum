@@ -4,7 +4,7 @@
 
 ## Careers across a changing world
 
-Characters have biological age and career age. A squire in Year 3 may become a knight in Year 10, a commander in Year 20, and a retired governor in Year 35, if they survive. The design should support a career with changing responsibilities rather than only a rising level.
+**Agreed direction (O17):** typical campaigns span roughly 20–50 years, with aging careers, changing roles, and retirement. Characters have biological age and career age. A squire in Year 3 may become a knight in Year 10, a commander in Year 20, and a retired governor in Year 35, if they survive. Exact seasonal aging events, illness and death probabilities, and physical modifiers remain tuning and implementation questions.
 
 A longer example follows a character from squire at seventeen, knight at twenty-two, captain at twenty-nine, named commander at thirty-eight, marshal at forty-nine, and governor and mentor at fifty-six. These are illustrative milestones, not required ages for promotions.
 
@@ -41,7 +41,7 @@ Death can come from combat, illness, age, or major events. Its frequency must le
 
 ## Households and relationships
 
-Important people can form households through proximity, relationships, shared service, social compatibility, politics, and player encouragement. The player may influence a pairing without controlling every relationship.
+**Agreed direction (O20):** families, children, mentorship, and several kinds of heirs support continuity; legacy does not require children. Important people can form households through proximity, relationships, shared service, social compatibility, politics, and player encouragement. The player may influence a pairing without controlling every relationship. Household transitions, succession eligibility, property rules, and mentorship duration/capacity remain open.
 
 Limited encouraged or arranged partnerships may support alliances, continuity, succession, and stability. The intended question is what the relationship means for those people and the faction. It should not become a roster of breeding statistics.
 

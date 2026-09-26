@@ -6,6 +6,8 @@
 
 This milestone consolidates the complete founding design, preserves the original drafts within `docs/reference/`, records conflicts and proposals, and commits the supplied template with the documentation. It makes no Kestrum gameplay or UI changes.
 
+The discussion clarification supplied on 2026-09-26 updates that foundation. Chapter 13 now separates confirmed decisions, agreed directions needing mechanics/tuning, and unanswered questions. The implementation sequence below remains proposed; settled choices such as six formation slots and 4–8 total factions do not need fresh confirmation.
+
 The root copies of the three design drafts are retained in the initial commit. All their content is preserved in `docs/`; the documentation set remains usable after those root copies are deleted. Exact source hashes and section coverage are recorded in the [coverage ledger](source-coverage.md).
 
 ## Proposed implementation sequence
@@ -22,7 +24,7 @@ Exit evidence: touch-only map selection and movement work; an army can enter and
 
 ### M2 — The first military loop
 
-Implement six formation slots per army, variable headcount, several armies, basic composition, movement costs, automatic encounters, retreat, destruction, supply-gated recovery, and formation veterancy. Add minimal resource costs and enemy behavior sufficient to exercise the same rules.
+Implement six formation slots per army, variable headcount, several armies, basic composition, movement costs, automatic encounters, retreat, destruction, supply-gated recovery, and formation veterancy. Resolve O16's reinforcement effect on veterancy before accepting recovery behavior. Add minimal resource costs and enemy behavior sufficient to exercise the same rules.
 
 Exit evidence: recruit → compose → move → fight → retain losses → recover or retreat works; destroyed formations do not reappear as veterans; leader presence has a clear, tunable effect; multiple fronts matter.
 
@@ -30,7 +32,7 @@ Exit evidence: recruit → compose → move → fight → retain losses → reco
 
 Track a small number of founders/juniors and permit grounded emergence from formations. Record reusable experiences, recognition, a limited trait set, basic classes, eligibility, and mentorship opportunities. Support an enemy who survives and can be recognized later.
 
-Prototype events: participation, victory, defeat, survival while outnumbered, commander wounded, assumed command, treatment of wounded, fighting a particular enemy type, defense, and capture of a strategic node.
+Candidate prototype events (O10 remains open): participation, victory, defeat, survival while outnumbered, commander wounded, assumed command, treatment of wounded, fighting a particular enemy type, defense, and capture of a strategic node.
 
 Exit evidence: a player can explain a junior's development using actual events. Tomas's leadership, Mira's medical opportunities, and an escaped rival illustrate desired outcomes without requiring scripted missions or every advanced class.
 
@@ -38,7 +40,7 @@ Exit evidence: a player can explain a junior's development using actual events. 
 
 Add Gold/Wood/Stone, development focuses, physical military prerequisites, outposts, roads, anchor control, basic growth/decline, occupation consequences, local threats, fog of war, and a persistent light siege with relief.
 
-Build toward several rival kingdoms and minimal War/Peace diplomacy, faction elimination, and a reachable conquest victory. Decide faction counts and conquest rules first.
+Build toward player-selected 4–8 total factions, minimal War/Peace diplomacy, faction elimination, and a reachable victory. Define exact conquest rules and reconcile D04/O07: conquest or vassalisation is the objective, while vassalisation as a defeat outcome remains a proposal for the initial version.
 
 Exit evidence: an outpost can become useful; road access benefits both sides; an isolated force cannot replenish normally; a siege persists through turns and saves; a captured region can still contain hostile pockets; all rival kingdoms use valid capabilities.
 
@@ -59,9 +61,9 @@ Exit evidence: a full campaign can conclude without an unavailable feature, and 
 | Scope | Required focus |
 | --- | --- |
 | Earliest playable prototype | Small graph with one nested region, persistent armies/people, combat/retreat, partial control, evidence and recognition |
-| First functional kingdom version | Six formation slots, headcounts, basic economy and AI, supply/roads/outposts, light siege, minimal diplomacy, elimination and achievable conquest victory |
+| First functional kingdom version | Six formation slots, headcounts, 4–8 total factions, basic economy and AI, supply/roads/outposts, light siege, minimal diplomacy, elimination and reachable victory; vassalisation scope requires D04/O07 |
 | Full generational promise | Useful aging/retirement, succession through family or mentorship, changing places/capitals, long histories and contextual memory |
-| Explicit future scope | Multiplayer; extensive origins/cultures/bonuses; richer intelligence; alliances/tribute/vassals/guarantees/borders/prisoner exchanges; restoration, fragmentation, civil wars, claimant or separatist factions |
+| Explicit future scope | Multiplayer; extensive origins/cultures/bonuses; richer intelligence; alliances/tribute/full vassal diplomacy/guarantees/borders/prisoner exchanges; restoration, fragmentation, civil wars, claimant or separatist factions |
 
 The generational game is the destination. Staging it after a small prototype does not remove it from the design. Later combat injury/capture/escape depth, weather, advanced bonds, complex civilian effects, and negotiation should be introduced when they strengthen the proven loop.
 

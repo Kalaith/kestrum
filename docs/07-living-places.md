@@ -4,7 +4,7 @@
 
 ## Persistent places
 
-Nodes have lives. They can grow, burn, decline, recover, change purpose, and outlive their founders. A place retains its identity through those changes. Peace can encourage growth; prolonged war can leave scars that are still visible decades later.
+**Agreed direction (O18–O19):** places grow, burn, decline, recover, change purpose, and outlive their founders; capitals can move as the world changes. A place retains its identity through those changes. Peace can encourage growth; prolonged war can leave scars that are still visible decades later. State representation, numerical thresholds, and relocation mechanics remain open.
 
 Possible trajectories include Plain → Outpost → Hamlet → Village → Fortified Town → Regional Capital, and Fortified Town → Sacked → Ruins → Bandit Hold → Reclaimed Fort. These combine several state layers for readable storytelling; implementation should keep those layers distinct.
 
@@ -87,7 +87,7 @@ Compact place histories can show founding, fortification, sieges, growth, sack, 
 
 The early map can be sparse: empty land, crossroads, woods, hills, ancient ruins, and small settlements. Over decades, settlements, fortifications, important roads, regional capitals, and ruins make it visually denser.
 
-Nested regions evolve too. A region beginning with Plains, Village, and Fort can later contain City, Citadel, Market Town, Monastery, Ruined Fort, and New Road. Under the stable-graph baseline these represent activated or changed sites and improved routes, not an unexplained expansion of the movement graph.
+Nested regions evolve too. A region beginning with Plains, Village, and Fort can later contain City, Citadel, Market Town, Monastery, Ruined Fort, and New Road. Under confirmed decision D06, these represent changed contents on fixed sites and improvements to existing routes.
 
 ## Proposed acceptance cases
 

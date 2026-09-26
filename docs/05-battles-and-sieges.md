@@ -47,7 +47,7 @@ A surviving army can retreat to a connected node. This preserves experienced for
 
 ## Persistent siege
 
-Attacking a fortified location can establish a persistent siege. Defenders begin with a strong defensive advantage that gradually weakens as the siege continues.
+**Agreed direction (O13):** attacking a fortified location can establish a persistent siege. Defenders begin with a strong defensive advantage that gradually weakens as the siege continues. Sorties, escape attempts, incoming reinforcements, and relief attacks are established options; their formulas and interaction rules remain open.
 
 The illustrative sequence is:
 
@@ -68,7 +68,7 @@ This sequence illustrates direction, not a fixed five-turn capture timer. Under 
 | Wait for defenses to weaken | Attempt escape |
 | Withdraw | Receive reinforcements or coordinate relief |
 
-Sieges can eventually involve disease, supply consumption, civilian suffering, fort damage, negotiation, and relief. Disease and negotiation need their own scope decisions; they are not all required for the first light siege mechanic.
+Later siege depth can involve disease, detailed supply consumption, civilian suffering, fort damage, and negotiation. Disease and negotiation need their own scope decisions. Relief is already part of the agreed light siege direction.
 
 ## Proposed siege state contract
 

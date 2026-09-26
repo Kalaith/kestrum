@@ -4,7 +4,7 @@
 
 This ledger accounts for every heading in the three founding drafts. The line spans partition each archived source in order; subheadings inherit the owning topic unless noted by the destination. The destination is the primary consolidated chapter, with additional integration and unresolved choices in [the decision register](13-decisions-and-open-questions.md).
 
-The permanent files in `docs/reference/` retain every source byte, including examples, diagrams, qualifications, and conflicting directions. The topical chapters add organization and clearly labelled proposals. The root-level drafts are not needed to read this set. Archive preservation guarantees completeness even where original wording is more detailed or a source idea remains future scope.
+The permanent files in `docs/reference/` retain every source byte, including examples, diagrams, qualifications, and conflicting directions. The topical chapters add organization, clearly labelled proposals, and the discussion clarifications recorded in chapter 13. The root-level drafts are not needed to read this set. Archive preservation guarantees completeness even where original wording is more detailed, superseded by a confirmed decision, or remains future scope.
 
 Checksums below refer to the exact supplied files. `.gitattributes` disables newline conversion for reference Markdown so those bytes survive Git storage. The original template README is also preserved as a historical reference; its relative links and commands describe its original location and are not maintained Kestrum instructions.
 
@@ -240,6 +240,6 @@ Checksums below refer to the exact supplied files. `.gitattributes` disables new
 
 ## Completeness and maintenance
 
-All source spans are represented by a heading row and preserved in full in the linked archive. Repeated headings, including the four generational design constraints, have separate rows. Source conflicts are retained rather than removed; their proposed reconciliation is explicit in chapter 13.
+All source spans are represented by a heading row and preserved in full in the linked archive. Repeated headings, including the four generational design constraints, have separate rows. Source conflicts remain in the archives; chapter 13 distinguishes confirmed resolutions from remaining interpretations and questions.
 
 When root drafts are removed, keep the three archived drafts, this manifest, and the topical documentation. No authored chapter or ledger link points back to those root drafts. Do not update archive wording to match a later design revision; update the relevant chapter and decision register instead.

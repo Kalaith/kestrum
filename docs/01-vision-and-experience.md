@@ -40,7 +40,7 @@ Disposition influences behavior, but experience, mentorship, opportunity, and co
 
 ### Ordinary people become significant
 
-A notable person emerges from meaningful service. The kingdom/army draft extends the original small-character-unit concept with abstract troop formations whose members may become individually tracked. Both scales support the same promise: a hero has a believable origin.
+A notable person emerges from meaningful service. The confirmed army model uses six troop-formation slots with abstract members who can become individually tracked after distinguishing themselves. A plausible recent history grounds the emerging hero without simulating every soldier from birth.
 
 ### Rivals belong to the same world
 

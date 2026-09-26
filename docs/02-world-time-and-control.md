@@ -14,9 +14,9 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
                   River Settlement
 ```
 
-The top level has the conceptual scope of a small Stellaris galaxy. Exact world size is open. Top-level nodes are fixed at generation. Internal nodes may also be generated at the start and generally retain a stable graph while their state changes.
+The top level has the conceptual scope of a small Stellaris galaxy. Exact world size is open. Major nodes and internal subnodes are generated at world creation and remain fixed while their contents change.
 
-**Working interpretation:** the initial implementation uses persistent node and route identities. A new settlement develops on an existing site, and a new road improves an existing connection. Dynamic creation of graph connections is future scope unless separately approved. Visual density can increase substantially without changing graph topology.
+**Confirmed decision (D06):** a new settlement develops on an existing site, and a new road improves an existing connection. Visual density can increase substantially without changing graph topology. Persistent node and route identities support this rule.
 
 ## Headquarters and expansion
 
@@ -139,4 +139,4 @@ These are possible light modifiers, not a requirement for a weather simulator. T
 
 ## Open decisions
 
-World and region counts, procedural-generation constraints, route directionality, terrain costs, naval travel, movement budgets, control reversal timing, and round-resolution order require prototyping. See [decisions D03, D06, D12, and O01–O04](13-decisions-and-open-questions.md).
+World and region counts, procedural-generation constraints, route directionality, terrain costs, naval travel, movement budgets, control reversal timing, and round-resolution order require prototyping. Graph stability is settled by D06. See [remaining mechanics and questions D03, D12, and O01–O04](13-decisions-and-open-questions.md).

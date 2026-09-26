@@ -20,23 +20,23 @@ The same event need not produce the same person. Context, prior history, and dis
 
 ## Levels of simulation and recognition
 
-The sources describe both persistent juniors and people who only become individually simulated after distinguishing themselves in a troop formation.
+**Confirmed decision (D02):** ordinary troop members begin abstractly. Someone who distinguishes themselves becomes a visible character attached to the formation, with a plausible recent history generated when needed. This does not require tracking every soldier from birth. Sparse juniors, heirs, and trainees may still be tracked when relevant to the generational design.
 
-**Working interpretation (D02):** support both paths through distinct levels:
+**Proposal — representation:** distinguish levels of simulation and prominence:
 
 1. **Abstract population or troop member:** represented by population and formation headcount, with shared formation history.
 2. **Tracked person:** a junior, trainee, emerging soldier, heir, or other relevant individual with a persistent ID and age.
 3. **Recognized figure:** a tracked person whose meaningful deeds justify greater historical and political prominence.
 
-An ordinary personal name is not the same as recognized status. Tomas can be named in a roster before becoming “Tomas of Hawthorn.” Emergence from abstraction and formal recognition may coincide, but need not. Named leaders' army bonuses require an explicit recognized/qualified status rule, not a check for whether a name string exists.
+An ordinary personal name is not the same as recognized status. Tomas can be named in a roster before becoming “Tomas of Hawthorn.” Emergence from abstraction and formal recognition may coincide, but need not. The agreed design lets named characters strengthen armies and later move into leadership. Exact appointment eligibility and contribution formulas still need implementation rules; this representation does not impose an additional confirmed recognition gate.
 
 ## Emergence from formations
 
 A warrior formation can become “Squire Elian + Warriors” after relevant service. Veteran formations are more likely to produce someone notable because they have survived and accumulated history.
 
-Emergence should be semi-rare and depend partly on the faction's important roster. Source illustrations suggest a few meaningful fights when the faction has one hero, less frequent emergence around ten, possibly a major war around twenty, and rarity near thirty. Approximately thirty important named characters is a soft target, not a hard stop.
+**Agreed direction (O14):** emergence is semi-rare, easier when the faction has few named heroes, and progressively rarer toward roughly 20–30. Veteran formations have a higher chance, and meaningful experiences influence who emerges. Source illustrations suggest a few meaningful fights with one hero, less frequent emergence around ten, and possibly a major war around twenty. Those are qualitative examples, not probability thresholds or a hard cap.
 
-**Working interpretation (D07):** plan around roughly thirty active important people per faction because the probability examples are faction-based. Campaign-wide versus faction-wide scope and the treatment of retirees remain open. Historical dead figures should not prevent later generations from emerging.
+**Remaining mechanics (D07/O14):** define which named roles count toward the faction's roster, how retirees are treated, and the exact probability curve. Historical dead figures should not prevent later generations from emerging.
 
 **Proposal:** use meaningful eligible events and a state-owned random process. Repeated low-risk farming should not have the same weight as surviving a major campaign. The exact probability curve and significance weights are tuning work.
 
@@ -71,7 +71,7 @@ Recognized figures may gain distinctive portrait treatment, a biography, command
 
 ## Class eligibility and opportunities
 
-Classes are connected to lived experience. Meeting history requirements makes a path eligible; it does not guarantee every resource or opportunity exists. Training duration, class acceptance, mutually exclusive paths, and retraining remain open.
+**Agreed direction (O15):** experience and opportunity create class eligibility, supported by resources and infrastructure in the world. Meeting history requirements makes a path eligible; it does not guarantee every resource or opportunity exists. Dragon training requires appropriate dragon infrastructure. Training duration, exact prerequisite expressions, class acceptance, mutually exclusive paths, and retraining remain open.
 
 Resources create possibilities:
 
@@ -112,7 +112,7 @@ The campaign creates the specialist. Medical service may also have emotional con
 
 Defensive service in forts under a defensive commander can encourage protective expertise. Assaults, vanguard service, and difficult positions create offensive opportunities. Dragon encounters, an awarded egg, a hatchery, and a mentor can encourage a dragon-related career.
 
-Occasional explicit choices are allowed: Teresa may ask whether to hunt dragons or learn to ride one. Such an event provides direction. The more systemic chain—slay dragon, recover egg, award egg, gain opportunities, become eligible—should remain available where world conditions support it.
+Occasional explicit choices are allowed: Teresa may ask whether to hunt dragons or learn to ride one. Such an event provides direction. The preferred path creates opportunities through play: slay a dragon, recover an egg, award it to Teresa, and support her development through suitable experience and infrastructure. A direct “Become Dragon Knight” choice should not replace that chain.
 
 ## Enemy careers and rivalries
 
@@ -131,6 +131,6 @@ If the player destroys his company and he survives, he may gain survivor experie
 
 ## Prototype event vocabulary
 
-Start with participated in battle, won, lost, survived while outnumbered, commander wounded, assumed command, treated wounded, fought a specific enemy type, defended a strategic node, and captured a strategic node. Reuse these events across multiple histories rather than author a special quest for each hero.
+**Candidate vocabulary (O10, still open):** participated in battle, won, lost, survived while outnumbered, commander wounded, assumed command, treated wounded, fought a specific enemy type, defended a strategic node, and captured a strategic node. These source examples suggest reusable experiences; the exact implementation list has not been selected.
 
 **Proposed invariants:** every experience has valid participants and a date; recognition is applied once; retrospective history fits age and presence; class eligibility can explain missing requirements; identity survives transfers and save/load; enemies follow the same development constraints.

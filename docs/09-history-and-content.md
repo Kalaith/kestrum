@@ -22,7 +22,7 @@ Useful event families include:
 | Continuity | Mentorship, household ties, entry into service, inheritance, item transfer, institutional legacy |
 | Kingdoms | Founding, war, peace, territorial transfer, elimination; vassalage when implemented |
 
-Record facts once and derive different summaries from them. A battle can appear in an army record, a character biography, and a place chronology without awarding its experience three times.
+Record facts once and derive different summaries from them. A battle can appear in an army record, a character biography, and a place chronology without awarding its experience three times. Under confirmed decision D05, a formation's own history is gone when it is destroyed. The world can still retain battle facts involving it; this event model does not require a separate destroyed-formation service archive.
 
 ## Historical integrity
 
@@ -32,7 +32,7 @@ Record facts once and derive different summaries from them. A battle can appear 
 - Direct participation needs evidence of presence or a valid retrospective grounding rule.
 - A person cannot acquire achievements after death; a posthumous title must say that it is posthumous.
 - Name changes preserve stable links and dated aliases.
-- A destroyed formation's past remains readable but grants no bonuses to a new formation.
+- A destroyed formation loses its own history and veteran identity. Retained world battle facts neither recreate its service archive nor grant bonuses to a replacement.
 - A generated family connection cannot contradict existing chronology or established relationships.
 - Unknown enemy facts stay unknown until legitimately revealed.
 - Save/load and report viewing cannot add duplicate events or reroll established outcomes.

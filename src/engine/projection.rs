@@ -9,6 +9,7 @@ use crate::{
     },
     state::{world::CampaignWorld, CampaignId, CampaignPhase, FactionStatus, StrategicCampaign},
 };
+use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VisibleFaction {
@@ -26,6 +27,9 @@ pub struct VisibleCampaign {
     pub campaign_id: CampaignId,
     pub completed_rounds: u32,
     pub player: FactionId,
+    pub observer: FactionId,
+    /// Derived only for the observer; foreign functional HQ roles stay private.
+    pub supplied_sites: BTreeSet<SiteId>,
     pub active_faction: FactionId,
     pub active_faction_name: String,
     pub player_turn: bool,
@@ -38,9 +42,10 @@ pub fn project(
     campaign: &StrategicCampaign,
     observer: FactionId,
 ) -> Result<VisibleCampaign, RuleError> {
-    if !campaign.factions.contains_key(&observer) {
-        return Err(RuleError::UnknownActor);
-    }
+    let viewer = campaign
+        .factions
+        .get(&observer)
+        .ok_or(RuleError::UnknownActor)?;
     let active_faction = campaign.active_faction();
     let active = campaign
         .factions
@@ -50,6 +55,8 @@ pub fn project(
         campaign_id: campaign.campaign_id,
         completed_rounds: campaign.completed_rounds,
         player: campaign.player,
+        observer,
+        supplied_sites: campaign.world.supplied_sites(observer, viewer.headquarters),
         active_faction,
         active_faction_name: active.name.clone(),
         player_turn: active_faction == campaign.player,

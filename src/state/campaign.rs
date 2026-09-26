@@ -1,5 +1,7 @@
 //! Authoritative campaign identity, phases, resources, and serializable RNG streams.
 
+mod compatibility;
+
 use crate::data::{
     economy::Resources,
     rules::Emblem,
@@ -186,6 +188,7 @@ impl StrategicCampaign {
         }
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.round_order = campaign.independent_order();
+        campaign.reconcile_region_control();
         campaign.validate(data)?;
         Ok(campaign)
     }

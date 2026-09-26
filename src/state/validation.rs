@@ -178,7 +178,7 @@ impl StrategicCampaign {
                 "fixed route changed or invalid road damage",
             )?;
         }
-        Ok(())
+        self.validate_region_control()
     }
 
     fn validate_phase(&self) -> Result<(), String> {

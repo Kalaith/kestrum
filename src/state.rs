@@ -83,8 +83,8 @@ impl<'de> Deserialize<'de> for Campaign {
                 .map(Self::Shell)
                 .map_err(D::Error::custom),
             Some(version) if version == u64::from(STRATEGIC_VERSION) => {
-                serde_json::from_value(value)
-                    .map(Self::Strategic)
+                StrategicCampaign::decode_compatible(value)
+                    .map(|campaign| Self::Strategic(Box::new(campaign)))
                     .map_err(D::Error::custom)
             }
             Some(version) => Err(D::Error::custom(format!(

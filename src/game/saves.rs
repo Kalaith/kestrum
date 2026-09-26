@@ -236,7 +236,7 @@ impl Game {
     pub(super) fn finish_load(&mut self, result: Result<Campaign, String>) {
         match result.and_then(|campaign| self.state.load_campaign(campaign, &self.data)) {
             Ok(()) => {
-                self.view.reset();
+                self.navigation.reset(&mut self.view);
                 self.npc_delay = 0.0;
                 self.error = None;
                 self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));

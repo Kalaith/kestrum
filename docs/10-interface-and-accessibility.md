@@ -5,9 +5,10 @@
 ## Status and goals
 
 This chapter describes the **full proposed interface**. K02 adds strategic faction
-phases to the title and atlas foundation. The current [screen brief](../README.md#screen-brief)
-describes implemented controls. Setup, selectable sites, inspectors, and later
-system screens below arrive in their scheduled packages.
+phases to the title and atlas foundation; K04 adds selectable world and regional
+places with inspectors. The current [screen brief](../README.md#screen-brief)
+describes implemented controls. Setup and later system screens below arrive in
+their scheduled packages.
 
 ### Current faction-phase controls (K02)
 
@@ -34,6 +35,26 @@ These are implementation targets, not claims of existing support. Earlier 800 ×
 Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; the actual device review determines whether more space is needed. Long names and dense army stacks must remain selectable without relying on precision clicking.
 
 ## Screen briefs
+
+### Selectable geography (K04)
+
+- **Current decision:** inspect a marked place, its controller and its connections,
+  or enter Rosemarch to inspect the ten physical sites behind its regional claim.
+- **Dominant focus:** the connected map. World markers summarize the same saved
+  physical sites; region gates identify their external connections.
+- **Primary action:** Enter Region on a regional selection; World Map returns to
+  the previous world camera. Close dismisses the inspector.
+- **Supporting information:** local controller, contested state, regional claim,
+  anchor requirements and the player's supplied entrances. Ownership does not
+  imply control of every internal site.
+- **Deferred information:** armies and orders arrive with their scheduled systems.
+  Save management stays in Menu, leaving the geography visible during inspection.
+- **Layout and camera:** one 358-pixel inspector sits opposite the selected target
+  on the 1280 × 720 logical canvas. The 1920 × 1080 fullscreen view scales the same
+  composition. Each regional camera and the world camera retain their positions.
+- **Input and feedback:** 48-pixel map targets and actions, common draw/pick
+  coordinates, a visible breadcrumb, and drag/pinch release suppression. Long
+  names wrap in the inspector; labels remain bounded on the map.
 
 ### Saved campaigns (K03)
 

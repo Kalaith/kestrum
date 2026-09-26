@@ -7,7 +7,7 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 The campaign foundation is implemented in Rust, Macroquad, and Macroquad Toolkit.
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
 Play, Credits, and native Quit Game. New Game starts Rosemarch's strategic state
-over the illustrated atlas. Selectable markers arrive in K04.
+over the illustrated atlas, with selectable headquarters and a regional marker.
 There are no demo actions, energy, grid, debug panels, or economy controls.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
@@ -20,8 +20,8 @@ campaign or its disk/browser save. Starting over requires confirmation.
 
 The save catalogue keeps each round checkpoint and each new named save. It offers
 explicit overwrite/deletion and retries failed writes without replaying the round.
-Armies, economy, and selectable nested regions remain later packages. Geography
-labels describe terrain; they are not selectable strategic locations.
+Enter Region opens Rosemarch's ten connected sites. Armies and economic orders
+remain later packages. Terrain labels are distinct from selectable place markers.
 
 ### K01 — Typed content and Rosemarch
 
@@ -83,21 +83,38 @@ browser catalogue/reload/recovery checks and Windows/WebGL Preview publishing.
 See [save verification](docs/verification/k03-saves.md) for shared commits, failure
 coverage and the remaining platform limitations.
 
+### K04 — Selectable geography and territorial claims
+
+Tap a world marker or regional site to inspect its local controller, political
+claim, contested state, supply and connections. Enter Region and World Map retain
+the respective cameras; Close dismisses the inspector. Gates name their external
+headquarters connections. The world marker summarizes the same physical sites.
+
+Secure anchors and a supplied entrance determine a region's political owner.
+Losing an anchor retains the previous claim as contested, while every physical
+site keeps its actual controller. Supply follows secure friendly physical routes.
+Earlier v2 saves gain these derived fields without changing their original bytes.
+
+All 33 tests, formatting, strict Clippy, native review at both supported sizes and
+Windows/WebGL Preview publishing pass. [K04 evidence](docs/verification/k04-geography.md)
+records browser navigation checks and the inherited minimum-browser display issue.
+K05–K18 remain required before the full release is complete.
+
 ## Screen brief
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Survey the land, finish the player's orders, and follow each faction's phase. |
-| Dominant focus | The continuous, full-bleed illustrated atlas. |
-| Primary action | End Turn passes to the next faction; Pause, Resume and Step control the visible NPC sequence. |
-| Supporting information | Season, year, round and active faction at the top edge; the season changes only after all eligible factions finish. |
+| Current decision | Inspect a place and its controller, or enter Rosemarch to examine its sites and entrances. |
+| Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
+| Primary action | Enter Region opens a regional marker; World Map returns to the previous world camera. End Turn remains separate from selection. |
+| Supporting information | A dismissible inspector shows local control, regional claim and anchor requirements. The top edge shows season, round and active faction. |
 | Deferred information | Settings, saves, help, and credits appear only when opened. No unimplemented system gets a panel. |
 | Layout and camera | 1280 × 720 logical canvas, scaled to 1920 × 1080; minimum supported landscape canvas is 1280 × 720. Camera stays within the atlas at 1–3× zoom. |
-| Input and feedback | Drag with one finger or the left mouse button; pinch, wheel, or visible + / -; Recenter restores the atlas. All controls are at least 48 logical pixels tall. Help names the visible controls and gestures. |
+| Input and feedback | Tap markers to inspect; Close dismisses selection. Drag to pan; pinch, wheel, or visible + / - to zoom; Recenter restores the current map. Targets and controls are at least 48 logical pixels. Help names the controls. |
 
 Approximately 80% of the minimum canvas sits between the shallow edge controls;
 the terrain continues beneath them. No framed central map widget or persistent
-sidebar exists. Removing the terrain leaves only a handful of game controls.
+sidebar exists. A selected place adds one inspector opposite its map position.
 
 ## Development
 

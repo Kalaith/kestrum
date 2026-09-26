@@ -257,32 +257,23 @@ fn settings(ctx: &Context<'_>) -> Option<UiAction> {
 }
 
 fn help(ctx: &Context<'_>) {
-    for (index, key) in [
-        "help_pan",
-        "help_zoom",
-        "help_turn",
-        "help_menu",
-        "help_scope",
-    ]
-    .iter()
-    .enumerate()
-    {
-        let help_text = if ctx.state.campaign.is_some()
-            && ctx.campaign_view.is_none()
-            && matches!(*key, "help_turn" | "help_scope")
-        {
-            if *key == "help_turn" {
-                ctx.text("legacy_read_only")
-            } else {
-                String::new()
-            }
-        } else {
-            ctx.text(key)
-        };
+    let keys: &[&str] = if ctx.state.campaign.is_some() && ctx.campaign_view.is_none() {
+        &["legacy_read_only", "help_pan", "help_zoom", "help_menu"]
+    } else {
+        &[
+            "help_select",
+            "help_region",
+            "help_navigation",
+            "help_turn",
+            "help_menu",
+            "help_scope",
+        ]
+    };
+    for (index, key) in keys.iter().enumerate() {
         paragraph(
             ctx,
-            &help_text,
-            vec2(414.0, 223.0 + index as f32 * 65.0),
+            &ctx.text(key),
+            vec2(414.0, 223.0 + index as f32 * 52.0),
             453.0,
         );
     }

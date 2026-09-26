@@ -31,7 +31,7 @@ impl Game {
         })();
         match result {
             Ok(()) => {
-                self.view.reset();
+                self.navigation.reset(&mut self.view);
                 self.error = None;
                 self.npc_delay = 0.0;
                 self.save_checkpoint();

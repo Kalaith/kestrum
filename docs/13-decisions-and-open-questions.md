@@ -197,3 +197,25 @@ and preserves the source. Empty-atlas saves remain read-only.
 
 These are delegated implementation choices under the full-release assignment.
 The K03 evidence records storage, compatibility and UI validation.
+
+### I03 — Geographic inspection and additive v2 claims
+
+K04 keeps map selection and remembered world/regional cameras in presentation
+state. Loading or starting a campaign resets them; inspecting a site never changes
+simulation state. A single inspector sits opposite the selected marker. The
+48-pixel targets share the renderer's projected centers, and release selection
+requires the same target with movement no greater than the toolkit drag threshold.
+
+Earlier v2 saves lack both regional claims and contested-site fields. When both
+are absent, migration initializes them and derives the first claim from saved
+site control and HQ supply. Partial or explicitly invalid new fields are rejected.
+Schema 2/content 1 and existing catalogue metadata remain valid; loading does not
+overwrite the earlier bytes. No past claim is fabricated from missing history.
+
+Rosemarch's mandatory city and fort permit only one qualifying owner. If future
+authored alternative anchors allow simultaneous qualifiers, a qualifying incumbent
+keeps the claim; otherwise the lowest qualifying faction ID resolves the tie.
+This deterministic choice does not change local controllers or supply.
+
+These delegated choices implement C02/C06/C07 and P03/P05. Validation and the
+remaining platform limitations are recorded in `docs/verification/k04-geography.md`.

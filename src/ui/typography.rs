@@ -8,8 +8,24 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
         return;
     };
     let mut samples = Vec::with_capacity(16);
+    let mut titles = Vec::new();
     if let Some(view) = ctx.campaign_view {
         samples.push((18, view.active_faction_name.as_str()));
+        // Names come from saved campaigns, including Unicode and renamed sites.
+        // Prepare both atlases before any visible labels are submitted.
+        for name in view
+            .world
+            .markers
+            .iter()
+            .map(|marker| marker.name.as_str())
+            .chain(view.world.sites.iter().map(|site| site.name.as_str()))
+            .chain(view.factions.iter().map(|faction| faction.name.as_str()))
+        {
+            for size in [18, 19, 20] {
+                samples.push((size, name));
+            }
+            titles.push((24, name));
+        }
     }
     if let Some(message) = feedback {
         samples.push((19, message));
@@ -46,4 +62,7 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
         _ => {}
     }
     macroquad_toolkit::ui::prepare_font_text(font, &samples);
+    if let Some(font) = ctx.font() {
+        macroquad_toolkit::ui::prepare_font_text(font, &titles);
+    }
 }

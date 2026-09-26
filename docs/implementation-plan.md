@@ -153,9 +153,11 @@ pass their behavioral checks. See [K01 evidence](verification/k01-content.md).
 K02 is **Done**: atomic strategic commands, faction rounds and v1/v2 compatibility
 pass the checks in [K02 evidence](verification/k02-campaign.md).
 K03 is **Done**: unlimited indexed saves, compatibility, retry and touch naming
-pass the checks in [K03 evidence](verification/k03-saves.md). K04–K18 remain
-**planned, not implemented**.
+pass the checks in [K03 evidence](verification/k03-saves.md).
+K04 is **Done**: selectable nested geography, entrances, supply and territorial
+anchors pass the checks in [K04 evidence](verification/k04-geography.md).
+K05–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
-status table. The current atlas has faction-phase controls; selectable places and
-armies remain later packages. Browser fullscreen and physical-touch review remain
+status table. The current atlas has faction-phase controls and selectable places;
+armies begin in K05. Browser fullscreen and physical-touch review remain
 open for K18.

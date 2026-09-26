@@ -4,11 +4,13 @@ mod atlas;
 mod components;
 mod menus;
 mod saves;
+mod selection;
 mod typography;
+mod world;
 
 use kestrum::{
     data::PresentationData,
-    navigation::MapView,
+    navigation::{MapNavigation, MapSelection, MapView},
     state::{GameState, Overlay, Preferences, Screen},
 };
 use macroquad::prelude::*;
@@ -20,6 +22,10 @@ pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    SelectMap(MapSelection),
+    EnterRegion(kestrum::data::world::MarkerId),
+    WorldMap,
+    CloseSelection,
     NewGame,
     ConfirmNew,
     Continue,
@@ -62,6 +68,7 @@ pub struct Context<'a> {
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
     pub view: &'a MapView,
+    pub navigation: &'a MapNavigation,
     pub assets: &'a AssetManager,
     pub pointer: Pointer,
     pub origin: Option<Vec2>,
@@ -103,13 +110,15 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     }
 }
 
+pub const FEEDBACK: Rect = Rect::new(328.0, 628.0, 642.0, 82.0);
+
 pub fn feedback(ctx: &Context<'_>, message: &str) -> Option<UiAction> {
     use components::*;
     draw_rectangle(
-        328.0,
-        628.0,
-        642.0,
-        82.0,
+        FEEDBACK.x,
+        FEEDBACK.y,
+        FEEDBACK.w,
+        FEEDBACK.h,
         Color::new(0.07, 0.12, 0.12, 0.98),
     );
     paragraph(ctx, message, vec2(346.0, 653.0), 500.0);

@@ -4,10 +4,11 @@ use crate::ui::{self, UiAction};
 mod campaign;
 mod saves;
 mod storage;
+mod world;
 use kestrum::{
     data::GameData,
     engine::{self, Command},
-    navigation::{MapView, HEIGHT, WIDTH},
+    navigation::{MapNavigation, MapView, HEIGHT, WIDTH},
     state::{Campaign, GameState, Overlay, Preferences, Screen, SAVE_SLOT},
 };
 use macroquad::prelude::*;
@@ -24,6 +25,7 @@ pub struct Game {
     preferences: Preferences,
     assets: AssetManager,
     view: MapView,
+    navigation: MapNavigation,
     gesture: TouchGesture,
     origin: Option<Vec2>,
     was_down: bool,
@@ -116,6 +118,7 @@ impl Game {
             state: GameState::default(),
             preferences: Preferences::default(),
             view: MapView::default(),
+            navigation: MapNavigation::default(),
             gesture: TouchGesture::new(),
             origin: None,
             was_down: false,
@@ -143,7 +146,7 @@ impl Game {
         self.capture = true;
         self.state = GameState::default();
         self.preferences = Preferences::default();
-        self.view.reset();
+        self.navigation.reset(&mut self.view);
         self.notice = None;
         self.error = None;
         self.save_exists = false;
@@ -178,6 +181,8 @@ impl Game {
                 self.capture_campaign();
                 self.view.zoom(vec2(720.0, 330.0), 2.0);
             }
+            "world_selected" | "region" | "region_selected" | "region_partial"
+            | "region_contested" | "region_long_name" => self.capture_world(scene),
             "menu" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
@@ -227,6 +232,7 @@ impl Game {
             state: &self.state,
             preferences: &self.preferences,
             view: &self.view,
+            navigation: &self.navigation,
             assets: &self.assets,
             pointer,
             origin: self.origin,
@@ -244,9 +250,10 @@ impl Game {
             .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
         ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
         let action = ui::draw(&ctx);
+        let map_action = self.map_selection_action(pointer);
         let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
         end_virtual_ui_frame();
-        if let Some(intent) = feedback_action.or(action) {
+        if let Some(intent) = feedback_action.or(action).or(map_action) {
             self.apply(intent);
         }
         if !pointer.down {
@@ -280,7 +287,7 @@ impl Game {
             self.origin = Some(pointer.position);
             self.map_gesture = self.state.screen == Screen::Campaign
                 && self.state.overlay == Overlay::None
-                && !ui::map_controls_contain(pointer.position);
+                && !self.map_controls_block(pointer.position);
         }
         let touches = self.gesture_touches(viewport, pointer);
         let frame = self.gesture.update_with(&touches);
@@ -289,7 +296,7 @@ impl Game {
             if self.map_gesture {
                 self.view.gesture(&frame);
             }
-            if !ui::map_controls_contain(pointer.position) && mouse_wheel().1 != 0.0 {
+            if !self.map_controls_block(pointer.position) && mouse_wheel().1 != 0.0 {
                 self.view
                     .zoom(pointer.position, 1.12_f32.powf(mouse_wheel().1));
             }
@@ -362,8 +369,12 @@ impl Game {
             UiAction::Back => self.go_back(),
             UiAction::MainMenu => {
                 self.state.main_menu();
-                self.view.reset();
+                self.navigation.reset(&mut self.view);
             }
+            UiAction::SelectMap(selection) => self.select_map(selection),
+            UiAction::EnterRegion(region) => self.enter_region(region),
+            UiAction::WorldMap => self.navigation.show_world(&mut self.view),
+            UiAction::CloseSelection => self.navigation.clear_selection(),
             UiAction::Save => self.open_saves(true),
             UiAction::Load => self.open_saves(false),
             UiAction::LoadLegacy => self.load_slot(SAVE_SLOT),

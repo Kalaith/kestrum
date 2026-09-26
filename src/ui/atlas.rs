@@ -1,9 +1,9 @@
 //! Full-bleed terrain and sparse campaign controls anchored to its edges.
 
-use super::{components::*, Context, UiAction};
+use super::{components::*, selection, world, Context, UiAction};
 use kestrum::{
-    navigation::{HEIGHT, WIDTH},
-    state::{Overlay, Screen},
+    navigation::{MapNavigation, MapScope, MapView, HEIGHT, WIDTH},
+    state::{world::CampaignWorld, Overlay, Screen},
 };
 use macroquad::prelude::*;
 
@@ -14,10 +14,19 @@ const RECENTER: Rect = Rect::new(138.0, 646.0, 144.0, 48.0);
 const END_TURN: Rect = Rect::new(1072.0, 646.0, 184.0, 48.0);
 const STEP_NPC: Rect = Rect::new(954.0, 646.0, 108.0, 48.0);
 
-pub fn map_controls_contain(point: Vec2) -> bool {
+pub fn map_controls_contain(
+    point: Vec2,
+    navigation: &MapNavigation,
+    campaign_world: Option<&CampaignWorld>,
+    view: &MapView,
+) -> bool {
     [MENU, ZOOM_OUT, ZOOM_IN, RECENTER, END_TURN, STEP_NPC]
         .iter()
         .any(|rect| rect.contains(point))
+        || (matches!(navigation.scope(), MapScope::Region(_)) && world::WORLD_MAP.contains(point))
+        || campaign_world
+            .and_then(|world| selection::bounds(navigation, world, view))
+            .is_some_and(|rect| rect.contains(point))
 }
 
 pub fn draw_landscape(ctx: &Context<'_>) {
@@ -35,7 +44,15 @@ pub fn draw_landscape(ctx: &Context<'_>) {
         );
     }
     if ctx.state.screen == Screen::Campaign {
-        if !ctx.preferences.hide_labels {
+        if matches!(ctx.navigation.scope(), MapScope::Region(_)) {
+            draw_rectangle(
+                0.0,
+                0.0,
+                WIDTH,
+                HEIGHT,
+                Color::new(INK.r, INK.g, INK.b, 0.62),
+            );
+        } else if !ctx.preferences.hide_labels {
             geography(ctx);
         }
         for row in 0..100 {
@@ -44,6 +61,7 @@ pub fn draw_landscape(ctx: &Context<'_>) {
             draw_rectangle(0.0, row as f32, WIDTH, 1.0, shade);
             draw_rectangle(0.0, HEIGHT - row as f32 - 1.0, WIDTH, 1.0, shade);
         }
+        world::draw(ctx);
     }
 }
 
@@ -82,9 +100,11 @@ fn geography(ctx: &Context<'_>) {
 
 pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
-    emblem(vec2(44.0, 43.0), 19.0);
-    text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
-    body(ctx, &ctx.data.title, vec2(81.0, 60.0), 16.0, BRASS);
+    if ctx.navigation.scope() == MapScope::World {
+        emblem(vec2(44.0, 43.0), 19.0);
+        text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
+        body(ctx, &ctx.data.title, vec2(81.0, 60.0), 16.0, BRASS);
+    }
     if let Some(campaign) = &ctx.state.campaign {
         let season = &ctx.data.seasons[campaign.season_index()];
         centered(
@@ -111,7 +131,9 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         let width = measure_text(&status, ctx.body_font(), 18, 1.0).width;
         body(ctx, &status, vec2(640.0 - width * 0.5, 59.0), 18.0, CREAM);
     }
-    compass(ctx);
+    if ctx.navigation.selection().is_none() {
+        compass(ctx);
+    }
     // A narrow dark wash preserves contrast without reserving a panel for the map.
     draw_rectangle(
         18.0,
@@ -130,7 +152,10 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
             return Some(intent);
         }
     }
-    phase_controls(ctx, active)
+    let phase_action = phase_controls(ctx, active);
+    let navigation_action = world::navigation(ctx);
+    let selection_action = selection::draw(ctx);
+    selection_action.or(navigation_action).or(phase_action)
 }
 
 fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
@@ -144,10 +169,10 @@ fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
     };
     if !view.player_turn {
         draw_rectangle(
-            906.0,
-            579.0,
-            356.0,
-            121.0,
+            300.0,
+            640.0,
+            640.0,
+            60.0,
             macroquad_toolkit::colors::with_alpha(INK, 0.88),
         );
         let phase = if view.npc_paused {
@@ -155,11 +180,11 @@ fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
         } else {
             "npc_phase"
         };
-        body(ctx, &ctx.text(phase), vec2(918.0, 603.0), 18.0, CREAM);
+        body(ctx, &ctx.text(phase), vec2(318.0, 663.0), 18.0, CREAM);
         body(
             ctx,
             &ctx.text("npc_prototype"),
-            vec2(918.0, 627.0),
+            vec2(318.0, 686.0),
             16.0,
             CREAM,
         );

@@ -1,0 +1,2 @@
+# Preserve the founding documents byte for byte, including original line endings.
+/docs/reference/*.md -text

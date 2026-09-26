@@ -1,0 +1,60 @@
+{
+  "title": "Game Template",
+  "wasm": "game_template",
+  "status": {
+    "text": "Playable",
+    "class": "playable"
+  },
+  "canvas_rendering": "pixelated",
+  "about": [
+    "A starter Rust + Macroquad game wired to macroquad-toolkit for UI, save/load, data loading, notifications, grid helpers, and camera controls."
+  ],
+  "controls": [
+    {
+      "key": "Tap / Click",
+      "desc": "Select a map tile or use the action and save buttons"
+    },
+    {
+      "key": "Drag action list",
+      "desc": "Scroll to more actions"
+    },
+    {
+      "key": "Map buttons",
+      "desc": "Pan, Zoom - / Zoom +, and Reset the view"
+    },
+    {
+      "key": "Pause / Resume",
+      "desc": "Stop or resume energy and actions; Escape also toggles pause"
+    },
+    {
+      "key": "Arrow Keys",
+      "desc": "Alternative to tapping map tiles"
+    },
+    {
+      "key": "Right Mouse / Wheel",
+      "desc": "Alternative map pan and zoom controls"
+    },
+    {
+      "key": "Space",
+      "desc": "Alternative to tapping the first action card"
+    },
+    {
+      "key": "S / L",
+      "desc": "Alternative to Save / Load buttons"
+    }
+  ],
+  "details": [
+    {
+      "label": "Genre",
+      "value": "Template"
+    },
+    {
+      "label": "Engine",
+      "value": "Macroquad + Toolkit"
+    },
+    {
+      "label": "Platform",
+      "value": "Browser, Windows"
+    }
+  ]
+}

@@ -16,6 +16,13 @@ The root copies of the three design drafts are retained in the initial commit. A
 
 ## Proposed implementation sequence
 
+The current executable handoff is the [implementation plan](implementation-plan.md)
+and its [K01–K18 work packages](implementation/work-packages.md). That plan expands
+the broad M1–M6 stages below, moves save/evidence foundations earlier, and selects
+explicit provisional mechanics under the user's request. Use its dependency order
+and acceptance cases when assigning implementation work. This chapter retains the
+high-level delivery intent and historical onboarding record.
+
 Each milestone is independently useful and should be completed, validated, and committed before the next major change. This sequencing is a proposal; the source prototype goals remain the basis of scope.
 
 ### M1 — Template onboarding and strategic foundation
@@ -106,6 +113,12 @@ Let an outpost develop, an old fort be damaged or ruined and later reclaimed, a 
 
 ## Initial template handoff
 
+**Historical inspection before `3a2b5b4`:** the issues in the following list were
+fixed by the title/atlas foundation. The current package identity, toolkit path,
+workspace registration, test placement, artwork and capture/publish integrations
+are correct. Do not repeat onboarding or alter workspace membership based on this
+historical list; inspect the [current baseline](implementation-plan.md#actual-starting-point).
+
 Read-only inspection of the supplied starter found:
 
 - `Cargo.toml` still names the package `game_template` and points at `../../macroquad-toolkit`. In this checkout that resolves outside `RustGames`; the actual sibling toolkit is at `../macroquad-toolkit`.
@@ -114,7 +127,10 @@ Read-only inspection of the supplied starter found:
 - Existing `src/**/tests.rs` files are legacy template placement; migrate separately before adding coverage.
 - The root thumbnail and four verification screenshots are supplied template assets.
 
-These are onboarding follow-ups, preserved in place for this documentation-first initial commit. Do not change shared workspace membership or unrelated projects just to obtain a passing check. The full original starter instructions are retained in [template provenance](reference/template_readme.md).
+These were onboarding follow-ups preserved in the documentation-first initial
+commit. Do not change shared workspace membership or unrelated projects just to
+obtain a passing check. The original starter instructions remain in
+[template provenance](reference/template_readme.md).
 
 ## Required engineering checks for implementation
 

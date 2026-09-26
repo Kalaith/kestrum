@@ -6,6 +6,13 @@ Kestrum is a generational strategy game in which connected places create campaig
 
 ## Reading order
 
+For implementation, begin with the [implementation plan](implementation-plan.md).
+It turns these design chapters into 18 dependency-ordered work packages with
+explicit contracts, provisional mechanics, acceptance cases, coverage and a
+copyable agent handoff. The user requested concrete defaults for unresolved
+mechanics on 2026-09-26; they are labelled **P** for review and are not newly
+confirmed design decisions. None of those work packages is implemented yet.
+
 | Document | Contents |
 | --- | --- |
 | [01 — Vision and experience](01-vision-and-experience.md) | Identity, pillars, inspirations, player role, loops, setting, success criteria |
@@ -21,6 +28,8 @@ Kestrum is a generational strategy game in which connected places create campaig
 | [11 — Simulation and data](11-simulation-and-data.md) | Proposed state ownership, actions, system contracts, data validation, saves, determinism |
 | [12 — Delivery and validation](12-delivery-and-validation.md) | Prototype, first release, later scope, acceptance scenarios, template handoff, checks |
 | [13 — Decisions and open questions](13-decisions-and-open-questions.md) | Confirmed decisions, delegated defaults, remaining mechanics and scope questions |
+| [Implementation plan](implementation-plan.md) | Current actionable sequence, precise provisional rules, agent handoff and acceptance ledger |
+| [Plan verification](verification/implementation-plan.md) | Documentation checks and limits; no new gameplay implementation or balance validation |
 | [Glossary](glossary.md) | Consistent terminology across chapters |
 | [Source coverage](source-coverage.md) | Section-by-section provenance and source preservation checks |
 | [Economy defaults](../assets/data/economy.json) | Provisional JSON costs, income, upkeep, recovery, and deficit/refund settings |
@@ -45,7 +54,7 @@ Unlabelled descriptive system sections restate source design. The discussion cla
 
 The [decision register](13-decisions-and-open-questions.md) owns reconciliation across chapters. Shared engineering documents at the project root remain authoritative for code and workflow. Do not alter those shared documents to express Kestrum-specific design.
 
-The latest answers settle the ten formerly unanswered entries:
+The earlier answers settle the ten formerly unanswered entries:
 
 - The campaign has 80 world nodes, interpreted as major nodes with regional subnodes additional. Periodic effects resolve at the end of a full round.
 - Armies can transfer formations and people whenever they share a node. Replenishment preserves veterancy. Progression requires relevant experiences and encounters.
@@ -53,6 +62,12 @@ The latest answers settle the ten formerly unanswered entries:
 - Initial content uses humans and ordinary classes. Display targets are 1920 × 1080 full screen and 1280 × 720 WebGL.
 
 The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional design data and is not yet loaded by the campaign shell.
+
+The subsequent implementation-plan request selects concrete provisional defaults
+for those remaining mechanics, including a narrow defeat-outcome vassal model.
+Use the [packet authority rules](implementation-plan.md#authority-and-changes) and
+[register mapping](13-decisions-and-open-questions.md#implementation-plan-defaults)
+to distinguish those defaults from confirmed rules and earlier open questions.
 
 ## Complete source preservation
 

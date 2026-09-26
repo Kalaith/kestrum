@@ -74,5 +74,11 @@ under `docs/reference/`. Historical references describe the earlier documentatio
 milestone; this README and the [UI verification record](docs/verification/initial-map.md)
 describe the implementation now present.
 
+For future development, use the [implementation plan](docs/implementation-plan.md).
+It supplies 18 ordered work packages, concrete provisional rules, state/data/save
+contracts, behavioral acceptance cases, a complete system coverage ledger, and a
+reusable prompt for implementing one package at a time. These are planned systems;
+the title and empty atlas remain the current playable milestone.
+
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

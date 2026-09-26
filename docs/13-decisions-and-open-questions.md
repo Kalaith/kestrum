@@ -103,3 +103,43 @@ D01, D02, D03, D05, and D06 are resolved above. The other original D identifiers
 The source drafts and answers do not settle a Rust entity schema, action transaction model, exact internal order of round-end effects, graph boundary contract, UI screen layout, save migration coverage, or automated test plan. Chapters 10–12 and marked sections elsewhere propose those details to make the design implementable. Validate them against actual toolkit capabilities and prototype behavior.
 
 A confirmed design rule is not evidence of implemented or tested gameplay. Track implementation and verification separately, and keep remaining mechanics explicit without reopening settled choices.
+
+## Implementation-plan defaults
+
+On 2026-09-26 the user requested an implementation handoff suitable for a smaller
+model and chose **“Specify concrete provisional defaults, clearly labelled for
+review”** for the remaining mechanics. The [implementation plan](implementation-plan.md)
+and its P01–P23 rules now supply those defaults. They are executable planning
+choices, not newly confirmed author rules and not implemented gameplay. The
+earlier “open” entries above retain their provenance; the mapping below identifies
+the current provisional answer. A future agent follows these defaults unless a
+review explicitly changes them, rather than inventing replacements.
+
+| Previously open mechanics | Current provisional answer location |
+| --- | --- |
+| O01/O08 regional density, setup default and starts | [P01](implementation/strategic-rules.md#p01--setup-and-the-fixed-world) |
+| O04 boundary effect order, event dates and first progress | [P02](implementation/strategic-rules.md#p02--faction-phases-and-round-order) |
+| Anchor reversal, route scale and physical location | [P03](implementation/strategic-rules.md#p03--control-and-nested-boundaries) |
+| O02/O09 movement, road cost and transfer bookkeeping | [P04](implementation/strategic-rules.md#p04--armies-movement-and-transfers) |
+| O03/D14 roots, contested access and recovery | [P05](implementation/strategic-rules.md#p05--supply-and-recovery) |
+| O11 local recruitment/facility access and added costs | [P06](implementation/strategic-rules.md#p06--economy-recruitment-and-facilities) |
+| O12/D12 builder, supply, interruption and refunds | [P07](implementation/strategic-rules.md#p07--construction-roads-and-focus-orders) |
+| D04/O07/D11 vassal outcome, exact defeat, survivors | [P08](implementation/strategic-rules.md#p08--war-peace-defeat-and-vassal-outcome) |
+| O21 AI war/peace, knowledge and initial difficulty | [P08–P10](implementation/strategic-rules.md#p08--war-peace-defeat-and-vassal-outcome) |
+| O05/O06 combat, leadership, stacking, retreat, survival and D10 wounds | [P11–P13](implementation/combat-rules.md#p11--participation-and-strength) |
+| O13 siege advantage, relief, escape and third parties | [P14](implementation/combat-rules.md#p14--persistent-siege-escape-and-relief) |
+| Local threats, damage and repeat-reward prevention | [P15](implementation/combat-rules.md#p15--ordinary-threats-and-lasting-damage) |
+| O10/O14/D07 participation, emergence curve and recognition | [P16–P17](implementation/people-and-places.md#p16--participation-service-and-formation-veterancy) |
+| O15/O24/D13 ordinary classes/training and later fantasy boundary | [P18](implementation/people-and-places.md#p18--ordinary-training-and-formation-specialization) |
+| O18/D08/O19/D09 growth, refugees, capital and HQ recovery | [P19](implementation/people-and-places.md#p19--development-occupation-refugees-and-capitals) |
+| O17 age, injury, retirement and mortality | [P20](implementation/people-and-places.md#p20--age-injury-career-change-and-death) |
+| O20 mentoring, families, heirs and property | [P21–P22](implementation/people-and-places.md#p21--mentorship-and-useful-non-blood-continuity) |
+| O23/D15 legacy, factual eras and retention integration | [P23](implementation/people-and-places.md#p23--items-institutional-memory-eras-and-retention) |
+| O22 catalogue/storage recovery and save compatibility | [C06](implementation/contracts.md#c06--save-catalogue-and-compatibility) |
+| O25 viewport/touch acceptance and existing limitations | [Acceptance](implementation/acceptance.md#visual-interaction-and-performance-evidence) |
+
+The existing fixed rules, O11 economy table and O23 memory budgets are preserved.
+Future advanced classes/races, richer diplomacy, restoration and multiplayer stay
+outside this plan. Generations, families, non-blood mentorship/succession, refugees
+and changing capitals have explicit packages; they have not been removed from the
+game merely because the kingdom prototype precedes them.

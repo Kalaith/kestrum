@@ -4,7 +4,7 @@
 
 ## Status
 
-This chapter combines **confirmed behavior** with **proposed implementation design**, labelled where relevant. None of these campaign systems exists in the template yet. Select concrete types and files as features are implemented; do not create unused scaffolding for every future system.
+This chapter combines **confirmed behavior** with **proposed implementation design**, labelled where relevant. The title/empty-atlas shell now has basic chronology, settings and a single save; the strategic simulation below remains future work. The [implementation contracts](implementation/contracts.md) specify the current handoff against the actual code. Introduce types and files as their packages consume them; do not create unused scaffolding for every future system.
 
 The required stack is Rust, Macroquad pinned exactly to `=0.4.16`, and macroquad-toolkit. Prefer existing toolkit capabilities for generic loading, input, layout, persistence, notifications, and capture. A Kestrum node graph and its semantic rules are game-specific; the template's grid demo does not require a square-tile game.
 
@@ -22,7 +22,8 @@ The required stack is Rust, Macroquad pinned exactly to `=0.4.16`, and macroquad
 
 Use named module files such as `data.rs`, `state.rs`, `engine.rs`, and `ui.rs`. Introduce focused child files only as needed. Every Rust file remains below 800 total physical lines, including tests and comments, with no exceptions. Target 200–400 and plan a cohesive split around 600.
 
-The template currently has legacy tests under `src/`. Migrate those as a separate implementation change before expanding coverage; this documentation milestone preserves them.
+The current Kestrum tests already live in `tests/` and use `src/lib.rs`. The
+legacy test-placement warning applied to the original starter, not this checkout.
 
 ## Entity contracts
 
@@ -73,7 +74,7 @@ For commands that depend on a route preview or selected target, revalidate at ex
 7. Evaluate progression, recognition, mentorship, and supported succession from eligible accumulated events.
 8. Reconcile elimination and victory, update faction knowledge, prune eligible narrative history, automatically save the completed round, and present the next turn summary.
 
-**Remaining ordering details:** whether completed infrastructure helps recovery immediately or next season; whether an order placed late in a round receives a full progress step; and the exact date assigned to boundary events. O11 supplies the provisional income-before-upkeep and shortfall rules. Adopt the remaining internal rules before tests pin them; the full-round boundary and automatic save are already settled. Never advance siege or age once per faction action.
+**Provisional ordering details now specified:** [P02](implementation/strategic-rules.md#p02--faction-phases-and-round-order) freezes the internal order, date labels, first progress step and next-round infrastructure eligibility for implementation. O11 supplies the existing income-before-upkeep and shortfall rules. These are reviewable defaults, while the full-round boundary and automatic save are confirmed. Never advance siege or age once per faction action.
 
 If faction elimination occurs during an action phase, remove future turns safely without skipping the next valid faction or repeating a completed one. A round records which factions have already acted.
 
@@ -129,7 +130,7 @@ Keep ordinary population abstract. Preserve compact formation/character experien
 
 Use available toolkit persistence support. Store authoritative state, active turn/round position, RNG state, stable IDs, knowledge, compact gameplay evidence, retained narrative, and ongoing orders/sieges. Settings remain separate. Load into a candidate state, validate, then replace the live campaign only after success. Loading a checkpoint cannot rerun its completed periodic effects or grant rewards again.
 
-**Remaining technical choices:** storage backend and indexing for an unbounded slot list, migration coverage, and old content compatibility. Saves need explicit schema/content versions; unsupported versions must fail clearly rather than silently reinterpret a campaign. Template demo saves must not be treated as Kestrum saves. Exact migration support is still an implementation task; cadence, slot policy, and manual-save availability are settled.
+**Technical handoff:** [C06](implementation/contracts.md#c06--save-catalogue-and-compatibility) and K03 specify the indexed catalogue, interrupted-write recovery and shell-v1 compatibility policy. Inspection found the toolkit's WASM `get_save_slots` only checks five fixed names; shared indexed storage is a dependency, not an existing unlimited-list feature. Saves need explicit schema/content versions; unsupported versions must fail clearly rather than silently reinterpret a campaign. Template demo saves must not be treated as Kestrum saves. Cadence, slot policy and manual-save availability remain confirmed.
 
 ## Errors and recovery
 

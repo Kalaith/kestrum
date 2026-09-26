@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "content_version": 1,
+  "min_factions": 4,
+  "max_factions": 8,
+  "default_factions": 4,
+  "kingdom_name_max_chars": 32,
+  "difficulty": "normal",
+  "ai_income_bonus_percent": 0,
+  "emblems": [
+    {
+      "id": "rose",
+      "name": "Rose"
+    },
+    {
+      "id": "oak",
+      "name": "Oak"
+    },
+    {
+      "id": "fern",
+      "name": "Fern"
+    },
+    {
+      "id": "iris",
+      "name": "Iris"
+    },
+    {
+      "id": "thistle",
+      "name": "Thistle"
+    },
+    {
+      "id": "ivy",
+      "name": "Ivy"
+    },
+    {
+      "id": "hawthorn",
+      "name": "Hawthorn"
+    },
+    {
+      "id": "laurel",
+      "name": "Laurel"
+    }
+  ]
+}

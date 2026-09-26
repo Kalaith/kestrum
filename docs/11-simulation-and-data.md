@@ -97,7 +97,7 @@ The central integration case is Rosemarch: a route and defense create a leadersh
 
 Keep balance values, content, configuration, and player-facing text in JSON under `assets/`. Load through toolkit embedded or typed runtime loading APIs. Kestrum owns typed schemas and semantic checks. Generic JSON parsing, loading, platform branching, source-labelled errors, and fallbacks belong to the toolkit; do not build duplicate local loaders or parse game-data files directly with `serde_json::from_str`.
 
-O11 delegates initial economy choices to provisional JSON balance data. [economy.json](../assets/data/economy.json) now records those defaults; future economy implementation must consume it through the toolkit. It is not wired into the current template. Validate nonnegative resources/costs, positive capacities, percentages in range, known troop IDs, and supported policy fields. Keep its format version distinct from a campaign save's schema version.
+O11 delegates initial economy choices to provisional JSON balance data. [economy.json](../assets/data/economy.json) records those defaults. K01 loads and validates every existing field through toolkit APIs, including nonnegative resources/costs, positive capacities, percentage bounds, known troop IDs, duplicate table IDs and supported policies. Its format version remains distinct from a campaign save's schema version. Economic actions and round effects remain later work.
 
 Proposed content groups include campaign generation, geography/routes, troop definitions, classes, traits, experience tags, facilities, development, local threats, event text, and balance settings. Split by cohesive use rather than creating one huge configuration file.
 

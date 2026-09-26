@@ -40,12 +40,16 @@ impl Game {
         let data = GameData::load()?;
         let mut assets = AssetManager::new();
         assets
-            .load_texture_with_filter("atlas", &data.map_path, FilterMode::Linear)
+            .load_texture_with_filter("atlas", &data.presentation.map_path, FilterMode::Linear)
             .await?;
-        assets.load_font("cinzel", &data.font_path).await?;
-        assets.load_font("body", &data.body_font_path).await?;
+        assets
+            .load_font("cinzel", &data.presentation.font_path)
+            .await?;
+        assets
+            .load_font("body", &data.presentation.body_font_path)
+            .await?;
         let mut game = Self {
-            save_exists: slot_exists(&data.game_id, SAVE_SLOT),
+            save_exists: slot_exists(&data.presentation.game_id, SAVE_SLOT),
             data,
             assets,
             state: GameState::default(),
@@ -98,7 +102,7 @@ impl Game {
                 self.state.overlay = Overlay::Menu;
                 self.error = Some(format!(
                     "{}: storage is unavailable",
-                    self.data.text("save_failed")
+                    self.data.presentation.text("save_failed")
                 ));
             }
             _ => panic!("Unknown Kestrum capture scene: {scene}"),
@@ -116,7 +120,7 @@ impl Game {
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
         let ctx = ui::Context {
-            data: &self.data,
+            data: &self.data.presentation,
             state: &self.state,
             preferences: &self.preferences,
             view: &self.view,
@@ -282,27 +286,38 @@ impl Game {
         let Some(campaign) = &self.state.campaign else {
             return;
         };
-        match save_to_slot(&self.data.game_id, SAVE_SLOT, campaign) {
+        match save_to_slot(&self.data.presentation.game_id, SAVE_SLOT, campaign) {
             Ok(()) => {
                 self.save_exists = true;
                 self.error = None;
                 if announce {
-                    self.notice = Some((self.data.text("save_success").into(), 3.0));
+                    self.notice = Some((self.data.presentation.text("save_success").into(), 3.0));
                 }
             }
-            Err(error) => self.error = Some(format!("{}: {error}", self.data.text("save_failed"))),
+            Err(error) => {
+                self.error = Some(format!(
+                    "{}: {error}",
+                    self.data.presentation.text("save_failed")
+                ))
+            }
         }
     }
 
     fn load(&mut self) {
-        let loaded: Result<Campaign, String> = load_from_slot(&self.data.game_id, SAVE_SLOT);
+        let loaded: Result<Campaign, String> =
+            load_from_slot(&self.data.presentation.game_id, SAVE_SLOT);
         match loaded.and_then(|campaign| self.state.load_campaign(campaign)) {
             Ok(()) => {
                 self.view.reset();
                 self.error = None;
-                self.notice = Some((self.data.text("load_success").into(), 3.0));
+                self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));
             }
-            Err(error) => self.error = Some(format!("{}: {error}", self.data.text("load_failed"))),
+            Err(error) => {
+                self.error = Some(format!(
+                    "{}: {error}",
+                    self.data.presentation.text("load_failed")
+                ))
+            }
         }
     }
 
@@ -311,7 +326,10 @@ impl Game {
             return;
         }
         if let Err(error) = save_json_key("kestrum", "preferences", &self.preferences) {
-            self.error = Some(format!("{}: {error}", self.data.text("settings_failed")));
+            self.error = Some(format!(
+                "{}: {error}",
+                self.data.presentation.text("settings_failed")
+            ));
         }
     }
 }

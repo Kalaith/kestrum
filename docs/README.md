@@ -2,7 +2,7 @@
 
 Kestrum is a generational strategy game in which connected places create campaigns, campaigns shape people, and people and places carry that history forward. This documentation consolidates the three founding design drafts and subsequent discussion clarifications into a navigable game design document (GDD).
 
-**Project state:** Kestrum now has its title screen and an empty illustrated atlas, with pan/zoom, seasons, saving, settings, and help. Strategic content remains future work. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See the [UI verification record](verification/initial-map.md).
+**Project state:** Kestrum has its title screen and an empty illustrated atlas, with pan/zoom, seasons, saving, settings, and help. K01 adds loaded, validated economy/setup data and the durable Rosemarch scenario; strategic play remains future work. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See [K01 verification](verification/k01-content.md) and the earlier [UI verification record](verification/initial-map.md).
 
 ## Reading order
 
@@ -11,7 +11,7 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. None of those work packages is implemented yet.
+confirmed design decisions. K01 is complete; K02–K18 remain planned.
 
 | Document | Contents |
 | --- | --- |
@@ -61,7 +61,7 @@ The earlier answers settle the ten formerly unanswered entries:
 - Economy defaults are adjustable JSON data. Saves are automatic at round end, manual during the player's turn, and have no game-imposed slot cap. Old narrative history may be forgotten.
 - Initial content uses humans and ordinary classes. Display targets are 1920 × 1080 full screen and 1280 × 720 WebGL.
 
-The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional design data and is not yet loaded by the campaign shell.
+The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional content loaded and validated at startup by K01; economic simulation belongs to later packages.
 
 The subsequent implementation-plan request selects concrete provisional defaults
 for those remaining mechanics, including a narrow defeat-outcome vassal model.

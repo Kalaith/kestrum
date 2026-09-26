@@ -209,7 +209,7 @@ acceptance criterion without explicit scope acceptance.
 
 | Package | Status | Commit / evidence / remaining limitations |
 | --- | --- | --- |
-| K01 | Planned | Typed content and small scenario |
+| K01 | Done | Commit subject: `Rosemarch gains its sites and founding kingdoms (K01 typed content)`; [verification](../verification/k01-content.md). 18 tests, format, Clippy, source gate and Windows/WebGL Preview publish pass. Roost tracking unavailable; no strategic play or new browser/touch claim. |
 | K02 | Planned | State/actions/faction rounds |
 | K03 | Planned | Shared save catalogue dependency and game integration |
 | K04 | Planned | Physical/world/region map |

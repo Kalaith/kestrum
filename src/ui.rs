@@ -5,7 +5,7 @@ mod components;
 mod menus;
 
 use kestrum::{
-    data::GameData,
+    data::PresentationData,
     navigation::MapView,
     state::{GameState, Overlay, Preferences, Screen},
 };
@@ -37,7 +37,7 @@ pub enum UiAction {
 }
 
 pub struct Context<'a> {
-    pub data: &'a GameData,
+    pub data: &'a PresentationData,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
     pub view: &'a MapView,

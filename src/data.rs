@@ -1,4 +1,11 @@
-//! Embedded Kestrum presentation data with project-owned validation.
+//! Toolkit-loaded content assembled and validated without a graphics context.
+
+pub mod economy;
+pub mod rules;
+mod setup_validation;
+mod validation;
+pub mod world;
+mod world_validation;
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -10,8 +17,36 @@ pub struct GeographyLabel {
     pub size: f32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct GameData {
+    pub presentation: PresentationData,
+    pub economy: economy::Economy,
+    pub rules: rules::CampaignRules,
+    pub scenario: world::Scenario,
+}
+
+impl GameData {
+    pub fn load() -> Result<Self, String> {
+        let data = Self {
+            presentation: macroquad_toolkit::include_json!("../assets/data/game_config.json")?,
+            economy: macroquad_toolkit::include_json!("../assets/data/economy.json")?,
+            rules: macroquad_toolkit::include_json!("../assets/data/campaign_rules.json")?,
+            scenario: macroquad_toolkit::include_json!("../assets/data/scenarios/rosemarch.json")?,
+        };
+        data.validate()?;
+        Ok(data)
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        self.presentation.validate()?;
+        self.economy.validate()?;
+        self.rules.validate()?;
+        self.scenario.validate(&self.rules, &self.economy)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PresentationData {
     pub game_id: String,
     pub title: String,
     pub subtitle: String,
@@ -73,13 +108,7 @@ const REQUIRED_TEXT: &[&str] = &[
     "settings_failed",
 ];
 
-impl GameData {
-    pub fn load() -> Result<Self, String> {
-        let data: Self = macroquad_toolkit::include_json!("../assets/data/game_config.json")?;
-        data.validate()?;
-        Ok(data)
-    }
-
+impl PresentationData {
     pub fn validate(&self) -> Result<(), String> {
         if self.game_id != "kestrum" || self.start_year == 0 || self.seasons.len() != 4 {
             return Err(

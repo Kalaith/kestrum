@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "provisional_design_defaults_not_yet_loaded_by_runtime",
+  "status": "provisional_defaults",
   "period": "full_round",
   "starting_resources": {
     "gold": 500,

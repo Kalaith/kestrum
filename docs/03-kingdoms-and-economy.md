@@ -43,7 +43,7 @@ The initial explicit resources are **Gold, Wood, and Stone**. They support recru
 
 ### Provisional economy defaults
 
-[assets/data/economy.json](../assets/data/economy.json) is the authoritative initial balance table. It is design data for the future economy; the current template does not load it. Implementation must use toolkit JSON loading with a Kestrum schema and semantic validation.
+[assets/data/economy.json](../assets/data/economy.json) is the authoritative initial balance table. K01 loads it through toolkit JSON APIs and validates its typed Kestrum schema. Economic simulation remains scheduled for later packages; loading content does not grant income or spend resources.
 
 - Each faction starts with 500 Gold, 200 Wood, and 150 Stone. Settlement income and a single headquarters bonus of 40 Gold, 15 Wood, and 10 Stone accrue per full round. The bonus requires control of the headquarters site and adds to its settlement income; a capital title creates no extra income by itself.
 - Recruitment costs and full-formation upkeep are listed for human Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines. Upkeep charges the listed Gold rate for each surviving formation, regardless of current headcount. Named people add no separate upkeep initially.

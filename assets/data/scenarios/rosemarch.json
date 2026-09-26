@@ -1,0 +1,691 @@
+{
+  "schema_version": 1,
+  "content_version": 1,
+  "kind": "rosemarch_prototype",
+  "name": "Rosemarch",
+  "seed": 260926,
+  "difficulty": "normal",
+  "player": 1,
+  "markers": [
+    {
+      "id": 1,
+      "key": "rose_hq",
+      "name": "Rose Headquarters",
+      "position": [
+        0.34,
+        0.4
+      ],
+      "location": {
+        "kind": "site",
+        "site": 1
+      }
+    },
+    {
+      "id": 2,
+      "key": "oak_hq",
+      "name": "Oak Headquarters",
+      "position": [
+        0.37,
+        0.55
+      ],
+      "location": {
+        "kind": "site",
+        "site": 2
+      }
+    },
+    {
+      "id": 3,
+      "key": "hawthorn_hq",
+      "name": "Hawthorn Headquarters",
+      "position": [
+        0.64,
+        0.42
+      ],
+      "location": {
+        "kind": "site",
+        "site": 3
+      }
+    },
+    {
+      "id": 4,
+      "key": "fern_hq",
+      "name": "Fern Headquarters",
+      "position": [
+        0.61,
+        0.55
+      ],
+      "location": {
+        "kind": "site",
+        "site": 4
+      }
+    },
+    {
+      "id": 5,
+      "key": "rosemarch",
+      "name": "Rosemarch",
+      "position": [
+        0.48,
+        0.47
+      ],
+      "location": {
+        "kind": "region",
+        "sites": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "entrances": [
+          {
+            "route": 13,
+            "site": 5
+          },
+          {
+            "route": 14,
+            "site": 5
+          },
+          {
+            "route": 15,
+            "site": 11
+          },
+          {
+            "route": 16,
+            "site": 11
+          }
+        ],
+        "anchors": {
+          "condition": "all",
+          "conditions": [
+            {
+              "condition": "controlled_site",
+              "site": 10
+            },
+            {
+              "condition": "controlled_site",
+              "site": 9
+            },
+            {
+              "condition": "any",
+              "conditions": [
+                {
+                  "condition": "supplied_entrance",
+                  "site": 5
+                },
+                {
+                  "condition": "supplied_entrance",
+                  "site": 11
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "sites": [
+    {
+      "id": 1,
+      "key": "rose_hq",
+      "name": "Rose Headquarters",
+      "marker": 1,
+      "position": [
+        0.34,
+        0.4
+      ],
+      "geography": "plains",
+      "tags": [
+        "horse_access"
+      ],
+      "controller": 1,
+      "habitation": "village",
+      "military": "none",
+      "facilities": [
+        "training_ground"
+      ]
+    },
+    {
+      "id": 2,
+      "key": "oak_hq",
+      "name": "Oak Headquarters",
+      "marker": 2,
+      "position": [
+        0.37,
+        0.55
+      ],
+      "geography": "plains",
+      "tags": [
+        "horse_access"
+      ],
+      "controller": 2,
+      "habitation": "village",
+      "military": "none",
+      "facilities": [
+        "training_ground"
+      ]
+    },
+    {
+      "id": 3,
+      "key": "hawthorn_hq",
+      "name": "Hawthorn Headquarters",
+      "marker": 3,
+      "position": [
+        0.64,
+        0.42
+      ],
+      "geography": "plains",
+      "tags": [
+        "horse_access"
+      ],
+      "controller": 3,
+      "habitation": "village",
+      "military": "none",
+      "facilities": [
+        "training_ground"
+      ]
+    },
+    {
+      "id": 4,
+      "key": "fern_hq",
+      "name": "Fern Headquarters",
+      "marker": 4,
+      "position": [
+        0.61,
+        0.55
+      ],
+      "geography": "plains",
+      "tags": [
+        "horse_access"
+      ],
+      "controller": 4,
+      "habitation": "village",
+      "military": "none",
+      "facilities": [
+        "training_ground"
+      ]
+    },
+    {
+      "id": 5,
+      "key": "west_gate",
+      "name": "West Gate",
+      "marker": 5,
+      "position": [
+        0.1,
+        0.5
+      ],
+      "geography": "plains",
+      "tags": [],
+      "controller": null,
+      "habitation": "unsettled",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 6,
+      "key": "milltown",
+      "name": "Milltown",
+      "marker": 5,
+      "position": [
+        0.27,
+        0.5
+      ],
+      "geography": "river",
+      "tags": [
+        "wood_source"
+      ],
+      "controller": null,
+      "habitation": "town",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 7,
+      "key": "orchard",
+      "name": "Orchard",
+      "marker": 5,
+      "position": [
+        0.3,
+        0.25
+      ],
+      "geography": "plains",
+      "tags": [],
+      "controller": null,
+      "habitation": "hamlet",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 8,
+      "key": "bridge",
+      "name": "Bridge",
+      "marker": 5,
+      "position": [
+        0.46,
+        0.56
+      ],
+      "geography": "river",
+      "tags": [],
+      "controller": null,
+      "habitation": "unsettled",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 9,
+      "key": "high_fort",
+      "name": "High Fort",
+      "marker": 5,
+      "position": [
+        0.57,
+        0.34
+      ],
+      "geography": "hill",
+      "tags": [],
+      "controller": 3,
+      "habitation": "outpost",
+      "military": "fort",
+      "facilities": []
+    },
+    {
+      "id": 10,
+      "key": "city",
+      "name": "Rosemarch City",
+      "marker": 5,
+      "position": [
+        0.69,
+        0.56
+      ],
+      "geography": "plains",
+      "tags": [],
+      "controller": 3,
+      "habitation": "city",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 11,
+      "key": "east_gate",
+      "name": "East Gate",
+      "marker": 5,
+      "position": [
+        0.91,
+        0.55
+      ],
+      "geography": "plains",
+      "tags": [],
+      "controller": null,
+      "habitation": "unsettled",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 12,
+      "key": "quarry",
+      "name": "Quarry",
+      "marker": 5,
+      "position": [
+        0.64,
+        0.8
+      ],
+      "geography": "hill",
+      "tags": [
+        "stone_source"
+      ],
+      "controller": null,
+      "habitation": "camp",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 13,
+      "key": "ruined_hold",
+      "name": "Ruined Hold",
+      "marker": 5,
+      "position": [
+        0.83,
+        0.81
+      ],
+      "geography": "hill",
+      "tags": [],
+      "controller": null,
+      "habitation": "unsettled",
+      "military": "none",
+      "facilities": []
+    },
+    {
+      "id": 14,
+      "key": "hill",
+      "name": "Hill",
+      "marker": 5,
+      "position": [
+        0.47,
+        0.17
+      ],
+      "geography": "hill",
+      "tags": [
+        "stone_source"
+      ],
+      "controller": null,
+      "habitation": "unsettled",
+      "military": "none",
+      "facilities": []
+    }
+  ],
+  "routes": [
+    {
+      "id": 1,
+      "from": 5,
+      "to": 6,
+      "major_connection": null,
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 2,
+      "from": 6,
+      "to": 7,
+      "major_connection": null,
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 3,
+      "from": 6,
+      "to": 8,
+      "major_connection": null,
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 4,
+      "from": 7,
+      "to": 14,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 5,
+      "from": 14,
+      "to": 9,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 6,
+      "from": 8,
+      "to": 9,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 7,
+      "from": 8,
+      "to": 10,
+      "major_connection": null,
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 8,
+      "from": 9,
+      "to": 10,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 9,
+      "from": 10,
+      "to": 11,
+      "major_connection": null,
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 10,
+      "from": 10,
+      "to": 12,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 11,
+      "from": 12,
+      "to": 13,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 12,
+      "from": 13,
+      "to": 11,
+      "major_connection": null,
+      "terrain_cost": 3,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 13,
+      "from": 1,
+      "to": 5,
+      "major_connection": [
+        1,
+        5
+      ],
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 14,
+      "from": 2,
+      "to": 5,
+      "major_connection": [
+        2,
+        5
+      ],
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 15,
+      "from": 3,
+      "to": 11,
+      "major_connection": [
+        3,
+        5
+      ],
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    },
+    {
+      "id": 16,
+      "from": 4,
+      "to": 11,
+      "major_connection": [
+        4,
+        5
+      ],
+      "terrain_cost": 2,
+      "road": {
+        "improved": false,
+        "damage": 0
+      }
+    }
+  ],
+  "factions": [
+    {
+      "id": 1,
+      "name": "Rose Kingdom",
+      "emblem": "rose",
+      "headquarters": 1,
+      "capital": 1,
+      "resources": "economy_starting_resources",
+      "starting_formations": [
+        "warriors",
+        "spearmen",
+        "archers"
+      ],
+      "founder": {
+        "age_years": 24,
+        "class": "officer",
+        "attached_to": "warriors",
+        "commander": true
+      }
+    },
+    {
+      "id": 2,
+      "name": "Oak Kingdom",
+      "emblem": "oak",
+      "headquarters": 2,
+      "capital": 2,
+      "resources": "economy_starting_resources",
+      "starting_formations": [
+        "warriors",
+        "spearmen",
+        "archers"
+      ],
+      "founder": {
+        "age_years": 24,
+        "class": "officer",
+        "attached_to": "warriors",
+        "commander": true
+      }
+    },
+    {
+      "id": 3,
+      "name": "Hawthorn Kingdom",
+      "emblem": "hawthorn",
+      "headquarters": 3,
+      "capital": 3,
+      "resources": "economy_starting_resources",
+      "starting_formations": [
+        "warriors",
+        "spearmen",
+        "archers"
+      ],
+      "founder": {
+        "age_years": 24,
+        "class": "officer",
+        "attached_to": "warriors",
+        "commander": true
+      }
+    },
+    {
+      "id": 4,
+      "name": "Fern Kingdom",
+      "emblem": "fern",
+      "headquarters": 4,
+      "capital": 4,
+      "resources": "economy_starting_resources",
+      "starting_formations": [
+        "warriors",
+        "spearmen",
+        "archers"
+      ],
+      "founder": {
+        "age_years": 24,
+        "class": "officer",
+        "attached_to": "warriors",
+        "commander": true
+      }
+    }
+  ],
+  "relations": [
+    {
+      "factions": [
+        1,
+        2
+      ],
+      "state": "peace"
+    },
+    {
+      "factions": [
+        1,
+        3
+      ],
+      "state": "war"
+    },
+    {
+      "factions": [
+        1,
+        4
+      ],
+      "state": "peace"
+    },
+    {
+      "factions": [
+        2,
+        3
+      ],
+      "state": "peace"
+    },
+    {
+      "factions": [
+        2,
+        4
+      ],
+      "state": "peace"
+    },
+    {
+      "factions": [
+        3,
+        4
+      ],
+      "state": "peace"
+    }
+  ]
+}

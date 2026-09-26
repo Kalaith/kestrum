@@ -3,7 +3,8 @@
 [Plan and handoff prompt](../implementation-plan.md) · [Contracts](contracts.md) ·
 [Verification and coverage](acceptance.md)
 
-All packages are initially **planned**. K01 is the next task. Numbered rule links
+K01 is **Done**; K02 is the next eligible task. See the completion record in
+[acceptance](acceptance.md#completion-record). Numbered rule links
 refer to the provisional packets; D/O identifiers refer to chapter 13. A package
 is a reviewable feature, not permission for one oversized Rust file or commit.
 If split for size, preserve the same acceptance contract and commit each useful

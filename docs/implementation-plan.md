@@ -142,7 +142,8 @@ eligible package. Do not claim success from a copied checkout or an untested UI.
 
 ## Current completion record
 
-All K01–K18 packages are **planned, not implemented**. The existing shell predates
-these packages. [Acceptance](implementation/acceptance.md#completion-record) owns
-the per-package status table. Start with K01; do not mark work complete by creating
-empty modules, JSON placeholders, or documentation alone.
+K01 is **Done**: toolkit-loaded typed economy and the durable Rosemarch scenario
+pass their behavioral checks. See [K01 evidence](verification/k01-content.md).
+K02–K18 remain **planned, not implemented**; K02 is next eligible.
+[Acceptance](implementation/acceptance.md#completion-record) owns the per-package
+status table. The existing title/empty-atlas shell remains the playable milestone.

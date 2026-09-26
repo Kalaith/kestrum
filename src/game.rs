@@ -1,316 +1,317 @@
-//! High-level game loop, state transitions, and toolkit integration.
+//! Application coordination, toolkit persistence, and routed atlas gestures.
 
-use crate::data::GameData;
-use crate::state::{migrate_save_value, GameSession, SaveData};
-use crate::ui::{self, UiAction, UiContext};
+use crate::ui::{self, UiAction};
+use kestrum::{
+    data::GameData,
+    navigation::{MapView, HEIGHT, WIDTH},
+    state::{Campaign, GameState, Overlay, Preferences, Screen, SAVE_SLOT},
+};
 use macroquad::prelude::*;
-use macroquad_toolkit::assets::AssetManager;
-use macroquad_toolkit::camera::{CameraBounds, CameraBoundsPolicy, CameraTransform};
-use macroquad_toolkit::debug::DebugOverlay;
-use macroquad_toolkit::events::EventBus;
-use macroquad_toolkit::notifications::{
-    NotificationAnchor, NotificationManager, NotificationRenderConfig,
+use macroquad_toolkit::{
+    assets::AssetManager,
+    input::gestures::{GestureTouch, TouchGesture},
+    persistence::{
+        json_key_exists, load_from_slot, load_json_key, save_json_key, save_to_slot, slot_exists,
+    },
+    ui::{begin_virtual_ui_frame, end_virtual_ui_frame, Pointer, VirtualUi},
 };
-use macroquad_toolkit::persistence::{
-    delete_slot, get_save_slots, load_from_slot_with_migration, save_to_slot_with_version,
-    slot_exists,
-};
-use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame, InputState};
-use macroquad_toolkit::settings::GameSettings;
-use macroquad_toolkit::ui::{ScrollArea, VirtualUi};
 
 pub struct Game {
     data: GameData,
-    session: GameSession,
+    state: GameState,
+    preferences: Preferences,
     assets: AssetManager,
-    notifications: NotificationManager,
-    camera: CameraTransform,
-    camera_drag: Option<Vec2>,
-    events: EventBus<UiAction>,
-    settings: GameSettings,
-    debug: DebugOverlay,
-    action_scroll: ScrollArea,
-    paused: bool,
-    frame_dt: f32,
+    view: MapView,
+    gesture: TouchGesture,
+    origin: Option<Vec2>,
+    was_down: bool,
+    map_gesture: bool,
     save_exists: bool,
-    save_slots: Vec<String>,
+    capture: bool,
+    notice: Option<(String, f32)>,
+    error: Option<String>,
+    #[cfg(not(target_arch = "wasm32"))]
+    fullscreen: bool,
+    pub running: bool,
 }
 
 impl Game {
-    pub async fn new() -> Self {
-        let data = GameData::load().unwrap_or_else(|err| {
-            panic!("Template embedded data failed to load: {}", err);
-        });
-
+    pub async fn new() -> Result<Self, String> {
+        let data = GameData::load()?;
         let mut assets = AssetManager::new();
-        let placeholder = Image::gen_image_color(16, 16, Color::new(0.75, 0.2, 0.8, 1.0));
-        assets.set_placeholder_texture_direct(Texture2D::from_image(&placeholder));
-        let loaded_assets = assets.load_texture_configs(&data.texture_manifest).await;
-
-        let mut notifications = NotificationManager::new();
-        notifications.info(format!(
-            "Template booted with macroquad-toolkit systems; {} manifest textures loaded",
-            loaded_assets
-        ));
-
-        let session = GameSession::new(&data.config);
-        let camera = CameraTransform::new(Vec2::ZERO, 1.0).expect("valid initial camera");
-
-        let settings = GameSettings::load(&data.config.game_name);
-        let mut debug = DebugOverlay::new();
-        debug.visible = settings.show_fps;
+        assets
+            .load_texture_with_filter("atlas", &data.map_path, FilterMode::Linear)
+            .await?;
+        assets.load_font("cinzel", &data.font_path).await?;
+        assets.load_font("body", &data.body_font_path).await?;
         let mut game = Self {
-            settings,
-            debug,
-            action_scroll: ScrollArea::new(),
-            paused: false,
-            frame_dt: 0.0,
+            save_exists: slot_exists(&data.game_id, SAVE_SLOT),
             data,
-            session,
             assets,
-            notifications,
-            camera,
-            camera_drag: None,
-            events: EventBus::new(),
-            save_exists: false,
-            save_slots: Vec::new(),
+            state: GameState::default(),
+            preferences: Preferences::default(),
+            view: MapView::default(),
+            gesture: TouchGesture::new(),
+            origin: None,
+            was_down: false,
+            map_gesture: false,
+            capture: false,
+            notice: None,
+            error: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            fullscreen: false,
+            running: true,
         };
-        game.refresh_save_state();
-        game
+        if json_key_exists("kestrum", "preferences") {
+            match load_json_key("kestrum", "preferences") {
+                Ok(preferences) => game.preferences = preferences,
+                Err(error) => game.error = Some(error),
+            }
+        }
+        Ok(game)
     }
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
-        self.session = GameSession::new(&self.data.config);
-        self.notifications.clear();
-        self.events.drain().for_each(drop);
-        self.action_scroll = ScrollArea::new();
-        self.paused = false;
-        self.debug.visible = false;
+        self.capture = true;
+        self.state = GameState::default();
+        self.preferences = Preferences::default();
+        self.view.reset();
+        self.notice = None;
+        self.error = None;
         self.save_exists = false;
-        self.save_slots.clear();
-        self.apply_action(UiAction::ResetCamera);
-        match scene {
-            "gameplay" => {}
-            "paused" => self.paused = true,
-            "scrolled" => self.action_scroll.set_offset(88.0),
+        match scene.trim_end_matches("_minimum") {
+            "title" => {}
+            "gameplay" => self.state.new_game(),
             "zoomed" => {
-                self.apply_action(UiAction::ZoomCamera(1));
-                self.apply_action(UiAction::PanCamera(1, 0));
+                self.state.new_game();
+                self.view.zoom(vec2(720.0, 330.0), 2.0);
             }
-            _ => panic!("Unknown template capture scene: {scene}"),
+            "menu" => {
+                self.state.new_game();
+                self.state.overlay = Overlay::Menu;
+            }
+            "settings" => self.state.overlay = Overlay::Settings,
+            "help" => self.state.overlay = Overlay::Help,
+            "confirm_new" => self.state.overlay = Overlay::ConfirmNew,
+            "save_error" => {
+                self.state.new_game();
+                self.state.overlay = Overlay::Menu;
+                self.error = Some(format!(
+                    "{}: storage is unavailable",
+                    self.data.text("save_failed")
+                ));
+            }
+            _ => panic!("Unknown Kestrum capture scene: {scene}"),
         }
     }
 
-    pub fn update(&mut self, dt: f32) {
-        self.frame_dt = dt;
-        self.debug.record_frame(dt);
-        self.notifications.update(dt);
-
-        let input = InputState::capture();
-        if input.escape_pressed {
-            self.events.push(UiAction::TogglePause);
-        }
-        if input.space_pressed {
-            if let Some(action) = self.data.ordered_actions().first() {
-                self.events.push(UiAction::RunAction(action.id.clone()));
+    pub fn frame(&mut self, dt: f32) {
+        if let Some((_, time)) = &mut self.notice {
+            *time -= dt;
+            if *time <= 0.0 {
+                self.notice = None;
             }
         }
-        if is_key_pressed(KeyCode::S) {
-            self.events.push(UiAction::Save);
-        }
-        if is_key_pressed(KeyCode::L) {
-            self.events.push(UiAction::Load);
-        }
-        if let Some((dx, dy)) = ui::tile_move_from_keys() {
-            self.session.move_selection(dx, dy);
-        }
-
-        let viewport = VirtualUi::new(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
-        let mouse = viewport.mouse_position();
-        let rect = ui::world_grid_rect();
-        if rect.contains(mouse) {
-            if is_mouse_button_pressed(MouseButton::Right) {
-                self.camera_drag = Some(mouse);
-            }
-            if is_mouse_button_down(MouseButton::Right) {
-                if let Some(last) = self.camera_drag.replace(mouse) {
-                    self.camera.pan_screen(mouse - last);
-                }
-            } else {
-                self.camera_drag = None;
-            }
-            let wheel = mouse_wheel().1;
-            if wheel != 0.0 {
-                self.camera
-                    .zoom_at(rect, mouse, 1.1_f32.powf(wheel), (0.75, 1.75));
-            }
-        } else {
-            self.camera_drag = None;
-        }
-        if is_key_pressed(KeyCode::Equal) || is_key_pressed(KeyCode::KpAdd) {
-            self.events.push(UiAction::ZoomCamera(1));
-        }
-        if is_key_pressed(KeyCode::Minus) || is_key_pressed(KeyCode::KpSubtract) {
-            self.events.push(UiAction::ZoomCamera(-1));
-        }
-
-        let actions: Vec<UiAction> = self.events.drain().collect();
-        for action in actions {
-            self.apply_action(action);
-        }
-        self.camera.constrain(
-            ui::world_grid_rect(),
-            CameraBounds::new(vec2(-240.0, -160.0), vec2(240.0, 160.0)),
-            CameraBoundsPolicy::TargetInside,
-        );
-        if !self.paused {
-            self.session.update_energy(&self.data.config, dt);
-        }
-    }
-
-    pub fn draw(&mut self) {
-        clear_background(dark::BACKGROUND);
-
-        let virtual_ui = begin_virtual_ui_frame(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
-        let ctx = UiContext {
+        clear_background(Color::new(0.06, 0.10, 0.10, 1.0));
+        let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
+        let pointer = self.input(&viewport, dt);
+        let ctx = ui::Context {
             data: &self.data,
-            session: &self.session,
+            state: &self.state,
+            preferences: &self.preferences,
+            view: &self.view,
+            assets: &self.assets,
+            pointer,
+            origin: self.origin,
             save_exists: self.save_exists,
-            save_slots: &self.save_slots,
-            loaded_assets: self.assets.len(),
-            camera: self.camera,
-            paused: self.paused,
-            show_stats: self.debug.visible,
-            dt: self.frame_dt,
-            ui: &virtual_ui,
         };
-
-        let actions = ui::draw_game_ui(ctx, &mut self.action_scroll);
+        let action = ui::draw(&ctx);
+        let message = self
+            .error
+            .as_ref()
+            .or(self.notice.as_ref().map(|(message, _)| message));
+        let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
         end_virtual_ui_frame();
-
-        for action in actions {
-            self.events.push(action);
+        if let Some(intent) = feedback_action.or(action) {
+            self.apply(intent);
         }
-
-        self.debug.draw(&[]);
-        self.notifications
-            .draw_with_config(&NotificationRenderConfig {
-                anchor: NotificationAnchor::TopRight,
-                ..Default::default()
-            });
+        if !pointer.down {
+            self.origin = None;
+        }
+        self.was_down = pointer.down;
     }
 
-    fn apply_action(&mut self, action: UiAction) {
-        match action {
-            UiAction::TogglePause => self.paused = !self.paused,
-            UiAction::ToggleStats => {
-                self.debug.toggle();
-                self.settings.show_fps = self.debug.visible;
-                if let Err(err) = self.settings.save(&self.data.config.game_name) {
-                    self.notifications
-                        .warning(format!("Settings save failed: {err}"));
+    fn input(&mut self, viewport: &VirtualUi, dt: f32) -> Pointer {
+        let mut pointer = Pointer::read(|position| viewport.screen_to_ui(position));
+        if self.capture {
+            return pointer.suppressed();
+        }
+        if is_key_pressed(KeyCode::Escape) {
+            self.state.back();
+        }
+        if pointer.down && !self.was_down {
+            self.origin = Some(pointer.position);
+            self.map_gesture = self.state.screen == Screen::Campaign
+                && self.state.overlay == Overlay::None
+                && !ui::map_controls_contain(pointer.position);
+        }
+        let touches = self.gesture_touches(viewport, pointer);
+        let frame = self.gesture.update_with(&touches);
+        let playing = self.state.screen == Screen::Campaign && self.state.overlay == Overlay::None;
+        if playing {
+            if self.map_gesture {
+                self.view.gesture(&frame);
+            }
+            if !ui::map_controls_contain(pointer.position) && mouse_wheel().1 != 0.0 {
+                self.view
+                    .zoom(pointer.position, 1.12_f32.powf(mouse_wheel().1));
+            }
+            let mut delta = Vec2::ZERO;
+            for (key, direction) in [
+                (KeyCode::Left, vec2(1.0, 0.0)),
+                (KeyCode::Right, vec2(-1.0, 0.0)),
+                (KeyCode::Up, vec2(0.0, 1.0)),
+                (KeyCode::Down, vec2(0.0, -1.0)),
+            ] {
+                if is_key_down(key) {
+                    delta += direction * dt * 420.0;
                 }
             }
-            UiAction::PanCamera(x, y) => {
-                self.camera.pan_screen(vec2(x as f32, y as f32) * -48.0);
+            self.view.pan(delta);
+        }
+        if frame.claimed {
+            pointer.released = false;
+        }
+        pointer
+    }
+
+    fn gesture_touches(&self, viewport: &VirtualUi, pointer: Pointer) -> Vec<GestureTouch> {
+        let contacts = touches();
+        if !contacts.is_empty() {
+            let dpi = screen_dpi_scale().max(1.0);
+            return contacts
+                .into_iter()
+                .map(|touch| {
+                    GestureTouch::new(
+                        touch.id,
+                        viewport.screen_to_ui(touch.position / dpi),
+                        touch.phase,
+                    )
+                })
+                .collect();
+        }
+        let phase = if pointer.down {
+            if self.was_down {
+                TouchPhase::Moved
+            } else {
+                TouchPhase::Started
             }
-            UiAction::ZoomCamera(direction) => {
-                let rect = ui::world_grid_rect();
-                self.camera.zoom_at(
-                    rect,
-                    rect.center(),
-                    if direction > 0 { 1.2 } else { 1.0 / 1.2 },
-                    (0.75, 1.75),
-                );
-            }
-            UiAction::ResetCamera => {
-                self.camera = CameraTransform::new(Vec2::ZERO, 1.0).expect("valid initial camera");
-                self.camera_drag = None;
-            }
+        } else if pointer.released {
+            TouchPhase::Ended
+        } else {
+            return Vec::new();
+        };
+        vec![GestureTouch::new(0, pointer.position, phase)]
+    }
+
+    fn apply(&mut self, action: UiAction) {
+        match action {
             UiAction::NewGame => {
-                self.session = GameSession::new(&self.data.config);
-                self.paused = false;
-                self.action_scroll.set_offset(0.0);
-                self.apply_action(UiAction::ResetCamera);
-                self.notifications.info("Started a fresh template session");
+                if self.save_exists || self.state.campaign.is_some() {
+                    self.state.overlay = Overlay::ConfirmNew;
+                } else {
+                    self.start_game();
+                }
             }
-            UiAction::Save => self.save_game(),
-            UiAction::Load => self.load_game(),
-            UiAction::DeleteSave => self.delete_save(),
-            UiAction::RunAction(id) => self.run_data_action(&id),
-            UiAction::SelectTile(tile) => {
-                self.session.select_tile(tile);
-                self.notifications
-                    .info(format!("Selected tile {}, {}", tile.x, tile.y));
+            UiAction::ConfirmNew => self.start_game(),
+            UiAction::Continue => {
+                if self.state.campaign.is_some() {
+                    self.state.screen = Screen::Campaign;
+                } else {
+                    self.load();
+                }
             }
+            UiAction::Open(overlay) => self.state.overlay = overlay,
+            UiAction::Back => self.state.back(),
+            UiAction::MainMenu => {
+                self.state.main_menu();
+                self.view.reset();
+            }
+            UiAction::Save => self.save(true),
+            UiAction::Load => self.load(),
+            UiAction::EndTurn => {
+                if self.state.end_turn() {
+                    self.save(false);
+                }
+            }
+            UiAction::Zoom(factor) => self.view.zoom(vec2(WIDTH / 2.0, HEIGHT / 2.0), factor),
+            UiAction::Recenter => self.view.reset(),
+            UiAction::ToggleLabels => {
+                self.preferences.hide_labels = !self.preferences.hide_labels;
+                self.save_preferences();
+            }
+            UiAction::ToggleContrast => {
+                self.preferences.high_contrast = !self.preferences.high_contrast;
+                self.save_preferences();
+            }
+            UiAction::DismissFeedback => {
+                self.error = None;
+                self.notice = None;
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            UiAction::Fullscreen => {
+                self.fullscreen = !self.fullscreen;
+                set_fullscreen(self.fullscreen);
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            UiAction::Quit => self.running = false,
         }
     }
 
-    fn run_data_action(&mut self, action_id: &str) {
-        if self.paused {
+    fn start_game(&mut self) {
+        self.state.new_game();
+        self.view.reset();
+        self.error = None;
+        self.save(false);
+    }
+
+    fn save(&mut self, announce: bool) {
+        if self.capture {
             return;
         }
-        let Some(action) = self.data.actions.get(action_id) else {
-            self.notifications
-                .warning(format!("Unknown action: {}", action_id));
+        let Some(campaign) = &self.state.campaign else {
             return;
         };
-
-        if self.session.apply_action(action) {
-            self.notifications
-                .success(format!("{} complete", action.name));
-        } else {
-            self.notifications.warning("Not enough energy");
-        }
-    }
-
-    fn save_game(&mut self) {
-        let save = self.session.to_save(&self.data.config.version);
-        match save_to_slot_with_version(
-            &self.data.config.game_name,
-            &self.data.config.save_slot,
-            &save,
-            &self.data.config.version,
-        ) {
+        match save_to_slot(&self.data.game_id, SAVE_SLOT, campaign) {
             Ok(()) => {
-                self.notifications.success("Saved with toolkit save slots");
-                self.refresh_save_state();
+                self.save_exists = true;
+                self.error = None;
+                if announce {
+                    self.notice = Some((self.data.text("save_success").into(), 3.0));
+                }
             }
-            Err(err) => self.notifications.danger(format!("Save failed: {}", err)),
+            Err(error) => self.error = Some(format!("{}: {error}", self.data.text("save_failed"))),
         }
     }
 
-    fn load_game(&mut self) {
-        let loaded: Result<SaveData, String> = load_from_slot_with_migration(
-            &self.data.config.game_name,
-            &self.data.config.save_slot,
-            &self.data.config.version,
-            |version, value| migrate_save_value(version, value, &self.data.config),
-        );
-
-        match loaded {
-            Ok(save) => {
-                self.session = GameSession::from_save(save);
-                self.notifications
-                    .success("Loaded save with migration support");
-                self.refresh_save_state();
-            }
-            Err(err) => self.notifications.warning(format!("Load failed: {}", err)),
-        }
-    }
-
-    fn delete_save(&mut self) {
-        match delete_slot(&self.data.config.game_name, &self.data.config.save_slot) {
+    fn load(&mut self) {
+        let loaded: Result<Campaign, String> = load_from_slot(&self.data.game_id, SAVE_SLOT);
+        match loaded.and_then(|campaign| self.state.load_campaign(campaign)) {
             Ok(()) => {
-                self.notifications.info("Deleted template save slot");
-                self.refresh_save_state();
+                self.view.reset();
+                self.error = None;
+                self.notice = Some((self.data.text("load_success").into(), 3.0));
             }
-            Err(err) => self.notifications.danger(format!("Delete failed: {}", err)),
+            Err(error) => self.error = Some(format!("{}: {error}", self.data.text("load_failed"))),
         }
     }
 
-    fn refresh_save_state(&mut self) {
-        self.save_exists = slot_exists(&self.data.config.game_name, &self.data.config.save_slot);
-        self.save_slots = get_save_slots(&self.data.config.game_name);
+    fn save_preferences(&mut self) {
+        if self.capture {
+            return;
+        }
+        if let Err(error) = save_json_key("kestrum", "preferences", &self.preferences) {
+            self.error = Some(format!("{}: {error}", self.data.text("settings_failed")));
+        }
     }
 }

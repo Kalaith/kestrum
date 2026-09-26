@@ -1,7 +1,0 @@
-{
-  "target": "owner/game-slug",
-  "channels": {
-    "html5": "html5",
-    "windows": "windows"
-  }
-}

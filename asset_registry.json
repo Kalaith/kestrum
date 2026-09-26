@@ -1,4 +1,4 @@
 {
   "version": 1,
-  "assets": []
+  "assets": ["assets/art/kestrum_atlas.png", "assets/fonts/Cinzel.ttf", "assets/fonts/OFL.txt", "assets/fonts/DejaVuSans.ttf", "assets/fonts/LICENSE-DejaVu.txt"]
 }

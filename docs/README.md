@@ -2,7 +2,7 @@
 
 Kestrum is a generational strategy game in which connected places create campaigns, campaigns shape people, and people and places carry that history forward. This documentation consolidates the three founding design drafts and subsequent discussion clarifications into a navigable game design document (GDD).
 
-**Project state:** design documentation and the supplied WebHatchery template. The systems described here are intended behavior, not implemented features. No Kestrum gameplay is claimed by this initial documentation milestone.
+**Project state:** Kestrum now has its title screen and an empty illustrated atlas, with pan/zoom, seasons, saving, settings, and help. Strategic content remains future work. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See the [UI verification record](verification/initial-map.md).
 
 ## Reading order
 
@@ -52,7 +52,7 @@ The latest answers settle the ten formerly unanswered entries:
 - Economy defaults are adjustable JSON data. Saves are automatic at round end, manual during the player's turn, and have no game-imposed slot cap. Old narrative history may be forgotten.
 - Initial content uses humans and ordinary classes. Display targets are 1920 × 1080 full screen and 1280 × 720 WebGL.
 
-The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional design data and is not yet loaded by the template.
+The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional design data and is not yet loaded by the campaign shell.
 
 ## Complete source preservation
 
@@ -76,4 +76,4 @@ The [original template README](reference/template_readme.md) is also retained as
 4. Update milestone acceptance criteria when scope changes.
 5. Report actual implementation and verification status separately from intended design.
 
-The existing images in `docs/verification/` belong to the supplied template. They do not demonstrate Kestrum screens.
+The current `ui_*.png` images in `docs/verification/` show Kestrum's implemented title, atlas, and menus. The documentation-only verification record is historical.

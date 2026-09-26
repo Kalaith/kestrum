@@ -4,7 +4,7 @@
 
 ## Status and goals
 
-This chapter is a **proposed screen plan** with confirmed viewport and save requirements. It is not evidence of implemented Kestrum screens. The supplied template's panels, technical labels, action demo, grid, and captures must be reconsidered when implementation begins.
+This chapter describes the **full proposed interface**. The initial title and empty atlas are now implemented; the current [screen brief](../README.md#screen-brief) and [verification record](verification/initial-map.md) describe their actual scope. The user explicitly deferred nodes and armies for this milestone. Future setup, inspectors, and system screens below are not yet implemented.
 
 The strategic map and current decision dominate ordinary play. Give no more than two or three areas strong visual emphasis. A selected object's short inspector can support the map; quiet navigation leads to kingdom, roster, history, and settings views as needed.
 
@@ -133,4 +133,4 @@ At 1920 × 1080 full screen and a 1280 × 720 WebGL canvas, inspect first use, o
 
 Check focus, map size, readable text, target sizes, clipping, overlap, hidden controls, drag-release behavior, and picking after resize/zoom/display scaling. Store captures directly in `docs/verification/` under stable scene names and replace equivalent states. Use the shared capture wrapper with its hidden-window default, wait for completion, and confirm the game exits. Browser touch checks supplement captures; neither compilation nor a clean screenshot proves usability.
 
-No such Kestrum UI review has been performed in this documentation-only milestone.
+The initial title/empty-atlas review is recorded in [initial-map.md](verification/initial-map.md), including browser and physical-touch limitations. Reviews of future strategic systems remain outstanding.

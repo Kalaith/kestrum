@@ -1,67 +1,116 @@
-//! Embedded game data and asset manifests.
+//! Embedded Kestrum presentation data with project-owned validation.
 
-use macroquad_toolkit::assets::TextureConfig;
-use macroquad_toolkit::data_loader::{
-    load_embedded_json, load_embedded_json_labeled, DataRegistry,
-};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use std::collections::BTreeMap;
 
-const GAME_CONFIG_JSON: &str =
-    macroquad_toolkit::include_json_str!("../assets/data/game_config.json");
-const ACTIONS_JSON: &str = macroquad_toolkit::include_json_str!("../assets/data/actions.json");
-const TEXTURE_MANIFEST_JSON: &str =
-    macroquad_toolkit::include_json_str!("../assets/data/texture_manifest.json");
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GameConfig {
-    pub game_name: String,
-    pub display_name: String,
-    pub save_slot: String,
-    pub version: String,
-    pub starting_points: i64,
-    pub starting_energy: f32,
-    pub max_energy: f32,
-    pub energy_per_second: f32,
-    pub world_width: usize,
-    pub world_height: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ActionDef {
-    pub id: String,
+#[derive(Debug, Clone, Deserialize)]
+pub struct GeographyLabel {
     pub name: String,
-    pub description: String,
-    pub energy_cost: f32,
-    pub points_reward: i64,
+    pub position: [f32; 2],
+    pub size: f32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GameData {
-    pub config: GameConfig,
-    pub actions: DataRegistry<ActionDef>,
-    pub texture_manifest: Vec<TextureConfig>,
+    pub game_id: String,
+    pub title: String,
+    pub subtitle: String,
+    pub edition: String,
+    pub map_path: String,
+    pub font_path: String,
+    pub body_font_path: String,
+    pub start_year: u32,
+    pub seasons: Vec<String>,
+    pub geography: Vec<GeographyLabel>,
+    pub text: BTreeMap<String, String>,
 }
+
+const REQUIRED_TEXT: &[&str] = &[
+    "new_game",
+    "continue",
+    "no_save",
+    "settings",
+    "help",
+    "credits",
+    "quit",
+    "menu",
+    "resume",
+    "save",
+    "load",
+    "main_menu",
+    "back",
+    "close",
+    "end_turn",
+    "world_map",
+    "turn",
+    "year",
+    "phase",
+    "zoom_in",
+    "zoom_out",
+    "reset_view",
+    "labels",
+    "contrast",
+    "on",
+    "off",
+    "standard",
+    "high",
+    "fullscreen",
+    "help_title",
+    "help_pan",
+    "help_zoom",
+    "help_turn",
+    "help_menu",
+    "help_scope",
+    "credits_title",
+    "credits_body",
+    "new_title",
+    "new_warning",
+    "cancel",
+    "save_success",
+    "load_success",
+    "save_failed",
+    "load_failed",
+    "settings_failed",
+];
 
 impl GameData {
-    /// Registry storage is unordered; keep visible cards and the first-action shortcut stable.
-    pub fn ordered_actions(&self) -> Vec<&ActionDef> {
-        let mut actions: Vec<_> = self.actions.iter().map(|(_, action)| action).collect();
-        actions.sort_by(|left, right| left.id.cmp(&right.id));
-        actions
+    pub fn load() -> Result<Self, String> {
+        let data: Self = macroquad_toolkit::include_json!("../assets/data/game_config.json")?;
+        data.validate()?;
+        Ok(data)
     }
 
-    pub fn load() -> Result<Self, String> {
-        let config = load_embedded_json_labeled("game_config", GAME_CONFIG_JSON)?;
-        let actions = DataRegistry::from_embedded_json(ACTIONS_JSON, "id")?;
-        let texture_manifest = load_embedded_json(TEXTURE_MANIFEST_JSON)?;
+    pub fn validate(&self) -> Result<(), String> {
+        if self.game_id != "kestrum" || self.start_year == 0 || self.seasons.len() != 4 {
+            return Err(
+                "Kestrum requires its own save identity, a positive year, and four seasons".into(),
+            );
+        }
+        for key in REQUIRED_TEXT {
+            if self
+                .text
+                .get(*key)
+                .is_none_or(|value| value.trim().is_empty())
+            {
+                return Err(format!("Missing Kestrum interface text: {key}"));
+            }
+        }
+        for label in &self.geography {
+            if label.name.trim().is_empty()
+                || !label
+                    .position
+                    .iter()
+                    .all(|v| v.is_finite() && (0.0..=1.0).contains(v))
+                || !label.size.is_finite()
+                || !(12.0..=36.0).contains(&label.size)
+            {
+                return Err(format!("Invalid geography label: {}", label.name));
+            }
+        }
+        Ok(())
+    }
 
-        Ok(Self {
-            config,
-            actions,
-            texture_manifest,
-        })
+    pub fn text<'a>(&'a self, key: &'a str) -> &'a str {
+        self.text.get(key).map(String::as_str).unwrap_or(key)
     }
 }
-
-#[cfg(test)]
-mod tests;

@@ -1,46 +1,41 @@
-use serde_json::Value;
-use std::collections::BTreeSet;
-use std::fs;
-use std::path::Path;
+//! Actual runtime artwork, interface copy, and semantic data validation.
+
+use kestrum::data::GameData;
+use std::{collections::BTreeSet, path::Path};
 
 #[test]
-fn asset_registry_contains_external_texture_manifest_paths() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let registry_json = fs::read_to_string(root.join("asset_registry.json"))
-        .expect("asset_registry.json must be readable");
-    let registry: Value =
-        serde_json::from_str(&registry_json).expect("asset registry must be valid JSON");
-    assert_eq!(registry["version"], 1);
-
-    let registered: BTreeSet<&str> = registry["assets"]
+fn runtime_artwork_is_registered_and_present() {
+    let data = GameData::load().unwrap();
+    let registry: serde_json::Value =
+        macroquad_toolkit::include_json!("../asset_registry.json").unwrap();
+    let registered: BTreeSet<_> = registry["assets"]
         .as_array()
-        .expect("asset registry needs an assets array")
+        .unwrap()
         .iter()
-        .map(|entry| entry.as_str().expect("asset paths must be strings"))
+        .map(|path| path.as_str().unwrap())
         .collect();
-
-    let manifest_json = fs::read_to_string(root.join("assets/data/texture_manifest.json"))
-        .expect("texture manifest must be readable");
-    let manifest: Vec<Value> =
-        serde_json::from_str(&manifest_json).expect("texture manifest must be valid JSON");
-    let expected: BTreeSet<&str> = manifest
-        .iter()
-        .map(|entry| {
-            entry["path"]
-                .as_str()
-                .expect("each texture manifest entry needs a path")
-        })
-        .collect();
-
-    let missing: Vec<&str> = expected.difference(&registered).copied().collect();
-    assert!(
-        missing.is_empty(),
-        "texture manifest paths missing from asset registry: {missing:?}"
-    );
-    for relative in registered {
+    assert_eq!(registry["version"], 1);
+    for path in [&data.map_path, &data.font_path, &data.body_font_path] {
+        assert!(registered.contains(path.as_str()));
+    }
+    for path in registered {
         assert!(
-            root.join(relative).is_file(),
-            "registered runtime asset is missing: {relative}"
+            Path::new(env!("CARGO_MANIFEST_DIR")).join(path).is_file(),
+            "Missing asset: {path}"
         );
     }
+}
+
+#[test]
+fn malformed_interface_data_is_rejected_before_play() {
+    let data = GameData::load().unwrap();
+    let mut missing_copy = data.clone();
+    missing_copy.text.remove("new_game");
+    assert!(missing_copy.validate().unwrap_err().contains("new_game"));
+    let mut wrong_seasons = data.clone();
+    wrong_seasons.seasons.clear();
+    assert!(wrong_seasons.validate().is_err());
+    let mut invalid_position = data;
+    invalid_position.geography[0].position[0] = f32::NAN;
+    assert!(invalid_position.validate().is_err());
 }

@@ -2,7 +2,11 @@
 
 [Documentation index](README.md) · [Decisions](13-decisions-and-open-questions.md) · [Verification record](verification/documentation.md)
 
-## Current milestone: documentation and initial repository
+## Current milestone: title screen and empty atlas
+
+The initial title/campaign shell is implemented. New Game opens empty geography as explicitly requested; nodes, factions, armies, and local regions remain later work. [Verification](verification/initial-map.md) records checks and limitations. This completes onboarding and presentation only, not every proposed M1 simulation feature below.
+
+## Previous milestone: documentation and initial repository
 
 This milestone consolidates the complete founding design, preserves the original drafts within `docs/reference/`, records conflicts and proposals, and commits the supplied template with the documentation. It makes no Kestrum gameplay or UI changes.
 

@@ -1,30 +1,16 @@
-<#
-.SYNOPSIS
-    Headless screenshot harness for the game template.
-
-.DESCRIPTION
-    Thin wrapper around the shared macroquad-toolkit capture script. Builds the
-    debug exe and drives it through the env-var capture hook
-    (GAME_TEMPLATE_CAPTURE_*) provided by macroquad_toolkit::capture in
-    src/main.rs. Named scenes reset runtime state before each capture.
-
-.EXAMPLE
-    ./scripts/capture_ui.ps1
-    ./scripts/capture_ui.ps1 -Frames 60 -SkipBuild
-#>
+# Kestrum's deterministic title, atlas, and menu captures through the shared pool.
 param(
-    [string[]]$Scenes = @("gameplay", "paused", "scrolled", "zoomed"),
-    [int]$Frames = 150,
-    [string]$OutputDir = "docs\verification",
+    [string[]]$Scenes = @("title", "gameplay", "zoomed", "menu", "settings", "help", "confirm_new", "save_error"),
+    [int]$Frames = 12,
+    [int]$WindowWidth = 1920,
+    [int]$WindowHeight = 1080,
+    [switch]$Fullscreen,
     [switch]$SkipBuild
 )
 
 $ErrorActionPreference = "Stop"
 $gameDir = Split-Path -Parent $PSScriptRoot
-$workspace = Split-Path -Parent $gameDir
-if (-not (Test-Path (Join-Path $workspace "macroquad-toolkit"))) {
-    $workspace = Split-Path -Parent $workspace
-}
-$shared = Join-Path $workspace "macroquad-toolkit\scripts\capture_ui.ps1"
-
-& $shared -GameDir $gameDir -Prefix "GAME_TEMPLATE" -Scenes $Scenes -Frames $Frames -OutputDir $OutputDir -SkipBuild:$SkipBuild
+$shared = Join-Path (Split-Path -Parent $gameDir) "macroquad-toolkit\scripts\capture_ui.ps1"
+& $shared -GameDir $gameDir -Prefix "KESTRUM" -Scenes $Scenes -Frames $Frames `
+    -WindowWidth $WindowWidth -WindowHeight $WindowHeight -OutputDir "docs\verification" -SkipBuild:$SkipBuild -Fullscreen:$Fullscreen
+if (-not $?) { exit 1 }

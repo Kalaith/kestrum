@@ -1,5 +1,6 @@
 //! Toolkit-loaded content assembled and validated without a graphics context.
 
+pub mod combat;
 pub mod economy;
 pub mod rules;
 mod setup_validation;
@@ -19,6 +20,8 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub troops: combat::Troops,
+    pub combat: combat::CombatRules,
     pub presentation: PresentationData,
     pub economy: economy::Economy,
     pub rules: rules::CampaignRules,
@@ -28,6 +31,8 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            troops: macroquad_toolkit::include_json!("../assets/data/troops.json")?,
+            combat: macroquad_toolkit::include_json!("../assets/data/combat_rules.json")?,
             presentation: macroquad_toolkit::include_json!("../assets/data/game_config.json")?,
             economy: macroquad_toolkit::include_json!("../assets/data/economy.json")?,
             rules: macroquad_toolkit::include_json!("../assets/data/campaign_rules.json")?,
@@ -38,6 +43,8 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.troops.validate()?;
+        self.combat.validate()?;
         self.presentation.validate()?;
         self.economy.validate()?;
         self.rules.validate()?;
@@ -145,6 +152,62 @@ const REQUIRED_TEXT: &[&str] = &[
     "formation_slots",
     "empty_formation_slot",
     "person_needs_formation",
+    "person_fit",
+    "person_wounded",
+    "wound_steps_remaining",
+    "battle_reports",
+    "help_battle",
+    "help_battle_reports",
+    "help_wounds",
+    "battle_recorded",
+    "no_battle_reports",
+    "older_report",
+    "newer_report",
+    "battle_outcome",
+    "battle_forces",
+    "battle_factors",
+    "battle_attacker",
+    "battle_defender",
+    "battle_victory",
+    "battle_stalemate",
+    "battle_mutual_destruction",
+    "battle_annihilation",
+    "battle_rout",
+    "battle_exchange_limit",
+    "battle_exchanges",
+    "battle_exhausted",
+    "battle_previous_control",
+    "battle_structural_damage",
+    "battle_occupation",
+    "battle_holds_site",
+    "battle_withdrew",
+    "battle_army_destroyed",
+    "battle_counted_elements",
+    "battle_slot",
+    "battle_combat_losses",
+    "battle_encirclement_losses",
+    "battle_destroyed",
+    "class_officer",
+    "person_dead",
+    "battle_person_died_wipe",
+    "battle_person_no_refuge",
+    "battle_wound_wipe",
+    "battle_wound_command",
+    "battle_assumed_command",
+    "battle_previous_commander",
+    "battle_person_event",
+    "no_battle_people",
+    "battle_simultaneous",
+    "battle_simultaneous_detail",
+    "battle_terrain",
+    "battle_defender_resistance",
+    "battle_initial_leadership",
+    "battle_leadership_change",
+    "battle_counter_attack",
+    "battle_exchange",
+    "battle_attacker_losses",
+    "battle_defender_losses",
+    "battle_recorded_place",
     "help_leadership",
     "recruit_success",
     "disband_success",

@@ -96,6 +96,9 @@ pub(super) fn person(
     if selected.faction != owner {
         return Err(RuleError::PersonNotOwned { person });
     }
+    if !selected.is_alive() {
+        return Err(RuleError::UnknownPerson { person });
+    }
     if selected.assignment
         == (PersonAssignment::Formation {
             formation: to_formation,
@@ -108,12 +111,14 @@ pub(super) fn person(
             Some(formation_army(campaign, owner, formation)?)
         }
         PersonAssignment::Site { .. } => None,
+        PersonAssignment::Dead => return Err(RuleError::UnknownPerson { person }),
     };
     let source_site = match selected.assignment {
         PersonAssignment::Formation { .. } => {
             campaign.armies[&source.ok_or(RuleError::NotColocated)?].site
         }
         PersonAssignment::Site { site } => site,
+        PersonAssignment::Dead => return Err(RuleError::UnknownPerson { person }),
     };
     if campaign.armies[&target].site != source_site {
         return Err(RuleError::NotColocated);
@@ -212,6 +217,7 @@ fn carry_commander(
 /// Physical co-location for an observer-owned person, including people at a site.
 pub fn person_site(campaign: &StrategicCampaign, person: PersonId) -> Option<SiteId> {
     match campaign.people.get(&person)?.assignment {
+        PersonAssignment::Dead => None,
         PersonAssignment::Site { site } => Some(site),
         PersonAssignment::Formation { formation } => campaign
             .armies

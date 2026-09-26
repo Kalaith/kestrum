@@ -45,8 +45,10 @@ impl StrategicCampaign {
                 require(
                     self.people.get(&commander).is_some_and(|person| {
                         person.faction == army.faction
-                            && person.age_years(self.completed_rounds)
-                                >= data.rules.leadership.field_min_age_years
+                            && person.is_fit_for_field(
+                                self.completed_rounds,
+                                data.rules.leadership.field_min_age_years,
+                            )
                             && matches!(person.assignment, PersonAssignment::Formation {formation}
                             if army.formation_ids().any(|id| id == formation))
                     }),
@@ -101,52 +103,6 @@ impl StrategicCampaign {
             "world.site_damage",
             "unknown physical site or damage above 100",
         )
-    }
-
-    fn validate_people(&self, data: &GameData) -> Result<(), String> {
-        for (id, person) in &self.people {
-            require(
-                *id == person.id && id.0 > 0,
-                "people.id",
-                "invalid identity",
-            )?;
-            require(
-                self.factions.contains_key(&person.faction),
-                "people.faction",
-                "unknown faction",
-            )?;
-            require(
-                valid_name(&person.name),
-                "people.name",
-                "invalid person name",
-            )?;
-            let age = i64::from(self.completed_rounds).checked_sub(person.birth_round);
-            require(
-                age.is_some_and(|age| (0..=i64::from(u32::MAX) * 4).contains(&age))
-                    && person.service_start_round <= self.completed_rounds
-                    && person.birth_round <= i64::from(person.service_start_round),
-                "people.birth_round/service_start_round",
-                "invalid birth or service date",
-            )?;
-            require(
-                person.movement_spent <= data.rules.leadership.officer_movement_allowance,
-                "people.movement_spent",
-                "exceeds seasonal allowance",
-            )?;
-            let valid_assignment = match person.assignment {
-                PersonAssignment::Formation { formation } => self
-                    .formations
-                    .get(&formation)
-                    .is_some_and(|entry| entry.faction == person.faction),
-                PersonAssignment::Site { site } => self.world.site(site).is_some(),
-            };
-            require(
-                valid_assignment,
-                "people.assignment",
-                "unknown or foreign assignment",
-            )?;
-        }
-        Ok(())
     }
 
     fn validate_economy_statements(&self) -> Result<(), String> {

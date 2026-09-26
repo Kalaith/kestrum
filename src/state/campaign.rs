@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
+    battle::{BattleId, BattleReport},
     military::{Army, ArmyId, EconomyStatement, Formation, FormationId, RecoveryStatement},
     people::{Person, PersonId},
     world::CampaignWorld,
@@ -99,6 +100,7 @@ impl PartialEq for RandomStreams {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NextIds {
+    pub battle: BattleId,
     pub faction: FactionId,
     pub marker: MarkerId,
     pub site: SiteId,
@@ -112,6 +114,9 @@ pub struct NextIds {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DomainFactKind {
+    BattleResolved {
+        battle: BattleId,
+    },
     FactionPassed {
         faction: FactionId,
     },
@@ -162,6 +167,7 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub battles: BTreeMap<BattleId, BattleReport>,
     pub version: u32,
     pub content_version: u32,
     pub campaign_id: CampaignId,
@@ -210,12 +216,14 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            battles: BTreeMap::new(),
             version: STRATEGIC_VERSION,
             content_version: scenario.content_version,
             campaign_id: CampaignId(scenario.seed),
             seed: scenario.seed,
             rng: RandomStreams::new(scenario.seed),
             next_ids: NextIds {
+                battle: BattleId(1),
                 faction: FactionId(next(scenario.factions.iter().map(|f| f.id.0))?),
                 marker: MarkerId(next(scenario.markers.iter().map(|m| m.id.0))?),
                 site: SiteId(next(scenario.sites.iter().map(|s| s.id.0))?),

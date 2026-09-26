@@ -1,4 +1,8 @@
-//! Minimal living founder records; age and assignment are authoritative facts.
+//! Persistent people, field fitness, and released assignments after death.
+
+mod combat;
+mod validation;
+pub use combat::{PersonCombatEvent, PersonCombatOutcome, PersonDeathReason, WoundCause};
 
 use super::{
     military::{ArmyId, FormationId},
@@ -19,6 +23,22 @@ pub struct PersonId(pub u32);
 pub enum PersonAssignment {
     Formation { formation: FormationId },
     Site { site: SiteId },
+    Dead,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PersonStatus {
+    #[default]
+    Fit,
+    Wounded {
+        since_round: u32,
+        remaining_steps: u32,
+    },
+    Dead {
+        completed_rounds: u32,
+        site: SiteId,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,10 +53,28 @@ pub struct Person {
     pub class: FounderClass,
     pub assignment: PersonAssignment,
     pub movement_spent: u32,
+    /// Earlier saves simulated only living, fit people; no past injury is invented.
+    #[serde(default)]
+    pub status: PersonStatus,
 }
 
 impl Person {
+    pub fn is_alive(&self) -> bool {
+        !matches!(self.status, PersonStatus::Dead { .. })
+    }
+
+    pub fn is_fit_for_field(&self, completed_rounds: u32, minimum_age: u32) -> bool {
+        self.status == PersonStatus::Fit && self.age_years(completed_rounds) >= minimum_age
+    }
+
     pub fn age_years(&self, completed_rounds: u32) -> u32 {
+        let completed_rounds = match self.status {
+            PersonStatus::Dead {
+                completed_rounds: death_round,
+                ..
+            } => completed_rounds.min(death_round),
+            _ => completed_rounds,
+        };
         i64::from(completed_rounds)
             .saturating_sub(self.birth_round)
             .saturating_div(4)
@@ -45,14 +83,13 @@ impl Person {
 }
 
 impl StrategicCampaign {
-    /// All people currently represented are living, fit founders. Their field
-    /// contribution requires adulthood and attachment to this surviving army.
+    /// Only living, fit adults attached to a surviving formation contribute.
     pub fn army_leadership_permille(&self, army: ArmyId, data: &GameData) -> Option<u32> {
         let army = self.armies.get(&army)?;
         let rules = &data.rules.leadership;
         let contributes = |person: &Person| {
             person.faction == army.faction
-                && person.age_years(self.completed_rounds) >= rules.field_min_age_years
+                && person.is_fit_for_field(self.completed_rounds, rules.field_min_age_years)
                 && matches!(person.assignment, PersonAssignment::Formation { formation }
                     if army.formation_ids().any(|id| id == formation)
                     && self.formations.get(&formation).is_some_and(|entry| entry.headcount > 0))

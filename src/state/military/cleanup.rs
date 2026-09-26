@@ -1,7 +1,10 @@
 //! Removing a formation preserves people and never reuses a military identity.
 
 use super::FormationId;
-use crate::state::{people::PersonAssignment, StrategicCampaign};
+use crate::state::{
+    people::{PersonAssignment, PersonStatus},
+    StrategicCampaign,
+};
 
 impl StrategicCampaign {
     /// Used after disbanding or resolved zero-headcount destruction. This also
@@ -55,6 +58,7 @@ impl StrategicCampaign {
                 .and_then(|id| candidate.people.get(&id))
                 .is_some_and(|person| {
                     person.faction == army.faction
+                        && person.status == PersonStatus::Fit
                         && matches!(person.assignment, PersonAssignment::Formation { formation }
                         if army.formation_ids().any(|id| id == formation))
                 });

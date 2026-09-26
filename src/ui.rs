@@ -2,6 +2,7 @@
 
 mod army;
 mod atlas;
+mod battle;
 mod components;
 mod menus;
 mod movement;
@@ -30,6 +31,7 @@ pub use army::{
     ArmyMode, ArmyView, TransferSubject, TransferView, PEOPLE_PAGE_SIZE, TRANSFER_PAGE_SIZE,
 };
 pub use atlas::map_controls_contain;
+pub use battle::{BattleTab, BattleView};
 pub use movement::{
     draw_map_overlay as draw_move_map_overlay,
     map_controls_contain as movement_map_controls_contain,
@@ -40,6 +42,10 @@ pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenBattleReports,
+    BattleReport(i32),
+    BattlePage(i32),
+    SetBattleTab(BattleTab),
     ArmyOrders,
     ArmyPeople,
     ArmyPeoplePage(i32),
@@ -116,6 +122,7 @@ pub struct Context<'a> {
     pub economy: &'a Economy,
     pub army: &'a ArmyView,
     pub movement: &'a MoveView,
+    pub battle: &'a BattleView,
     pub help_page: usize,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
@@ -153,6 +160,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     };
     if ctx.state.overlay == Overlay::Saves {
         saves::draw(ctx)
+    } else if ctx.state.overlay == Overlay::Battle {
+        battle::draw(ctx)
     } else if ctx.state.overlay == Overlay::Armies {
         army::draw(ctx)
     } else if matches!(ctx.state.overlay, Overlay::MoveGroup | Overlay::MoveReview) {

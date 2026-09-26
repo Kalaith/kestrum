@@ -10,6 +10,7 @@ use crate::{
         GameData,
     },
     state::{
+        battle::BattleId,
         military::{ArmyId, FormationId},
         people::PersonId,
         StrategicCampaign,
@@ -57,7 +58,7 @@ impl fmt::Display for MovementBlock {
                 f.write_str("Peace grants no military access to this foreign site.")
             }
             Self::EncounterUnavailable => f.write_str(
-                "An encounter is required here. Battles and assaults are not available yet.",
+                "This encounter requires a siege or multiple hostile sides, which are not available yet.",
             ),
             Self::Contested => f.write_str("A contested site requires an encounter before entry."),
             Self::RouteUnavailable => f.write_str("The next physical route is unavailable."),
@@ -86,6 +87,7 @@ pub struct MovementPreview {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MovementOutcome {
+    pub battle: Option<BattleId>,
     pub armies: Vec<ArmyId>,
     pub path: Vec<SiteId>,
     pub spent: u32,
@@ -125,6 +127,9 @@ pub fn person_remaining(
         .people
         .get(&id)
         .ok_or(RuleError::UnknownPerson { person: id })?;
+    if !person.is_alive() {
+        return Err(RuleError::UnknownPerson { person: id });
+    }
     Ok(data
         .rules
         .leadership
@@ -319,11 +324,12 @@ fn public_block(
                 relation.factions.contains(&owner) && relation.factions.contains(&foreign)
             })
             .is_some_and(|relation| relation.state == DiplomaticState::Peace);
-        return Some(if peace {
-            MovementBlock::PeaceBoundary
-        } else {
-            MovementBlock::EncounterUnavailable
-        });
+        if peace {
+            return Some(MovementBlock::PeaceBoundary);
+        }
+        if site.military != MilitaryLayer::None {
+            return Some(MovementBlock::EncounterUnavailable);
+        }
     }
     if campaign.world.contested_sites.contains(&site.id) {
         return Some(MovementBlock::Contested);

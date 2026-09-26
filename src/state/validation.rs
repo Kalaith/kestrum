@@ -35,6 +35,7 @@ impl StrategicCampaign {
         self.validate_factions(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
+        self.validate_battles(data)?;
         self.validate_phase()?;
         self.validate_facts()?;
         self.validate_counters()
@@ -246,6 +247,14 @@ impl StrategicCampaign {
                 "invalid identity, sequence or date",
             )?;
             match &fact.kind {
+                DomainFactKind::BattleResolved { battle } => require(
+                    self.battles.get(battle).is_some_and(|report| {
+                        report.sequence == fact.sequence
+                            && report.completed_rounds == fact.completed_rounds
+                    }),
+                    "pending_facts.battle",
+                    "missing or mismatched encounter receipt",
+                )?,
                 DomainFactKind::FactionPassed { faction } => require(
                     self.acted.contains(faction) && actors.insert(*faction),
                     "pending_facts.faction",

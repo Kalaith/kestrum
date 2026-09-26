@@ -1,0 +1,10 @@
+{
+  "formations": {
+    "warriors": {"attack": 10, "resistance": 10},
+    "spearmen": {"attack": 9, "resistance": 11},
+    "archers": {"attack": 12, "resistance": 7},
+    "riders": {"attack": 24, "resistance": 18},
+    "medics": {"attack": 4, "resistance": 8},
+    "siege_engines": {"attack": 20, "resistance": 16}
+  }
+}

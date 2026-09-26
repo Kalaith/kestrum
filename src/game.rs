@@ -1,6 +1,10 @@
 //! Application coordination, toolkit persistence, and routed atlas gestures.
 
+mod actions;
+
 use crate::ui::{self, UiAction};
+mod battle;
+mod battle_capture;
 mod campaign;
 mod composition;
 mod military;
@@ -43,6 +47,7 @@ pub struct Game {
     saves: ui::SaveView,
     army: ui::ArmyView,
     movement: ui::MoveView,
+    battle: ui::BattleView,
     help_page: usize,
     pending_save: Option<storage::PendingWrite>,
     retry_save_when_ready: bool,
@@ -118,6 +123,7 @@ impl Game {
             saves: ui::SaveView::default(),
             army: ui::ArmyView::default(),
             movement: ui::MoveView::default(),
+            battle: ui::BattleView::default(),
             help_page: 0,
             pending_save: None,
             retry_save_when_ready: false,
@@ -164,6 +170,7 @@ impl Game {
         self.import_save_exists = false;
         self.saves = ui::SaveView::default();
         self.movement = ui::MoveView::default();
+        self.battle = ui::BattleView::default();
         self.army = ui::ArmyView::default();
         self.help_page = 0;
         self.save_error.clear();
@@ -217,6 +224,15 @@ impl Game {
                 self.state.overlay = Overlay::Help;
                 self.help_page = 3;
             }
+            "help_battle" => {
+                self.state.overlay = Overlay::Help;
+                self.help_page = 4;
+            }
+            "battle_empty" | "battle_outcome" | "battle_forces" | "battle_factors"
+            | "battle_people" | "battle_dense" | "battle_defeat" | "battle_destroyed"
+            | "battle_victory" | "battle_wounded" | "battle_succession" => {
+                self.capture_battle(scene)
+            }
             "move_group" | "move_group_dense" | "move_map" | "move_preview" | "move_review"
             | "move_blocked" | "move_exhausted" | "transfer" | "transfer_slots"
             | "transfer_person" | "army_recovery" | "army_cutoff" | "army_recovered"
@@ -261,6 +277,7 @@ impl Game {
             .and_then(Campaign::strategic)
             .and_then(|campaign| engine::project(campaign, campaign.player).ok());
         if let Some(view) = &campaign_view {
+            self.battle.clamp(&view.battles);
             self.army.people_page = self.army.people_page.min(
                 self.army
                     .local_people(view)
@@ -298,6 +315,7 @@ impl Game {
             economy: &self.data.economy,
             army: &self.army,
             movement: &self.movement,
+            battle: &self.battle,
             help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,
@@ -416,163 +434,6 @@ impl Game {
             return Vec::new();
         };
         vec![GestureTouch::new(0, pointer.position, phase)]
-    }
-
-    fn apply(&mut self, action: UiAction) {
-        match action {
-            UiAction::ArmyOrders => self.army.mode = ui::ArmyMode::Orders,
-            UiAction::ArmyPeople => {
-                self.army.mode = ui::ArmyMode::People;
-                self.army.people_page = 0;
-            }
-            UiAction::ArmyPeoplePage(delta) => {
-                self.army.people_page = self.army.people_page.saturating_add_signed(delta as isize)
-            }
-            UiAction::BeginMove(army) => self.begin_move(army),
-            UiAction::ToggleMoveArmy(army) => self.toggle_move_army(army),
-            UiAction::MoveGroupPage(delta) => {
-                self.movement.page = self.movement.page.saturating_add_signed(delta as isize)
-            }
-            UiAction::ChooseMoveDestination => self.choose_move_destination(),
-            UiAction::ReviewMove => self.review_move(),
-            UiAction::MoveRoutePage(delta) => {
-                self.movement.route_page = self
-                    .movement
-                    .route_page
-                    .saturating_add_signed(delta as isize)
-            }
-            UiAction::ConfirmMove => self.confirm_move(),
-            UiAction::CancelMove => self.cancel_move(),
-            UiAction::BeginTransferFormation(formation) => {
-                self.begin_transfer(ui::TransferSubject::Formation(formation))
-            }
-            UiAction::BeginTransferPerson(person) => {
-                self.begin_transfer(ui::TransferSubject::Person(person))
-            }
-            UiAction::SelectTransferArmy(army) => {
-                self.army.transfer.army = Some(army);
-                self.army.transfer.slot = None;
-                self.army.transfer.formation = None;
-            }
-            UiAction::ClearTransferArmy => {
-                self.army.transfer.army = None;
-                self.army.transfer.slot = None;
-                self.army.transfer.formation = None;
-            }
-            UiAction::SelectTransferSlot(slot) => self.army.transfer.slot = Some(slot),
-            UiAction::SelectTransferFormation(formation) => {
-                self.army.transfer.formation = Some(formation)
-            }
-            UiAction::TransferPage(delta) => {
-                self.army.transfer.page = self
-                    .army
-                    .transfer
-                    .page
-                    .saturating_add_signed(delta as isize)
-            }
-            UiAction::ConfirmTransfer => self.confirm_transfer(),
-            UiAction::SplitArmy(formation) => self.split_army(formation),
-            UiAction::OpenArmies(site) => self.open_armies(site),
-            UiAction::ArmyPage(delta) => self.army_page(delta),
-            UiAction::SelectFormation(id) => self.army.selected = Some(id),
-            UiAction::BeginRecruit(army) => self.begin_recruit(army),
-            UiAction::SelectRecruit(kind) => {
-                if let ui::ArmyMode::Recruit { kind: selected, .. } = &mut self.army.mode {
-                    *selected = Some(kind);
-                }
-            }
-            UiAction::ConfirmRecruit => self.confirm_recruit(),
-            UiAction::AskDisband(id) => {
-                self.army.mode = ui::ArmyMode::Disband(id);
-                self.army.status.clear();
-            }
-            UiAction::ConfirmDisband(id) => self.confirm_disband(id),
-            UiAction::CancelArmyAction => {
-                self.army.mode = ui::ArmyMode::Roster;
-                self.army.status.clear();
-            }
-            UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(3);
-            }
-            UiAction::NewGame => {
-                if self.save_exists || self.state.campaign.is_some() {
-                    self.state.overlay = Overlay::ConfirmNew;
-                } else {
-                    self.start_game();
-                }
-            }
-            UiAction::ConfirmNew => self.start_game(),
-            UiAction::Continue => {
-                if self.state.campaign.is_some() {
-                    self.state.screen = Screen::Campaign;
-                } else {
-                    self.load();
-                }
-            }
-            UiAction::Open(overlay) => {
-                self.state.overlay = overlay;
-                if overlay == Overlay::Help {
-                    self.help_page = 0;
-                }
-            }
-            UiAction::Back => self.go_back(),
-            UiAction::MainMenu => {
-                self.state.main_menu();
-                self.navigation.reset(&mut self.view);
-                self.movement = ui::MoveView::default();
-            }
-            UiAction::SelectMap(selection) => self.select_map(selection),
-            UiAction::EnterRegion(region) => self.enter_region(region),
-            UiAction::WorldMap => self.navigation.show_world(&mut self.view),
-            UiAction::CloseSelection => self.navigation.clear_selection(),
-            UiAction::Save => self.open_saves(true),
-            UiAction::Load => self.open_saves(false),
-            UiAction::LoadLegacy => self.load_slot(SAVE_SLOT),
-            UiAction::ImportCampaign => self.import_campaign(),
-            UiAction::SelectSave(id) => self.saves.selected = Some(id),
-            UiAction::SavePage(delta) => self.saves.change_page(delta),
-            UiAction::NameSave(target) => self.name_save(target),
-            UiAction::LoadSelectedSave => self.load_selected(),
-            UiAction::OverwriteSave => self.name_save(self.saves.selected),
-            UiAction::AskDeleteSave => {
-                if let Some(id) = self.saves.selected {
-                    self.saves.mode = ui::SaveMode::ConfirmDelete(id);
-                }
-            }
-            UiAction::ConfirmDeleteSave(id) => self.delete_save(id),
-            UiAction::CommitNamedSave => self.commit_named_save(),
-            UiAction::CancelSaveEdit => self.saves.mode = ui::SaveMode::Browse,
-            UiAction::RetryStorage => self.retry_storage(),
-            UiAction::RetrySave => self.retry_save(),
-            UiAction::ContinueUnsaved => self.continue_unsaved(),
-            UiAction::EditSaveName(action) => self.edit_save_name(action),
-            UiAction::EndTurn => self.apply_campaign_command(Command::EndTurn),
-            UiAction::PauseNpcs(paused) => {
-                self.apply_campaign_command(Command::SetNpcPaused(paused))
-            }
-            UiAction::StepNpc => self.apply_campaign_command(Command::StepNpc),
-            UiAction::Zoom(factor) => self.view.zoom(vec2(WIDTH / 2.0, HEIGHT / 2.0), factor),
-            UiAction::Recenter => self.view.reset(),
-            UiAction::ToggleLabels => {
-                self.preferences.hide_labels = !self.preferences.hide_labels;
-                self.save_preferences();
-            }
-            UiAction::ToggleContrast => {
-                self.preferences.high_contrast = !self.preferences.high_contrast;
-                self.save_preferences();
-            }
-            UiAction::DismissFeedback => {
-                self.error = None;
-                self.notice = None;
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            UiAction::Fullscreen => {
-                self.fullscreen = !self.fullscreen;
-                set_fullscreen(self.fullscreen);
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            UiAction::Quit => self.running = false,
-        }
     }
 
     fn save_preferences(&mut self) {

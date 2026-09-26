@@ -135,7 +135,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::SaveRecovery
         | Overlay::Armies
         | Overlay::MoveGroup
-        | Overlay::MoveReview => return None,
+        | Overlay::MoveReview
+        | Overlay::Battle => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
@@ -153,7 +154,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::SaveRecovery
         | Overlay::Armies
         | Overlay::MoveGroup
-        | Overlay::MoveReview => None,
+        | Overlay::MoveReview
+        | Overlay::Battle => None,
     };
     if action.is_some() {
         return action;
@@ -177,9 +179,9 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
 
 fn pause(ctx: &Context<'_>) -> Option<UiAction> {
     for (index, (key, action)) in [
-        ("resume", UiAction::Back),
         ("save", UiAction::Save),
         ("load", UiAction::Load),
+        ("battle_reports", UiAction::OpenBattleReports),
         ("settings", UiAction::Open(Overlay::Settings)),
         ("help", UiAction::Open(Overlay::Help)),
         ("main_menu", UiAction::MainMenu),
@@ -271,6 +273,8 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
         &["help_move", "help_route", "help_spent"]
     } else if ctx.help_page == 3 {
         &["help_transfer", "help_recovery", "help_transfer_phase"]
+    } else if ctx.help_page == 4 {
+        &["help_battle", "help_battle_reports", "help_wounds"]
     } else if ctx.help_page == 1 {
         &[
             "help_army",
@@ -315,7 +319,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             ctx,
             Rect::new(766.0, 548.0, 124.0, 48.0),
             &ctx.text("next"),
-            ctx.help_page < 3,
+            ctx.help_page < 4,
             false,
         ) {
             return Some(UiAction::HelpPage(1));

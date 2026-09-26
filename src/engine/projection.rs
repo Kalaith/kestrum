@@ -8,6 +8,7 @@ use crate::{
         world::{FactionId, SiteId},
     },
     state::{
+        battle::BattleReport,
         military::{Army, EconomyStatement, Formation, RecoveryStatement},
         people::Person,
         world::CampaignWorld,
@@ -32,6 +33,8 @@ pub struct VisibleFaction {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VisibleCampaign {
+    /// Actual encounter snapshots, visible only to participants.
+    pub battles: Vec<BattleReport>,
     pub campaign_id: CampaignId,
     pub completed_rounds: u32,
     pub player: FactionId,
@@ -64,6 +67,7 @@ pub fn project(
         .get(&active_faction)
         .ok_or(RuleError::UnknownActor)?;
     Ok(VisibleCampaign {
+        battles: super::battle_reports(campaign, observer),
         campaign_id: campaign.campaign_id,
         completed_rounds: campaign.completed_rounds,
         player: campaign.player,

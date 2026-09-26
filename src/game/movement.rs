@@ -121,6 +121,9 @@ impl Game {
                         self.army.status = message;
                     }
                 }
+                if outcome.battle.is_some() {
+                    self.open_battle_reports();
+                }
             }
             Err(error) => self.movement.status = error.to_string(),
         }

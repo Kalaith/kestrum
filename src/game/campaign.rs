@@ -34,6 +34,7 @@ impl Game {
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();
+                self.battle = ui::BattleView::default();
                 self.error = None;
                 self.npc_delay = 0.0;
                 self.save_checkpoint();
@@ -56,6 +57,13 @@ impl Game {
             Ok(outcome) => {
                 if outcome.round_completed {
                     self.save_checkpoint();
+                }
+                if outcome
+                    .battle
+                    .is_some_and(|battle| self.witnessed_battle(battle))
+                    && self.state.overlay != Overlay::SaveRecovery
+                {
+                    self.open_battle_reports();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),

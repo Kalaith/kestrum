@@ -11,6 +11,7 @@ use crate::{
         GameData,
     },
     state::{
+        battle::BattleId,
         campaign::{DomainFact, DomainFactKind, FactId},
         military::{ArmyId, FormationId},
         people::PersonId,
@@ -256,6 +257,7 @@ impl std::error::Error for RuleError {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActionOutcome {
+    pub battle: Option<BattleId>,
     pub accepted_sequence: u64,
     pub active_faction: FactionId,
     pub round_completed: bool,
@@ -335,6 +337,8 @@ fn prepare(
 ) -> Result<(StrategicCampaign, ActionOutcome), RuleError> {
     data.economy.validate().map_err(RuleError::InvalidState)?;
     data.rules.validate().map_err(RuleError::InvalidState)?;
+    data.troops.validate().map_err(RuleError::InvalidState)?;
+    data.combat.validate().map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
     validate_command(campaign, actor, &command)?;
     let mut candidate = campaign.clone();
@@ -346,6 +350,7 @@ fn prepare(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        battle: None,
         accepted_sequence: candidate.accepted_sequence,
         active_faction: candidate.active_faction(),
         round_completed: false,
@@ -389,13 +394,18 @@ fn prepare(
         }
         Command::Move(order) => {
             let moved = movement::execute(&mut candidate, data, &order)?;
-            let fact = DomainFactKind::ArmiesMoved {
-                faction: owner,
-                armies: moved.armies.clone(),
-                path: moved.path.clone(),
-                spent: moved.spent,
+            let fact = if let Some(battle) = moved.battle {
+                DomainFactKind::BattleResolved { battle }
+            } else {
+                DomainFactKind::ArmiesMoved {
+                    faction: owner,
+                    armies: moved.armies.clone(),
+                    path: moved.path.clone(),
+                    spent: moved.spent,
+                }
             };
             record_fact(&mut candidate, &mut outcome, fact)?;
+            outcome.battle = moved.battle;
             outcome.movement = Some(moved);
         }
         Command::TransferFormation {

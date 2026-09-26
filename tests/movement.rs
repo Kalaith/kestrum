@@ -159,10 +159,13 @@ fn later_budget_or_blocked_edges_keep_the_legal_prefix_without_revealing_hidden_
     .movement
     .unwrap();
     assert_eq!(result.path, [1, 5, 6, 8].map(SiteId));
-    assert_eq!(
+    assert!(matches!(
         result.stop.unwrap().reason,
-        MovementBlock::EncounterUnavailable
-    );
+        MovementBlock::InsufficientMovement {
+            required: 2,
+            remaining: 0
+        }
+    ));
     assert_eq!(
         hostile.world.site(SiteId(10)).unwrap().controller,
         Some(FactionId(3))
@@ -183,7 +186,10 @@ fn later_budget_or_blocked_edges_keep_the_legal_prefix_without_revealing_hidden_
         preview(&hidden, &data, Actor::Player, order(&[1], &[1, 5, 6])),
         preview(&initial, &data, Actor::Player, order(&[1], &[1, 5, 6]))
     );
-    rejected(&mut hidden, &data, order(&[1], &[1, 5, 6]));
+    let contact = apply(&mut hidden, &data, Actor::Player, order(&[1], &[1, 5, 6])).unwrap();
+    assert!(contact.battle.is_some());
+    assert_eq!(contact.movement.unwrap().path, [SiteId(1), SiteId(5)]);
+    assert_eq!(hidden.battles.len(), 1);
     let mut interrupted = initial.clone();
     let moved = apply(
         &mut interrupted,

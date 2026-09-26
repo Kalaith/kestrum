@@ -1,6 +1,6 @@
 //! Stable-ID faction phases and one atomic seasonal boundary.
 
-use super::{actions::record_fact, economy, recovery, ActionOutcome, RuleError};
+use super::{actions::record_fact, economy, person_combat, recovery, ActionOutcome, RuleError};
 use crate::{
     data::GameData,
     state::{campaign::DomainFactKind, CampaignPhase, StrategicCampaign},
@@ -40,6 +40,7 @@ fn complete_round(
     let supply = recovery::snapshot(campaign);
     economy::resolve(campaign, data)?;
     recovery::resolve(campaign, data, &supply)?;
+    person_combat::heal_wounds(campaign, &supply);
     campaign.completed_rounds =
         campaign
             .completed_rounds

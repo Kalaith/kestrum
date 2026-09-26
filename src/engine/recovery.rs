@@ -67,6 +67,14 @@ pub(super) struct SupplySnapshot {
     supplied: BTreeMap<FactionId, BTreeSet<SiteId>>,
 }
 
+impl SupplySnapshot {
+    pub(super) fn contains(&self, faction: FactionId, site: SiteId) -> bool {
+        self.supplied
+            .get(&faction)
+            .is_some_and(|sites| sites.contains(&site))
+    }
+}
+
 pub(super) fn resolve(
     campaign: &mut StrategicCampaign,
     data: &GameData,

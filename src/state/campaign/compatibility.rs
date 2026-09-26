@@ -7,6 +7,7 @@ impl StrategicCampaign {
         mut value: serde_json::Value,
     ) -> Result<Self, serde_json::Error> {
         initialize_earlier_military(&mut value);
+        initialize_earlier_battles(&mut value);
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.
@@ -26,6 +27,46 @@ impl StrategicCampaign {
             campaign.reconcile_region_control();
         }
         Ok(campaign)
+    }
+}
+
+fn initialize_earlier_battles(value: &mut serde_json::Value) {
+    if value.get("battles").is_some()
+        || value.pointer("/next_ids/battle").is_some()
+        || value.pointer("/world/occupation").is_some()
+    {
+        return;
+    }
+    if let Some(campaign) = value.as_object_mut() {
+        campaign.insert("battles".into(), serde_json::json!({}));
+    }
+    if let Some(ids) = value
+        .get_mut("next_ids")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        ids.insert("battle".into(), serde_json::json!(1));
+    }
+    if let Some(world) = value
+        .get_mut("world")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        world.insert("occupation".into(), serde_json::json!({}));
+        // Explicit migration of the shipped pre-combat Rosemarch bridge. Never
+        // repair malformed modern topology, and never infer combat from names.
+        if let Some(sites) = world
+            .get_mut("sites")
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            for site in sites {
+                if site.get("id") == Some(&serde_json::json!(8))
+                    && site.get("key") == Some(&serde_json::json!("bridge"))
+                    && site.get("geography") == Some(&serde_json::json!("river"))
+                    && site.get("tags") == Some(&serde_json::json!([]))
+                {
+                    site["tags"] = serde_json::json!(["bridge"]);
+                }
+            }
+        }
     }
 }
 

@@ -269,7 +269,7 @@
         0.56
       ],
       "geography": "river",
-      "tags": [],
+      "tags": ["bridge"],
       "controller": null,
       "habitation": "unsettled",
       "military": "none",

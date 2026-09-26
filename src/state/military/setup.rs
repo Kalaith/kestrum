@@ -4,7 +4,7 @@ use super::{Army, ArmyId, Formation, FormationId};
 use crate::{
     data::GameData,
     state::{
-        people::{Person, PersonAssignment, PersonId},
+        people::{Person, PersonAssignment, PersonId, PersonStatus},
         StrategicCampaign,
     },
 };
@@ -62,6 +62,7 @@ impl StrategicCampaign {
                             .ok_or("Founder's formation grant is absent")?,
                     },
                     movement_spent: 0,
+                    status: PersonStatus::Fit,
                 },
             );
             army.commander = setup.founder.commander.then_some(person_id);

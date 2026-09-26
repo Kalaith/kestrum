@@ -1,5 +1,6 @@
 //! Confirmed orders retain every legal traversed edge when a later edge stops.
 
+use super::super::{combat, retreat};
 use super::*;
 use crate::state::people::PersonAssignment;
 
@@ -13,6 +14,7 @@ pub(crate) fn execute(
     let mut armies = order.armies.clone();
     armies.sort();
     let mut outcome = MovementOutcome {
+        battle: None,
         armies,
         path: vec![origin],
         spent: 0,
@@ -22,21 +24,16 @@ pub(crate) fn execute(
         let (from, to) = (pair[0], pair[1]);
         let route = campaign.world.connected_route(from, to);
         let cost = route.map(|route| route_cost(route, data));
+        let contact = contact(campaign, owner, to);
         let reason = if let Some(cost) = cost {
             public_block(campaign, owner, to)
-                .or_else(|| {
-                    campaign
-                        .armies
-                        .values()
-                        .any(|army| army.site == to && army.faction != owner)
-                        .then_some(MovementBlock::EncounterUnavailable)
-                })
                 .or_else(|| {
                     (cost > remaining).then_some(MovementBlock::InsufficientMovement {
                         required: cost,
                         remaining,
                     })
                 })
+                .or(contact.block.clone())
         } else {
             Some(MovementBlock::RouteUnavailable)
         };
@@ -49,21 +46,80 @@ pub(crate) fn execute(
         }
         let cost = cost.ok_or(RuleError::InvalidRoute)?;
         spend_edge(campaign, &outcome.armies, to, cost)?;
-        campaign
-            .world
-            .sites
-            .iter_mut()
-            .find(|site| site.id == to)
-            .ok_or(RuleError::UnknownSite { site: to })?
-            .controller = Some(owner);
-        campaign.reconcile_region_control();
         remaining -= cost;
         outcome.spent = outcome.spent.checked_add(cost).ok_or(RuleError::Overflow {
             field: "movement spent",
         })?;
         outcome.path.push(to);
+        if !contact.defenders.is_empty() {
+            outcome.battle = Some(combat::resolve(
+                campaign,
+                data,
+                &outcome.armies,
+                &contact.defenders,
+                from,
+                to,
+            )?);
+            break;
+        }
+        if !contact.neutral_peaceful_stack {
+            combat::capture(campaign, data, to, owner);
+        }
     }
     Ok(outcome)
+}
+
+struct Contact {
+    defenders: Vec<ArmyId>,
+    neutral_peaceful_stack: bool,
+    block: Option<MovementBlock>,
+}
+
+fn contact(campaign: &StrategicCampaign, owner: FactionId, to: SiteId) -> Contact {
+    let occupants: Vec<_> = campaign
+        .armies
+        .values()
+        .filter(|army| army.site == to && army.faction != owner)
+        .map(|army| army.id)
+        .collect();
+    let foreign: BTreeSet<_> = occupants
+        .iter()
+        .map(|id| campaign.armies[id].faction)
+        .collect();
+    let peaceful = foreign
+        .iter()
+        .any(|faction| !retreat::hostile(campaign, owner, *faction));
+    let defenders: Vec<_> = occupants
+        .iter()
+        .copied()
+        .filter(|id| retreat::hostile(campaign, owner, campaign.armies[id].faction))
+        .collect();
+    let neutral_peaceful_stack = peaceful
+        && defenders.is_empty()
+        && campaign
+            .world
+            .site(to)
+            .is_some_and(|site| site.controller.is_none());
+    let block = if peaceful && !defenders.is_empty() {
+        Some(MovementBlock::EncounterUnavailable)
+    } else if peaceful && !neutral_peaceful_stack {
+        Some(MovementBlock::PeaceBoundary)
+    } else if (!peaceful && foreign.len() > 1)
+        || (!defenders.is_empty()
+            && campaign
+                .world
+                .site(to)
+                .is_some_and(|site| site.military != MilitaryLayer::None))
+    {
+        Some(MovementBlock::EncounterUnavailable)
+    } else {
+        None
+    };
+    Contact {
+        defenders,
+        neutral_peaceful_stack,
+        block,
+    }
 }
 
 fn spend_edge(

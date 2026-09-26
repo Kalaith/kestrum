@@ -4,6 +4,9 @@ use super::{Context, SaveMode};
 use kestrum::state::Overlay;
 
 pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
+    if ctx.state.overlay == Overlay::Battle {
+        super::battle::prepare_text(ctx);
+    }
     let Some(font) = ctx.body_font() else {
         return;
     };

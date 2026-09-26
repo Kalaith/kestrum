@@ -1,5 +1,19 @@
 # 10 — Interface and accessibility
 
+## K07 battle report screen brief
+
+The current decision after an automatic encounter is to understand losses,
+withdrawal and control before giving another order. The report occupies the main
+canvas. Its first page prioritizes the result, place, participants and surviving
+locations; paged details explain headcounts, leadership, counters, terrain and
+person consequences. It reads a saved observation of the encounter. Reopening it
+does not resolve combat or grant evidence again. Battle Reports in Menu provides
+the return path. Back/Close and all page controls remain visible touch targets.
+Orders/People show wounds and the two supplied recovery steps beside affected
+people. Movement preview describes hostile contact and known retreat constraints
+without disclosing unobserved enemy composition. Normal and minimum review must
+include multiple armies, destruction, stalemate, long names and wounded commanders.
+
 ## K06 movement and composition screen brief
 
 The army's Orders screen leads to movement, formation transfer and a paged People

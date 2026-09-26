@@ -160,7 +160,9 @@ K05 is **Done**: six-slot armies, founding Officers, recruitment/disbanding and
 round economy pass [K05 evidence](verification/k05-armies.md).
 K06 is **Done**: costed group movement, preserved transfer allowances and supplied
 recovery pass [K06 evidence](verification/k06-logistics.md).
-K07–K18 remain **planned, not implemented**.
+K07 is **Done**: automatic encounters, casualties, retreat, limited wounds and
+recorded reports pass [K07 evidence](verification/k07-combat.md).
+K08–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain

@@ -268,3 +268,52 @@ shared supply query with K10's siege state.
 
 These delegated choices implement C03/C04/C06/C07 and P03–P05. K06 evidence records
 the acceptance cases, interactive movement/composition and platform limitations.
+
+### I06 — Encounter observations, terrain and limited wounds
+
+K07 implements P11–P13's bounded automatic field resolver with integer arithmetic.
+An encounter ends the travelling group's order and exhausts its actual participants.
+Other armies at the origin do not join. The report stores the observed participant
+snapshot and final result; only the two participating factions can read it. A
+BattleResolved fact identifies that committed encounter once. Reports never read
+later enemy changes or reapply the result. K08 consumes this real participation
+evidence for progression and bounded observation retention.
+Each exchange recalculates leadership from fit adults still attached to a living
+formation. Losing their host formation removes that contribution from later
+exchanges; post-battle wound rolls do not change attacks already resolved. Reports
+retain those exchange factors and each person's original participating formation.
+Only an attacker victory captures the target. Defender victory or stalemate
+preserves its previous controller, including a neutral site; mutual destruction
+clears it. Defending an unclaimed site therefore grants no incidental conquest.
+
+Bridge and Pass are explicit site tags, separate from broad geography. River
+settlements do not all receive the bridge modifier. The shipped old Rosemarch
+bridge gains its missing Bridge tag only through the grouped pre-combat migration.
+Current saves validate the authored tags. Absent battle collection, battle counter
+and occupation map together migrate to empty records and a fresh counter; partial
+new groups are rejected. No earlier encounters or occupations are invented.
+
+Peaceful armies may share a neutral site, as P08 permits. Such an arrival pays its
+edge but leaves the site neutral: another peaceful force prevents an unopposed
+capture. Peace-controlled foreign sites still deny access. Mixed peaceful and
+hostile foreign occupants reject entry before an unsupported three-party battle;
+the rejection reveals no names, counts or composition. Supply forecasts are
+conditional on securing the destination, since hidden occupants can prevent it.
+
+People gain Fit, Wounded and Dead states. Missing earlier status means Fit because
+those versions had no injury or death simulation. Death releases the assignment
+and command while retaining a factual dated person record for later history.
+Wounded people can remain attached or move through legal local transfers, but do
+not contribute field leadership. Two eligible supplied boundaries heal them. The
+formation-wipe and limited commander rolls use the combat RNG and actual encounter
+participants; no automatic founder immunity or replacement formation is granted.
+For a side with several commanders, select the lowest person ID whose surviving
+formation meets the loss threshold after combat. Roll at most once for that side,
+in faction-ID order after the globally ordered formation-wipe rolls. An undamaged
+lower-ID commander therefore does not suppress another eligible commander's check.
+
+The Menu's redundant Resume entry is replaced by Battle Reports; its existing Back
+control returns to play. The result opens automatically after a player encounter,
+and reopening it remains read-only. These are delegated implementation choices,
+not new author-confirmed rules. K07 verification records the acceptance
+results and platform limitations.

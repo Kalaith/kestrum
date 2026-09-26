@@ -36,6 +36,8 @@ pub struct CampaignWorld {
     pub contested_sites: BTreeSet<SiteId>,
     /// Sparse structural damage; absent entries have zero damage.
     pub site_damage: BTreeMap<SiteId, u32>,
+    /// Sparse lasting occupation pressure; absent entries are zero.
+    pub occupation: BTreeMap<SiteId, u32>,
 }
 
 impl CampaignWorld {
@@ -47,6 +49,7 @@ impl CampaignWorld {
             region_control: BTreeMap::new(),
             contested_sites: BTreeSet::new(),
             site_damage: BTreeMap::new(),
+            occupation: BTreeMap::new(),
         };
         world.markers.sort_by_key(|marker| marker.id);
         world.sites.sort_by_key(|site| site.id);

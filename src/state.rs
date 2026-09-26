@@ -1,5 +1,6 @@
 //! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
+pub mod battle;
 pub mod campaign;
 pub mod military;
 pub mod people;
@@ -40,6 +41,7 @@ pub enum Overlay {
     Armies,
     MoveGroup,
     MoveReview,
+    Battle,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

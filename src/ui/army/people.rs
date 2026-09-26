@@ -1,7 +1,7 @@
 //! All local named people remain selectable through a bounded page.
 
 use super::*;
-use kestrum::state::people::{Person, PersonAssignment};
+use kestrum::state::people::{Person, PersonAssignment, PersonStatus};
 
 pub fn local_people<'a>(view: &ArmyView, campaign: &'a VisibleCampaign) -> Vec<&'a Person> {
     campaign
@@ -13,6 +13,7 @@ pub fn local_people<'a>(view: &ArmyView, campaign: &'a VisibleCampaign) -> Vec<&
                 .armies
                 .iter()
                 .any(|army| Some(army.site) == view.site && army.slots.contains(&Some(formation))),
+            PersonAssignment::Dead => false,
         })
         .collect()
 }
@@ -57,6 +58,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             PersonAssignment::Formation { formation: id } => formation(campaign, id)
                 .map(|formation| ctx.text(troop_key(formation.kind)))
                 .unwrap_or_default(),
+            PersonAssignment::Dead => continue,
         };
         body(
             ctx,
@@ -79,11 +81,23 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         ) {
             return Some(UiAction::BeginTransferPerson(person.id));
         }
+        let status = match person.status {
+            PersonStatus::Fit => ctx.text("person_fit"),
+            PersonStatus::Wounded {
+                remaining_steps, ..
+            } => format!(
+                "{} · {remaining_steps} {}",
+                ctx.text("person_wounded"),
+                ctx.text("wound_steps_remaining")
+            ),
+            PersonStatus::Dead { .. } => continue,
+        };
+        body(ctx, &status, vec2(112.0, y + 46.0), 16.0, MUTED);
         draw_line(
             112.0,
-            y + 44.0,
+            y + 64.0,
             1168.0,
-            y + 44.0,
+            y + 64.0,
             1.0,
             Color::new(0.21, 0.29, 0.25, 1.0),
         );

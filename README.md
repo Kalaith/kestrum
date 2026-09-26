@@ -22,7 +22,8 @@ The save catalogue keeps each round checkpoint and each new named save. It offer
 explicit overwrite/deletion and retries failed writes without replaying the round.
 Enter Region opens Rosemarch's ten connected sites. Six-slot armies, recruitment,
 disbanding, income, upkeep, movement, transfers and supplied recovery are playable.
-Automatic battles follow in K07.
+Hostile field encounters resolve automatically, with lasting casualties, retreat,
+person wounds and recorded reports. Fortified encounters follow in K10.
 Terrain labels are distinct from selectable place markers.
 
 ### K01 — Typed content and Rosemarch
@@ -129,7 +130,7 @@ Orders opens group movement, formation transfers, local People and disbanding.
 Choose co-located armies, select a physical destination, review the route and
 Confirm Move. Every member pays actual edge costs; the group stops at its last
 legal site when a later edge is blocked. Route details can close without cancelling
-the order. Fortified or hostile entry remains unavailable until combat arrives.
+the order. Fortified hostile entry remains unavailable until K10; K07 adds field combat.
 
 Transfer whole formations or people between local friendly rosters, or split a
 formation into a new army. Spent movement is preserved. Opening Armies pauses a
@@ -142,6 +143,30 @@ All 48 tests, strict Clippy, formatting, source-size checks, native visual revie
 browser movement/transfer/reload and Windows/WebGL Preview publishing pass.
 [K06 evidence](docs/verification/k06-logistics.md) records the checks and remaining
 platform limitations. K07–K18 remain required.
+
+### K07 — Automatic battles and recorded consequences
+
+Move a selected army group into a hostile unfortified force to fight every enemy
+army at that site. Up to eight simultaneous exchanges account for surviving troop
+counts, named leadership, troop counters and defensive terrain. Participants spend
+their remaining movement. Defeated survivors retreat through legal adjacent routes;
+trapped forces are destroyed. Inhabited battlefields and hostile captures retain
+structural damage, with occupation recorded after capture.
+
+Battle Reports opens after an encounter and remains available through Menu.
+Outcome, Forces, People and Factors show the recorded result, separate formation
+losses, destinations, wounds, command succession and the strength factors used.
+Previous/Next pages through long rosters; Older/Newer changes encounters. Reports
+preserve what the participating faction witnessed and do not rerun the battle.
+
+People from destroyed formations can die or escape wounded through the documented
+combat rolls. A surviving commander can also be wounded; another fit adult in the
+same army takes command when available. Wounded people cannot contribute leadership
+and recover after two supplied seasonal boundaries. Earlier saves gain no invented
+encounters, injuries or occupation. All 58 tests, strict Clippy, formatting,
+source-size checks, both-size native review, published browser battle/recovery/
+reload and Windows/WebGL Preview publishing pass. [K07 evidence](docs/verification/k07-combat.md)
+records the checks and remaining platform limitations. K08–K18 remain required.
 
 ## Screen brief
 

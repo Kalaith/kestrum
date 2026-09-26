@@ -6,7 +6,7 @@
 
 This milestone consolidates the complete founding design, preserves the original drafts within `docs/reference/`, records conflicts and proposals, and commits the supplied template with the documentation. It makes no Kestrum gameplay or UI changes.
 
-The discussion clarification supplied on 2026-09-26 updates that foundation. Chapter 13 now separates confirmed decisions, agreed directions needing mechanics/tuning, and unanswered questions. The implementation sequence below remains proposed; settled choices such as six formation slots and 4–8 total factions do not need fresh confirmation.
+The discussion clarification and direct answers supplied on 2026-09-26 update that foundation. The ten formerly unanswered questions now have rules or delegated defaults. The implementation sequence below remains proposed; settled choices do not need fresh confirmation. Provisional economy data is stored in `assets/data/economy.json` for future toolkit loading.
 
 The root copies of the three design drafts are retained in the initial commit. All their content is preserved in `docs/`; the documentation set remains usable after those root copies are deleted. Exact source hashes and section coverage are recorded in the [coverage ledger](source-coverage.md).
 
@@ -18,27 +18,27 @@ Each milestone is independently useful and should be completed, validated, and c
 
 Adapt project/package identity, dependency path, assets/metadata, capture prefix, and the first screen composition. Coordinate legitimate shared workspace registration through the canonical management configuration; do not fabricate a workspace or edit unrelated projects to bypass validation.
 
-Build the calendar, explicit actions, persistent node graph, world/region entrances, local control, and simple army movement. Include a player headquarters, several simple world nodes, one 8–12-node region with two entrances, a regional capital and fortress, and an enemy headquarters.
+Build the calendar, explicit actions, persistent node graph, world/region entrances, local control, and simple army movement. Start with a small test graph and one 8–12-site region with two entrances, a capital and fortress, and player/enemy headquarters. The campaign target is 80 major world nodes; internal sites are additional under the documented interpretation.
 
 Exit evidence: touch-only map selection and movement work; an army can enter and leave the intended gate; partial regional control is visible; a full faction round advances one season.
 
 ### M2 — The first military loop
 
-Implement six formation slots per army, variable headcount, several armies, basic composition, movement costs, automatic encounters, retreat, destruction, supply-gated recovery, and formation veterancy. Resolve O16's reinforcement effect on veterancy before accepting recovery behavior. Add minimal resource costs and enemy behavior sufficient to exercise the same rules.
+Implement six formation slots per army, variable headcount, several armies, composition, movement costs, automatic encounters, retreat, destruction, supply-gated recovery, and formation veterancy. Transfers are available whenever armies share a node, and reinforcement leaves surviving formations' veterancy unchanged. Load the provisional economy JSON through toolkit APIs and add enemy behavior sufficient to exercise the same rules.
 
 Exit evidence: recruit → compose → move → fight → retain losses → recover or retreat works; destroyed formations do not reappear as veterans; leader presence has a clear, tunable effect; multiple fronts matter.
 
 ### M3 — People emerge from campaigns
 
-Track a small number of founders/juniors and permit grounded emergence from formations. Record reusable experiences, recognition, a limited trait set, basic classes, eligibility, and mentorship opportunities. Support an enemy who survives and can be recognized later.
+Track a small number of human founders/juniors and permit grounded emergence from formations. Record participation and encounter facts, recognition, a limited trait set, ordinary classes, eligibility, and mentorship opportunities. Support an enemy who survives and can be recognized later.
 
-Candidate prototype events (O10 remains open): participation, victory, defeat, survival while outnumbered, commander wounded, assumed command, treatment of wounded, fighting a particular enemy type, defense, and capture of a strategic node.
+The initial event vocabulary covers participation, victory, defeat, survival while outnumbered, commander wounded, assumed command, treatment of wounded, enemy types encountered, defense, capture, training, and non-combat encounters. O10 requires relevant participation; generic experience cannot bypass a missing encounter prerequisite.
 
-Exit evidence: a player can explain a junior's development using actual events. Tomas's leadership, Mira's medical opportunities, and an escaped rival illustrate desired outcomes without requiring scripted missions or every advanced class.
+Exit evidence: a player can explain a junior's development using actual participation. Tomas's leadership, Mira's development as a human Medic, and an escaped rival illustrate desired outcomes. Advanced classes and other races are deferred.
 
 ### M4 — Kingdom expansion and changing places
 
-Add Gold/Wood/Stone, development focuses, physical military prerequisites, outposts, roads, anchor control, basic growth/decline, occupation consequences, local threats, fog of war, and a persistent light siege with relief.
+Expand Gold/Wood/Stone systems, development focuses, physical military prerequisites, outposts, roads, anchor control, basic growth/decline, occupation consequences, ordinary local threats, fog of war, and a persistent light siege with relief. Use the JSON economy placeholders as the balance starting point.
 
 Build toward player-selected 4–8 total factions, minimal War/Peace diplomacy, faction elimination, and a reachable victory. Define exact conquest rules and reconcile D04/O07: conquest or vassalisation is the objective, while vassalisation as a defeat outcome remains a proposal for the initial version.
 
@@ -48,11 +48,11 @@ Exit evidence: an outpost can become useful; road access benefits both sides; an
 
 Add age and career transitions, retirement, useful mentorship, sparse households/dependents, several kinds of heirs, inherited items or roles where supported, population movement, changing capitals, and contextual histories/eras.
 
-Exit evidence: run a multi-decade scenario in which founders give way to students or relatives, places change unevenly, losses remain historical, and the roster stays understandable. Demonstrate a meaningful legacy with no children.
+Exit evidence: run a multi-decade scenario in which founders give way to students or relatives, places change unevenly, and the roster stays understandable. Demonstrate a legacy with no children and history pruning that preserves current state and progression facts while allowing old stories to be forgotten.
 
 ### M6 — Campaign balance and presentation
 
-Tune emergence, combat, leader effects, economic pressure, recovery, construction, sieges, and growth. Test supported faction counts, long histories, fog of war, dense states, and save compatibility. Complete native and browser review at normal and minimum viewports, with touch-only interaction and required publishing.
+Tune emergence, combat, leader effects, economic pressure, recovery, construction, sieges, and growth. Test 4–8 factions on 80 world nodes, bounded histories, fog of war, dense states, and save compatibility. Verify round-end autosaves, unlimited slot lists, and manual saving during the player's turn. Complete native review at 1920 × 1080 full screen and WebGL review at 1280 × 720, with touch-only interaction and required publishing.
 
 Exit evidence: a full campaign can conclude without an unavailable feature, and players remember particular forces, people, and places for reasons supported by the record.
 
@@ -61,9 +61,9 @@ Exit evidence: a full campaign can conclude without an unavailable feature, and 
 | Scope | Required focus |
 | --- | --- |
 | Earliest playable prototype | Small graph with one nested region, persistent armies/people, combat/retreat, partial control, evidence and recognition |
-| First functional kingdom version | Six formation slots, headcounts, 4–8 total factions, basic economy and AI, supply/roads/outposts, light siege, minimal diplomacy, elimination and reachable victory; vassalisation scope requires D04/O07 |
+| First functional kingdom version | Human/ordinary-class roster; 80 world nodes; six formation slots; 4–8 total factions; JSON economy; supply/roads/outposts; light siege; round-end/manual saves with no slot cap; minimal diplomacy and reachable victory, with vassalisation scope under D04/O07 |
 | Full generational promise | Useful aging/retirement, succession through family or mentorship, changing places/capitals, long histories and contextual memory |
-| Explicit future scope | Multiplayer; extensive origins/cultures/bonuses; richer intelligence; alliances/tribute/full vassal diplomacy/guarantees/borders/prisoner exchanges; restoration, fragmentation, civil wars, claimant or separatist factions |
+| Explicit future scope | Other races and advanced/magical classes; multiplayer; extensive origins/cultures/bonuses; richer intelligence; alliances/tribute/full vassal diplomacy/guarantees/borders/prisoner exchanges; restoration, fragmentation, civil wars, claimant or separatist factions |
 
 The generational game is the destination. Staging it after a small prototype does not remove it from the design. Later combat injury/capture/escape depth, weather, advanced bonds, complex civilian effects, and negotiation should be introduced when they strengthen the proven loop.
 
@@ -76,13 +76,13 @@ Strongly target five meaningful tests per major feature, using table-driven case
 | Graph and control | Connected movement; blocked route; correct regional entrance/exit; partial ownership; anchor capture with remaining enemies |
 | Turn/calendar | Sequential turns; one season per round; four seasons per year; mid-round elimination; construction/siege/age advance once |
 | Economy/development | Valid purchase; rejection without mutation; one active focus; facility access lost; deficit policy applied consistently |
-| Army persistence | Six-slot validation; valid transfer; cumulative casualties/recovery; destruction/new identity; specialization with prerequisites |
+| Army persistence | Six-slot validation; shared-node transfer without refreshing allowances; recovery preserving veterancy; destruction/new identity; specialization with participation prerequisites |
 | Combat and siege | Ordinary outcome; retreat; wipeout consequences; continued siege/assault; relief or escape with multiple armies |
 | Character development | Evidence-based trait; grounded emergence; class prerequisites; constrained enemy progression; repeated event does not grant duplicate credit |
 | Living places | Sustained growth; decline/reclamation; independent military layer; occupation/refugees; stable identity across rename/capital move |
 | Generations | Career aging; grounded service entry; retirement/death cleanup; non-blood succession; bounded active roster with retained history |
-| History/knowledge | Chronological biography; unknown enemy remains hidden; stale observations; alias/history links; shared event rendered without duplicate effects |
-| Persistence | Deterministic save round-trip; supported migration; corrupt load preserves session; RNG/order preserved; no repeated battle/reward after load |
+| History/knowledge | Chronological biography; unknown enemy remains hidden; stale observations; bounded pruning preserves gameplay facts and valid references; shared event rendered without duplicate effects |
+| Persistence | Round-end autosave round-trip without duplicate effects; manual save preserves mid-turn RNG/order; supported migration; corrupt load preserves session; unbounded slot list with full-storage failure recovery |
 
 Keep useful existing regressions. Additional distinct cases require an explanation, not removal of useful coverage to reach a count. No test may validate against a copied checkout, alternate manifest, dummy crate, or fabricated workspace.
 

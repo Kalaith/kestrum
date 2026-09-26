@@ -39,9 +39,20 @@ The initial explicit resources are **Gold, Wood, and Stone**. They support recru
 | Horses and rare opportunities | Access to specialist forces | Requirement or access status at the recruiting site |
 | Infrastructure | Training and class opportunities | Physical site and whether access is currently valid |
 
-Exact costs, income rates, recovery costs, and population conversion rules are open. Avoid inventing fixed numbers before the military loop establishes demand.
+**Confirmed decision (O11):** use reasonable provisional economy values stored in JSON and adjust them during balance work. The values are tuning defaults, not unresolved design blockers or fixed final balance.
 
-**Proposal — economic contract:** validate ownership, access, available resources, and prerequisites before accepting an order. Rejected orders do not deduct resources. Show recurring upkeep separately from immediate cost. An upkeep deficit needs an explicit policy; armies must not silently disappear or gain negative headcount.
+### Provisional economy defaults
+
+[assets/data/economy.json](../assets/data/economy.json) is the authoritative initial balance table. It is design data for the future economy; the current template does not load it. Implementation must use toolkit JSON loading with a Kestrum schema and semantic validation.
+
+- Each faction starts with 500 Gold, 200 Wood, and 150 Stone. Settlement income and a single headquarters bonus of 40 Gold, 15 Wood, and 10 Stone accrue per full round. The bonus requires control of the headquarters site and adds to its settlement income; a capital title creates no extra income by itself.
+- Recruitment costs and full-formation upkeep are listed for human Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines. Upkeep charges the listed Gold rate for each surviving formation, regardless of current headcount. Named people add no separate upkeep initially.
+- Recruitment completes immediately at a valid recruiting site after validation. Population deductions/pressure are disabled initially; enable a separate population model after economy playtesting.
+- Income resolves before upkeep. Pay what is available, clamp Gold at zero, and record any shortfall without carrying debt. A shortfall blocks new recruitment and normal recovery until a later round's upkeep is fully paid. Existing forces remain; the player may disband formations without refund to reduce upkeep. Prepaid construction continues subject to its own conditions.
+- Supplied formations may recover up to 20% of capacity at round end, capped by missing headcount. Restoring a full capacity costs 50% of that troop type's recruitment Gold, proportionally rounded up for the actual headcount restored; no Wood or Stone is charged. Process by stable army ID then slot, restoring only what available Gold can cover. Recovery keeps veterancy unchanged under O16.
+- Outposts, roads, forts, and focus changes use the JSON order costs. Pay construction costs when an order is accepted; cancellation before any progress refunds 100%, while cancellation after progress or voluntary disbanding refunds nothing. Attack/interruption behavior remains O12.
+
+These defaults apply equally to player and AI before explicit difficulty modifiers. Rejected orders spend nothing. Show immediate costs separately from recurring upkeep and explain deficits at the affected controls. Balance changes belong in the JSON rather than hard-coded Rust values.
 
 ## Light settlement management
 
@@ -60,7 +71,7 @@ The player can also establish an outpost, encourage settlement, invest in trade,
 
 ## World-based military capability
 
-Advanced forces require resources, facilities, experience, and appropriate people. Examples:
+For the initial human roster, ordinary training and recruitment depend on appropriate sites and resources. The examples below include initial cavalry and future magical specialists. Mages, magical Clerics, and Dragon Knights are deferred under O24; all capabilities should depend on suitable resources, facilities, experience, and people:
 
 | Capability | Required opportunity from the sources |
 | --- | --- |

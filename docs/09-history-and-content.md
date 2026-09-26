@@ -8,13 +8,27 @@ History should help the player understand why a person or place matters. Biograp
 
 People age, places evolve, and wars leave history behind. The world should never return completely to zero after a cycle of conquest and rebuilding.
 
+## Bounded history and forgetting
+
+**Confirmed decision (O23):** retaining every old story is unnecessary. The world may forget that a ruin was once the city where Alexander was slain and simply know it as a ruin. Current geography, condition, ownership, and living people's capabilities remain valid even when their older narrative context is gone.
+
+**Provisional retention policy, chosen under the delegated discretion:**
+
+- Keep detailed narrative events for at most 40 rounds (ten years), capped at the newest 10,000 events per campaign. Expire by age or count, whichever applies first, with stable event IDs breaking date ties.
+- Keep up to twelve short notable-history entries per extant place, army, or person, each for at most 80 rounds (twenty years). Old names, deaths, and battlefield stories can leave these summaries too. A destroyed formation loses its own history immediately under D05.
+- Keep at most 2,000 unreferenced departed-person records, also expiring after 80 rounds. Preserve minimal identity/relationship facts while current households, inheritance, or retained events still reference them; those facts need not retain a biography.
+- Keep compact gameplay facts separately: experience totals, encounter types actually participated in, earned traits/classes, dates and links required by current relationships, current state, and already-applied order outcomes. Pruning a battle story must not remove an earned skill, invent an encounter, revive someone, or let a reward apply twice.
+- Prune once at round end before autosaving. Resolve narrative references to an extant entity or retained event label; if detail is gone, show that older history is unavailable. Do not fabricate replacement stories or allow dangling links to break a save.
+
+These are starting budgets to tune after measuring the 80-node campaign. Retained event pages should query bounded selections rather than scan the entire campaign each frame. Permanent archives, full biographies of everyone who ever lived, and preservation of every old place name are not requirements.
+
 ## Proposed event record
 
 Each significant occurrence should have a stable event ID, date, kind, participants, place, causal references where available, outcome facts, and knowledge visibility. This is a design contract, not an implemented schema.
 
 Useful event families include:
 
-| Domain | Events to retain |
+| Domain | Candidate narrative events, subject to retention |
 | --- | --- |
 | Military | Recruitment, formation specialization, battle, retreat, siege, relief, army or formation destruction |
 | Character | Emergence, training, recognition, trait evidence, class change, wound, command, retirement, death |
@@ -31,7 +45,7 @@ Record facts once and derive different summaries from them. A battle can appear 
 - Events cannot predate a person's birth or relevant service unless the statement concerns inherited context.
 - Direct participation needs evidence of presence or a valid retrospective grounding rule.
 - A person cannot acquire achievements after death; a posthumous title must say that it is posthumous.
-- Name changes preserve stable links and dated aliases.
+- Name changes preserve current entity identity; dated aliases and old narrative links follow the retention policy.
 - A destroyed formation loses its own history and veteran identity. Retained world battle facts neither recreate its service archive nor grant bonuses to a replacement.
 - A generated family connection cannot contradict existing chronology or established relationships.
 - Unknown enemy facts stay unknown until legitimately revealed.
@@ -50,7 +64,7 @@ Retrospective background fills plausible gaps. It is not permission to invent im
 | 5 | Led the defense of Rosemarch |
 | 6 | Became known as Tomas of Hawthorn |
 
-These dates belong to an illustrative short campaign. They are not required to match the longer examples below.
+These dates belong to an illustrative short campaign. They are not required to match the longer examples below, and the record may become shorter as old details expire.
 
 ## Place chronology example
 
@@ -93,7 +107,7 @@ The frontline can likewise shift: River A in Year 5; Hawthorn captured in Year 1
 | 36–45 | Redplain becomes a major city and government relocates | An enemy first seen as a young squire decades earlier becomes the central rival |
 | 46–50 | Map visibly bears fifty years of war and development | Founders are mostly retired or dead; descendants, students, and political heirs lead |
 
-This is an experience target rather than a scripted campaign. The initial numbers of founders and juniors are examples, not fixed setup requirements.
+This is a source experience example rather than a scripted campaign or a requirement to retain all fifty years of narrative. The initial numbers of founders and juniors are examples. Plague Cleric and other advanced-class references are later content under O24; the first version can express medical development through a human Medic.
 
 ## Eras and reminders
 
@@ -110,7 +124,7 @@ Occasional source examples of contextual reminders:
 
 ## Contextual presentation
 
-A selected place can show founding year, significant sieges, and last capture. A selected person can show important service, number of pupils, and institutional ties. A visible History action opens a fuller chronology; searching and filtering become useful in long campaigns.
+A selected place can show retained founding, siege, and capture facts. A selected person can show supported service, pupils, and institutional ties. A visible History action opens the available chronology; it need not reconstruct forgotten records. Searching and filtering operate on retained history.
 
 Notifications emphasize changed circumstances: a leader's retirement, a new class opportunity, or a key route lost. Persistent state remains inspectable after a toast ends. The UI should not repeat the same commander in every banner and panel.
 
@@ -118,7 +132,9 @@ Notifications emphasize changed circumstances: a leader's retirement, a new clas
 
 Author reusable conditions and consequences rather than fixed protagonists. Each event definition should specify trigger context, eligible participants, chronological requirements, state changes, evidence tags, possible text, and who can know it. Separate a template's prose from the factual record.
 
-Useful first content groups are basic troop types, junior roles, a small trait vocabulary, mentor disciplines, experience tags, terrain and route types, fortification stages, development focuses, and several local threats. Keep Dragon Knight and Plague Cleric as reference paths; they do not require the prototype to ship every fantasy class.
+**Confirmed initial scope (O24):** humans and ordinary classes; advanced classes and other races are later additions. The provisional character roster is Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer. Initial formations are Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines, with placeholder capacities and costs in [economy.json](../assets/data/economy.json). Bandits and ordinary wildlife provide early threats.
+
+Start with a small human naming pool, basic traits, mentor disciplines, participation/encounter tags, terrain and route types, fortifications, and development focuses. Exact names, art, and audio are content-authoring tasks. Dragon Knight and Plague Cleric remain future reference paths, not launch requirements.
 
 Names from the sources—Serai, Edrin, Tomas, Mira, Dratanus, Teresa, Elian, Elara, Thomas of Frostmarch, Rosemarch, Hawthorn, Redplain, Ashford, and Frostmarch—are examples. Thomas and Tomas must not be silently assumed to be the same person. Likewise High Fort, Hawthorn Fort, and Hawthorn Gate appear in separate map examples; content authors must assign explicit IDs instead of assuming those labels are interchangeable.
 

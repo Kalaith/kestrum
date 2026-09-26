@@ -4,7 +4,7 @@
 
 ## Status
 
-This chapter is a **proposed implementation design**. It connects the source gameplay systems without claiming they exist in the template. Select concrete types and files as features are implemented; do not create unused scaffolding for every future system.
+This chapter combines **confirmed behavior** with **proposed implementation design**, labelled where relevant. None of these campaign systems exists in the template yet. Select concrete types and files as features are implemented; do not create unused scaffolding for every future system.
 
 The required stack is Rust, Macroquad pinned exactly to `=0.4.16`, and macroquad-toolkit. Prefer existing toolkit capabilities for generic loading, input, layout, persistence, notifications, and capture. A Kestrum node graph and its semantic rules are game-specific; the template's grid demo does not require a square-tile game.
 
@@ -35,13 +35,13 @@ The template currently has legacy tests under `src/`. Migrate those as a separat
 | Route | Endpoints, traversal rules, terrain/road condition, boundary mapping if needed | Connectivity consistent across movement and supply |
 | Army | Faction, location, movement state, up to six formation slots, assignments | One physical location and unique formation membership |
 | Formation | Type, headcount/capacity, experience, specialization, origin, attached people | Zero headcount destroys the formation and its history; replacement gets a new ID; world battle facts may remain |
-| Character | Birth date, service dates, roles/classes, evidence, recognition, lifecycle | Chronology valid; at most one incompatible active assignment |
+| Character | Birth date, service dates, roles/classes, compact participation evidence, recognition, lifecycle | Chronology valid; at most one incompatible active assignment; narrative pruning cannot change eligibility |
 | Household/dependent | Sparse relationships, approximate or exact dates, place ties | No contradictory ancestry; deepen simulation when relevant |
 | Mentorship | Teacher, learner, discipline, dates, opportunity | Valid participants and feasible active relationship |
 | Equipment | Item identity, current holder, past custody and deeds | A historical item cannot have two current owners |
 | Construction | Site, owner, order, duration/progress, costs, interruption state | Progress once per round; cancellation policy explicit |
 | Siege | Node, sides, participants, start date, progress | End or revalidate when forces or diplomacy change |
-| Event | Date, participants, place, kind, facts, visibility, causes | Immutable outcome facts; unique application |
+| Event | Date, participants, place, kind, facts, visibility, causes | Facts immutable while retained; bounded narrative retention; application safety lives in authoritative state |
 | Knowledge | Observer, subject, observed facts, date/location, confidence | Player view cannot read hidden live enemy state |
 
 These are contracts rather than final serialization layouts. Split mutable campaign instances from reusable troop, class, trait, terrain, facility, and event definitions.
@@ -52,7 +52,7 @@ Potential commands include move army, recruit formation, transfer character, reo
 
 For every command:
 
-1. Validate phase, actor ownership, IDs, access, movement, costs, and prerequisites.
+1. Validate actor ownership, IDs, and command-specific phase, access, movement, cost, and prerequisite rules. O09 transfers require shared-node presence and can occur between atomic actions without an active-faction restriction.
 2. Return a clear reason if rejected, without partially spending resources or moving entities.
 3. Compute consequences in a stable order.
 4. Apply state changes once and emit relevant domain events.
@@ -60,9 +60,9 @@ For every command:
 
 For commands that depend on a route preview or selected target, revalidate at execution. UI previews never become a second authoritative rule implementation.
 
-## Proposed seasonal resolution
+## Round-end resolution
 
-During a faction's action phase, orders and resulting battles resolve immediately. After every active faction has finished, the shared round resolves once:
+**Confirmed boundary (O04):** periodic effects resolve at the end of a full round after every active faction has finished. Orders and resulting battles resolve as immediate action consequences. The following internal order is an implementation proposal:
 
 1. Reconcile active armies, siege participation, territorial control, and current supply connectivity.
 2. Settle income and upkeep under the chosen economic policy.
@@ -71,9 +71,9 @@ During a faction's action phase, orders and resulting battles resolve immediatel
 5. Resolve development pressure, decline, and population movement.
 6. Advance calendar and lifecycle checks using one explicit date boundary.
 7. Evaluate progression, recognition, mentorship, and supported succession from eligible accumulated events.
-8. Reconcile elimination and victory, update faction knowledge, persist a stable checkpoint, and present the next turn summary.
+8. Reconcile elimination and victory, update faction knowledge, prune eligible narrative history, automatically save the completed round, and present the next turn summary.
 
-**Open ordering details:** whether completed infrastructure helps recovery immediately or next season; whether an order placed late in a round receives a full progress step; the exact date assigned to boundary events; upkeep deficits; and who can act after a new season begins. Adopt a written rule before tests pin these behaviors. Never advance siege or age once per faction action.
+**Remaining ordering details:** whether completed infrastructure helps recovery immediately or next season; whether an order placed late in a round receives a full progress step; and the exact date assigned to boundary events. O11 supplies the provisional income-before-upkeep and shortfall rules. Adopt the remaining internal rules before tests pin them; the full-round boundary and automatic save are already settled. Never advance siege or age once per faction action.
 
 If faction elimination occurs during an action phase, remove future turns safely without skipping the next valid faction or repeating a completed one. A round records which factions have already acted.
 
@@ -86,7 +86,7 @@ If faction elimination occurs during an action phase, remove future turns safely
 | Supply | Recovery eligibility affects persistence and viable offensive length |
 | Development | Facilities and local conditions affect recruitment, classes, income, and population |
 | Character growth | Eligible classes, leaders, and mentors alter army capability and future opportunities |
-| Lifecycle | Retirement/death releases duties and enables succession without erasing history |
+| Lifecycle | Retirement/death releases duties and enables succession; narrative history follows the retention policy |
 | Local threat resolution | Clearance/rewards create settlement and specialist opportunities |
 | History | Contextual summaries and legacy links explain current state without modifying it |
 
@@ -95,6 +95,8 @@ The central integration case is Rosemarch: a route and defense create a leadersh
 ## JSON content and validation
 
 Keep balance values, content, configuration, and player-facing text in JSON under `assets/`. Load through toolkit embedded or typed runtime loading APIs. Kestrum owns typed schemas and semantic checks. Generic JSON parsing, loading, platform branching, source-labelled errors, and fallbacks belong to the toolkit; do not build duplicate local loaders or parse game-data files directly with `serde_json::from_str`.
+
+O11 delegates initial economy choices to provisional JSON balance data. [economy.json](../assets/data/economy.json) now records those defaults; future economy implementation must consume it through the toolkit. It is not wired into the current template. Validate nonnegative resources/costs, positive capacities, percentages in range, known troop IDs, and supported policy fields. Keep its format version distinct from a campaign save's schema version.
 
 Proposed content groups include campaign generation, geography/routes, troop definitions, classes, traits, experience tags, facilities, development, local threats, event text, and balance settings. Split by cohesive use rather than creating one huge configuration file.
 
@@ -117,15 +119,17 @@ Persist the campaign seed and state-owned RNG. Sort iteration and event applicat
 
 Use integer seasonal dates and deliberate numeric rules. Cross-platform replay precision must be measured if floating point enters combat. Bound combat resolution and graph searches; a stalemate should terminate with an explicit outcome.
 
-Keep ordinary population abstract. Retain enough history in surviving formations to ground emerging people without simulating every soldier. When a formation is destroyed, its own history ends under D05; world battle records may remain. Cache graph calculations only with correct invalidation. Event retention must respect that distinction and preserve required evidence while preventing UI work from scanning the entire campaign every frame. Storage policy and performance budgets for large worlds and hundred-year campaigns remain open under O23.
+Keep ordinary population abstract. Preserve compact formation/character experience and participation facts for gameplay, with bounded narrative detail for biographies. A destroyed formation loses its own history under D05. O23 permits world memory to fade; use the [retention budgets](09-history-and-content.md#bounded-history-and-forgetting) and keep current state, necessary relationships, and applied outcomes independent from expiring stories. Cache graph calculations only with correct invalidation. Profile the 80-node world and long campaigns; tune retention budgets without making every historical event permanent.
 
 ## Persistence
 
-Reuse toolkit versioned save/load and migration support. A save should include all authoritative campaign state, active round position, RNG state, persistent IDs, knowledge, event history, and ongoing orders or siege states that the supported save boundary permits. Settings remain separate.
+**Confirmed decision (O22):** automatically save at the end of every full round. The player can also manually save during their turn. There is no game-imposed save-slot limit; actual storage capacity still applies.
 
-**Proposal:** start with saving at stable action or round boundaries. If mid-resolution saving is unsupported, explain when saving becomes available and never create a half-applied encounter. Preserve long-term chronology and identity through migrations. Load into a candidate state, validate it, then replace the current campaign only after success.
+**Implementation baseline:** each completed round creates a distinct automatic checkpoint, and each manual save creates a new named slot unless the player explicitly chooses an existing slot to overwrite. Do not rotate or delete slots automatically. Provide save deletion and clear storage-full errors. Manual saving uses a stable boundary during the player's turn; if requested while an action is resolving, finish that atomic action first. An autosave occurs after all periodic effects and history pruning, before the next round's orders are accepted. Save failure leaves the live campaign usable and reports that the round was not persisted.
 
-**Open:** save-slot count, autosave cadence, migration policy, old content compatibility, and supported interruption points. Template demo saves must not be mistaken for Kestrum campaign saves; game identity and schema need a deliberate onboarding change.
+Use available toolkit persistence support. Store authoritative state, active turn/round position, RNG state, stable IDs, knowledge, compact gameplay evidence, retained narrative, and ongoing orders/sieges. Settings remain separate. Load into a candidate state, validate, then replace the live campaign only after success. Loading a checkpoint cannot rerun its completed periodic effects or grant rewards again.
+
+**Remaining technical choices:** storage backend and indexing for an unbounded slot list, migration coverage, and old content compatibility. Saves need explicit schema/content versions; unsupported versions must fail clearly rather than silently reinterpret a campaign. Template demo saves must not be treated as Kestrum saves. Exact migration support is still an implementation task; cadence, slot policy, and manual-save availability are settled.
 
 ## Errors and recovery
 

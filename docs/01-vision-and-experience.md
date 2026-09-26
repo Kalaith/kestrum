@@ -108,7 +108,9 @@ The setting can use flowers and plants in heraldry, noble houses, orders, region
 
 Source examples include Roseguard, Blackthorn Company, Laurel Captain, Hawthorn Keep, Ashmere, White Rose Gate, the War of Three Blooms, and the Red Laurel Campaign. Distinct botanical emblems can help identify factions and armies on the map. Dragonkin, drakes, dragons, wyverns, clerics, mages, and religious institutions establish room for fantasy without fixing a full bestiary or cosmology.
 
-**Proposal:** botanical symbols should identify cultures and institutions consistently. They should not require every common noun or message to become a floral metaphor. Species, cultures, visual art direction, audio, and naming vocabularies remain content decisions.
+**Initial scope (O24):** humans and ordinary classes. The wider fantasy examples remain future possibilities; other races and advanced classes can be added after the core campaign works.
+
+**Proposal:** botanical symbols should identify cultures and institutions consistently. They should not require every common noun or message to become a floral metaphor. Initial species scope is settled; human naming vocabularies, visual art, audio, and later cultural variety remain content-authoring work.
 
 ## Intended player experience
 

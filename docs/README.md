@@ -20,9 +20,10 @@ Kestrum is a generational strategy game in which connected places create campaig
 | [10 — Interface and accessibility](10-interface-and-accessibility.md) | Screen briefs, touch flows, information hierarchy, map presentation, visual review |
 | [11 — Simulation and data](11-simulation-and-data.md) | Proposed state ownership, actions, system contracts, data validation, saves, determinism |
 | [12 — Delivery and validation](12-delivery-and-validation.md) | Prototype, first release, later scope, acceptance scenarios, template handoff, checks |
-| [13 — Decisions and open questions](13-decisions-and-open-questions.md) | Confirmed decisions, agreed directions needing mechanics/tuning, unanswered questions |
+| [13 — Decisions and open questions](13-decisions-and-open-questions.md) | Confirmed decisions, delegated defaults, remaining mechanics and scope questions |
 | [Glossary](glossary.md) | Consistent terminology across chapters |
 | [Source coverage](source-coverage.md) | Section-by-section provenance and source preservation checks |
+| [Economy defaults](../assets/data/economy.json) | Provisional JSON costs, income, upkeep, recovery, and deficit/refund settings |
 | [Documentation verification](verification/documentation.md) | Checks and limitations of this documentation milestone |
 
 Read chapters 01–03 for the game overview, 04–09 for system design, and 10–13 before implementation. Cross-references between chapters describe dependencies rather than separate games or optional competing designs.
@@ -34,6 +35,7 @@ These labels distinguish the origin and maturity of a rule:
 - **Source design:** stated in the supplied drafts. It may still be a tentative direction or an example; original qualifiers remain important.
 - **Confirmed decision:** settled by the subsequent discussion and recorded in chapter 13. Implement this rule without reopening it because related tuning is unfinished.
 - **Agreed direction:** the discussion establishes the feature's behavior or philosophy; the register names the remaining mechanics and tuning.
+- **Delegated default:** a reasonable starting choice made under the user's permission to choose details. It is documented and adjustable during implementation or balance work.
 - **Working interpretation:** a documented way to reconcile source ambiguity. It is a baseline for planning, not a claim that the author settled the question.
 - **Proposal:** new detail added in this consolidation. It must be evaluated during implementation and playtesting.
 - **Open:** a choice that needs a decision before the dependent feature can be accepted.
@@ -43,7 +45,14 @@ Unlabelled descriptive system sections restate source design. The discussion cla
 
 The [decision register](13-decisions-and-open-questions.md) owns reconciliation across chapters. Shared engineering documents at the project root remain authoritative for code and workflow. Do not alter those shared documents to express Kestrum-specific design.
 
-The latest clarification confirms six formation slots, emergence from abstract troops, loss of formation history on destruction, fixed world and regional graphs, named-character army contributions, and 4–8 total factions including the player. The register separates these from remaining mechanics and unanswered questions. **O16, how reinforcements affect veteran formations, is the next design priority.** Vassalisation as a defeat outcome remains a proposal to reconcile the victory objective with early War/Peace diplomacy.
+The latest answers settle the ten formerly unanswered entries:
+
+- The campaign has 80 world nodes, interpreted as major nodes with regional subnodes additional. Periodic effects resolve at the end of a full round.
+- Armies can transfer formations and people whenever they share a node. Replenishment preserves veterancy. Progression requires relevant experiences and encounters.
+- Economy defaults are adjustable JSON data. Saves are automatic at round end, manual during the player's turn, and have no game-imposed slot cap. Old narrative history may be forgotten.
+- Initial content uses humans and ordinary classes. Display targets are 1920 × 1080 full screen and 1280 × 720 WebGL.
+
+The earlier decisions about six formation slots, emergence, formation destruction, fixed graphs, named-character contributions, and 4–8 total factions remain in force. Remaining mechanics are listed in the register; vassalisation as a defeat outcome remains a proposal. The economy JSON is provisional design data and is not yet loaded by the template.
 
 ## Complete source preservation
 

@@ -53,7 +53,7 @@ Repeated attacks, lost trade routes, famine, plague, depopulation, political aba
 
 Example: Hawthorn City is besieged for three years, population collapses, Hawthorn Ruins remains, and bandits occupy the outer district. Later an expedition clears them, Hawthorn Hold is established, and slow resettlement begins. The rebuilt place retains its earlier history.
 
-Ruins can host bandits, monsters, military camps, archaeology, memorials, religious sites, or reclaimed settlements. These uses are content possibilities of varying scope. Ruination must not remove the node or its past from the world.
+Ruins can host bandits, military camps, memorials, or reclaimed settlements; monsters and more elaborate uses are later content. Ruination preserves the node and current world state. Under O23, older stories and former identities may eventually be forgotten; permanent detailed place history is not required.
 
 ## War damage
 
@@ -77,11 +77,11 @@ Devastation can push population toward safer neighboring nodes. That can create 
 
 Names can evolve: Red Plain → Red Plain Outpost → Redplain → Redplain Citadel. Places may be renamed for commanders, battles, noble houses, religious events, or new factions. Locals can remember an older name after conquest.
 
-**Proposal:** keep a stable ID, current display name, and dated name history. Biographies can use the name appropriate to the event while linking to the same place.
+**Implementation baseline:** keep a stable ID and current display name. Retained events may carry dated names and link to that place, but old aliases and narrative records can expire under [history retention](09-history-and-content.md#bounded-history-and-forgetting). A missing old name must not invalidate current map references.
 
 A new capital may be safer, wealthier, more central, more connected, or politically important. The player may move the seat of government. The old capital remains a place with its own history. Relocation cost, prerequisites, and administrative effects need a decision.
 
-Compact place histories can show founding, fortification, sieges, growth, sack, and reclamation. Selecting Hawthorn might show “Founded Year 6; survived three sieges; last captured Year 41,” with a visible path to the full chronology.
+Compact place histories can show retained founding, fortification, sieges, growth, sack, and reclamation records. Selecting Hawthorn might show “Founded Year 6; survived three sieges; last captured Year 41,” with a visible path to available history. O23 permits older details to disappear, so a ruin may eventually be known only as a ruin.
 
 ## Evolving map presentation
 
@@ -92,7 +92,7 @@ Nested regions evolve too. A region beginning with Plains, Village, and Fort can
 ## Proposed acceptance cases
 
 1. A protected, connected outpost can develop while a comparable isolated site remains small.
-2. Sustained war damage can cause decline; reclaiming a ruin preserves its ID and chronology.
+2. Sustained war damage can cause decline; reclaiming a ruin preserves its ID and current state even when older narrative history has expired.
 3. Fortification and settlement size change independently, including a small heavily defended site.
 4. Occupation and refugee movement affect neighboring places without duplicating population or history.
 5. Renaming or relocating a capital preserves old references and does not reset development.

@@ -4,6 +4,23 @@ Date: 2026-09-26
 
 [Documentation index](../README.md) · [Source coverage](../source-coverage.md) · [Delivery plan](../12-delivery-and-validation.md)
 
+## Direct answers and provisional defaults — 2026-09-26
+
+Recorded the user's answers to O01, O04, O09, O10, O11, O16, and O22–O25 in the register and dependent chapters. The register now contains seventeen confirmed entries, thirteen agreed directions with remaining mechanics, and ten reconciliation notes. All forty original IDs remain present exactly once. The ten formerly unanswered entries are settled at the stated scope; finer implementation work remains explicit.
+
+The 80-node world count is interpreted as major nodes with regional subnodes additional. Chosen baselines are labelled separately from direct answers: cost-free transfers between atomic actions, ordinary human classes, distinct automatic save checkpoints, and bounded narrative retention. Provisional economy values are stored in `assets/data/economy.json`, including deficit, recovery, and refund policies. The template does not load this new data yet.
+
+Validation for this update:
+
+- Passed all 342 local links and heading fragments across 18 authored Markdown files, with no dependency on root drafts.
+- Confirmed all forty register IDs and the placement of every new answer; checked for stale claims that reinforcement, saves, world size, transfers, or viewport targets remain unanswered.
+- Parsed the economy JSON with duplicate-key rejection and checked currency sets, nonnegative costs/income, positive capacities, percentage ranges, policy settings, all six initial troop types, and agreement with the documented values.
+- Verified all four reference hashes and exact committed bytes, the three root/archive matches, and all 200 source headings and contiguous coverage spans.
+- Confirmed only authored design documentation and the new economy JSON changed. Runtime source, existing config/assets, source archives, and screenshots are unchanged.
+- Counted all ten Rust files against the 800-line limit; the largest remains `src/ui.rs` at 563 lines. Documentation whitespace checks passed.
+
+No gameplay or UI was implemented. Cargo formatting, Clippy, tests, publishing, and visual/touch capture were not rerun for this design/data update. The viewport changes define future review targets. Earlier runtime blockers below are historical validation results, not fresh checks or resolved onboarding work.
+
 ## Discussion clarification update — 2026-09-26
 
 Updated the design index, decision register, owning chapters, glossary, and delivery plan from the supplied discussion. The register now distinguishes six confirmed entries (four D decisions and O06/O08), thirteen agreed directions needing mechanics or tuning, ten unanswered questions, and eleven remaining reconciliation/source-handling notes. All forty original identifiers remain present exactly once as register entries.

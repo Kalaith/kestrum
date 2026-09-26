@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "status": "provisional_design_defaults_not_yet_loaded_by_runtime",
+  "period": "full_round",
+  "starting_resources": {
+    "gold": 500,
+    "wood": 200,
+    "stone": 150
+  },
+  "headquarters_income_bonus": {
+    "gold": 40,
+    "wood": 15,
+    "stone": 10
+  },
+  "settlement_income": {
+    "unsettled": {
+      "gold": 0,
+      "wood": 0,
+      "stone": 0
+    },
+    "camp": {
+      "gold": 0,
+      "wood": 0,
+      "stone": 0
+    },
+    "outpost": {
+      "gold": 4,
+      "wood": 0,
+      "stone": 0
+    },
+    "hamlet": {
+      "gold": 6,
+      "wood": 2,
+      "stone": 1
+    },
+    "village": {
+      "gold": 10,
+      "wood": 4,
+      "stone": 2
+    },
+    "town": {
+      "gold": 20,
+      "wood": 8,
+      "stone": 4
+    },
+    "city": {
+      "gold": 35,
+      "wood": 12,
+      "stone": 8
+    },
+    "major_city": {
+      "gold": 50,
+      "wood": 16,
+      "stone": 12
+    }
+  },
+  "formations": {
+    "warriors": {
+      "capacity": 100,
+      "recruit_cost": {
+        "gold": 60,
+        "wood": 10,
+        "stone": 0
+      },
+      "upkeep_gold": 10
+    },
+    "spearmen": {
+      "capacity": 100,
+      "recruit_cost": {
+        "gold": 70,
+        "wood": 10,
+        "stone": 0
+      },
+      "upkeep_gold": 10
+    },
+    "archers": {
+      "capacity": 80,
+      "recruit_cost": {
+        "gold": 80,
+        "wood": 20,
+        "stone": 0
+      },
+      "upkeep_gold": 10
+    },
+    "riders": {
+      "capacity": 40,
+      "recruit_cost": {
+        "gold": 120,
+        "wood": 10,
+        "stone": 0
+      },
+      "upkeep_gold": 16
+    },
+    "medics": {
+      "capacity": 40,
+      "recruit_cost": {
+        "gold": 60,
+        "wood": 10,
+        "stone": 0
+      },
+      "upkeep_gold": 8
+    },
+    "siege_engines": {
+      "capacity": 20,
+      "recruit_cost": {
+        "gold": 120,
+        "wood": 60,
+        "stone": 20
+      },
+      "upkeep_gold": 14
+    }
+  },
+  "orders": {
+    "establish_outpost": {
+      "cost": {
+        "gold": 80,
+        "wood": 60,
+        "stone": 40
+      }
+    },
+    "improve_road": {
+      "cost": {
+        "gold": 40,
+        "wood": 30,
+        "stone": 0
+      }
+    },
+    "build_fort": {
+      "cost": {
+        "gold": 100,
+        "wood": 80,
+        "stone": 100
+      }
+    },
+    "change_focus": {
+      "cost": {
+        "gold": 0,
+        "wood": 0,
+        "stone": 0
+      }
+    }
+  },
+  "recovery": {
+    "capacity_percent_per_round": 20,
+    "full_replacement_recruit_gold_percent": 50,
+    "round_cost_up": true,
+    "requires_supply": true
+  },
+  "upkeep": {
+    "named_character_gold": 0,
+    "charge_full_formation_rate": true,
+    "carry_unpaid_debt": false,
+    "block_recruitment_and_recovery_on_shortfall": true,
+    "automatic_disbanding": false
+  },
+  "refunds": {
+    "unstarted_construction_percent": 100,
+    "started_construction_percent": 0,
+    "disband_percent": 0
+  },
+  "recruitment_population": {
+    "enabled": false
+  }
+}

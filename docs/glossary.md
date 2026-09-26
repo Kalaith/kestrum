@@ -10,7 +10,7 @@
 | Company / Host | In-world formation or army names; a name alone does not define mechanical scale |
 | Troop type | Reusable military category such as Warriors, Riders, or Wyverns |
 | Headcount | Current individuals or type-specific counted elements in a formation, relative to its capacity |
-| Veteran formation | Surviving formation with accumulated experience; distinct from an aging veteran person |
+| Veteran formation | Surviving formation with accumulated experience; replenishment does not dilute its veterancy or specialization |
 | Abstract person | Population or troop member without a full individual simulation record |
 | Tracked person | Individually persistent junior, emerging soldier, heir, or other relevant person |
 | Named / recognized character | Individually important person who can strengthen an army and later take leadership; exact contribution and appointment rules remain open |
@@ -43,10 +43,10 @@
 | Relief | Friendly outside force acting to lift a siege |
 | Faction turn | One faction's action phase within the current season |
 | Round | All active factions act, followed by one shared seasonal resolution |
-| Season | Proposed time unit for a complete round; four per year |
+| Season | Time unit advanced at the end of a complete round; four per year |
 | Campaign | Depending on context, the whole saved game or a connected military operation within a longer war |
 | Era | Informal historical grouping generated from major events, not necessarily a scripted chapter |
-| Event | Dated facts about an occurrence, referenced by histories and progression |
+| Event | Dated occurrence; narrative details may expire while compact participation facts remain available for progression |
 | Knowledge | What a faction has legitimately learned, including last-known observations |
 | V1 / first functional version | Initial operational kingdom game; smaller than the complete generational design |
 

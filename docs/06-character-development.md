@@ -73,6 +73,10 @@ Recognized figures may gain distinctive portrait treatment, a biography, command
 
 **Agreed direction (O15):** experience and opportunity create class eligibility, supported by resources and infrastructure in the world. Meeting history requirements makes a path eligible; it does not guarantee every resource or opportunity exists. Dragon training requires appropriate dragon infrastructure. Training duration, exact prerequisite expressions, class acceptance, mutually exclusive paths, and retraining remain open.
 
+**Confirmed decision (O10):** eligibility uses the experiences and encounter types the unit actually participated in. Generic experience points cannot replace a missing encounter: a unit that has never seen a dragon cannot unlock dragon flying. A formation member can draw on events during their service in that formation, not battles before they joined or events experienced only by a remote ally. Compact participation facts survive narrative-history pruning under O23.
+
+**Initial scope (O24):** humans and ordinary classes only. Use Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer as the provisional roster. Dragon Knight, Plague Cleric, magical specialists, and other races remain later content. The examples below preserve that future design without adding it to the first release.
+
 Resources create possibilities:
 
 | Resource | Opportunity |
@@ -85,7 +89,7 @@ Resources create possibilities:
 
 A “Book of Courage: +5 Courage” illustrates the abstract direct-stat approach the design wants to avoid.
 
-### Dragon Knight: Dratanus
+### Dragon Knight: Dratanus — future content
 
 Dratanus begins as a squire. He trains with cavalry, uses polearms, serves a mounted commander, encounters dragonkin, survives a dragon attack, receives specialist riding training, and bonds with a drake.
 
@@ -98,7 +102,7 @@ Source eligibility example:
 
 The kingdom draft additionally requires suitable named status and dragon infrastructure such as a Dragon Hatchery. **Open:** which opportunities are alternatives, which are all required, and how an egg, drake, hatchery, stable, and mentor relate. Preserve the possibilities until the content rule is explicitly selected.
 
-### Plague Cleric: Mira
+### Plague Cleric: Mira — future content
 
 Mira begins as a temple neophyte in a conquered city suffering disease. Treating infected civilians, performing battlefield triage, learning herbalism, working with an apothecary, surviving infection, and studying poison and disease can create the path:
 
@@ -131,6 +135,8 @@ If the player destroys his company and he survives, he may gain survivor experie
 
 ## Prototype event vocabulary
 
-**Candidate vocabulary (O10, still open):** participated in battle, won, lost, survived while outnumbered, commander wounded, assumed command, treated wounded, fought a specific enemy type, defended a strategic node, and captured a strategic node. These source examples suggest reusable experiences; the exact implementation list has not been selected.
+**Implementation baseline for O10:** record participation in battle, victory, defeat, survival while outnumbered, commander wounded, assumed command, treated wounded, fought an enemy type, defended a strategic node, captured a strategic node, training, and non-combat encounters. Tag the relevant troop/creature type, terrain, role, and activity. Additional event kinds can be added as content needs them.
+
+Store only facts supported by actual participation or a valid retrospective service history. Seeing a dragon can satisfy an encounter prerequisite but does not by itself grant flying, riding skill, a mount, or infrastructure. V1 uses ordinary human training and service tags; dragon tags illustrate the rule for future content. Recognition thresholds and class expressions remain O14/O15.
 
 **Proposed invariants:** every experience has valid participants and a date; recognition is applied once; retrospective history fits age and presence; class eligibility can explain missing requirements; identity survives transfers and save/load; enemies follow the same development constraints.

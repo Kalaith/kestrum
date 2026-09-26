@@ -19,7 +19,7 @@ A longer example follows a character from squire at seventeen, knight at twenty-
 | 41–55 | Veteran | Greater skill and reputation, potentially reduced physical ability |
 | 56+ | Elder | Commander, mentor, governor, priest, strategist, retired figure |
 
-Culture and species may adjust these ranges. Birth dates and dates of entry into service must use the same [seasonal calendar](02-world-time-and-control.md). Calendar passage does not itself award combat experience.
+The initial roster is human; other species and their age ranges are later content under O24. Birth dates and dates of entry into service must use the same [seasonal calendar](02-world-time-and-control.md). Calendar passage does not itself award combat experience.
 
 ## Aging as a change in role
 
@@ -99,7 +99,7 @@ Later recruits should reflect military families, temples, settlements, apprentic
 
 Most people remain abstract population. Deeper simulation is reserved for relevance through lineage, military service, mentorship, recognition, politics, or exceptional events. Sparse dependents, tracked juniors, active recognized figures, and historical figures need distinct treatment.
 
-**Proposal:** keep compact historical entries for retired and dead people while using a soft active-roster emergence target. Do not discard a famous dead person's record to make room for a new character. The approximately thirty-person target and precise active-roster definition require tuning.
+**Confirmed direction (O23):** historical memory may be bounded and forgotten, including stories about famous dead people. Keep living people's state and facts required by current relationships, succession, and progression; prune unneeded narrative records under the [history policy](09-history-and-content.md#bounded-history-and-forgetting). Narrative retention and the soft emergence curve are separate controls. The approximately 20–30-person emergence range and precise active-roster definition still require tuning.
 
 ## Proposed generational acceptance cases
 
@@ -107,4 +107,4 @@ Most people remain abstract population. Deeper simulation is reserved for releva
 2. A child, apprentice, or adopted ward can enter service with valid dates and contextual opportunities.
 3. Death or retirement removes active assignments once while preserving relationships and history.
 4. A legacy can continue through mentorship with no children or family requirement.
-5. A multi-decade campaign maintains a manageable active roster and searchable historical records.
+5. A multi-decade campaign maintains a manageable active roster and bounded, searchable retained history without breaking current relationships or progression.

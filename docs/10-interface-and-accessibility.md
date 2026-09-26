@@ -4,19 +4,18 @@
 
 ## Status and goals
 
-This entire chapter is a **proposed screen plan**, applying the shared UI rules to the source game design. It is not evidence of implemented Kestrum screens. The supplied template's panels, technical labels, action demo, grid, and captures must be reconsidered when implementation begins.
+This chapter is a **proposed screen plan** with confirmed viewport and save requirements. It is not evidence of implemented Kestrum screens. The supplied template's panels, technical labels, action demo, grid, and captures must be reconsidered when implementation begins.
 
 The strategic map and current decision dominate ordinary play. Give no more than two or three areas strong visual emphasis. A selected object's short inspector can support the map; quiet navigation leads to kingdom, roster, history, and settings views as needed.
 
 ## Viewport targets
 
-Proposed review sizes, expressed as actual usable canvas dimensions:
+**Confirmed targets (O25), expressed as usable canvas dimensions:**
 
-- Normal desktop: 1280 × 720.
-- Minimum landscape: 800 × 450.
-- Minimum portrait touch: 360 × 640.
+- Primary desktop: full-screen 1920 × 1080.
+- WebGL: 1280 × 720 (720p), used as the initial minimum supported landscape canvas.
 
-These are design targets to validate, not claims of existing support. Review native and browser rendering, including embedded canvas sizes. At smaller sizes, use a bottom selection sheet or a dedicated full-screen detail view. Preserve a useful map region and readable action controls before reducing typography. Long collections scroll within deliberate bounds.
+These are implementation targets, not claims of existing support. Earlier 800 × 450 and 360 × 640 proposals are outside initial support. Review the actual native/browser canvas, including browser chrome and embedded play; offer a visible Full Screen control to reach the supported area. At 720p, reflow secondary content into dismissible sheets or detail views while preserving the map, readable text, and touch controls. Long collections scroll within deliberate bounds. Full-screen entry must be available through a visible user action.
 
 Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; the actual device review determines whether more space is needed. Long names and dense army stacks must remain selectable without relying on precision clicking.
 
@@ -27,7 +26,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 - **Current decision:** name and identify the new kingdom and choose the campaign's faction count.
 - **Dominant focus:** compact setup form and emblem preview.
 - **Primary action:** Start Campaign, beside any invalid setup explanation.
-- **Supporting information:** single-player scope and clearly labelled rival/total count once decided.
+- **Supporting information:** single-player scope, 80 world nodes, and 4–8 total factions including the player.
 - **Deferred information:** future culture, origin, and difficulty details until supported.
 - **Layout and camera:** form fills the useful area; no map camera needed.
 - **Input and feedback:** visible text input, emblem controls, and count adjustment; validate and acknowledge campaign creation.
@@ -49,7 +48,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 - **Primary action:** confirm the chosen transfer or composition change, with requirements and consequences beside it.
 - **Supporting information:** veterancy, role, leader contribution, supply, and the receiving force where relevant.
 - **Deferred information:** full biographies, relationship networks, and hidden personality values.
-- **Layout and camera:** dedicated comparison view; stack slots vertically and scroll on a phone. No map camera required.
+- **Layout and camera:** dedicated comparison view; at 720p, reflow slots and scroll within the view as needed. No map camera required.
 - **Input and feedback:** select slot, choose replacement or destination, then confirm. Dragging is optional; all transfers have tap controls. Explain unavailable options.
 
 ### Battle result
@@ -97,7 +96,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 - **Current decision:** review what happened and follow an interesting person, place, army, or era.
 - **Dominant focus:** selected chronology; after victory or defeat, campaign outcome and a concise historical summary.
 - **Primary action:** inspect a linked event or choose a supported continue/new-campaign/menu action.
-- **Supporting information:** date, participants, location, outcome, and visibility confidence.
+- **Supporting information:** retained date, participants, location, outcome, and visibility confidence; clearly indicate when older history is unavailable.
 - **Deferred information:** unrelated event streams and technical save data.
 - **Layout and camera:** filterable timeline with bounded scrolling and a visible Back control.
 - **Input and feedback:** tap filters and links; retain navigation context after closing a biography.
@@ -126,11 +125,11 @@ Show each only when the supporting feature exists. Dismiss completed prompts. A 
 
 Place costs and missing requirements by the action. A lost supply route belongs beside the affected army. A high-priority unresolved choice may interrupt End Turn, but ordinary army availability should not force a confirmation after every turn.
 
-Save, load, settings, and debug controls belong behind clear navigation. Failed saves or invalid loads need an understandable message and a usable route back to play. Enemy turn progress should remain visible; the exact pause/cancel policy requires implementation decisions. Critical outcomes remain in state or history after transient notifications fade.
+Save, load, settings, and debug controls belong behind clear navigation. Provide visible Save and Load controls in the menu: manual saving is available during the player's turn, and automatic saving follows every completed round. Save lists scroll or paginate without a fixed slot count. Show save progress, completion, and failures without obscuring the map. Failed saves, full storage, and invalid loads need an understandable message and a usable route back to play. Enemy turn progress should remain visible; the exact pause/cancel policy requires implementation decisions. Current critical outcomes remain in state after transient notifications fade; older stories may expire under O23.
 
 ## Required visual and interaction review
 
-At normal and minimum viewports, inspect first use, ordinary play, selected/expanded objects, dense late-game map and roster, long names, large values, siege urgency, lost supply, and failure/recovery states that actually exist. Verify every required interaction using touch alone: setup, map pan and zoom, selection, regional navigation, orders, composition, report dismissal, Help, menu, save/load, and recovery.
+At 1920 × 1080 full screen and a 1280 × 720 WebGL canvas, inspect first use, ordinary play, selected/expanded objects, the dense 80-node map and roster, long names, large values, siege urgency, lost supply, and failure/recovery states that actually exist. Verify every required interaction using touch alone: setup, map pan and zoom, selection, regional navigation, orders, composition, report dismissal, Help, menu, full-screen entry, save/load, and recovery. Check manual saves during the player's turn, round-end autosave feedback, and long save lists.
 
 Check focus, map size, readable text, target sizes, clipping, overlap, hidden controls, drag-release behavior, and picking after resize/zoom/display scaling. Store captures directly in `docs/verification/` under stable scene names and replace equivalent states. Use the shared capture wrapper with its hidden-window default, wait for completion, and confirm the game exits. Browser touch checks supplement captures; neither compilation nor a clean screenshot proves usability.
 

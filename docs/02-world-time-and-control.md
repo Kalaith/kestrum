@@ -14,7 +14,7 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
                   River Settlement
 ```
 
-The top level has the conceptual scope of a small Stellaris galaxy. Exact world size is open. Major nodes and internal subnodes are generated at world creation and remain fixed while their contents change.
+**Confirmed decision (O01):** the world map has 80 nodes. The implementation interpretation counts major world-level nodes; regional internal sites are additional. Their density remains a generation detail, with roughly 8–12 sites as the existing prototype region target. Major nodes and internal subnodes are generated at world creation and remain fixed while their contents change.
 
 **Confirmed decision (D06):** a new settlement develops on an existing site, and a new road improves an existing connection. Visual density can increase substantially without changing graph topology. Persistent node and route identities support this rule.
 
@@ -92,9 +92,9 @@ The western Ashford approach may threaten player headquarters while an eastern f
 
 ## Faction turns and the calendar
 
-Source design specifies sequential faction turns and recommends one strategic turn per season. These need one unambiguous clock.
+Faction turns proceed sequentially: player, then NPC factions, then the round ends.
 
-**Working interpretation:** one complete round through all active factions advances one season. An individual faction turn is that faction's action phase within the shared season. Calendar advancement never depends on how many rivals remain.
+**Confirmed decision (O04/D03):** periodic effects resolve at the end of one full round through all active factions. That round advances one season. An individual faction turn is an action phase within the shared season; calendar advancement never depends on how many rivals remain.
 
 ```text
 Spring, Year 1
@@ -114,7 +114,7 @@ Player -> Faction 1 -> Faction 2 -> ... -> round resolution
 
 Typical campaigns target 20–50 years. Longer histories of 60–100 years should be supported without making hundreds of years necessary. Starting characters need time to become meaningful before the campaign outlives them.
 
-**Proposal — resolution boundary:** action consequences such as movement, combat, and control resolve during the acting faction's turn. Economy, recovery, construction progress, siege aging, settlement pressure, and biological time each resolve once per complete round in a defined order. The [simulation chapter](11-simulation-and-data.md) proposes that order and records unresolved fairness choices.
+Movement, combat, and control resolve as immediate action consequences. Economy, recovery, construction progress, siege aging, settlement pressure, and biological time resolve at the end of the full round, followed by an automatic save. The [simulation chapter](11-simulation-and-data.md) proposes the internal order; the end-of-round boundary is settled.
 
 ## Seasonal rhythm
 
@@ -139,4 +139,4 @@ These are possible light modifiers, not a requirement for a weather simulator. T
 
 ## Open decisions
 
-World and region counts, procedural-generation constraints, route directionality, terrain costs, naval travel, movement budgets, control reversal timing, and round-resolution order require prototyping. Graph stability is settled by D06. See [remaining mechanics and questions D03, D12, and O01–O04](13-decisions-and-open-questions.md).
+Regional site density, generation constraints, route directionality, terrain costs, naval travel, movement budgets, control reversal timing, and the internal order of round-end effects require prototyping. The 80-node world, fixed graph, and full-round resolution boundary are settled. See [remaining mechanics](13-decisions-and-open-questions.md).

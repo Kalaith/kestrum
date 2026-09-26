@@ -34,11 +34,13 @@ Each slot holds a formation whose size depends on type:
 | Wyverns | 3 |
 | Dragon | 1 |
 
-These examples communicate scale; they are not final balance data. A dragon can occupy the same conceptual slot as a hundred infantry. Siege-engine counts and their accompanying crews need a consistent definition before casualty rules are implemented.
+These examples communicate scale; fantasy formations are future content under O24. Initial human formation capacities and costs are provisional values in [economy.json](../assets/data/economy.json). Siege-engine counts and their accompanying crews need a consistent definition before casualty rules are implemented.
 
-The player chooses troop types, character placement, support, specialists, siege equipment, and magical forces before combat. This preparation is a principal tactical choice. The source allows full composition control but leaves reorganization location, movement cost, empty slots, and transfer timing open.
+The player chooses troop types, character placement, support, and siege equipment before combat. This preparation is a principal tactical choice. Magical forces and advanced classes are later content.
 
-**Proposal:** permit fewer than six occupied slots; prevent exceeding six. Transfers require a safe shared location and eligible characters. Validate both sides before moving anything. A character or formation may belong to only one army at a time.
+**Confirmed decision (O09):** formations and named characters may transfer whenever their armies share the same physical node. A region's world-map marker does not make different internal sites the same node. A safe settlement, supply connection, or fresh movement allowance is not required.
+
+**Implementation baseline:** transfers cost no movement or time and are not restricted to the active faction's phase. Apply them between atomic actions, never partway through a resolving battle or round-end calculation; revalidate co-location when applied. Allow empty slots while enforcing six slots, ownership, and unique membership. Transferring never refreshes movement or action allowances already spent. Exact movement bookkeeping belongs to O02.
 
 ## Named characters as force multipliers
 
@@ -46,7 +48,7 @@ The player chooses troop types, character placement, support, specialists, siege
 
 Multiple important characters should improve an otherwise identical army. Concentrating them increases strength; distributing them improves coverage. Exact stacking, role compatibility, command appointment, and whether effects apply to one slot or the entire army are open. The first prototype must make the contribution visible and avoid runaway multiplication.
 
-A newly emerging character may appear within a formation as “Squire Elian + Warriors” and can later leave Commander Teresa's Briar Host to lead the Frostmarch Guard. That transfer reduces Briar Host's concentration of talent. Exact appointment eligibility and transfer timing/cost remain mechanics to define; they do not reopen the agreed emergence-to-leadership path.
+A newly emerging character may appear within a formation as “Squire Elian + Warriors” and can later leave Commander Teresa's Briar Host to lead the Frostmarch Guard. That transfer reduces Briar Host's concentration of talent. Appointment eligibility remains a mechanic to define; transfers follow O09's shared-node rule.
 
 ## Formation persistence
 
@@ -58,7 +60,7 @@ Veterancy can progress from Warriors to Seasoned Warriors to Veteran Warriors. R
 
 The wider world can still remember battles involving the lost formation, but there is no requirement to retain its own service archive. Those world events cannot restore the formation or pass its veteran benefits to replacements.
 
-**Open (O16), next design priority:** if Veteran Warriors at 21/100 reinforce to 100/100, do they remain fully veteran? The effect of replacements on a surviving formation's experience and specialization is undecided. Destruction at zero is already settled; it does not answer how partial losses and replenishment affect veterancy.
+**Confirmed decision (O16):** reinforcement has no effect on a surviving formation's veterancy or specialization. Veteran Warriors at 21/100 remain fully veteran when restored to 100/100. Replacements neither dilute nor grant experience. At zero headcount, D05 still destroys the formation; recruitment cannot revive it.
 
 ## Formation specialization
 
@@ -98,17 +100,17 @@ Under confirmed decision D06, constructing a road improves an existing route. Ro
 
 **Proposal — connectivity model:** supply queries follow usable routes to an eligible friendly source. Hostile-controlled nodes, blockades, contested boundaries, and siege isolation must be evaluated consistently at both world and regional scales. Cache results only if control and route changes invalidate them correctly.
 
-**Open:** define valid sources, treatment of contested nodes, range limits, neutral passage, supply through occupied territory, and exact recovery timing/cost. An outpost should extend an existing logistical position; treating every isolated new outpost as unlimited independent supply would undermine encirclement and requires a separate decision.
+**Open:** define valid sources, treatment of contested nodes, range limits, neutral passage, and supply through occupied territory. Recovery resolves at round end; provisional rate and cost are in [economy defaults](03-kingdoms-and-economy.md#provisional-economy-defaults). An outpost should extend an existing logistical position; treating every isolated new outpost as unlimited independent supply would undermine encirclement and requires a separate decision.
 
 The v1 rule is restricted normal recovery. Starvation, automatic attrition, and detailed siege supplies are later possibilities. Show “Cut off: cannot replenish” at the selected army and identify a known broken route when possible.
 
 ## Outposts
 
-Armies can establish outposts on suitable nodes. **Agreed direction (O12):** establishment takes roughly three turns. With one complete round per season, **working interpretation:** construction requires approximately three seasonal progress steps, about nine months. This pacing must be tested; the first progress step, completion timing, supply needs, and interruption rules remain open.
+Armies can establish outposts on suitable nodes. **Agreed direction (O12):** establishment takes roughly three turns. With the full-round seasonal boundary confirmed, this means approximately three seasonal progress steps, about nine months. This pacing must be tested; the first progress step, completion timing, supply needs, and interruption rules remain open.
 
 Outposts create territorial presence, a forward recovery point, a future settlement seed, a defensive position, and supply extension. They are persistent places. They may become hamlets, villages, fortified settlements, and towns, or become abandoned, ruined, and occupied by bandits.
 
-**Proposal — order states:** planned → under construction → complete; interruption can suspend or cancel the work according to an explicit policy. Show remaining seasons and why progress is blocked. Resolve cost, occupation requirement, refund, and interruption rules before shipping. The source's “Village → Fort → Town” example describes changing habitation and fortification together; those remain separate state layers.
+**Proposal — order states:** planned → under construction → complete; interruption can suspend or cancel the work according to an explicit policy. Show remaining seasons and why progress is blocked. Use O11's provisional cost/refund defaults; occupation and interruption rules still need definition. The source's “Village → Fort → Town” example describes changing habitation and fortification together; those remain separate state layers.
 
 ## Stacking and reinforcement
 

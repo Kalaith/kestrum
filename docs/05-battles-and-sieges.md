@@ -94,9 +94,9 @@ A relief force can attack the besieger from outside while defenders may break ou
 
 ## Local threats and peace-time combat
 
-Bandits, wolves, wild beasts, monster nests, and dangerous ruins can occupy nodes. Clearing them gives combat experience, formation veterancy, recognition, resources, settlement opportunities, or class opportunities.
+Initial local threats are human bandits, ordinary wildlife, and occupied ruins. Clearing them gives participation experience, formation veterancy, recognition, resources, or settlement opportunities. Monster nests and dragon-related rewards are future content under O24.
 
-Source examples:
+Source examples, including deferred fantasy content:
 
 - A wyvern nest near Frostmarch is cleared. A veteran formation gains experience, a character distinguishes herself, and a recovered dragon egg creates a possible Dragon Knight path.
 - A cleared Bandit Hold can become an outpost.

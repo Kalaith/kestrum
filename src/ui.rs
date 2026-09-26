@@ -25,6 +25,9 @@ pub enum UiAction {
     Save,
     Load,
     EndTurn,
+    PauseNpcs(bool),
+    StepNpc,
+    LoadLegacy,
     Zoom(f32),
     Recenter,
     ToggleLabels,
@@ -45,6 +48,8 @@ pub struct Context<'a> {
     pub pointer: Pointer,
     pub origin: Option<Vec2>,
     pub save_exists: bool,
+    pub legacy_save_exists: bool,
+    pub campaign_view: Option<&'a kestrum::engine::VisibleCampaign>,
 }
 
 impl Context<'_> {

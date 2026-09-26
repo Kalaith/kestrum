@@ -2,7 +2,7 @@
 
 Kestrum is a generational strategy game in which connected places create campaigns, campaigns shape people, and people and places carry that history forward. This documentation consolidates the three founding design drafts and subsequent discussion clarifications into a navigable game design document (GDD).
 
-**Project state:** Kestrum has its title screen and an empty illustrated atlas, with pan/zoom, seasons, saving, settings, and help. K01 adds loaded, validated economy/setup data and the durable Rosemarch scenario; strategic play remains future work. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See [K01 verification](verification/k01-content.md) and the earlier [UI verification record](verification/initial-map.md).
+**Project state:** Kestrum has a strategic campaign foundation with player-first faction rounds, deterministic commands, paused/stepped rival phases and separate read-only access to old atlas saves. The illustrated atlas retains pan/zoom, settings and Help; selectable geography, armies and economic actions remain later packages. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See [K02 verification](verification/k02-campaign.md) and the earlier [UI verification record](verification/initial-map.md).
 
 ## Reading order
 
@@ -11,7 +11,7 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. K01 is complete; K02–K18 remain planned.
+confirmed design decisions. K01–K02 are complete; K03–K18 remain required work.
 
 | Document | Contents |
 | --- | --- |

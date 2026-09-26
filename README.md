@@ -4,20 +4,23 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
-The first campaign shell is implemented in Rust, Macroquad, and Macroquad Toolkit.
+The campaign foundation is implemented in Rust, Macroquad, and Macroquad Toolkit.
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
-Play, Credits, and native Quit Game. New Game unfolds an empty illustrated atlas.
-Strategic markers and commands arrive in later work packages.
+Play, Credits, and native Quit Game. New Game starts Rosemarch's strategic state
+over the illustrated atlas. Selectable markers arrive in K04.
 There are no demo actions, energy, grid, debug panels, or economy controls.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
-season/turn, Menu, zoom/recenter controls, compass, and End Turn visible. End Turn
-advances a season and saves the campaign. The menu contains manual save/load,
+season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
+visible. End Turn passes to the next faction; each rival currently passes. Pause,
+Step and Resume control rival progression between atomic actions. A full round
+advances one season and saves the campaign. The menu contains manual save/load,
 settings, help, and the route back to the title. Continue restores the current
 campaign or its disk/browser save. Starting over requires confirmation.
 
-This milestone uses one campaign save. The full design's named save slots,
-faction rounds, armies, economy, and nested regions remain future work. Geography
+This milestone uses one strategic checkpoint. K03 adds the required recoverable
+catalogue and named saves. Armies, economy, and selectable nested regions remain
+later packages. Geography
 labels describe terrain; they are not selectable strategic locations.
 
 ### K01 — Typed content and Rosemarch
@@ -33,23 +36,41 @@ grants, diplomacy and normalized positions are durable JSON content.
 The economy's balance values are unchanged. All existing fields are typed and
 validated, including unsupported policies, duplicate table IDs and invalid costs.
 Scenario resource grants reference its 500 Gold / 200 Wood / 150 Stone starting
-table; full formation grants reference its troop capacities. No strategic entities
-are instantiated yet. The title/empty-atlas flow and `kestrum_campaign_v1` saves
-retain their existing behavior and bytes format.
+table; full formation grants reference its troop capacities. K02 instantiates
+factions and the graph. The original `kestrum_campaign_v1` bytes remain readable
+through Open Old Atlas and are never overwritten by a strategic campaign.
 
 [K01 verification](docs/verification/k01-content.md) records the five new behavioral
 tests, 13 preserved regressions, native captures and Windows/WebGL Preview publish.
-Project Roost tracking remains unavailable; browser fullscreen and physical touch
-limitations remain open. K02 is next eligible and has not been started.
+Project Roost tracking was unavailable for K01 and succeeded during K02 publishing.
+Browser fullscreen and physical touch limitations remain open.
+
+### K02 — Campaign ownership and seasonal phases
+
+Strategic state owns stable graph/faction IDs, founding resources, four persisted
+toolkit RNG streams, the current faction, round order, acted set and command
+sequence. Accepted commands commit atomically; rejection preserves state. Player
+observation exposes public places and the player's own faction resources.
+
+The season stays fixed while the player and each eligible rival take their turns.
+Four rounds make one year. Rivals currently pass without income or fabricated
+events from future systems. Menu overlays and errors hold automatic progression.
+Manual saving is available during the player's phase. Old atlas campaigns are
+read-only, with no invented strategic history.
+
+K02 passes 23 tests, formatting, strict Clippy, both-size native visual review and
+Windows/WebGL Preview publishing. Browser checks cover phase controls and save
+restoration after reload. [K02 evidence](docs/verification/k02-campaign.md) records
+the remaining fullscreen/physical-touch limitations. K03–K18 remain required.
 
 ## Screen brief
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Survey the empty land that will host the campaign. |
+| Current decision | Survey the land, finish the player's orders, and follow each faction's phase. |
 | Dominant focus | The continuous, full-bleed illustrated atlas. |
-| Primary action | Pan/zoom to inspect geography; End Turn advances the chronology. |
-| Supporting information | Current season, year, and turn at the top edge. |
+| Primary action | End Turn passes to the next faction; Pause, Resume and Step control the visible NPC sequence. |
+| Supporting information | Season, year, round and active faction at the top edge; the season changes only after all eligible factions finish. |
 | Deferred information | Settings, saves, help, and credits appear only when opened. No unimplemented system gets a panel. |
 | Layout and camera | 1280 × 720 logical canvas, scaled to 1920 × 1080; minimum supported landscape canvas is 1280 × 720. Camera stays within the atlas at 1–3× zoom. |
 | Input and feedback | Drag with one finger or the left mouse button; pinch, wheel, or visible + / -; Recenter restores the atlas. All controls are at least 48 logical pixels tall. Help names the visible controls and gestures. |
@@ -80,7 +101,8 @@ capture, with no additional image processing.
 ## Code and artwork
 
 - `src/data.rs`, `src/data/`: combined content, typed schemas and semantic validation.
-- `src/state.rs`: title/campaign transitions and saved chronology.
+- `src/state.rs`, `src/state/`: title/campaign transitions and authoritative state.
+- `src/engine.rs`, `src/engine/`: atomic commands, projections and faction rounds.
 - `src/navigation.rs`: bounded map camera, reused by mouse and touch.
 - `src/game.rs`: input routing, action dispatch, assets, and toolkit persistence.
 - `src/ui/`: atlas, menus, typography, and toolkit plaque rendering.
@@ -101,8 +123,9 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. K01 content is implemented;
-K02–K18 remain planned. The title and empty atlas remain the playable milestone.
+reusable prompt for implementing one package at a time. The current assignment
+continues automatically through all remaining packages, with validation and a
+commit at each completed package.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

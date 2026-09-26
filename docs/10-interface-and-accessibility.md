@@ -4,7 +4,21 @@
 
 ## Status and goals
 
-This chapter describes the **full proposed interface**. The initial title and empty atlas are now implemented; the current [screen brief](../README.md#screen-brief) and [verification record](verification/initial-map.md) describe their actual scope. The user explicitly deferred nodes and armies for this milestone. Future setup, inspectors, and system screens below are not yet implemented.
+This chapter describes the **full proposed interface**. K02 adds strategic faction
+phases to the title and atlas foundation. The current [screen brief](../README.md#screen-brief)
+describes implemented controls. Setup, selectable sites, inspectors, and later
+system screens below arrive in their scheduled packages.
+
+### Current faction-phase controls (K02)
+
+The atlas remains dominant. Season, year, round and current faction have one home
+along the top edge. End Turn finishes the player's phase. During rival phases it
+becomes Pause or Resume, with Step beside it while paused. A short status names
+the pause and explains that rivals currently pass. Menu/help overlays suspend
+automatic progression; returning to the map continues from the same boundary.
+Help names the visible controls. The old atlas is explicitly read-only and the
+Save action explains when it is unavailable. All controls retain 48-pixel minimum
+height at the 1280 × 720 logical canvas.
 
 The strategic map and current decision dominate ordinary play. Give no more than two or three areas strong visual emphasis. A selected object's short inspector can support the map; quiet navigation leads to kingdom, roster, history, and settings views as needed.
 

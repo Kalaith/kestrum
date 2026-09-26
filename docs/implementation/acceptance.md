@@ -210,7 +210,7 @@ acceptance criterion without explicit scope acceptance.
 | Package | Status | Commit / evidence / remaining limitations |
 | --- | --- | --- |
 | K01 | Done | Commit subject: `Rosemarch gains its sites and founding kingdoms (K01 typed content)`; [verification](../verification/k01-content.md). 18 tests, format, Clippy, source gate and Windows/WebGL Preview publish pass. Roost tracking unavailable; no strategic play or new browser/touch claim. |
-| K02 | Planned | State/actions/faction rounds |
+| K02 | Done | Commit subject: `Kestrum's kingdoms share one seasonal round (K02 campaign phases)`; [verification](../verification/k02-campaign.md). 23 tests, format, Clippy, source gate, both-size native review, browser phase/reload checks and Windows/WebGL Preview publish pass. Inherited fullscreen/display scaling and physical touch remain K18 limitations. |
 | K03 | Planned | Shared save catalogue dependency and game integration |
 | K04 | Planned | Physical/world/region map |
 | K05 | Planned | Armies/recruitment/economy |

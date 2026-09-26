@@ -106,6 +106,17 @@ const REQUIRED_TEXT: &[&str] = &[
     "save_failed",
     "load_failed",
     "settings_failed",
+    "round",
+    "npc_phase",
+    "npc_paused",
+    "npc_prototype",
+    "pause_npcs",
+    "resume_npcs",
+    "step_npc",
+    "load_legacy",
+    "legacy_phase",
+    "save_player_only",
+    "legacy_read_only",
 ];
 
 impl PresentationData {

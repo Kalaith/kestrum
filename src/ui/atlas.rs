@@ -12,9 +12,10 @@ const ZOOM_OUT: Rect = Rect::new(24.0, 646.0, 48.0, 48.0);
 const ZOOM_IN: Rect = Rect::new(78.0, 646.0, 48.0, 48.0);
 const RECENTER: Rect = Rect::new(138.0, 646.0, 144.0, 48.0);
 const END_TURN: Rect = Rect::new(1072.0, 646.0, 184.0, 48.0);
+const STEP_NPC: Rect = Rect::new(954.0, 646.0, 108.0, 48.0);
 
 pub fn map_controls_contain(point: Vec2) -> bool {
-    [MENU, ZOOM_OUT, ZOOM_IN, RECENTER, END_TURN]
+    [MENU, ZOOM_OUT, ZOOM_IN, RECENTER, END_TURN, STEP_NPC]
         .iter()
         .any(|rect| rect.contains(point))
 }
@@ -97,12 +98,16 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
             21.0,
             CREAM,
         );
-        let status = format!(
-            "{} {}   ·   {}",
-            ctx.text("turn"),
-            campaign.turn,
-            ctx.text("phase")
-        );
+        let status = if let Some(view) = ctx.campaign_view {
+            format!(
+                "{} {}   ·   {}",
+                ctx.text("round"),
+                campaign.display_turn(),
+                view.active_faction_name
+            )
+        } else {
+            ctx.text("legacy_phase")
+        };
         let width = measure_text(&status, ctx.body_font(), 18, 1.0).width;
         body(ctx, &status, vec2(640.0 - width * 0.5, 59.0), 18.0, CREAM);
     }
@@ -120,11 +125,56 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         (ZOOM_OUT, "zoom_out", UiAction::Zoom(1.0 / 1.25)),
         (ZOOM_IN, "zoom_in", UiAction::Zoom(1.25)),
         (RECENTER, "reset_view", UiAction::Recenter),
-        (END_TURN, "end_turn", UiAction::EndTurn),
     ] {
         if button(ctx, rect, &ctx.text(key), active, key == "end_turn") {
             return Some(intent);
         }
+    }
+    phase_controls(ctx, active)
+}
+
+fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
+    let view = ctx.campaign_view?;
+    let (key, action) = if view.player_turn {
+        ("end_turn", UiAction::EndTurn)
+    } else if view.npc_paused {
+        ("resume_npcs", UiAction::PauseNpcs(false))
+    } else {
+        ("pause_npcs", UiAction::PauseNpcs(true))
+    };
+    if !view.player_turn {
+        draw_rectangle(
+            906.0,
+            579.0,
+            356.0,
+            121.0,
+            macroquad_toolkit::colors::with_alpha(INK, 0.88),
+        );
+        let phase = if view.npc_paused {
+            "npc_paused"
+        } else {
+            "npc_phase"
+        };
+        body(ctx, &ctx.text(phase), vec2(918.0, 603.0), 18.0, CREAM);
+        body(
+            ctx,
+            &ctx.text("npc_prototype"),
+            vec2(918.0, 627.0),
+            16.0,
+            CREAM,
+        );
+        if button(
+            ctx,
+            STEP_NPC,
+            &ctx.text("step_npc"),
+            active && view.npc_paused,
+            false,
+        ) {
+            return Some(UiAction::StepNpc);
+        }
+    }
+    if button(ctx, END_TURN, &ctx.text(key), active, true) {
+        return Some(action);
     }
     None
 }

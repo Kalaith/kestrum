@@ -8,6 +8,12 @@ provisional defaults for unresolved mechanics, clearly labelled for review.
 
 ## How to use this plan
 
+For the current full-release assignment, implement successive numbered packages,
+validate and commit each one, then continue automatically through K18. The user's
+2026-09-26 full-release instruction supersedes the earlier one-package-per-request
+handoff and author-review gate. Remaining gaps are delegated implementation
+decisions recorded in chapter 13; confirmed rules and acceptance gates remain.
+
 Give an implementation agent one numbered work package at a time, together with
 this entry point. Each package names its prerequisites, source chapters, rule
 sections, intended files, outputs, and five behavioral acceptance cases. Complete
@@ -144,6 +150,10 @@ eligible package. Do not claim success from a copied checkout or an untested UI.
 
 K01 is **Done**: toolkit-loaded typed economy and the durable Rosemarch scenario
 pass their behavioral checks. See [K01 evidence](verification/k01-content.md).
-K02–K18 remain **planned, not implemented**; K02 is next eligible.
+K02 is **Done**: atomic strategic commands, faction rounds and v1/v2 compatibility
+pass the checks in [K02 evidence](verification/k02-campaign.md). K03–K18 remain
+**planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
-status table. The existing title/empty-atlas shell remains the playable milestone.
+status table. The current atlas has faction-phase controls; selectable places and
+armies remain later packages. Browser fullscreen and physical-touch review remain
+open for K18.

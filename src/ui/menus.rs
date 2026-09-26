@@ -31,7 +31,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
         CREAM,
     );
     let active = ctx.state.overlay == Overlay::None;
-    let can_continue = ctx.save_exists || ctx.state.campaign.is_some();
+    let can_continue = ctx.save_exists || ctx.legacy_save_exists || ctx.state.campaign.is_some();
     let entries = [
         ("continue", UiAction::Continue, can_continue),
         ("new_game", UiAction::NewGame, true),
@@ -68,6 +68,17 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
         false,
     ) {
         return Some(UiAction::Quit);
+    }
+    if ctx.legacy_save_exists
+        && button(
+            ctx,
+            Rect::new(850.0, 608.0, 350.0, 48.0),
+            &ctx.text("load_legacy"),
+            active,
+            false,
+        )
+    {
+        return Some(UiAction::LoadLegacy);
     }
     text(ctx, &ctx.data.edition, vec2(38.0, 693.0), 15.0, BRASS);
     body(ctx, "WebHatchery", vec2(1138.0, 693.0), 18.0, CREAM);
@@ -149,11 +160,24 @@ fn pause(ctx: &Context<'_>) -> Option<UiAction> {
     .into_iter()
     .enumerate()
     {
-        let enabled = key != "load" || ctx.save_exists;
+        let enabled = match key {
+            "load" => ctx.save_exists || ctx.legacy_save_exists,
+            "save" => ctx.campaign_view.is_some_and(|view| view.player_turn),
+            _ => true,
+        };
+        let label = if key == "save" && !enabled {
+            ctx.text(if ctx.campaign_view.is_some() {
+                "save_player_only"
+            } else {
+                "legacy_phase"
+            })
+        } else {
+            ctx.text(key)
+        };
         if button(
             ctx,
             Rect::new(482.0, 209.0 + index as f32 * 52.0, 316.0, 48.0),
-            &ctx.text(key),
+            &label,
             enabled,
             index == 0,
         ) {
@@ -223,9 +247,21 @@ fn help(ctx: &Context<'_>) {
     .iter()
     .enumerate()
     {
+        let help_text = if ctx.state.campaign.is_some()
+            && ctx.campaign_view.is_none()
+            && matches!(*key, "help_turn" | "help_scope")
+        {
+            if *key == "help_turn" {
+                ctx.text("legacy_read_only")
+            } else {
+                String::new()
+            }
+        } else {
+            ctx.text(key)
+        };
         paragraph(
             ctx,
-            &ctx.text(key),
+            &help_text,
             vec2(414.0, 223.0 + index as f32 * 65.0),
             453.0,
         );

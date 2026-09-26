@@ -1,8 +1,10 @@
 //! Application coordination, toolkit persistence, and routed atlas gestures.
 
 use crate::ui::{self, UiAction};
+mod campaign;
 use kestrum::{
     data::GameData,
+    engine::{self, Command},
     navigation::{MapView, HEIGHT, WIDTH},
     state::{Campaign, GameState, Overlay, Preferences, Screen, SAVE_SLOT},
 };
@@ -10,9 +12,7 @@ use macroquad::prelude::*;
 use macroquad_toolkit::{
     assets::AssetManager,
     input::gestures::{GestureTouch, TouchGesture},
-    persistence::{
-        json_key_exists, load_from_slot, load_json_key, save_json_key, save_to_slot, slot_exists,
-    },
+    persistence::{json_key_exists, load_json_key, save_json_key, slot_exists},
     ui::{begin_virtual_ui_frame, end_virtual_ui_frame, Pointer, VirtualUi},
 };
 
@@ -27,6 +27,8 @@ pub struct Game {
     was_down: bool,
     map_gesture: bool,
     save_exists: bool,
+    legacy_save_exists: bool,
+    npc_delay: f32,
     capture: bool,
     notice: Option<(String, f32)>,
     error: Option<String>,
@@ -49,7 +51,9 @@ impl Game {
             .load_font("body", &data.presentation.body_font_path)
             .await?;
         let mut game = Self {
-            save_exists: slot_exists(&data.presentation.game_id, SAVE_SLOT),
+            save_exists: slot_exists(&data.presentation.game_id, campaign::STRATEGIC_SLOT),
+            legacy_save_exists: slot_exists(&data.presentation.game_id, SAVE_SLOT),
+            npc_delay: 0.0,
             data,
             assets,
             state: GameState::default(),
@@ -83,22 +87,43 @@ impl Game {
         self.notice = None;
         self.error = None;
         self.save_exists = false;
+        self.legacy_save_exists = false;
         match scene.trim_end_matches("_minimum") {
             "title" => {}
-            "gameplay" => self.state.new_game(),
+            "gameplay" => self.capture_campaign(),
+            "npc_paused" | "npc_menu" | "npc_long_name" => {
+                self.capture_campaign();
+                self.apply_campaign_command(Command::EndTurn);
+                self.apply_campaign_command(Command::SetNpcPaused(true));
+                if scene.starts_with("npc_menu") {
+                    self.state.overlay = Overlay::Menu;
+                }
+                if scene.starts_with("npc_long_name") {
+                    if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+                        let active = campaign.active_faction();
+                        if let Some(faction) = campaign.factions.get_mut(&active) {
+                            faction.name = "The Kingdom of Silver Hawthorns".into();
+                        }
+                    }
+                }
+            }
+            "legacy" => {
+                self.state.campaign = Some(Campaign::Shell(Default::default()));
+                self.state.screen = Screen::Campaign;
+            }
             "zoomed" => {
-                self.state.new_game();
+                self.capture_campaign();
                 self.view.zoom(vec2(720.0, 330.0), 2.0);
             }
             "menu" => {
-                self.state.new_game();
+                self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
             }
             "settings" => self.state.overlay = Overlay::Settings,
             "help" => self.state.overlay = Overlay::Help,
             "confirm_new" => self.state.overlay = Overlay::ConfirmNew,
             "save_error" => {
-                self.state.new_game();
+                self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
                 self.error = Some(format!(
                     "{}: storage is unavailable",
@@ -110,6 +135,7 @@ impl Game {
     }
 
     pub fn frame(&mut self, dt: f32) {
+        self.progress_npcs(dt);
         if let Some((_, time)) = &mut self.notice {
             *time -= dt;
             if *time <= 0.0 {
@@ -119,6 +145,12 @@ impl Game {
         clear_background(Color::new(0.06, 0.10, 0.10, 1.0));
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
+        let campaign_view = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .and_then(|campaign| engine::project(campaign, campaign.player).ok());
         let ctx = ui::Context {
             data: &self.data.presentation,
             state: &self.state,
@@ -128,6 +160,8 @@ impl Game {
             pointer,
             origin: self.origin,
             save_exists: self.save_exists,
+            legacy_save_exists: self.legacy_save_exists,
+            campaign_view: campaign_view.as_ref(),
         };
         let action = ui::draw(&ctx);
         let message = self
@@ -153,7 +187,13 @@ impl Game {
         if is_key_pressed(KeyCode::Escape) {
             self.state.back();
         }
-        if pointer.down && !self.was_down {
+        // A quick click can press and release between frames. Macroquad still
+        // records the press edge even though `down` is already false.
+        let started = is_mouse_button_pressed(MouseButton::Left)
+            || touches()
+                .iter()
+                .any(|touch| touch.phase == TouchPhase::Started);
+        if !self.was_down && (pointer.down || started) {
             self.origin = Some(pointer.position);
             self.map_gesture = self.state.screen == Screen::Campaign
                 && self.state.overlay == Overlay::None
@@ -243,11 +283,12 @@ impl Game {
             }
             UiAction::Save => self.save(true),
             UiAction::Load => self.load(),
-            UiAction::EndTurn => {
-                if self.state.end_turn() {
-                    self.save(false);
-                }
+            UiAction::LoadLegacy => self.load_slot(SAVE_SLOT),
+            UiAction::EndTurn => self.apply_campaign_command(Command::EndTurn),
+            UiAction::PauseNpcs(paused) => {
+                self.apply_campaign_command(Command::SetNpcPaused(paused))
             }
+            UiAction::StepNpc => self.apply_campaign_command(Command::StepNpc),
             UiAction::Zoom(factor) => self.view.zoom(vec2(WIDTH / 2.0, HEIGHT / 2.0), factor),
             UiAction::Recenter => self.view.reset(),
             UiAction::ToggleLabels => {
@@ -269,55 +310,6 @@ impl Game {
             }
             #[cfg(not(target_arch = "wasm32"))]
             UiAction::Quit => self.running = false,
-        }
-    }
-
-    fn start_game(&mut self) {
-        self.state.new_game();
-        self.view.reset();
-        self.error = None;
-        self.save(false);
-    }
-
-    fn save(&mut self, announce: bool) {
-        if self.capture {
-            return;
-        }
-        let Some(campaign) = &self.state.campaign else {
-            return;
-        };
-        match save_to_slot(&self.data.presentation.game_id, SAVE_SLOT, campaign) {
-            Ok(()) => {
-                self.save_exists = true;
-                self.error = None;
-                if announce {
-                    self.notice = Some((self.data.presentation.text("save_success").into(), 3.0));
-                }
-            }
-            Err(error) => {
-                self.error = Some(format!(
-                    "{}: {error}",
-                    self.data.presentation.text("save_failed")
-                ))
-            }
-        }
-    }
-
-    fn load(&mut self) {
-        let loaded: Result<Campaign, String> =
-            load_from_slot(&self.data.presentation.game_id, SAVE_SLOT);
-        match loaded.and_then(|campaign| self.state.load_campaign(campaign)) {
-            Ok(()) => {
-                self.view.reset();
-                self.error = None;
-                self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));
-            }
-            Err(error) => {
-                self.error = Some(format!(
-                    "{}: {error}",
-                    self.data.presentation.text("load_failed")
-                ))
-            }
         }
     }
 

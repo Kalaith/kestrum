@@ -1,8 +1,21 @@
-//! Explicit title/campaign transitions and the empty campaign's saved chronology.
+//! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
-use serde::{Deserialize, Serialize};
+pub mod campaign;
+mod validation;
+pub mod world;
+
+pub use campaign::{
+    CampaignId, CampaignPhase, FactionStatus, StrategicCampaign, STRATEGIC_VERSION,
+};
+
+use crate::{
+    data::GameData,
+    engine::{self, ActionOutcome, Actor, Command, RuleError},
+};
+use serde::{de::Error, Deserialize, Deserializer, Serialize};
 
 pub const SAVE_SLOT: &str = "kestrum_campaign_v1";
+pub const STRATEGIC_SAVE_SLOT: &str = "kestrum_strategic_v2";
 pub const SAVE_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,13 +34,14 @@ pub enum Overlay {
     ConfirmNew,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct Campaign {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ShellCampaign {
     pub version: u32,
     pub turn: u32,
 }
 
-impl Default for Campaign {
+impl Default for ShellCampaign {
     fn default() -> Self {
         Self {
             version: SAVE_VERSION,
@@ -36,22 +50,84 @@ impl Default for Campaign {
     }
 }
 
-impl Campaign {
+impl ShellCampaign {
     pub fn validate(&self) -> Result<(), String> {
         if self.version != SAVE_VERSION || self.turn == 0 {
-            return Err("This campaign has an unsupported version or invalid turn".into());
+            return Err(
+                "This empty-atlas campaign has an unsupported version or invalid turn".into(),
+            );
         }
         Ok(())
     }
+}
 
-    pub fn end_turn(&mut self) {
-        self.turn = self.turn.saturating_add(1);
+/// Flat JSON deliberately retains the original v1 shape and explicit schema version.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum Campaign {
+    Shell(ShellCampaign),
+    Strategic(Box<StrategicCampaign>),
+}
+
+impl<'de> Deserialize<'de> for Campaign {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        // Serde's untagged buffer loses the JSON map-key deserializer needed by
+        // numeric FactionId keys. Decode the selected schema through JSON itself,
+        // which also preserves every u64 RNG bit on native and WASM targets.
+        let value = serde_json::Value::deserialize(deserializer)?;
+        match value.get("version").and_then(serde_json::Value::as_u64) {
+            Some(version) if version == u64::from(SAVE_VERSION) => serde_json::from_value(value)
+                .map(Self::Shell)
+                .map_err(D::Error::custom),
+            Some(version) if version == u64::from(STRATEGIC_VERSION) => {
+                serde_json::from_value(value)
+                    .map(Self::Strategic)
+                    .map_err(D::Error::custom)
+            }
+            Some(version) => Err(D::Error::custom(format!(
+                "Unsupported campaign schema version {version}"
+            ))),
+            None => Err(D::Error::custom(
+                "Campaign schema version must be an unsigned integer",
+            )),
+        }
     }
+}
+
+impl Campaign {
+    pub fn validate(&self, data: &GameData) -> Result<(), String> {
+        match self {
+            Self::Shell(shell) => shell.validate(),
+            Self::Strategic(campaign) => campaign.validate(data),
+        }
+    }
+
+    pub fn strategic(&self) -> Option<&StrategicCampaign> {
+        match self {
+            Self::Strategic(campaign) => Some(campaign),
+            Self::Shell(_) => None,
+        }
+    }
+
     pub fn season_index(&self) -> usize {
-        ((self.turn - 1) % 4) as usize
+        match self {
+            Self::Shell(shell) => (shell.turn.saturating_sub(1) % 4) as usize,
+            Self::Strategic(campaign) => campaign.season_index(),
+        }
     }
+
     pub fn year(&self, start: u32) -> u32 {
-        start.saturating_add((self.turn - 1) / 4)
+        match self {
+            Self::Shell(shell) => start.saturating_add(shell.turn.saturating_sub(1) / 4),
+            Self::Strategic(campaign) => campaign.year(start),
+        }
+    }
+
+    pub fn display_turn(&self) -> u32 {
+        match self {
+            Self::Shell(shell) => shell.turn,
+            Self::Strategic(campaign) => campaign.completed_rounds.saturating_add(1),
+        }
     }
 }
 
@@ -80,29 +156,46 @@ impl Default for GameState {
 }
 
 impl GameState {
-    pub fn new_game(&mut self) {
-        self.campaign = Some(Campaign::default());
-        self.screen = Screen::Campaign;
-        self.overlay = Overlay::None;
+    pub fn new_game(&mut self, data: &GameData) -> Result<(), String> {
+        let campaign = StrategicCampaign::new(data)?;
+        self.load_campaign(Campaign::Strategic(Box::new(campaign)), data)
     }
 
-    pub fn load_campaign(&mut self, campaign: Campaign) -> Result<(), String> {
-        campaign.validate()?;
+    pub fn load_campaign(&mut self, campaign: Campaign, data: &GameData) -> Result<(), String> {
+        campaign.validate(data)?;
         self.campaign = Some(campaign);
         self.screen = Screen::Campaign;
         self.overlay = Overlay::None;
         Ok(())
     }
 
-    pub fn end_turn(&mut self) -> bool {
+    pub fn end_turn(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
+        self.command(data, Command::EndTurn)
+    }
+
+    pub fn command(
+        &mut self,
+        data: &GameData,
+        command: Command,
+    ) -> Result<ActionOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::apply(campaign, data, Actor::Player, command)
+    }
+
+    pub fn advance_npc(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::advance_npc(campaign, data)
+    }
+
+    fn playing_campaign(&mut self) -> Result<&mut StrategicCampaign, RuleError> {
         if self.screen != Screen::Campaign || self.overlay != Overlay::None {
-            return false;
+            return Err(RuleError::PlayObstructed);
         }
-        if let Some(campaign) = &mut self.campaign {
-            campaign.end_turn();
-            return true;
+        match &mut self.campaign {
+            Some(Campaign::Strategic(campaign)) => Ok(campaign),
+            Some(Campaign::Shell(_)) => Err(RuleError::LegacyReadOnly),
+            None => Err(RuleError::NoCampaign),
         }
-        false
     }
 
     pub fn back(&mut self) {

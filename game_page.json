@@ -7,14 +7,15 @@
   "controls_hint": "Choose New Game to unfold the atlas. Use Full Screen for the best view.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
-    "This first milestone opens on an empty illustrated landscape. Explore the terrain, advance the seasons, and save your campaign. Locations and armies arrive in a later milestone."
+    "Begin a Rosemarch campaign and follow each kingdom's turn. A season passes after every faction acts. Rival kingdoms currently pass their turns; armies and selectable places arrive in later milestones."
   ],
   "controls": [
     { "key": "Tap / Click", "desc": "Choose title and campaign controls" },
     { "key": "Drag the landscape", "desc": "Pan the map with one finger or the left mouse button" },
     { "key": "Pinch / + / -", "desc": "Zoom the map; a mouse wheel also works" },
     { "key": "Recenter", "desc": "Return to the full atlas" },
-    { "key": "End Turn", "desc": "Advance the season and save the campaign" },
+    { "key": "End Turn", "desc": "Finish your faction's orders; a full round advances one season and saves" },
+    { "key": "Pause / Step / Resume", "desc": "Pause between rival orders, advance one phase, or resume progress" },
     { "key": "Menu", "desc": "Open saving, loading, settings, help, and the title screen; Escape also opens the menu" }
   ],
   "details": [

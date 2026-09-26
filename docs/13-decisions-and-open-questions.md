@@ -143,3 +143,26 @@ Future advanced classes/races, richer diplomacy, restoration and multiplayer sta
 outside this plan. Generations, families, non-blood mentorship/succession, refugees
 and changing capitals have explicit packages; they have not been removed from the
 game merely because the kingdom prototype precedes them.
+
+## Full-release delegated implementation decisions
+
+The 2026-09-26 full-release assignment authorizes implementation decisions and
+automatic progression through K02–K18. These decisions remain delegated choices,
+not newly confirmed author rules. Package evidence records their validation.
+
+### I01 — Visible faction pacing and the old atlas
+
+K02 follows P02's player-first seasonal round. The application presents one NPC
+pass every 1.2 seconds, with Pause, Step and Resume controls. This delay affects
+presentation only; the engine advances solely through atomic commands. Opening
+an overlay or showing an error holds automatic progression. Step advances one
+paused faction and preserves the pause for the following faction.
+
+The existing v1 slot remains read-only and is labelled as an empty-atlas campaign.
+K02 uses a separate v2 strategic checkpoint until K03 introduces its recoverable
+catalogue. This preserves old bytes without inventing a strategic past for the
+shell. K03 replaces the interim single strategic slot with unlimited named saves
+and distinct round checkpoints; it is a required dependency, not deferred scope.
+
+Affected contracts: C03, C04, C06; P02. Validation: K02 phase/save regressions and
+the UI review recorded in `docs/verification/k02-campaign.md` when completed.

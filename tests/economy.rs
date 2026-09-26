@@ -112,7 +112,7 @@ fn affordable_recruitment_creates_fresh_exhausted_formations_for_player_and_npc(
         for destination in [Some(ArmyId(1)), None] {
             let before = campaign.clone();
             let command = recruit(kind, destination);
-            preview(&campaign, &data, Actor::Player, command).unwrap();
+            preview(&campaign, &data, Actor::Player, command.clone()).unwrap();
             assert_eq!(campaign, before);
             let options =
                 recruit_options(&campaign, &data, campaign.player, SiteId(1), destination);
@@ -210,15 +210,33 @@ fn invalid_cost_site_facility_and_slot_orders_preserve_the_entire_campaign() {
     );
     let mut campaign = initial.clone();
     campaign.world.sites[0].habitation = Habitation::Camp;
-    rejected(&mut campaign, &data, Actor::Player, command, "Outpost");
+    rejected(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        command.clone(),
+        "Outpost",
+    );
     let mut campaign = initial.clone();
     campaign
         .set_site_control(&data, SiteId(1), Some(campaign.player), true)
         .unwrap();
-    rejected(&mut campaign, &data, Actor::Player, command, "contested");
+    rejected(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        command.clone(),
+        "contested",
+    );
     let mut campaign = initial.clone();
     campaign.factions.get_mut(&campaign.player).unwrap().deficit = true;
-    rejected(&mut campaign, &data, Actor::Player, command, "shortfall");
+    rejected(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        command.clone(),
+        "shortfall",
+    );
     for (army, reason) in [(ArmyId(999), "unavailable"), (ArmyId(2), "own armies")] {
         rejected(
             &mut initial.clone(),
@@ -234,25 +252,25 @@ fn invalid_cost_site_facility_and_slot_orders_preserve_the_entire_campaign() {
         &mut campaign,
         &data,
         Actor::Player,
-        command,
+        command.clone(),
         "receiving army",
     );
     let mut campaign = initial.clone();
     for _ in 0..3 {
-        apply(&mut campaign, &data, Actor::Player, command).unwrap();
+        apply(&mut campaign, &data, Actor::Player, command.clone()).unwrap();
     }
     rejected(
         &mut campaign,
         &data,
         Actor::Player,
-        command,
+        command.clone(),
         "six formation",
     );
     rejected(
         &mut initial.clone(),
         &data,
         Actor::Npc(FactionId(2)),
-        command,
+        command.clone(),
         "Wait",
     );
     assert_invalid_facilities(&data, &initial);

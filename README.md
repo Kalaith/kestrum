@@ -21,7 +21,8 @@ campaign or its disk/browser save. Starting over requires confirmation.
 The save catalogue keeps each round checkpoint and each new named save. It offers
 explicit overwrite/deletion and retries failed writes without replaying the round.
 Enter Region opens Rosemarch's ten connected sites. Six-slot armies, recruitment,
-disbanding, income and upkeep are playable. Movement and battles follow in K06/K07.
+disbanding, income, upkeep, movement, transfers and supplied recovery are playable.
+Automatic battles follow in K07.
 Terrain labels are distinct from selectable place markers.
 
 ### K01 — Typed content and Rosemarch
@@ -122,11 +123,31 @@ troops or founders; legal recruitment starts their army roster. The five K05
 behavioral cases and all 38 game tests pass. [K05 evidence](docs/verification/k05-armies.md)
 records visual, browser, save and Windows/WebGL Preview verification and limitations.
 
+### K06 — Movement, composition and connected recovery
+
+Orders opens group movement, formation transfers, local People and disbanding.
+Choose co-located armies, select a physical destination, review the route and
+Confirm Move. Every member pays actual edge costs; the group stops at its last
+legal site when a later edge is blocked. Route details can close without cancelling
+the order. Fortified or hostile entry remains unavailable until combat arrives.
+
+Transfer whole formations or people between local friendly rosters, or split a
+formation into a new army. Spent movement is preserved. Opening Armies pauses a
+rival phase so these transfers remain available between rival actions.
+
+After income and upkeep, supplied surviving formations recover up to 20% of their
+capacity, limited by missing troops and affordable Gold. Orders shows the current
+forecast and actual last-round recovery. Cut supply and unpaid upkeep block it.
+All 48 tests, strict Clippy, formatting, source-size checks, native visual review,
+browser movement/transfer/reload and Windows/WebGL Preview publishing pass.
+[K06 evidence](docs/verification/k06-logistics.md) records the checks and remaining
+platform limitations. K07–K18 remain required.
+
 ## Screen brief
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Inspect a place, or open its armies to choose a formation and review recruitment costs. |
+| Current decision | Inspect a place, manage its armies, or select and confirm a costed route for a travelling group. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
 | Primary action | Enter Region opens a regional marker; World Map returns to the previous world camera. End Turn remains separate from selection. |
 | Supporting information | A dismissible inspector shows local control, regional claim and anchor requirements. The top edge shows season, round and active faction. |

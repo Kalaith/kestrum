@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
-    military::{Army, ArmyId, EconomyStatement, Formation, FormationId},
+    military::{Army, ArmyId, EconomyStatement, Formation, FormationId, RecoveryStatement},
     people::{Person, PersonId},
     world::CampaignWorld,
 };
@@ -49,6 +49,8 @@ pub struct Faction {
     pub capital: SiteId,
     #[serde(default)]
     pub last_economy: Option<EconomyStatement>,
+    #[serde(default)]
+    pub last_recovery: Option<RecoveryStatement>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,6 +129,25 @@ pub enum DomainFactKind {
         site: SiteId,
         troop: TroopKind,
     },
+    ArmiesMoved {
+        faction: FactionId,
+        armies: Vec<ArmyId>,
+        path: Vec<SiteId>,
+        spent: u32,
+    },
+    FormationTransferred {
+        faction: FactionId,
+        formation: FormationId,
+        from_army: ArmyId,
+        to_army: ArmyId,
+        site: SiteId,
+    },
+    PersonTransferred {
+        faction: FactionId,
+        person: PersonId,
+        to_formation: FormationId,
+        site: SiteId,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -183,6 +204,7 @@ impl StrategicCampaign {
                         headquarters: setup.headquarters,
                         capital: setup.capital,
                         last_economy: None,
+                        last_recovery: None,
                     },
                 )
             })

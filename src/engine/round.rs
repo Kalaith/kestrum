@@ -1,6 +1,6 @@
 //! Stable-ID faction phases and one atomic seasonal boundary.
 
-use super::{actions::record_fact, economy, ActionOutcome, RuleError};
+use super::{actions::record_fact, economy, recovery, ActionOutcome, RuleError};
 use crate::{
     data::GameData,
     state::{campaign::DomainFactKind, CampaignPhase, StrategicCampaign},
@@ -37,7 +37,9 @@ fn complete_round(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     // Income and upkeep precede recovery and the new season's calendar.
+    let supply = recovery::snapshot(campaign);
     economy::resolve(campaign, data)?;
+    recovery::resolve(campaign, data, &supply)?;
     campaign.completed_rounds =
         campaign
             .completed_rounds

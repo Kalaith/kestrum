@@ -38,6 +38,8 @@ pub enum Overlay {
     Saves,
     SaveRecovery,
     Armies,
+    MoveGroup,
+    MoveReview,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -185,7 +187,16 @@ impl GameState {
         command: Command,
     ) -> Result<ActionOutcome, RuleError> {
         let military_order = self.overlay == Overlay::Armies
-            && matches!(command, Command::Recruit { .. } | Command::Disband { .. });
+            && matches!(
+                &command,
+                Command::Recruit { .. }
+                    | Command::Disband { .. }
+                    | Command::TransferFormation { .. }
+                    | Command::TransferPerson { .. }
+                    | Command::SplitArmy { .. }
+            );
+        let military_order = military_order
+            || (self.overlay == Overlay::MoveReview && matches!(&command, Command::Move(_)));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }

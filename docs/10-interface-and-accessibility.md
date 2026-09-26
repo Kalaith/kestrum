@@ -1,5 +1,28 @@
 # 10 — Interface and accessibility
 
+## K06 movement and composition screen brief
+
+The army's Orders screen leads to movement, formation transfer and a paged People
+list. Group movement chooses among co-located armies, then returns to the map for
+a physical destination. Region markers open their sites. The selected destination
+shows cost, remaining allowance, the reachable stop and public supply consequences;
+Review Route pages through every physical edge before confirmation. The connected
+map remains the dominant focus while choosing the destination.
+
+Composition chooses a whole formation or named person, a co-located recipient,
+then an empty slot or surviving formation. Split into New Army creates another
+roster at the same site. Movement already spent remains visible and unchanged.
+Opening Armies pauses rival progression between commands; off-turn transfers are
+available while movement/recruitment wait for the owner's turn. Back and Cancel
+are visible at every step.
+
+Recovery appears beside the selected formation, with the cap, predicted affordable
+replacement count and Gold cost or blocker. It follows post-upkeep finances at
+the seasonal boundary. Actual recovery has a separate last-round receipt. Lists
+and routes page with touch controls, retaining the 1280 × 720 logical layout and
+48-pixel targets. Minimum, dense stack, cut-off, interrupted-route, exhausted and
+long-name reviews belong to K06 evidence before package completion.
+
 [Documentation index](README.md) · [Shared UI authority](../UI_STYLE.md) · [Validation](12-delivery-and-validation.md)
 
 ## Status and goals

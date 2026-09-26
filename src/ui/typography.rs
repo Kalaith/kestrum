@@ -43,9 +43,23 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     if let Some(message) = feedback {
         samples.push((19, message));
     }
+    for size in [18, 20] {
+        samples.push((size, ctx.movement.status.as_str()));
+    }
     match ctx.state.overlay {
         Overlay::Armies => {
             samples.push((18, ctx.army.status.as_str()));
+            if let Some(reason) = &ctx.army.transfer.blocked {
+                samples.push((18, reason));
+            }
+            if let Some(reason) = &ctx.army.transfer.split_blocked {
+                samples.push((18, reason));
+            }
+            if let Some(recovery) = &ctx.army.recovery {
+                if let Some(reason) = &recovery.blocked {
+                    samples.push((18, reason));
+                }
+            }
             for option in &ctx.army.options {
                 if let Some(reason) = &option.blocked {
                     samples.push((18, reason.as_str()));

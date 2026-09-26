@@ -185,7 +185,7 @@ pub(super) fn rejected(
     reason: &str,
 ) {
     let before = campaign.clone();
-    let expected = preview(campaign, data, actor, command).unwrap_err();
+    let expected = preview(campaign, data, actor, command.clone()).unwrap_err();
     assert!(expected.to_string().contains(reason), "{expected}");
     assert_eq!(apply(campaign, data, actor, command), Err(expected));
     assert_eq!(
@@ -475,6 +475,7 @@ pub(super) fn assert_deficit_statement_contract(data: &GameData, campaign: &Stra
 
     let mut legacy_deficit = encoded;
     legacy_deficit["factions"]["1"]["last_economy"] = serde_json::Value::Null;
+    legacy_deficit["factions"]["1"]["last_recovery"] = serde_json::Value::Null;
     let restored: Campaign = serde_json::from_value(legacy_deficit).unwrap();
     restored.validate(data).unwrap();
     assert!(restored.strategic().unwrap().factions[&campaign.player].deficit);

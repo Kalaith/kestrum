@@ -165,6 +165,20 @@ impl Game {
     }
 
     pub(super) fn go_back(&mut self) {
+        if self.movement.stage != ui::MoveStage::Inactive
+            && matches!(
+                self.state.overlay,
+                Overlay::None | Overlay::MoveGroup | Overlay::MoveReview
+            )
+        {
+            if self.movement.stage == ui::MoveStage::Review {
+                self.movement.stage = ui::MoveStage::Map;
+                self.state.overlay = Overlay::None;
+            } else {
+                self.cancel_move();
+            }
+            return;
+        }
         match self.state.overlay {
             Overlay::Armies if self.army.mode != ui::ArmyMode::Roster => {
                 self.army.mode = ui::ArmyMode::Roster;

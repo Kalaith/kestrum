@@ -92,6 +92,7 @@ impl StrategicCampaign {
         }
         self.validate_people(data)?;
         self.validate_economy_statements()?;
+        self.validate_recovery_statements(data)?;
         require(
             self.world
                 .site_damage
@@ -173,6 +174,93 @@ impl StrategicCampaign {
             )?;
         }
         Ok(())
+    }
+
+    fn validate_recovery_statements(&self, data: &GameData) -> Result<(), String> {
+        for faction in self.factions.values() {
+            let Some(statement) = &faction.last_recovery else {
+                continue;
+            };
+            require(
+                statement.completed_rounds > 0
+                    && statement.completed_rounds <= self.completed_rounds
+                    && statement.opening_gold >= 0
+                    && statement.closing_gold >= 0
+                    && statement.gold_spent >= 0
+                    && statement.closing_gold.checked_add(statement.gold_spent)
+                        == Some(statement.opening_gold)
+                    && faction.last_economy.as_ref().is_some_and(|economy| {
+                        economy.completed_rounds == statement.completed_rounds
+                            && economy.closing.gold == statement.opening_gold
+                            && (economy.shortfall == 0 || statement.entries.is_empty())
+                    }),
+                "factions.last_recovery",
+                "invalid date, balance or post-upkeep eligibility",
+            )?;
+            let mut restored = 0_u64;
+            let mut gold = 0_i64;
+            let mut formations = BTreeSet::new();
+            let mut last_army = 0;
+            for entry in &statement.entries {
+                self.validate_recovery_entry(entry, data)?;
+                require(
+                    formations.insert(entry.formation) && entry.army.0 >= last_army,
+                    "factions.last_recovery.entries",
+                    "duplicate formation or unordered army",
+                )?;
+                last_army = entry.army.0;
+                restored = restored
+                    .checked_add(u64::from(entry.restored))
+                    .ok_or("campaign.factions.last_recovery: restored headcount overflow")?;
+                gold = gold
+                    .checked_add(entry.gold_cost)
+                    .ok_or("campaign.factions.last_recovery: Gold total overflow")?;
+            }
+            require(
+                restored == statement.restored && gold == statement.gold_spent,
+                "factions.last_recovery",
+                "entry totals do not match summary",
+            )?;
+        }
+        Ok(())
+    }
+
+    fn validate_recovery_entry(
+        &self,
+        entry: &super::RecoveryEntry,
+        data: &GameData,
+    ) -> Result<(), String> {
+        let definition = &data.economy.formations[&entry.kind];
+        let cap = u64::from(entry.capacity)
+            * u64::from(data.economy.recovery.capacity_percent_per_round)
+            / 100;
+        require(
+            entry.army.0 > 0
+                && entry.army < self.next_ids.army
+                && entry.formation.0 > 0
+                && entry.formation < self.next_ids.formation
+                && self.world.site(entry.site).is_some()
+                && entry.capacity == definition.capacity
+                && entry.capacity > 0
+                && entry.headcount_before > 0
+                && entry.restored > 0
+                && u64::from(entry.restored) <= cap
+                && entry
+                    .headcount_before
+                    .checked_add(entry.restored)
+                    .is_some_and(|after| after <= entry.capacity),
+            "factions.last_recovery.entries",
+            "invalid historical identity or headcount",
+        )?;
+        let numerator = i128::from(definition.recruit_cost.gold)
+            * i128::from(data.economy.recovery.full_replacement_recruit_gold_percent)
+            * i128::from(entry.restored);
+        let denominator = 100 * i128::from(entry.capacity);
+        require(
+            i128::from(entry.gold_cost) == (numerator + denominator - 1) / denominator,
+            "factions.last_recovery.entries",
+            "incorrect recovery Gold cost",
+        )
     }
 }
 

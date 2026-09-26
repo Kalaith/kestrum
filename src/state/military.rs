@@ -66,3 +66,65 @@ pub struct EconomyStatement {
     pub shortfall: i64,
     pub closing: Resources,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoveryEntry {
+    pub army: ArmyId,
+    pub formation: FormationId,
+    pub site: SiteId,
+    /// Historical rule inputs remain meaningful if this formation is later removed.
+    pub kind: TroopKind,
+    pub capacity: u32,
+    pub headcount_before: u32,
+    pub restored: u32,
+    pub gold_cost: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoveryStatement {
+    pub completed_rounds: u32,
+    /// The post-upkeep balance, before any formation recovers.
+    pub opening_gold: i64,
+    pub closing_gold: i64,
+    pub gold_spent: i64,
+    pub restored: u64,
+    pub entries: Vec<RecoveryEntry>,
+}
+
+impl super::StrategicCampaign {
+    /// Every attached member constrains the army; transfers never reset spent movement.
+    pub fn army_movement_remaining(
+        &self,
+        army: ArmyId,
+        data: &crate::data::GameData,
+    ) -> Option<u32> {
+        let army = self.armies.get(&army)?;
+        let mut remaining = None;
+        for id in army.formation_ids() {
+            let formation = self.formations.get(&id)?;
+            let allowance = data
+                .economy
+                .formations
+                .get(&formation.kind)?
+                .movement_allowance;
+            let available = allowance.saturating_sub(formation.movement_spent);
+            remaining = Some(remaining.map_or(available, |minimum: u32| minimum.min(available)));
+        }
+        let mut remaining = remaining?;
+        for person in self.people.values() {
+            if matches!(person.assignment, super::people::PersonAssignment::Formation { formation }
+                if army.formation_ids().any(|id| id == formation))
+            {
+                remaining = remaining.min(
+                    data.rules
+                        .leadership
+                        .officer_movement_allowance
+                        .saturating_sub(person.movement_spent),
+                );
+            }
+        }
+        Some(remaining)
+    }
+}

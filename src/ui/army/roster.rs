@@ -1,7 +1,6 @@
 //! Six visible formation slots with a separate selected-force summary.
 
 use super::*;
-use kestrum::state::people::PersonAssignment;
 
 pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAction> {
     let current = ctx.army.selected_army(campaign);
@@ -62,7 +61,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
                 body(
                     ctx,
                     &ctx.text(troop_key(formation.kind)),
-                    vec2(rect.x + 46.0, rect.y + 32.0),
+                    vec2(rect.x + 46.0, rect.y + 23.0),
                     21.0,
                     CREAM,
                 );
@@ -72,6 +71,24 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
                     vec2(rect.x + 390.0, rect.y + 32.0),
                     18.0,
                     CREAM,
+                );
+                let remaining = ctx
+                    .army
+                    .member_remaining
+                    .get(&formation.id)
+                    .copied()
+                    .unwrap_or(0);
+                body(
+                    ctx,
+                    &format!(
+                        "{}: {remaining} · {}: {}",
+                        ctx.text("movement_left"),
+                        ctx.text("movement_spent"),
+                        formation.movement_spent
+                    ),
+                    vec2(rect.x + 46.0, rect.y + 44.0),
+                    16.0,
+                    MUTED,
                 );
                 if tapped(ctx, rect) {
                     return Some(UiAction::SelectFormation(formation.id));
@@ -89,9 +106,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
                 }
             }
         }
-        if let Some(action) = army_summary(ctx, campaign, army) {
-            return Some(action);
-        }
+        army_summary(ctx, campaign, army);
     } else {
         text(ctx, &ctx.text("no_armies"), vec2(112.0, 226.0), 24.0, CREAM);
         block(
@@ -105,7 +120,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     if !campaign.player_turn && ctx.army.status.is_empty() {
         body(
             ctx,
-            &ctx.text("military_wait_turn"),
+            &ctx.text("transfer_paused_help"),
             vec2(112.0, 599.0),
             18.0,
             MUTED,
@@ -119,6 +134,17 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         false,
     ) {
         return Some(UiAction::Back);
+    }
+    if current.is_some()
+        && button(
+            ctx,
+            Rect::new(300.0, 626.0, 214.0, 48.0),
+            &ctx.text("army_orders"),
+            true,
+            false,
+        )
+    {
+        return Some(UiAction::ArmyOrders);
     }
     if current.is_some()
         && button(
@@ -147,7 +173,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     None
 }
 
-fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> Option<UiAction> {
+fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) {
     let upkeep: i64 = army
         .slots
         .iter()
@@ -179,13 +205,20 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> O
         18.0,
         CREAM,
     );
+    body(
+        ctx,
+        &format!("{}: {}", ctx.text("army_movement_left"), ctx.army.remaining),
+        vec2(704.0, 293.0),
+        18.0,
+        CREAM,
+    );
     let commander = army
         .commander
         .and_then(|id| campaign.people.iter().find(|person| person.id == id));
     let commander = commander
         .map(|person| format!("{}: {}", ctx.text("commander"), person.name))
         .unwrap_or_else(|| ctx.text("no_commander"));
-    let mut y = block(ctx, &commander, vec2(704.0, 293.0), 464.0, CREAM) + 6.0;
+    let mut y = block(ctx, &commander, vec2(704.0, 327.0), 464.0, CREAM) + 6.0;
     y = block(
         ctx,
         &ctx.text(if campaign.supplied_sites.contains(&army.site) {
@@ -202,82 +235,12 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> O
         .iter()
         .find(|faction| faction.id == campaign.observer);
     if viewer.is_some_and(|faction| faction.deficit == Some(true)) {
-        y = block(
+        block(
             ctx,
             &ctx.text("upkeep_deficit"),
             vec2(704.0, y),
             464.0,
             BRASS,
-        ) + 8.0;
-    }
-    if let Some(selected) = ctx
-        .army
-        .selected
-        .and_then(|id| formation(campaign, id))
-        .filter(|selected| army.slots.contains(&Some(selected.id)))
-    {
-        draw_line(704.0, y - 5.0, 1168.0, y - 5.0, 1.0, BRASS);
-        y += 22.0;
-        text(
-            ctx,
-            &ctx.text(troop_key(selected.kind)),
-            vec2(704.0, y),
-            24.0,
-            CREAM,
-        );
-        y += 28.0;
-        let people = campaign
-            .people
-            .iter()
-            .filter(|person| {
-                person.assignment
-                    == PersonAssignment::Formation {
-                        formation: selected.id,
-                    }
-            })
-            .map(|person| {
-                if Some(person.id) == army.commander {
-                    ctx.text("commander")
-                } else {
-                    person.name.clone()
-                }
-            })
-            .collect::<Vec<_>>();
-        if !people.is_empty() {
-            y = block(
-                ctx,
-                &format!("{}: {}", ctx.text("attached_people"), people.join(", ")),
-                vec2(704.0, y),
-                464.0,
-                CREAM,
-            ) + 5.0;
-        }
-        if selected.created_round == campaign.completed_rounds && selected.movement_spent > 0 {
-            block(
-                ctx,
-                &ctx.text("recruit_exhausted"),
-                vec2(704.0, y),
-                464.0,
-                MUTED,
-            );
-        }
-        if button(
-            ctx,
-            Rect::new(300.0, 626.0, 214.0, 48.0),
-            &ctx.text("disband"),
-            campaign.player_turn,
-            false,
-        ) {
-            return Some(UiAction::AskDisband(selected.id));
-        }
-    } else {
-        block(
-            ctx,
-            &ctx.text("select_formation"),
-            vec2(704.0, y),
-            464.0,
-            MUTED,
         );
     }
-    None
 }

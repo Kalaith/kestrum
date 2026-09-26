@@ -1,6 +1,9 @@
 //! Validated transactional commands shared by player and NPC phase processing.
 
-use super::{recruitment, round, RecruitmentResult};
+use super::{
+    movement, recruitment, round, transfer, MoveOrder, MovementBlock, MovementOutcome,
+    RecruitmentResult,
+};
 use crate::{
     data::{
         economy::{Resources, TroopKind},
@@ -10,6 +13,7 @@ use crate::{
     state::{
         campaign::{DomainFact, DomainFactKind, FactId},
         military::{ArmyId, FormationId},
+        people::PersonId,
         CampaignPhase, StrategicCampaign,
     },
 };
@@ -21,7 +25,7 @@ pub enum Actor {
     Npc(FactionId),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     EndTurn,
     SetNpcPaused(bool),
@@ -32,6 +36,19 @@ pub enum Command {
         kind: TroopKind,
     },
     Disband {
+        formation: FormationId,
+    },
+    Move(MoveOrder),
+    TransferFormation {
+        formation: FormationId,
+        to_army: ArmyId,
+        to_slot: usize,
+    },
+    TransferPerson {
+        person: PersonId,
+        to_formation: FormationId,
+    },
+    SplitArmy {
         formation: FormationId,
     },
 }
@@ -108,11 +125,48 @@ pub enum RuleError {
         field: &'static str,
     },
     InvalidState(String),
+    InvalidArmyGroup,
+    InvalidRoute,
+    NotColocated,
+    InvalidSlot,
+    SlotOccupied,
+    TransferUnchanged,
+    TransferPauseRequired,
+    UnknownPerson {
+        person: PersonId,
+    },
+    PersonNotOwned {
+        person: PersonId,
+    },
+    MovementBlocked {
+        site: SiteId,
+        reason: MovementBlock,
+    },
 }
 
 impl fmt::Display for RuleError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),
+            Self::InvalidRoute => formatter.write_str(
+                "Choose a connected physical route beginning at the armies' current site.",
+            ),
+            Self::NotColocated => formatter.write_str(
+                "Every participating army and person must share the same physical site.",
+            ),
+            Self::InvalidSlot => formatter.write_str("Choose one of the six formation slots."),
+            Self::SlotOccupied => formatter.write_str("The receiving slot is occupied."),
+            Self::TransferUnchanged => {
+                formatter.write_str("That person already serves in this formation.")
+            }
+            Self::TransferPauseRequired => {
+                formatter.write_str("Pause NPC phases before transferring troops or people.")
+            }
+            Self::UnknownPerson { .. } => formatter.write_str("That person is unavailable."),
+            Self::PersonNotOwned { .. } => {
+                formatter.write_str("You can transfer only your own people.")
+            }
+            Self::MovementBlocked { reason, .. } => fmt::Display::fmt(reason, formatter),
             Self::NoCampaign => formatter.write_str("Start or load a campaign first."),
             Self::LegacyReadOnly => formatter.write_str(
                 "This empty-atlas save is read-only. Start a strategic campaign to play.",
@@ -209,6 +263,8 @@ pub struct ActionOutcome {
     pub consumed_facts: Vec<DomainFact>,
     pub recruited: Option<RecruitmentResult>,
     pub disbanded: Option<FormationId>,
+    pub movement: Option<MovementOutcome>,
+    pub split_army: Option<ArmyId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -223,6 +279,25 @@ pub fn preview(
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    if let Command::Move(order) = &command {
+        let observer = match actor {
+            Actor::Player => campaign.player,
+            Actor::Npc(id) => id,
+        };
+        validate_command(campaign, actor, &command)?;
+        let result = movement::preview_order(campaign, data, observer, order)?;
+        if result.reachable_steps == 0 {
+            let stop = result.stop.ok_or(RuleError::InvalidRoute)?;
+            return Err(RuleError::MovementBlocked {
+                site: stop.site,
+                reason: stop.reason,
+            });
+        }
+        return Ok(ActionPreview {
+            active_faction_after: campaign.active_faction(),
+            round_completed: false,
+        });
+    }
     let (_, outcome) = prepare(campaign, data, actor, command)?;
     Ok(ActionPreview {
         active_faction_after: outcome.active_faction,
@@ -259,8 +334,9 @@ fn prepare(
     command: Command,
 ) -> Result<(StrategicCampaign, ActionOutcome), RuleError> {
     data.economy.validate().map_err(RuleError::InvalidState)?;
+    data.rules.validate().map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
-    validate_command(campaign, actor, command)?;
+    validate_command(campaign, actor, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -277,6 +353,12 @@ fn prepare(
         consumed_facts: Vec::new(),
         recruited: None,
         disbanded: None,
+        movement: None,
+        split_army: None,
+    };
+    let owner = match actor {
+        Actor::Player => campaign.player,
+        Actor::Npc(id) => id,
     };
     match command {
         Command::EndTurn | Command::StepNpc => {
@@ -305,6 +387,37 @@ fn prepare(
             record_fact(&mut candidate, &mut outcome, fact)?;
             outcome.disbanded = Some(formation);
         }
+        Command::Move(order) => {
+            let moved = movement::execute(&mut candidate, data, &order)?;
+            let fact = DomainFactKind::ArmiesMoved {
+                faction: owner,
+                armies: moved.armies.clone(),
+                path: moved.path.clone(),
+                spent: moved.spent,
+            };
+            record_fact(&mut candidate, &mut outcome, fact)?;
+            outcome.movement = Some(moved);
+        }
+        Command::TransferFormation {
+            formation,
+            to_army,
+            to_slot,
+        } => {
+            let fact = transfer::formation(&mut candidate, owner, formation, to_army, to_slot)?;
+            record_fact(&mut candidate, &mut outcome, fact)?;
+        }
+        Command::TransferPerson {
+            person,
+            to_formation,
+        } => {
+            let fact = transfer::person(&mut candidate, owner, person, to_formation)?;
+            record_fact(&mut candidate, &mut outcome, fact)?;
+        }
+        Command::SplitArmy { formation } => {
+            let (army, fact) = transfer::split(&mut candidate, owner, formation)?;
+            record_fact(&mut candidate, &mut outcome, fact)?;
+            outcome.split_army = Some(army);
+        }
     }
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
@@ -332,10 +445,10 @@ pub(super) fn record_fact(
     Ok(())
 }
 
-fn validate_command(
+pub(super) fn validate_command(
     campaign: &StrategicCampaign,
     actor: Actor,
-    command: Command,
+    command: &Command,
 ) -> Result<(), RuleError> {
     let faction = match actor {
         Actor::Player => campaign.player,
@@ -346,7 +459,7 @@ fn validate_command(
         return Err(RuleError::UnknownActor);
     }
     match command {
-        Command::EndTurn | Command::Recruit { .. } | Command::Disband { .. } => {
+        Command::EndTurn | Command::Recruit { .. } | Command::Disband { .. } | Command::Move(_) => {
             if faction != campaign.active_faction() {
                 return Err(RuleError::NotYourTurn {
                     active: campaign.active_faction(),
@@ -356,9 +469,18 @@ fn validate_command(
                 return Err(RuleError::NpcPaused);
             }
         }
+        Command::TransferFormation { .. }
+        | Command::TransferPerson { .. }
+        | Command::SplitArmy { .. } => {
+            if faction != campaign.active_faction()
+                && !matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. })
+            {
+                return Err(RuleError::TransferPauseRequired);
+            }
+        }
         Command::SetNpcPaused(requested) => {
             let paused = player_npc_control(campaign, actor)?;
-            if requested == paused {
+            if *requested == paused {
                 return Err(RuleError::PauseUnchanged);
             }
         }

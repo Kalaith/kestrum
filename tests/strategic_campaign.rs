@@ -260,7 +260,7 @@ fn serialized_paused_phase_and_full_rng_streams_resume_identically() {
     restored.validate(&data).unwrap();
     assert_eq!(campaign, restored);
     for command in [Command::StepNpc, Command::SetNpcPaused(false)] {
-        let expected = apply(&mut campaign, &data, Actor::Player, command).unwrap();
+        let expected = apply(&mut campaign, &data, Actor::Player, command.clone()).unwrap();
         let resumed = apply(&mut restored, &data, Actor::Player, command).unwrap();
         assert_eq!(expected, resumed);
         assert_eq!(campaign, restored);

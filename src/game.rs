@@ -2,7 +2,10 @@
 
 use crate::ui::{self, UiAction};
 mod campaign;
+mod composition;
 mod military;
+mod military_capture;
+mod movement;
 mod saves;
 mod storage;
 mod world;
@@ -39,6 +42,7 @@ pub struct Game {
     storage_checked: bool,
     saves: ui::SaveView,
     army: ui::ArmyView,
+    movement: ui::MoveView,
     help_page: usize,
     pending_save: Option<storage::PendingWrite>,
     retry_save_when_ready: bool,
@@ -69,7 +73,7 @@ impl Game {
         // Prepare all fixed UI sizes together before the first visible frame.
         // Runtime names and messages are prepared separately before UI drawing.
         let mut characters: Vec<char> = (b' '..=b'~').map(char::from).collect();
-        characters.extend("…—–×·".chars());
+        characters.extend("…—–×·→".chars());
         for text in data.presentation.text.values().chain([
             &data.presentation.title,
             &data.presentation.subtitle,
@@ -113,6 +117,7 @@ impl Game {
             storage_checked: false,
             saves: ui::SaveView::default(),
             army: ui::ArmyView::default(),
+            movement: ui::MoveView::default(),
             help_page: 0,
             pending_save: None,
             retry_save_when_ready: false,
@@ -158,6 +163,7 @@ impl Game {
         self.legacy_save_exists = false;
         self.import_save_exists = false;
         self.saves = ui::SaveView::default();
+        self.movement = ui::MoveView::default();
         self.army = ui::ArmyView::default();
         self.help_page = 0;
         self.save_error.clear();
@@ -203,6 +209,18 @@ impl Game {
                 self.state.overlay = Overlay::Help;
                 self.help_page = 1;
             }
+            "help_movement" => {
+                self.state.overlay = Overlay::Help;
+                self.help_page = 2;
+            }
+            "help_transfer" => {
+                self.state.overlay = Overlay::Help;
+                self.help_page = 3;
+            }
+            "move_group" | "move_group_dense" | "move_map" | "move_preview" | "move_review"
+            | "move_blocked" | "move_exhausted" | "transfer" | "transfer_slots"
+            | "transfer_person" | "army_recovery" | "army_cutoff" | "army_recovered"
+            | "army_paused" | "army_people" => self.capture_logistics(scene),
             "confirm_new" => self.state.overlay = Overlay::ConfirmNew,
             "save_list" | "save_name" | "save_symbols" | "save_busy" | "save_invalid"
             | "save_delete" | "save_recovery" => self.capture_saves(scene),
@@ -242,10 +260,44 @@ impl Game {
             .as_ref()
             .and_then(Campaign::strategic)
             .and_then(|campaign| engine::project(campaign, campaign.player).ok());
+        if let Some(view) = &campaign_view {
+            self.army.people_page = self.army.people_page.min(
+                self.army
+                    .local_people(view)
+                    .len()
+                    .div_ceil(ui::PEOPLE_PAGE_SIZE)
+                    .saturating_sub(1),
+            );
+            self.army.transfer.page = self.army.transfer.page.min(
+                self.army
+                    .armies_at_site(view)
+                    .len()
+                    .div_ceil(ui::TRANSFER_PAGE_SIZE)
+                    .saturating_sub(1),
+            );
+        }
+        self.movement.page = self.movement.page.min(
+            self.movement
+                .remaining
+                .len()
+                .div_ceil(ui::MOVE_GROUP_PAGE_SIZE)
+                .saturating_sub(1),
+        );
+        self.movement.route_page =
+            self.movement
+                .route_page
+                .min(self.movement.preview.as_ref().map_or(0, |preview| {
+                    preview
+                        .steps
+                        .len()
+                        .div_ceil(ui::ROUTE_PAGE_SIZE)
+                        .saturating_sub(1)
+                }));
         let ctx = ui::Context {
             data: &self.data.presentation,
             economy: &self.data.economy,
             army: &self.army,
+            movement: &self.movement,
             help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,
@@ -368,6 +420,58 @@ impl Game {
 
     fn apply(&mut self, action: UiAction) {
         match action {
+            UiAction::ArmyOrders => self.army.mode = ui::ArmyMode::Orders,
+            UiAction::ArmyPeople => {
+                self.army.mode = ui::ArmyMode::People;
+                self.army.people_page = 0;
+            }
+            UiAction::ArmyPeoplePage(delta) => {
+                self.army.people_page = self.army.people_page.saturating_add_signed(delta as isize)
+            }
+            UiAction::BeginMove(army) => self.begin_move(army),
+            UiAction::ToggleMoveArmy(army) => self.toggle_move_army(army),
+            UiAction::MoveGroupPage(delta) => {
+                self.movement.page = self.movement.page.saturating_add_signed(delta as isize)
+            }
+            UiAction::ChooseMoveDestination => self.choose_move_destination(),
+            UiAction::ReviewMove => self.review_move(),
+            UiAction::MoveRoutePage(delta) => {
+                self.movement.route_page = self
+                    .movement
+                    .route_page
+                    .saturating_add_signed(delta as isize)
+            }
+            UiAction::ConfirmMove => self.confirm_move(),
+            UiAction::CancelMove => self.cancel_move(),
+            UiAction::BeginTransferFormation(formation) => {
+                self.begin_transfer(ui::TransferSubject::Formation(formation))
+            }
+            UiAction::BeginTransferPerson(person) => {
+                self.begin_transfer(ui::TransferSubject::Person(person))
+            }
+            UiAction::SelectTransferArmy(army) => {
+                self.army.transfer.army = Some(army);
+                self.army.transfer.slot = None;
+                self.army.transfer.formation = None;
+            }
+            UiAction::ClearTransferArmy => {
+                self.army.transfer.army = None;
+                self.army.transfer.slot = None;
+                self.army.transfer.formation = None;
+            }
+            UiAction::SelectTransferSlot(slot) => self.army.transfer.slot = Some(slot),
+            UiAction::SelectTransferFormation(formation) => {
+                self.army.transfer.formation = Some(formation)
+            }
+            UiAction::TransferPage(delta) => {
+                self.army.transfer.page = self
+                    .army
+                    .transfer
+                    .page
+                    .saturating_add_signed(delta as isize)
+            }
+            UiAction::ConfirmTransfer => self.confirm_transfer(),
+            UiAction::SplitArmy(formation) => self.split_army(formation),
             UiAction::OpenArmies(site) => self.open_armies(site),
             UiAction::ArmyPage(delta) => self.army_page(delta),
             UiAction::SelectFormation(id) => self.army.selected = Some(id),
@@ -388,7 +492,7 @@ impl Game {
                 self.army.status.clear();
             }
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(1);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(3);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {
@@ -415,6 +519,7 @@ impl Game {
             UiAction::MainMenu => {
                 self.state.main_menu();
                 self.navigation.reset(&mut self.view);
+                self.movement = ui::MoveView::default();
             }
             UiAction::SelectMap(selection) => self.select_map(selection),
             UiAction::EnterRegion(region) => self.enter_region(region),

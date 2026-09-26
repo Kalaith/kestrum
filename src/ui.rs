@@ -4,6 +4,7 @@ mod army;
 mod atlas;
 mod components;
 mod menus;
+mod movement;
 mod saves;
 mod selection;
 mod typography;
@@ -18,19 +19,47 @@ use kestrum::{
     navigation::{MapNavigation, MapSelection, MapView},
     state::{
         military::{ArmyId, FormationId},
+        people::PersonId,
         GameState, Overlay, Preferences, Screen,
     },
 };
 use macroquad::prelude::*;
 use macroquad_toolkit::{assets::AssetManager, ui::Pointer};
 
-pub use army::{ArmyMode, ArmyView};
+pub use army::{
+    ArmyMode, ArmyView, TransferSubject, TransferView, PEOPLE_PAGE_SIZE, TRANSFER_PAGE_SIZE,
+};
 pub use atlas::map_controls_contain;
+pub use movement::{
+    draw_map_overlay as draw_move_map_overlay,
+    map_controls_contain as movement_map_controls_contain,
+};
+pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
 pub use saves::{SaveMode, SaveRow, SaveView};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    ArmyOrders,
+    ArmyPeople,
+    ArmyPeoplePage(i32),
+    BeginMove(ArmyId),
+    ToggleMoveArmy(ArmyId),
+    MoveGroupPage(i32),
+    ChooseMoveDestination,
+    ReviewMove,
+    MoveRoutePage(i32),
+    ConfirmMove,
+    CancelMove,
+    BeginTransferFormation(FormationId),
+    BeginTransferPerson(PersonId),
+    SelectTransferArmy(ArmyId),
+    ClearTransferArmy,
+    SelectTransferSlot(u8),
+    SelectTransferFormation(FormationId),
+    TransferPage(i32),
+    ConfirmTransfer,
+    SplitArmy(FormationId),
     OpenArmies(SiteId),
     ArmyPage(i32),
     SelectFormation(FormationId),
@@ -86,6 +115,7 @@ pub struct Context<'a> {
     pub data: &'a PresentationData,
     pub economy: &'a Economy,
     pub army: &'a ArmyView,
+    pub movement: &'a MoveView,
     pub help_page: usize,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
@@ -125,6 +155,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         saves::draw(ctx)
     } else if ctx.state.overlay == Overlay::Armies {
         army::draw(ctx)
+    } else if matches!(ctx.state.overlay, Overlay::MoveGroup | Overlay::MoveReview) {
+        movement::draw(ctx)
     } else if ctx.state.overlay == Overlay::SaveRecovery {
         saves::recovery(ctx, ctx.save_error)
     } else if ctx.state.overlay != Overlay::None {

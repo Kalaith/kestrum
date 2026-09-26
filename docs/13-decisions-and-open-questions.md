@@ -240,3 +240,31 @@ upkeep, shortfall and closing resources; it does not promise future income.
 These delegated choices implement C02/C03/C06 and P04–P06/P11. The K05 evidence
 records recruitment, upkeep, migration and UI validation. Movement, transfers
 and headcount recovery retain their scheduled K06 dependency.
+
+### I05 — Route interruptions, appointments and recovery receipts
+
+K06 finds the cheapest usable physical route with complete site-ID paths breaking
+equal-cost ties. When no usable route reaches the destination, the preview shows
+the physical route and its first public obstruction. Confirmation retains that
+exact path. An obstruction at its first edge rejects without changing state;
+after a legal prefix, the command commits only that prefix and reports the stop.
+Before K07, hostile or fortified-neutral entry reports that an encounter is
+unavailable and stops before entry. No victory, casualty or occupation is invented.
+
+Transferring a whole formation carries its attached people. A moved commander
+keeps the appointment only when the destination has no commander; an existing
+destination appointment stays in place. Splitting carries that appointment to the
+new army. The source remains vacant instead of inventing a promotion. Opening
+Armies during rival phases explicitly pauses between atomic orders; transfers
+are legal while paused, and Resume stays a visible map action.
+
+Recovery snapshots current physical supply before economy and uses the resulting
+post-upkeep Gold in faction/army/slot order. Only headcount and the exact Gold cost
+change. A dated receipt retains historical troop kind/capacity so disbanding a
+recovered formation cannot invalidate the save. Missing earlier recovery receipts
+load as absent; no prior recovery is fabricated. Forecasts assume current control,
+troops and balances remain until the boundary. Actual siege exclusions join the
+shared supply query with K10's siege state.
+
+These delegated choices implement C03/C04/C06/C07 and P03–P05. K06 evidence records
+the acceptance cases, interactive movement/composition and platform limitations.

@@ -152,9 +152,18 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
             return Some(intent);
         }
     }
-    let phase_action = phase_controls(ctx, active);
+    let moving = ctx.movement.stage == super::MoveStage::Map;
+    let phase_action = if moving {
+        None
+    } else {
+        phase_controls(ctx, active)
+    };
     let navigation_action = world::navigation(ctx);
-    let selection_action = selection::draw(ctx);
+    let selection_action = if moving {
+        super::draw_move_map_overlay(ctx)
+    } else {
+        selection::draw(ctx)
+    };
     selection_action.or(navigation_action).or(phase_action)
 }
 

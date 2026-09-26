@@ -238,6 +238,7 @@ impl Game {
             Ok(()) => {
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
+                self.movement = ui::MoveView::default();
                 self.npc_delay = 0.0;
                 self.error = None;
                 self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));

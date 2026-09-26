@@ -7,6 +7,7 @@
   "kingdom_name_max_chars": 32,
   "difficulty": "normal",
   "ai_income_bonus_percent": 0,
+  "movement": { "road_bonus": 1, "road_disabled_damage": 50, "minimum_edge_cost": 1 },
   "leadership": {
     "base_permille": 500,
     "named_scale_permille": 1000,

@@ -130,7 +130,12 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Help => "help_title",
         Overlay::Credits => "credits",
         Overlay::ConfirmNew => "new_title",
-        Overlay::None | Overlay::Saves | Overlay::SaveRecovery | Overlay::Armies => return None,
+        Overlay::None
+        | Overlay::Saves
+        | Overlay::SaveRecovery
+        | Overlay::Armies
+        | Overlay::MoveGroup
+        | Overlay::MoveReview => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
@@ -143,7 +148,12 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
             None
         }
         Overlay::ConfirmNew => confirm(ctx),
-        Overlay::None | Overlay::Saves | Overlay::SaveRecovery | Overlay::Armies => None,
+        Overlay::None
+        | Overlay::Saves
+        | Overlay::SaveRecovery
+        | Overlay::Armies
+        | Overlay::MoveGroup
+        | Overlay::MoveReview => None,
     };
     if action.is_some() {
         return action;
@@ -257,6 +267,10 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
     let legacy = ctx.state.campaign.is_some() && ctx.campaign_view.is_none();
     let keys: &[&str] = if legacy {
         &["legacy_read_only", "help_pan", "help_zoom", "help_menu"]
+    } else if ctx.help_page == 2 {
+        &["help_move", "help_route", "help_spent"]
+    } else if ctx.help_page == 3 {
+        &["help_transfer", "help_recovery", "help_transfer_phase"]
     } else if ctx.help_page == 1 {
         &[
             "help_army",
@@ -280,7 +294,10 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
         paragraph(
             ctx,
             &ctx.text(key),
-            vec2(414.0, 223.0 + index as f32 * 52.0),
+            vec2(
+                414.0,
+                223.0 + index as f32 * if ctx.help_page >= 2 { 90.0 } else { 52.0 },
+            ),
             453.0,
         );
     }
@@ -298,7 +315,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             ctx,
             Rect::new(766.0, 548.0, 124.0, 48.0),
             &ctx.text("next"),
-            ctx.help_page == 0,
+            ctx.help_page < 3,
             false,
         ) {
             return Some(UiAction::HelpPage(1));

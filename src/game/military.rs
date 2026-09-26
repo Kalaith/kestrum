@@ -7,97 +7,6 @@ use kestrum::{
 };
 
 impl Game {
-    pub(super) fn capture_army(&mut self, scene: &str) {
-        use kestrum::{data::economy::TroopKind, engine::Actor};
-        self.capture_campaign();
-        let scene = scene.trim_end_matches("_minimum");
-        if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
-            let army = campaign
-                .armies
-                .values()
-                .find(|army| army.faction == campaign.player)
-                .expect("capture starts with the founding army")
-                .id;
-            if matches!(scene, "army_full" | "recruit_full") {
-                for _ in 0..3 {
-                    engine::apply(
-                        campaign,
-                        &self.data,
-                        Actor::Player,
-                        Command::Recruit {
-                            site: SiteId(1),
-                            army: Some(army),
-                            kind: TroopKind::Warriors,
-                        },
-                    )
-                    .expect("three affordable founding army slots");
-                }
-            }
-            if matches!(scene, "army_empty" | "disband_last") {
-                let ids: Vec<_> = campaign.armies[&army].formation_ids().collect();
-                for (index, formation) in ids.into_iter().enumerate() {
-                    if scene == "disband_last" && index == 0 {
-                        continue;
-                    }
-                    engine::apply(
-                        campaign,
-                        &self.data,
-                        Actor::Player,
-                        Command::Disband { formation },
-                    )
-                    .expect("owned formation can be disbanded");
-                }
-            }
-            if matches!(scene, "army_long_name" | "army_dense") {
-                campaign.armies.get_mut(&army).expect("founding army").name =
-                    "The Riverward Silver Hawthorn Regiment of the Northern Marches I".into();
-                campaign
-                    .people
-                    .values_mut()
-                    .find(|person| person.faction == campaign.player)
-                    .expect("founder")
-                    .name =
-                    "Alexandria of the Silver Hawthorns and Northern River Marches II".into();
-            }
-            if matches!(scene, "army_economy" | "army_deficit" | "army_dense") {
-                if matches!(scene, "army_deficit" | "army_dense") {
-                    campaign
-                        .factions
-                        .get_mut(&campaign.player)
-                        .expect("player")
-                        .resources
-                        .gold = 0;
-                    campaign
-                        .set_site_control(&self.data, SiteId(1), Some(campaign.player), true)
-                        .expect("contested headquarters fixture");
-                }
-                engine::apply(campaign, &self.data, Actor::Player, Command::EndTurn)
-                    .expect("player finishes capture round");
-                while !matches!(campaign.phase, kestrum::state::CampaignPhase::PlayerTurn) {
-                    engine::advance_npc(campaign, &self.data).expect("rivals finish capture round");
-                }
-            }
-        }
-        self.open_armies(SiteId(1));
-        if matches!(scene, "recruit" | "recruit_blocked" | "recruit_full") {
-            let army = self.local_armies().first().copied();
-            self.begin_recruit(army);
-            self.army.mode = ui::ArmyMode::Recruit {
-                army,
-                kind: Some(if scene == "recruit_blocked" {
-                    TroopKind::Riders
-                } else {
-                    TroopKind::Warriors
-                }),
-            };
-        }
-        if matches!(scene, "disband" | "disband_last") {
-            if let Some(formation) = self.army.selected {
-                self.army.mode = ui::ArmyMode::Disband(formation);
-            }
-        }
-    }
-
     pub(super) fn open_armies(&mut self, site: SiteId) {
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
@@ -116,6 +25,12 @@ impl Game {
             );
             return;
         }
+        if matches!(
+            campaign.phase,
+            kestrum::state::CampaignPhase::NpcTurn { paused: false, .. }
+        ) {
+            self.apply_campaign_command(Command::SetNpcPaused(true));
+        }
         self.army = ui::ArmyView {
             site: Some(site),
             ..Default::default()
@@ -126,7 +41,7 @@ impl Game {
         self.refresh_army();
     }
 
-    fn local_armies(&self) -> Vec<ArmyId> {
+    pub(super) fn local_armies(&self) -> Vec<ArmyId> {
         self.state
             .campaign
             .as_ref()
@@ -168,12 +83,41 @@ impl Game {
         self.army.leadership_permille = current
             .and_then(|id| campaign.army_leadership_permille(id, &self.data))
             .unwrap_or(0);
+        self.army.remaining = current
+            .and_then(|id| engine::army_remaining(campaign, &self.data, id).ok())
+            .unwrap_or(0);
+        self.army.member_remaining = formation_ids
+            .iter()
+            .filter_map(|id| {
+                engine::formation_remaining(campaign, &self.data, *id)
+                    .ok()
+                    .map(|remaining| (*id, remaining))
+            })
+            .collect();
+        self.army.person_remaining = campaign
+            .people
+            .values()
+            .filter(|person| person.faction == campaign.player)
+            .filter_map(|person| {
+                engine::person_remaining(campaign, &self.data, person.id)
+                    .ok()
+                    .map(|remaining| (person.id, remaining))
+            })
+            .collect();
+        self.army.recovery = engine::recovery_preview(campaign, &self.data, campaign.player)
+            .ok()
+            .and_then(|entries| {
+                entries
+                    .into_iter()
+                    .find(|entry| Some(entry.formation) == self.army.selected)
+            });
         if let (Some(site), ui::ArmyMode::Recruit { army, .. }) = (self.army.site, self.army.mode) {
             self.army.options =
                 engine::recruit_options(campaign, &self.data, campaign.player, site, army);
         } else {
             self.army.options.clear();
         }
+        self.refresh_transfer();
     }
 
     pub(super) fn army_page(&mut self, delta: i32) {

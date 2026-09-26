@@ -7,7 +7,7 @@
   "controls_hint": "Choose New Game to unfold the atlas. Use Full Screen for the best view.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
-    "Begin a Rosemarch campaign with founding armies and officers. Inspect world markers and ten regional sites for control, political claims, anchors and supply. Open Armies at your headquarters to recruit into six formation slots or disband with confirmation. Each full round grants settlement income, pays upkeep and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Rival kingdoms currently pass; movement and battles arrive in later milestones."
+    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Rival kingdoms currently pass; hostile entry waits for the battle milestone."
   ],
   "controls": [
     { "key": "Tap / Click", "desc": "Select marked places and inspect their control, supply and connections" },
@@ -15,7 +15,9 @@
     { "key": "Close", "desc": "Dismiss the selected place's inspector" },
     { "key": "Armies", "desc": "Inspect your six-slot rosters, resources, leadership, supply and last round's economy" },
     { "key": "Recruit / New Army", "desc": "Choose a troop type, review its cost and requirements, then Confirm Recruit" },
-    { "key": "Disband", "desc": "Review the selected formation's removal before Confirm Disband; named people remain in service" },
+    { "key": "Orders", "desc": "Move Army, transfer the selected formation, open People, inspect recovery or disband with confirmation" },
+    { "key": "Move Army", "desc": "Select co-located armies, Choose Destination on the map, inspect Review Route and Confirm Move" },
+    { "key": "Transfer Formation / People", "desc": "Choose a co-located recipient; transfers preserve spent movement and remain available during paused rival phases" },
     { "key": "Drag the landscape", "desc": "Pan the map with one finger or the left mouse button" },
     { "key": "Pinch / + / -", "desc": "Zoom the map; a mouse wheel also works" },
     { "key": "Recenter", "desc": "Return to the full atlas" },

@@ -45,6 +45,14 @@ pub struct LeadershipRules {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct MovementRules {
+    pub road_bonus: u32,
+    pub road_disabled_damage: u32,
+    pub minimum_edge_cost: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CampaignRules {
     pub schema_version: u32,
     pub content_version: u32,
@@ -55,6 +63,7 @@ pub struct CampaignRules {
     pub difficulty: Difficulty,
     pub ai_income_bonus_percent: u32,
     pub leadership: LeadershipRules,
+    pub movement: MovementRules,
     pub emblems: Vec<EmblemDefinition>,
 }
 
@@ -95,6 +104,14 @@ impl CampaignRules {
                 && (1..=100).contains(&self.leadership.field_min_age_years)
                 && (1..=100).contains(&self.leadership.officer_movement_allowance),
             "invalid contribution or movement rule",
+        )?;
+        require(
+            SOURCE,
+            "movement",
+            self.movement.road_bonus <= 4
+                && (1..=100).contains(&self.movement.road_disabled_damage)
+                && (1..=4).contains(&self.movement.minimum_edge_cost),
+            "invalid road or edge cost rule",
         )?;
         Ok(())
     }

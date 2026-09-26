@@ -22,6 +22,8 @@ impl Game {
             .and_then(Campaign::strategic)
             .map(|campaign| &campaign.world);
         ui::map_controls_contain(point, &self.navigation, world, &self.view)
+            || (self.movement.stage == ui::MoveStage::Map
+                && ui::movement_map_controls_contain(point, &self.navigation, world, &self.view))
     }
 
     pub(super) fn map_selection_action(&self, pointer: Pointer) -> Option<UiAction> {
@@ -46,6 +48,20 @@ impl Game {
         };
         if let Err(error) = self.navigation.select(&campaign.world, selection) {
             self.error = Some(error);
+            return;
+        }
+        if self.movement.stage == ui::MoveStage::Map {
+            let site = match selection {
+                MapSelection::Site(id) => Some(id),
+                MapSelection::Marker(id) => campaign.world.physical_site(id),
+            };
+            if let Some(site) = site {
+                self.select_move_destination(site);
+            } else {
+                self.movement.destination = None;
+                self.movement.preview = None;
+                self.movement.status.clear();
+            }
         }
     }
 

@@ -1,8 +1,11 @@
 //! On-demand army composition, recruitment choices, and explicit disbanding.
 
 mod disband;
+mod orders;
+mod people;
 mod recruit;
 mod roster;
+mod transfer;
 
 use super::{components::*, Context, UiAction};
 use kestrum::{
@@ -10,16 +13,43 @@ use kestrum::{
         economy::{Resources, TroopKind},
         world::SiteId,
     },
-    engine::{RecruitOption, VisibleCampaign},
-    state::military::{Army, ArmyId, Formation, FormationId},
+    engine::{RecoveryPreview, RecruitOption, VisibleCampaign},
+    state::{
+        military::{Army, ArmyId, Formation, FormationId},
+        people::PersonId,
+    },
 };
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
+use std::collections::BTreeMap;
+
+pub const TRANSFER_PAGE_SIZE: usize = 5;
+pub const PEOPLE_PAGE_SIZE: usize = 4;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransferSubject {
+    Formation(FormationId),
+    Person(PersonId),
+}
+
+#[derive(Debug, Default)]
+pub struct TransferView {
+    pub subject: Option<TransferSubject>,
+    pub army: Option<ArmyId>,
+    pub slot: Option<u8>,
+    pub formation: Option<FormationId>,
+    pub page: usize,
+    pub blocked: Option<String>,
+    pub split_blocked: Option<String>,
+}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum ArmyMode {
     #[default]
     Roster,
+    Orders,
+    People,
+    Transfer,
     Recruit {
         army: Option<ArmyId>,
         kind: Option<TroopKind>,
@@ -36,6 +66,12 @@ pub struct ArmyView {
     pub options: Vec<RecruitOption>,
     pub leadership_permille: u32,
     pub status: String,
+    pub transfer: TransferView,
+    pub people_page: usize,
+    pub remaining: u32,
+    pub member_remaining: BTreeMap<FormationId, u32>,
+    pub person_remaining: BTreeMap<PersonId, u32>,
+    pub recovery: Option<RecoveryPreview>,
 }
 
 impl Default for ArmyView {
@@ -48,11 +84,24 @@ impl Default for ArmyView {
             options: Vec::new(),
             leadership_permille: 500,
             status: String::new(),
+            transfer: TransferView::default(),
+            people_page: 0,
+            remaining: 0,
+            member_remaining: BTreeMap::new(),
+            person_remaining: BTreeMap::new(),
+            recovery: None,
         }
     }
 }
 
 impl ArmyView {
+    pub fn local_people<'a>(
+        &self,
+        campaign: &'a VisibleCampaign,
+    ) -> Vec<&'a kestrum::state::people::Person> {
+        people::local_people(self, campaign)
+    }
+
     pub fn armies_at_site<'a>(&self, campaign: &'a VisibleCampaign) -> Vec<&'a Army> {
         campaign
             .armies
@@ -77,6 +126,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     draw_rectangle(80.0, 38.0, 1120.0, 650.0, INK);
     let key = match ctx.army.mode {
         ArmyMode::Roster => "armies",
+        ArmyMode::Orders => "army_orders",
+        ArmyMode::People => "army_people",
+        ArmyMode::Transfer => "composition",
         ArmyMode::Recruit { .. } => "recruit",
         ArmyMode::Disband(_) => "disband",
     };
@@ -105,6 +157,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     draw_line(112.0, 143.0, 1168.0, 143.0, 1.0, BRASS);
     let action = match ctx.army.mode {
         ArmyMode::Roster => roster::draw(ctx, campaign),
+        ArmyMode::Orders => orders::draw(ctx, campaign),
+        ArmyMode::People => people::draw(ctx, campaign),
+        ArmyMode::Transfer => transfer::draw(ctx, campaign),
         ArmyMode::Recruit { army, kind } => recruit::draw(ctx, campaign, army, kind),
         ArmyMode::Disband(formation) => disband::draw(ctx, campaign, formation),
     };

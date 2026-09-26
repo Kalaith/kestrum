@@ -8,7 +8,7 @@ use crate::{
         world::{FactionId, SiteId},
     },
     state::{
-        military::{Army, EconomyStatement, Formation},
+        military::{Army, EconomyStatement, Formation, RecoveryStatement},
         people::Person,
         world::CampaignWorld,
         CampaignId, CampaignPhase, FactionStatus, StrategicCampaign,
@@ -25,6 +25,7 @@ pub struct VisibleFaction {
     pub resources: Option<Resources>,
     pub deficit: Option<bool>,
     pub last_economy: Option<EconomyStatement>,
+    pub last_recovery: Option<RecoveryStatement>,
     pub headquarters: Option<SiteId>,
     pub capital: Option<SiteId>,
 }
@@ -85,6 +86,7 @@ pub fn project(
                     resources: owned.then_some(faction.resources),
                     deficit: owned.then_some(faction.deficit),
                     last_economy: owned.then(|| faction.last_economy.clone()).flatten(),
+                    last_recovery: owned.then(|| faction.last_recovery.clone()).flatten(),
                     headquarters: owned.then_some(faction.headquarters),
                     capital: owned.then_some(faction.capital),
                 }

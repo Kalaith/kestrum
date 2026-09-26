@@ -39,6 +39,36 @@ pub fn draw(ctx: &Context<'_>) {
             let to = ctx.view.project_normalized(to);
             draw_line(from.x, from.y, to.x, to.y, 7.0, INK);
             draw_line(from.x, from.y, to.x, to.y, 2.5, BRASS);
+            if let Some((index, step, preview)) = ctx
+                .movement
+                .preview
+                .as_ref()
+                .and_then(|preview| {
+                    preview
+                        .steps
+                        .iter()
+                        .enumerate()
+                        .find(|(_, step)| step.route == route.id)
+                        .map(|(index, step)| (index, step, preview))
+                })
+                .filter(|_| ctx.movement.stage != super::MoveStage::Inactive)
+            {
+                let color = if index < preview.reachable_steps {
+                    CREAM
+                } else {
+                    Color::new(0.86, 0.51, 0.39, 1.0)
+                };
+                draw_line(from.x, from.y, to.x, to.y, 5.0, color);
+                let center = (from + to) * 0.5;
+                draw_circle(center.x, center.y, 14.0, INK);
+                body(
+                    ctx,
+                    &format!("{}", step.cost),
+                    center + vec2(-5.0, 6.0),
+                    16.0,
+                    color,
+                );
+            }
         }
     }
     for target in &targets {

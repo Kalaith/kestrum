@@ -18,9 +18,9 @@ advances one season and saves the campaign. The menu contains manual save/load,
 settings, help, and the route back to the title. Continue restores the current
 campaign or its disk/browser save. Starting over requires confirmation.
 
-This milestone uses one strategic checkpoint. K03 adds the required recoverable
-catalogue and named saves. Armies, economy, and selectable nested regions remain
-later packages. Geography
+The save catalogue keeps each round checkpoint and each new named save. It offers
+explicit overwrite/deletion and retries failed writes without replaying the round.
+Armies, economy, and selectable nested regions remain later packages. Geography
 labels describe terrain; they are not selectable strategic locations.
 
 ### K01 — Typed content and Rosemarch
@@ -61,7 +61,27 @@ read-only, with no invented strategic history.
 K02 passes 23 tests, formatting, strict Clippy, both-size native visual review and
 Windows/WebGL Preview publishing. Browser checks cover phase controls and save
 restoration after reload. [K02 evidence](docs/verification/k02-campaign.md) records
-the remaining fullscreen/physical-touch limitations. K03–K18 remain required.
+the remaining fullscreen/physical-touch limitations. K04–K18 remain required.
+
+### K03 — Recoverable campaign saves
+
+Saved Campaigns opens from the title or Menu. The paged list has no game-imposed
+slot limit. New Save keeps a separate named copy; Overwrite and Delete require
+confirmation. Naming uses a shared touch keyboard with optional physical typing.
+Automatic saves retain each completed round. Retry uses the exact failed snapshot;
+Continue Unsaved returns to the current campaign without repeating its effects.
+
+The shared toolkit writes fresh payloads and publishes catalogue references through
+a recoverable journal. Native file locks and browser Web Locks serialize writers.
+Storage errors remain visible. A second game window can browse committed entries
+and retry for writer ownership. Campaign IDs and save identities do not use game RNG.
+Open Old Atlas preserves the shell; Import Earlier Campaign copies the K02 save
+into the catalogue with a new identity. Both source slots stay intact.
+
+K03 passes all 28 game tests, formatting, strict Clippy, both-size native review,
+browser catalogue/reload/recovery checks and Windows/WebGL Preview publishing.
+See [save verification](docs/verification/k03-saves.md) for shared commits, failure
+coverage and the remaining platform limitations.
 
 ## Screen brief
 

@@ -2,6 +2,8 @@
 
 use crate::ui::{self, UiAction};
 mod campaign;
+mod saves;
+mod storage;
 use kestrum::{
     data::GameData,
     engine::{self, Command},
@@ -28,6 +30,14 @@ pub struct Game {
     map_gesture: bool,
     save_exists: bool,
     legacy_save_exists: bool,
+    import_save_exists: bool,
+    storage: Option<macroquad_toolkit::persistence::IndexedKeyStore>,
+    library: Option<kestrum::state::persistence::SaveLibrary>,
+    storage_checked: bool,
+    saves: ui::SaveView,
+    pending_save: Option<storage::PendingWrite>,
+    retry_save_when_ready: bool,
+    save_error: String,
     npc_delay: f32,
     capture: bool,
     notice: Option<(String, f32)>,
@@ -40,6 +50,7 @@ pub struct Game {
 impl Game {
     pub async fn new() -> Result<Self, String> {
         let data = GameData::load()?;
+        let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some();
         let mut assets = AssetManager::new();
         assets
             .load_texture_with_filter("atlas", &data.presentation.map_path, FilterMode::Linear)
@@ -50,9 +61,55 @@ impl Game {
         assets
             .load_font("body", &data.presentation.body_font_path)
             .await?;
+        // Prepare all fixed UI sizes together before the first visible frame.
+        // Runtime names and messages are prepared separately before UI drawing.
+        let mut characters: Vec<char> = (b' '..=b'~').map(char::from).collect();
+        characters.extend("…—–×·".chars());
+        for text in data.presentation.text.values().chain([
+            &data.presentation.title,
+            &data.presentation.subtitle,
+            &data.presentation.edition,
+        ]) {
+            characters.extend(text.chars());
+        }
+        characters.sort_unstable();
+        characters.dedup();
+        let common_text: String = characters.into_iter().collect();
+        for (key, sizes) in [
+            ("cinzel", &[15, 17, 18, 19, 20, 21, 24, 28, 30][..]),
+            ("body", &[16, 18, 19, 20, 21, 23, 25][..]),
+        ] {
+            let font = assets
+                .get_font(key)
+                .ok_or_else(|| format!("Loaded UI font {key} is unavailable"))?;
+            let mut samples: Vec<_> = sizes
+                .iter()
+                .map(|size| (*size, common_text.as_str()))
+                .collect();
+            if key == "cinzel" {
+                samples.push((76, &data.presentation.title));
+                samples.extend(
+                    data.presentation
+                        .geography
+                        .iter()
+                        .map(|label| (label.size as u16, label.name.as_str())),
+                );
+            }
+            macroquad_toolkit::ui::prepare_font_text(font, &samples);
+        }
+        next_frame().await;
         let mut game = Self {
-            save_exists: slot_exists(&data.presentation.game_id, campaign::STRATEGIC_SLOT),
-            legacy_save_exists: slot_exists(&data.presentation.game_id, SAVE_SLOT),
+            save_exists: false,
+            legacy_save_exists: !capture && slot_exists(&data.presentation.game_id, SAVE_SLOT),
+            import_save_exists: !capture
+                && slot_exists(&data.presentation.game_id, campaign::STRATEGIC_SLOT),
+            storage: None,
+            library: None,
+            storage_checked: false,
+            saves: ui::SaveView::default(),
+            pending_save: None,
+            retry_save_when_ready: false,
+            save_error: String::new(),
             npc_delay: 0.0,
             data,
             assets,
@@ -63,18 +120,21 @@ impl Game {
             origin: None,
             was_down: false,
             map_gesture: false,
-            capture: false,
+            capture,
             notice: None,
             error: None,
             #[cfg(not(target_arch = "wasm32"))]
             fullscreen: false,
             running: true,
         };
-        if json_key_exists("kestrum", "preferences") {
+        if !capture && json_key_exists("kestrum", "preferences") {
             match load_json_key("kestrum", "preferences") {
                 Ok(preferences) => game.preferences = preferences,
                 Err(error) => game.error = Some(error),
             }
+        }
+        if !capture {
+            game.retry_storage();
         }
         Ok(game)
     }
@@ -88,6 +148,9 @@ impl Game {
         self.error = None;
         self.save_exists = false;
         self.legacy_save_exists = false;
+        self.import_save_exists = false;
+        self.saves = ui::SaveView::default();
+        self.save_error.clear();
         match scene.trim_end_matches("_minimum") {
             "title" => {}
             "gameplay" => self.capture_campaign(),
@@ -122,6 +185,8 @@ impl Game {
             "settings" => self.state.overlay = Overlay::Settings,
             "help" => self.state.overlay = Overlay::Help,
             "confirm_new" => self.state.overlay = Overlay::ConfirmNew,
+            "save_list" | "save_name" | "save_symbols" | "save_busy" | "save_invalid"
+            | "save_delete" | "save_recovery" => self.capture_saves(scene),
             "save_error" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
@@ -135,7 +200,13 @@ impl Game {
     }
 
     pub fn frame(&mut self, dt: f32) {
+        self.poll_storage();
         self.progress_npcs(dt);
+        if self.state.overlay == Overlay::Saves {
+            if let Some(error) = self.error.take() {
+                self.saves.status = error;
+            }
+        }
         if let Some((_, time)) = &mut self.notice {
             *time -= dt;
             if *time <= 0.0 {
@@ -161,13 +232,18 @@ impl Game {
             origin: self.origin,
             save_exists: self.save_exists,
             legacy_save_exists: self.legacy_save_exists,
+            import_save_exists: self.import_save_exists,
+            saves: &self.saves,
+            save_error: &self.save_error,
             campaign_view: campaign_view.as_ref(),
         };
-        let action = ui::draw(&ctx);
         let message = self
             .error
             .as_ref()
-            .or(self.notice.as_ref().map(|(message, _)| message));
+            .or(self.notice.as_ref().map(|(message, _)| message))
+            .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
+        ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
+        let action = ui::draw(&ctx);
         let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
         end_virtual_ui_frame();
         if let Some(intent) = feedback_action.or(action) {
@@ -185,7 +261,14 @@ impl Game {
             return pointer.suppressed();
         }
         if is_key_pressed(KeyCode::Escape) {
-            self.state.back();
+            self.go_back();
+        }
+        let naming = self.state.overlay == Overlay::Saves
+            && matches!(self.saves.mode, ui::SaveMode::Name { .. });
+        for edit in macroquad_toolkit::ui::text_entry::read_text_edits(naming) {
+            self.edit_save_name(macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(
+                edit,
+            ));
         }
         // A quick click can press and release between frames. Macroquad still
         // records the press edge even though `down` is already false.
@@ -276,14 +359,32 @@ impl Game {
                 }
             }
             UiAction::Open(overlay) => self.state.overlay = overlay,
-            UiAction::Back => self.state.back(),
+            UiAction::Back => self.go_back(),
             UiAction::MainMenu => {
                 self.state.main_menu();
                 self.view.reset();
             }
-            UiAction::Save => self.save(true),
-            UiAction::Load => self.load(),
+            UiAction::Save => self.open_saves(true),
+            UiAction::Load => self.open_saves(false),
             UiAction::LoadLegacy => self.load_slot(SAVE_SLOT),
+            UiAction::ImportCampaign => self.import_campaign(),
+            UiAction::SelectSave(id) => self.saves.selected = Some(id),
+            UiAction::SavePage(delta) => self.saves.change_page(delta),
+            UiAction::NameSave(target) => self.name_save(target),
+            UiAction::LoadSelectedSave => self.load_selected(),
+            UiAction::OverwriteSave => self.name_save(self.saves.selected),
+            UiAction::AskDeleteSave => {
+                if let Some(id) = self.saves.selected {
+                    self.saves.mode = ui::SaveMode::ConfirmDelete(id);
+                }
+            }
+            UiAction::ConfirmDeleteSave(id) => self.delete_save(id),
+            UiAction::CommitNamedSave => self.commit_named_save(),
+            UiAction::CancelSaveEdit => self.saves.mode = ui::SaveMode::Browse,
+            UiAction::RetryStorage => self.retry_storage(),
+            UiAction::RetrySave => self.retry_save(),
+            UiAction::ContinueUnsaved => self.continue_unsaved(),
+            UiAction::EditSaveName(action) => self.edit_save_name(action),
             UiAction::EndTurn => self.apply_campaign_command(Command::EndTurn),
             UiAction::PauseNpcs(paused) => {
                 self.apply_campaign_command(Command::SetNpcPaused(paused))

@@ -151,7 +151,9 @@ eligible package. Do not claim success from a copied checkout or an untested UI.
 K01 is **Done**: toolkit-loaded typed economy and the durable Rosemarch scenario
 pass their behavioral checks. See [K01 evidence](verification/k01-content.md).
 K02 is **Done**: atomic strategic commands, faction rounds and v1/v2 compatibility
-pass the checks in [K02 evidence](verification/k02-campaign.md). K03–K18 remain
+pass the checks in [K02 evidence](verification/k02-campaign.md).
+K03 is **Done**: unlimited indexed saves, compatibility, retry and touch naming
+pass the checks in [K03 evidence](verification/k03-saves.md). K04–K18 remain
 **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls; selectable places and

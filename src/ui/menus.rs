@@ -80,6 +80,26 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     {
         return Some(UiAction::LoadLegacy);
     }
+    if button(
+        ctx,
+        Rect::new(850.0, 556.0, 350.0, 48.0),
+        &ctx.text("save_catalogue"),
+        active,
+        false,
+    ) {
+        return Some(UiAction::Load);
+    }
+    if ctx.import_save_exists
+        && button(
+            ctx,
+            Rect::new(850.0, 504.0, 350.0, 48.0),
+            &ctx.text("import_campaign"),
+            active,
+            false,
+        )
+    {
+        return Some(UiAction::ImportCampaign);
+    }
     text(ctx, &ctx.data.edition, vec2(38.0, 693.0), 15.0, BRASS);
     body(ctx, "WebHatchery", vec2(1138.0, 693.0), 18.0, CREAM);
     None
@@ -110,7 +130,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Help => "help_title",
         Overlay::Credits => "credits",
         Overlay::ConfirmNew => "new_title",
-        Overlay::None => return None,
+        Overlay::None | Overlay::Saves | Overlay::SaveRecovery => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
@@ -126,7 +146,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
             None
         }
         Overlay::ConfirmNew => confirm(ctx),
-        Overlay::None => None,
+        Overlay::None | Overlay::Saves | Overlay::SaveRecovery => None,
     };
     if action.is_some() {
         return action;
@@ -161,7 +181,7 @@ fn pause(ctx: &Context<'_>) -> Option<UiAction> {
     .enumerate()
     {
         let enabled = match key {
-            "load" => ctx.save_exists || ctx.legacy_save_exists,
+            "load" => true,
             "save" => ctx.campaign_view.is_some_and(|view| view.player_turn),
             _ => true,
         };

@@ -63,6 +63,21 @@ pub fn paragraph(ctx: &Context<'_>, label: &str, at: Vec2, max_width: f32) {
 }
 
 pub fn button(ctx: &Context<'_>, rect: Rect, label: &str, enabled: bool, primary: bool) -> bool {
+    button_font(ctx, rect, label, enabled, primary, ctx.font())
+}
+
+pub fn input_key(ctx: &Context<'_>, rect: Rect, label: &str) -> bool {
+    button_font(ctx, rect, label, true, true, ctx.body_font())
+}
+
+fn button_font(
+    ctx: &Context<'_>,
+    rect: Rect,
+    label: &str,
+    enabled: bool,
+    primary: bool,
+    font: Option<&Font>,
+) -> bool {
     let hovered = enabled && ctx.pointer.hovering_over(rect);
     let pressed = enabled && ctx.pointer.pressing(rect);
     let palette = PlaquePalette {
@@ -98,12 +113,17 @@ pub fn button(ctx: &Context<'_>, rect: Rect, label: &str, enabled: bool, primary
             selected: false,
         },
     );
-    centered(
-        ctx,
+    let width = measure_text(label, font, 21, 1.0).width;
+    draw_text_ex(
         label,
-        vec2(rect.x + rect.w * 0.5, rect.y + rect.h * 0.5 + 7.0),
-        21.0,
-        if enabled { CREAM } else { MUTED },
+        rect.x + (rect.w - width) * 0.5,
+        rect.y + rect.h * 0.5 + 7.0,
+        TextParams {
+            font,
+            font_size: 21,
+            color: if enabled { CREAM } else { MUTED },
+            ..Default::default()
+        },
     );
     enabled
         && ctx.pointer.released_on(rect)

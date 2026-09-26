@@ -1,6 +1,7 @@
 //! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
 pub mod campaign;
+pub mod persistence;
 mod validation;
 pub mod world;
 
@@ -32,6 +33,8 @@ pub enum Overlay {
     Help,
     Credits,
     ConfirmNew,
+    Saves,
+    SaveRecovery,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -201,7 +204,11 @@ impl GameState {
     pub fn back(&mut self) {
         self.overlay = match self.overlay {
             Overlay::None if self.screen == Screen::Campaign => Overlay::Menu,
-            Overlay::Settings | Overlay::Help if self.screen == Screen::Campaign => Overlay::Menu,
+            Overlay::Settings | Overlay::Help | Overlay::Saves
+                if self.screen == Screen::Campaign =>
+            {
+                Overlay::Menu
+            }
             _ => Overlay::None,
         };
     }

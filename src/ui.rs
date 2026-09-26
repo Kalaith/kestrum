@@ -3,6 +3,8 @@
 mod atlas;
 mod components;
 mod menus;
+mod saves;
+mod typography;
 
 use kestrum::{
     data::PresentationData,
@@ -13,6 +15,8 @@ use macroquad::prelude::*;
 use macroquad_toolkit::{assets::AssetManager, ui::Pointer};
 
 pub use atlas::map_controls_contain;
+pub use saves::{SaveMode, SaveRow, SaveView};
+pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
@@ -28,6 +32,20 @@ pub enum UiAction {
     PauseNpcs(bool),
     StepNpc,
     LoadLegacy,
+    ImportCampaign,
+    SelectSave(u64),
+    SavePage(i32),
+    NameSave(Option<u64>),
+    LoadSelectedSave,
+    OverwriteSave,
+    AskDeleteSave,
+    ConfirmDeleteSave(u64),
+    CommitNamedSave,
+    CancelSaveEdit,
+    RetryStorage,
+    RetrySave,
+    ContinueUnsaved,
+    EditSaveName(macroquad_toolkit::ui::text_entry::TextEntryAction),
     Zoom(f32),
     Recenter,
     ToggleLabels,
@@ -49,6 +67,9 @@ pub struct Context<'a> {
     pub origin: Option<Vec2>,
     pub save_exists: bool,
     pub legacy_save_exists: bool,
+    pub import_save_exists: bool,
+    pub saves: &'a SaveView,
+    pub save_error: &'a str,
     pub campaign_view: Option<&'a kestrum::engine::VisibleCampaign>,
 }
 
@@ -71,7 +92,11 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
-    if ctx.state.overlay != Overlay::None {
+    if ctx.state.overlay == Overlay::Saves {
+        saves::draw(ctx)
+    } else if ctx.state.overlay == Overlay::SaveRecovery {
+        saves::recovery(ctx, ctx.save_error)
+    } else if ctx.state.overlay != Overlay::None {
         menus::overlay(ctx)
     } else {
         action

@@ -35,6 +35,27 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 
 ## Screen briefs
 
+### Saved campaigns (K03)
+
+- **Current decision:** choose a saved moment to restore, keep a new named copy,
+  or explicitly replace/delete a selected entry.
+- **Dominant focus:** one list with five readable rows per page. Each row shows
+  the name, kind and campaign date; Previous/Next reach every entry without a cap.
+- **Primary action:** Load the selected entry, or Create Save while naming a copy.
+  Overwrite and Delete require a separate confirmation with the selected name.
+- **Supporting information:** saving is available during the player's orders;
+  storage errors and another window's writer lock have a visible Retry route.
+- **Deferred information:** the entire catalogue opens from Menu or title. Naming
+  replaces the list with a text field and shared touch keyboard. Normal play
+  keeps the full atlas and its existing phase controls.
+- **Layout and camera:** a 1064 × 632 sheet at the 1280 × 720 logical minimum;
+  the native 1920 × 1080 view scales the same composition. The map stays dimmed
+  behind the sheet and receives no gestures while it is open.
+- **Input and feedback:** 48-pixel actions, 62-pixel selectable rows, visible
+  keyboard pages and editing keys. Failed automatic saves hold the resolved
+  round and offer Retry or Continue Unsaved; retry uses the same saved snapshot.
+
+
 ### New campaign
 
 - **Current decision:** name and identify the new kingdom and choose the campaign's faction count.

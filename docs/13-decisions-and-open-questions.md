@@ -166,3 +166,34 @@ and distinct round checkpoints; it is a required dependency, not deferred scope.
 
 Affected contracts: C03, C04, C06; P02. Validation: K02 phase/save regressions and
 the UI review recorded in `docs/verification/k02-campaign.md` when completed.
+
+### I02 — Save identities, writer ownership and naming
+
+K03 reserves campaign and save-request identities from the storage catalogue,
+independent of simulation RNG. Each completed boundary reserves a new request:
+loading an older save and reaching the same round can create a different timeline.
+A failed write retains that request and its immutable payload for Retry. The
+initial founding moment is a named manual save; later boundaries are checkpoints.
+Requests commit in preparation order. An older uncommitted request is rejected
+after a newer one commits, and an overwrite records the target revision it saw.
+This prevents a delayed request from replacing newer work. A committed request
+can still be retried idempotently. The application keeps one pending request.
+
+One application holds the namespace's writer lease, through an OS file lock on
+native or Web Locks in the browser. Other windows can discover committed entries
+and show Retry Storage; writes wait until they acquire the lease. Browser storage
+that cannot provide a writer lock reports its limitation instead of claiming a
+successful save. This is an implementation choice for C06 serialization.
+Validated loads remain available when storage cannot write the Continue choice;
+the game opens the candidate and shows a warning while preserving the previous
+persisted choice. A deliberate older-save load acknowledges the known catalogue,
+so later journal cleanup does not silently choose a newer campaign instead.
+
+Save names accept 1–40 Unicode characters without control characters. They are
+labels only. A shared on-screen keyboard supplies letters, numbers, punctuation,
+Space, Backspace and Clear; physical typing is supplemental. The earlier K02 slot
+has an explicit import action that gives its copy a new catalogue campaign ID
+and preserves the source. Empty-atlas saves remain read-only.
+
+These are delegated implementation choices under the full-release assignment.
+The K03 evidence records storage, compatibility and UI validation.

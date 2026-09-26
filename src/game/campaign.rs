@@ -1,7 +1,6 @@
 //! Strategic command pacing and stable save boundaries for the application.
 
 use super::*;
-use macroquad_toolkit::persistence::{load_from_slot, save_to_slot_with_version};
 
 pub use kestrum::state::STRATEGIC_SAVE_SLOT as STRATEGIC_SLOT;
 
@@ -13,14 +12,34 @@ impl Game {
     }
 
     pub(super) fn start_game(&mut self) {
-        match self.state.new_game(&self.data) {
+        let result = (|| {
+            let mut campaign = kestrum::state::StrategicCampaign::new(&self.data)?;
+            if !self.capture {
+                let library = self
+                    .library
+                    .as_mut()
+                    .ok_or_else(|| self.saves.status.clone())?;
+                let store = self
+                    .storage
+                    .as_mut()
+                    .ok_or_else(|| self.saves.status.clone())?;
+                library.refresh(store, &self.data)?;
+                campaign.campaign_id = library.allocate_campaign_id(store)?;
+            }
+            self.state
+                .load_campaign(Campaign::Strategic(Box::new(campaign)), &self.data)
+        })();
+        match result {
             Ok(()) => {
                 self.view.reset();
                 self.error = None;
                 self.npc_delay = 0.0;
-                self.save(false);
+                self.save_checkpoint();
             }
-            Err(error) => self.error = Some(error),
+            Err(error) => {
+                self.error = Some(error);
+                self.open_saves(false);
+            }
         }
     }
 
@@ -34,7 +53,7 @@ impl Game {
         match result {
             Ok(outcome) => {
                 if outcome.round_completed {
-                    self.save(false);
+                    self.save_checkpoint();
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
@@ -71,73 +90,6 @@ impl Game {
             self.npc_delay = 0.0;
             let result = self.state.advance_npc(&self.data);
             self.handle_campaign_result(result);
-        }
-    }
-
-    pub(super) fn save(&mut self, announce: bool) {
-        if self.capture {
-            return;
-        }
-        let Some(campaign) = &self.state.campaign else {
-            return;
-        };
-        let Some(strategic) = campaign.strategic() else {
-            self.error = Some(self.data.presentation.text("legacy_read_only").into());
-            return;
-        };
-        if !matches!(
-            strategic.phase,
-            kestrum::state::campaign::CampaignPhase::PlayerTurn
-        ) {
-            self.error = Some(self.data.presentation.text("save_player_only").into());
-            return;
-        }
-        match save_to_slot_with_version(
-            &self.data.presentation.game_id,
-            STRATEGIC_SLOT,
-            campaign,
-            "2",
-        ) {
-            Ok(()) => {
-                self.save_exists = true;
-                self.error = None;
-                if announce {
-                    self.notice = Some((self.data.presentation.text("save_success").into(), 3.0));
-                }
-            }
-            Err(error) => {
-                self.error = Some(format!(
-                    "{}: {error}",
-                    self.data.presentation.text("save_failed")
-                ))
-            }
-        }
-    }
-
-    pub(super) fn load(&mut self) {
-        self.load_slot(if self.save_exists {
-            STRATEGIC_SLOT
-        } else {
-            SAVE_SLOT
-        });
-    }
-
-    pub(super) fn load_slot(&mut self, slot: &str) {
-        let loaded: Result<Campaign, String> =
-            load_from_slot(&self.data.presentation.game_id, slot);
-        match loaded.and_then(|campaign| self.state.load_campaign(campaign, &self.data)) {
-            Ok(()) => {
-                self.view.reset();
-                self.npc_delay = 0.0;
-                self.error = None;
-                self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));
-            }
-            Err(error) => {
-                self.error = Some(format!(
-                    "{}: {error}",
-                    self.data.presentation.text("load_failed")
-                ))
-            }
         }
     }
 }

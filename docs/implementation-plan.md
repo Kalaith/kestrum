@@ -178,10 +178,12 @@ K11 is **Done**: living settlements, refugees, administration and ordinary threa
 pass [K11 evidence](verification/k11-living-places.md).
 K12 is **Done**: legal AI, diplomacy and reachable kingdom endings pass
 [K12 evidence](verification/k12-kingdoms.md).
-K13 is **In progress**: evidence-grounded emergence, ordinary class courses,
-appointments and formation specialization are implemented and validated; the
-package commit and final status reference remain. See
-[K13 evidence](verification/k13-careers.md). K14–K18 remain planned.
+K13 is **Done**: `10ab4c6` implements evidence-grounded emergence, ordinary class
+courses, appointments and formation specialization. Nine progression cases and
+136 tests pass, with strict Clippy, formatting, the source-size gate, native
+screen review and Windows/WebGL Preview publishing. See
+[K13 evidence](verification/k13-careers.md). Browser interaction, physical touch
+and minimum-WebGL campaign scaling remain open for K18; K14–K18 remain planned.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain open for K18.

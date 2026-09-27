@@ -45,19 +45,32 @@ pub fn recovery_preview(
 }
 
 /// Capture physical connectivity before income, construction or other boundary work.
-/// K10 will add actual siege exclusions to the shared supply query when sieges exist.
+/// Besieger endpoints are included without becoming supply transit nodes.
 pub(super) fn snapshot(campaign: &StrategicCampaign) -> SupplySnapshot {
     SupplySnapshot {
         supplied: campaign
             .factions
             .values()
             .map(|faction| {
-                (
-                    faction.id,
-                    campaign
+                let mut sites = campaign
+                    .world
+                    .supplied_sites(faction.id, faction.headquarters);
+                let transit = sites.clone();
+                for siege in campaign
+                    .sieges
+                    .values()
+                    .filter(|siege| siege.besieger == faction.id)
+                {
+                    if campaign
                         .world
-                        .supplied_sites(faction.id, faction.headquarters),
-                )
+                        .adjacent_sites(siege.site)
+                        .iter()
+                        .any(|site| transit.contains(site))
+                    {
+                        sites.insert(siege.site);
+                    }
+                }
+                (faction.id, sites)
             })
             .collect(),
     }

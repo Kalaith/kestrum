@@ -8,6 +8,7 @@ pub(crate) fn execute(
     campaign: &mut StrategicCampaign,
     data: &GameData,
     order: &MoveOrder,
+    action: &mut super::super::ActionOutcome,
 ) -> Result<MovementOutcome, RuleError> {
     let owner = campaign.active_faction();
     let (origin, mut remaining) = validate_order(campaign, data, owner, order)?;
@@ -24,7 +25,19 @@ pub(crate) fn execute(
         let (from, to) = (pair[0], pair[1]);
         let route = campaign.world.connected_route(from, to);
         let cost = route.map(|route| route_cost(route, data));
-        let contact = contact(campaign, owner, to);
+        let siege_entry = campaign.sieges.contains_key(&to)
+            || campaign.world.site(to).is_some_and(|site| {
+                site.military != MilitaryLayer::None && site.controller != Some(owner)
+            });
+        let contact = if siege_entry {
+            Contact {
+                defenders: Vec::new(),
+                neutral_peaceful_stack: false,
+                block: super::super::siege::admission(campaign, owner, to).err(),
+            }
+        } else {
+            contact(campaign, owner, to)
+        };
         let reason = if let Some(cost) = cost {
             public_block(campaign, owner, to)
                 .or_else(|| {
@@ -51,6 +64,11 @@ pub(crate) fn execute(
             field: "movement spent",
         })?;
         outcome.path.push(to);
+        if siege_entry {
+            outcome.battle =
+                super::super::siege::arrive(campaign, data, &outcome.armies, from, to, action)?;
+            break;
+        }
         if !contact.defenders.is_empty() {
             outcome.battle = Some(combat::resolve(
                 campaign,

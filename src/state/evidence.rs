@@ -67,6 +67,11 @@ pub enum EvidenceKind {
     AssumedCommand,
     CommandedVictory,
     RetreatingEnemyVictory,
+    AssaultedFort,
+    DefendedFort,
+    Sortie,
+    EscapeAttempt,
+    Relief,
 }
 
 impl fmt::Display for EvidenceKind {
@@ -85,6 +90,11 @@ impl fmt::Display for EvidenceKind {
             Self::AssumedCommand => "Assumed command",
             Self::CommandedVictory => "Commanded victory",
             Self::RetreatingEnemyVictory => "Victories over retreating enemies",
+            Self::AssaultedFort => "Assaulted a fort",
+            Self::DefendedFort => "Defended a fort",
+            Self::Sortie => "Fought a sortie",
+            Self::EscapeAttempt => "Attempted a siege escape",
+            Self::Relief => "Fought to relieve a siege",
         })
     }
 }

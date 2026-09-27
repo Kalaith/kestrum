@@ -1,5 +1,7 @@
 //! Historical references validate against counters, never against live enemy rosters.
 
+mod context;
+
 use super::*;
 use crate::{
     data::GameData,
@@ -27,7 +29,7 @@ impl StrategicCampaign {
             validate_header(self, data, *id, report, sequence)?;
             sequence = report.sequence;
             let roster = validate_roster(self, data, report)?;
-            validate_exchanges(report, &roster)?;
+            validate_exchanges(data, report, &roster)?;
             validate_result(self, data, report)?;
             validate_people(report)?;
         }
@@ -56,11 +58,7 @@ fn validate_header(
         "invalid identity, sequence or date",
     )?;
     ensure(
-        campaign
-            .world
-            .connected_route(report.origin, report.site)
-            .is_some()
-            && !report.site_name.trim().is_empty()
+        !report.site_name.trim().is_empty()
             && report.attacker.faction != report.defender.faction
             && campaign.factions.contains_key(&report.attacker.faction)
             && campaign.factions.contains_key(&report.defender.faction)
@@ -75,6 +73,7 @@ fn validate_header(
             && (1..=10_000).contains(&report.terrain_permille),
         "invalid location, faction or effects",
     )?;
+    context::validate_context(campaign, data, report)?;
     ensure(
         !report.exchanges.is_empty()
             && report.exchanges.len() <= data.combat.max_exchanges as usize,
@@ -258,13 +257,18 @@ fn validate_person_snapshot(
     Ok(())
 }
 
-fn validate_exchanges(report: &BattleReport, roster: &Roster<'_>) -> Result<(), String> {
+fn validate_exchanges(
+    data: &GameData,
+    report: &BattleReport,
+    roster: &Roster<'_>,
+) -> Result<(), String> {
     let mut remaining: BTreeMap<_, _> = roster
         .formations
         .iter()
         .map(|(id, formation)| (*id, formation.start))
         .collect();
     for (index, exchange) in report.exchanges.iter().enumerate() {
+        context::validate_wall(data, report, exchange, &remaining)?;
         ensure(
             !exchange.leadership.is_empty()
                 && exchange
@@ -311,27 +315,7 @@ fn validate_result(
     data: &GameData,
     report: &BattleReport,
 ) -> Result<(), String> {
-    let survivors = |side: &BattleSideReport| {
-        side.armies
-            .iter()
-            .flat_map(|army| &army.formations)
-            .map(|formation| u64::from(formation.end))
-            .sum::<u64>()
-    };
-    let valid_outcome = match report.outcome {
-        BattleOutcome::AttackerVictory => {
-            survivors(&report.attacker) > 0 && report.control_after == Some(report.attacker.faction)
-        }
-        BattleOutcome::DefenderVictory | BattleOutcome::Stalemate => {
-            survivors(&report.defender) > 0 && report.control_after == report.control_before
-        }
-        BattleOutcome::MutualDestruction => {
-            survivors(&report.attacker) == 0
-                && survivors(&report.defender) == 0
-                && report.control_after.is_none()
-        }
-    };
-    ensure(valid_outcome, "outcome disagrees with survivors/control")?;
+    context::validate_outcome(campaign, report)?;
     ensure(
         report.reason != BattleEndReason::ExchangeLimit
             || report.exchanges.len() == data.combat.max_exchanges as usize,
@@ -345,26 +329,6 @@ fn validate_result(
                 && counter.permille != 1000,
             "invalid observed counter",
         )?;
-    }
-    for (attacking, side) in [(true, &report.attacker), (false, &report.defender)] {
-        let withdrawing = match report.outcome {
-            BattleOutcome::AttackerVictory => !attacking,
-            BattleOutcome::DefenderVictory | BattleOutcome::Stalemate => attacking,
-            BattleOutcome::MutualDestruction => false,
-        };
-        for army in &side.armies {
-            if let Some(site) = army.final_site {
-                ensure(
-                    if withdrawing {
-                        campaign.world.connected_route(report.site, site).is_some()
-                            && (attacking || site != report.origin)
-                    } else {
-                        site == report.site
-                    },
-                    "final army location disagrees with result/retreat topology",
-                )?;
-            }
-        }
     }
     Ok(())
 }

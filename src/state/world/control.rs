@@ -37,6 +37,14 @@ impl StrategicCampaign {
         } else {
             candidate.world.contested_sites.remove(&site);
         }
+        if candidate
+            .sieges
+            .get(&site)
+            .is_some_and(|siege| controller != Some(siege.defender))
+        {
+            candidate.sieges.remove(&site);
+            candidate.world.contested_sites.remove(&site);
+        }
         candidate.reconcile_region_control();
         candidate.cancel_lost_construction();
         candidate.validate(data)?;

@@ -1,6 +1,7 @@
 //! Read-only, paginated views of participant-filtered battle snapshots.
 
 mod rows;
+mod siege;
 
 use super::{components::*, Context, UiAction};
 use kestrum::state::battle::BattleReport;
@@ -36,11 +37,11 @@ impl BattleView {
 
     pub fn page_count(&self, report: &BattleReport) -> usize {
         let armies = report.attacker.armies.iter().chain(&report.defender.armies);
-        let count =
-            match self.tab {
-                BattleTab::Outcome => 2 + armies.count(),
-                BattleTab::Forces => armies.map(|army| army.formations.len()).sum(),
-                BattleTab::People => armies.map(|army| army.people.len()).sum::<usize>()
+        let count = match self.tab {
+            BattleTab::Outcome => 2 + armies.count() + siege::extra_rows(report),
+            BattleTab::Forces => armies.map(|army| army.formations.len()).sum(),
+            BattleTab::People => {
+                armies.map(|army| army.people.len()).sum::<usize>()
                     + report.person_events.len()
                     + report
                         .person_events
@@ -51,14 +52,16 @@ impl BattleView {
                                 kestrum::state::people::PersonCombatOutcome::AssumedCommand { .. }
                             )
                         })
-                        .count(),
-                BattleTab::Factors => {
-                    2 + armies.count()
-                        + report.counters.len()
-                        + report.exchanges.len()
-                        + rows::leadership_changes(report).len()
-                }
-            };
+                        .count()
+            }
+            BattleTab::Factors => {
+                2 + armies.count()
+                    + usize::from(report.context != kestrum::state::battle::BattleContext::Field)
+                    + report.counters.len()
+                    + report.exchanges.len()
+                    + rows::leadership_changes(report).len()
+            }
+        };
         count.div_ceil(BATTLE_ROWS_PER_PAGE).max(1)
     }
 }

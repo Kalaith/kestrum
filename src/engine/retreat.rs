@@ -33,6 +33,7 @@ pub(super) fn eligible(
                     site.controller.is_none_or(|owner| owner == faction)
                         && !campaign.world.contested_sites.contains(id)
                 })
+                && !campaign.sieges.contains_key(id)
                 && !campaign.armies.values().any(|army| {
                     army.site == *id
                         && hostile(campaign, faction, army.faction)

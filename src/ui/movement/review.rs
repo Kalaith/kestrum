@@ -67,6 +67,15 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
             Color::new(0.21, 0.29, 0.25, 1.0),
         );
     }
+    review_controls(ctx, preview, page, page_count)
+}
+
+fn review_controls(
+    ctx: &Context<'_>,
+    preview: &MovementPreview,
+    page: usize,
+    page_count: usize,
+) -> Option<UiAction> {
     if button(
         ctx,
         Rect::new(112.0, 526.0, 160.0, 48.0),

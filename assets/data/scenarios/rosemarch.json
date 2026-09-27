@@ -184,7 +184,7 @@
       ],
       "controller": 3,
       "habitation": "village",
-      "military": "none",
+      "military": "fort",
       "facilities": [
         "training_ground"
       ]

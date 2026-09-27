@@ -9,8 +9,9 @@ use crate::{
     },
     state::{
         battle::BattleReport,
-        military::{Army, EconomyStatement, Formation, RecoveryStatement},
+        military::{Army, ArmyId, EconomyStatement, Formation, RecoveryStatement},
         people::Person,
+        siege::SiegeId,
         world::CampaignWorld,
         CampaignId, CampaignPhase, FactionStatus, StrategicCampaign,
     },
@@ -33,6 +34,7 @@ pub struct VisibleFaction {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VisibleCampaign {
+    pub sieges: Vec<VisibleSiege>,
     pub construction: Vec<crate::state::construction::ConstructionOrder>,
     /// Actual encounter snapshots, visible only to participants.
     pub battles: Vec<BattleReport>,
@@ -70,6 +72,7 @@ pub fn project(
         .get(&active_faction)
         .ok_or(RuleError::UnknownActor)?;
     Ok(VisibleCampaign {
+        sieges: visible_sieges(campaign, observer),
         construction: campaign
             .construction
             .values()
@@ -140,5 +143,60 @@ fn observed_world(campaign: &StrategicCampaign, observer: FactionId) -> Campaign
     };
     world.population.retain(|id, _| owned(id));
     world.focus.retain(|id, _| owned(id));
+    world.fort_damage.retain(|id, _| {
+        owned(id)
+            || campaign
+                .sieges
+                .get(id)
+                .is_some_and(|siege| siege.besieger == observer)
+    });
     world
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SiegeRole {
+    Defender,
+    Besieger,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VisibleSiege {
+    pub id: SiegeId,
+    pub site: SiteId,
+    pub role: SiegeRole,
+    pub elapsed_steps: u32,
+    pub fort_damage: u32,
+    pub own_armies: Vec<ArmyId>,
+}
+
+pub(super) fn visible_sieges(
+    campaign: &StrategicCampaign,
+    observer: FactionId,
+) -> Vec<VisibleSiege> {
+    campaign
+        .sieges
+        .values()
+        .filter_map(|siege| {
+            let (role, own_armies) = if siege.defender == observer {
+                (SiegeRole::Defender, siege.defending.clone())
+            } else if siege.besieger == observer {
+                (SiegeRole::Besieger, siege.besieging.clone())
+            } else {
+                return None;
+            };
+            Some(VisibleSiege {
+                id: siege.id,
+                site: siege.site,
+                role,
+                elapsed_steps: siege.elapsed_steps,
+                fort_damage: campaign
+                    .world
+                    .fort_damage
+                    .get(&siege.site)
+                    .copied()
+                    .unwrap_or(0),
+                own_armies,
+            })
+        })
+        .collect()
 }

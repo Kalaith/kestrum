@@ -10,6 +10,7 @@ mod movement;
 mod saves;
 mod selection;
 mod settlement;
+mod siege;
 mod typography;
 mod world;
 
@@ -44,10 +45,19 @@ pub use saves::{SaveMode, SaveRow, SaveView};
 pub use settlement::{
     BuildChoice, BuilderChoice, FocusChoice, SettlementMode, SettlementView, SETTLEMENT_PAGE_SIZE,
 };
+pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenSiege(SiteId),
+    SiegeMode(SiegeMode),
+    ToggleSiegeArmy(ArmyId),
+    SiegePage(i32),
+    ChooseSiegeAction(kestrum::state::siege::SiegeAction),
+    SiegeDestination(SiteId),
+    ConfirmSiege,
+    SiegeBack,
     OpenSettlement(SiteId),
     SettlementTab(SettlementMode),
     SettlementPage(i32),
@@ -156,6 +166,20 @@ pub enum UiAction {
 }
 
 impl UiAction {
+    pub fn is_siege(self) -> bool {
+        matches!(
+            self,
+            Self::OpenSiege(_)
+                | Self::SiegeMode(_)
+                | Self::ToggleSiegeArmy(_)
+                | Self::SiegePage(_)
+                | Self::ChooseSiegeAction(_)
+                | Self::SiegeDestination(_)
+                | Self::ConfirmSiege
+                | Self::SiegeBack
+        )
+    }
+
     pub fn is_settlement(self) -> bool {
         matches!(
             self,
@@ -199,6 +223,7 @@ impl UiAction {
 }
 
 pub struct Context<'a> {
+    pub siege: &'a SiegePanel,
     pub settlement: &'a SettlementView,
     pub data: &'a PresentationData,
     pub economy: &'a Economy,
@@ -242,7 +267,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
-    if ctx.state.overlay == Overlay::Settlement {
+    if ctx.state.overlay == Overlay::Siege {
+        siege::draw(ctx)
+    } else if ctx.state.overlay == Overlay::Settlement {
         settlement::draw(ctx)
     } else if ctx.state.overlay == Overlay::Saves {
         saves::draw(ctx)

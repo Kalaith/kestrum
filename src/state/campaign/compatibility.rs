@@ -3,6 +3,7 @@
 use super::StrategicCampaign;
 mod construction;
 mod evidence;
+mod siege;
 
 impl StrategicCampaign {
     pub(crate) fn decode_compatible(
@@ -12,6 +13,7 @@ impl StrategicCampaign {
         initialize_earlier_battles(&mut value);
         let earlier_evidence = evidence::initialize(&mut value)?;
         let earlier_construction = construction::initialize(&mut value);
+        siege::initialize(&mut value)?;
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.

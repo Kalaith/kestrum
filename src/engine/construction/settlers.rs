@@ -45,14 +45,20 @@ impl SettlerSnapshot {
                 continue;
             }
             let site = self.world.site(id)?;
-            if id != target && site.habitation != Habitation::Unsettled && self.remaining[&id] > 0 {
+            if id != target
+                && self.world.is_secure(id, order.owner)
+                && site.habitation != Habitation::Unsettled
+                && self.remaining[&id] > 0
+            {
                 return Some((
                     id,
                     self.remaining[&id].min(data.construction.population.settler_limit),
                 ));
             }
             for adjacent in self.world.adjacent_sites(id) {
-                if !supply.contains(order.owner, adjacent) {
+                if !supply.contains(order.owner, adjacent)
+                    || !self.world.is_secure(adjacent, order.owner)
+                {
                     continue;
                 }
                 let edge = self

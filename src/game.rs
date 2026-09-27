@@ -17,6 +17,8 @@ mod resources;
 mod saves;
 mod settlement;
 mod settlement_capture;
+mod siege;
+mod siege_capture;
 mod storage;
 mod world;
 use kestrum::{
@@ -57,6 +59,7 @@ pub struct Game {
     battle: ui::BattleView,
     history: ui::HistoryView,
     settlement: ui::SettlementView,
+    siege: ui::SiegePanel,
     projection: Option<engine::VisibleCampaign>,
     projection_revision: Option<(kestrum::state::CampaignId, u64)>,
     history_return: Overlay,
@@ -95,6 +98,7 @@ impl Game {
             battle: ui::BattleView::default(),
             history: ui::HistoryView::default(),
             settlement: ui::SettlementView::default(),
+            siege: ui::SiegePanel::default(),
             projection: None,
             projection_revision: None,
             history_return: Overlay::None,
@@ -136,6 +140,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_siege_scene(scene) {
+            return;
+        }
         if self.capture_settlement_scene(scene) {
             return;
         }
@@ -238,6 +245,7 @@ impl Game {
         self.import_save_exists = false;
         self.saves = ui::SaveView::default();
         self.settlement = ui::SettlementView::default();
+        self.siege = ui::SiegePanel::default();
         self.movement = ui::MoveView::default();
         self.battle = ui::BattleView::default();
         self.reset_history();
@@ -268,11 +276,13 @@ impl Game {
         if changed || self.army_refresh_pending {
             self.refresh_army();
             self.refresh_settlement();
+            self.refresh_siege();
             self.army_refresh_pending = false;
         }
         self.clamp_pages();
         let ctx = ui::Context {
             settlement: &self.settlement,
+            siege: &self.siege,
             data: &self.data.presentation,
             economy: &self.data.economy,
             progression: &self.data.progression,

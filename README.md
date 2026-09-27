@@ -23,7 +23,7 @@ explicit overwrite/deletion and retries failed writes without replaying the roun
 Enter Region opens Rosemarch's ten connected sites. Six-slot armies, recruitment,
 disbanding, income, upkeep, movement, transfers and supplied recovery are playable.
 Hostile field encounters resolve automatically, with lasting casualties, retreat,
-person wounds and recorded reports. Fortified encounters follow in K10.
+person wounds and recorded reports. Persistent fortified encounters, escape and joint relief are playable.
 Terrain labels are distinct from selectable place markers.
 
 ### K01 — Typed content and Rosemarch
@@ -130,7 +130,7 @@ Orders opens group movement, formation transfers, local People and disbanding.
 Choose co-located armies, select a physical destination, review the route and
 Confirm Move. Every member pays actual edge costs; the group stops at its last
 legal site when a later edge is blocked. Route details can close without cancelling
-the order. Fortified hostile entry remains unavailable until K10; K07 adds field combat.
+the order. K07 added field combat; K10 extends fortified arrival into persistent sieges.
 
 Transfer whole formations or people between local friendly rosters, or split a
 formation into a new army. Spent movement is preserved. Opening Armies pauses a
@@ -209,6 +209,35 @@ Saves and owner-visible histories retain actual orders and outcomes.
 strict Clippy, native visual review and published browser construction/reload checks.
 Windows and WebGL Preview publishing passed. Minimum-browser sizing, cache
 invalidation and physical-touch checks remain open for K18. K10–K18 remain required.
+
+### K10 — Persistent sieges and relief
+
+New Rosemarch campaigns have a defended Fort at Hawthorn Headquarters. Existing
+saves keep their saved site layers.
+
+Entering a defended Fort establishes a siege with the garrison inside and
+besiegers outside at the same physical site. The garrison keeps control while
+the site is contested and cut off. Walls weaken once per season; lasting fort
+damage remains when the siege ends. A supplied friendly approach can feed the
+besiegers without carrying supply through the contested site.
+
+Open Siege from a participating place or army, select your armies, and Choose
+Siege Order. Besiegers can Maintain, Assault or Withdraw; defenders can Sortie or
+Escape. Exit orders show legal adjacent destinations before Confirm Siege Order.
+A failed or drawn assault leaves surviving attackers outside. Sortie/escape
+failure leaves surviving defenders inside; escape reaches its exit only on victory.
+All combat casualties and exhausted movement persist.
+
+Move outside friendly armies to a besieged garrison to initiate relief. The
+garrison joins the actual battle; failed relief retreats incoming armies while
+surviving original defenders remain inside. Route review explains the context,
+and reports separate troop losses, structural damage, fort damage and road damage.
+Siege histories reveal no undiscovered enemy rosters. Only real combat earns
+assault, defense, sortie, escape or relief service evidence.
+
+K10 is complete; [verification](docs/verification/k10-sieges.md) records 96 passing
+tests, publication and the remaining platform checks.
+K11–K18 remain required release work.
 
 ## Screen brief
 

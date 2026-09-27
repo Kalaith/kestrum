@@ -25,6 +25,7 @@ pub(super) fn exchanges(
             .copied()
             .filter(|id| campaign.formations[id].headcount > 0)
             .collect();
+        let wall = effective_wall(campaign, data, report, &a);
         let mut losses = calculate_losses(
             campaign,
             data,
@@ -34,6 +35,7 @@ pub(super) fn exchanges(
                 side: &report.attacker,
                 exchange: number,
                 terrain: report.terrain_permille,
+                wall,
             },
             &mut report.counters,
         )?;
@@ -46,6 +48,7 @@ pub(super) fn exchanges(
                 side: &report.defender,
                 exchange: number,
                 terrain: 1000,
+                wall: 1000,
             },
             &mut report.counters,
         )?);
@@ -58,6 +61,7 @@ pub(super) fn exchanges(
                 .headcount -= loss.amount;
         }
         report.exchanges.push(BattleExchange {
+            wall_permille: wall,
             number: number + 1,
             losses,
             leadership,
@@ -182,6 +186,7 @@ struct AttackWave<'a> {
     side: &'a BattleSideReport,
     exchange: u32,
     terrain: u32,
+    wall: u32,
 }
 
 fn calculate_losses(
@@ -196,6 +201,7 @@ fn calculate_losses(
         side,
         exchange,
         terrain,
+        wall,
     } = wave;
     let mut assigned = BTreeMap::<FormationId, u128>::new();
     for (index, id) in sources.iter().enumerate() {
@@ -256,7 +262,7 @@ fn calculate_losses(
                 divisor,
                 target.service.tier.permille(&data.progression).into(),
             )?;
-            let amount = (attack / divisor)
+            let amount = (mul(attack, 1000)? / mul(divisor, wall.into())?)
                 .max(u128::from(attack > 0))
                 .min(target.headcount.into()) as u32;
             Ok(FormationLoss {
@@ -276,4 +282,26 @@ fn add(left: u128, right: u128) -> Result<u128, RuleError> {
     left.checked_add(right).ok_or(RuleError::Overflow {
         field: "combat arithmetic",
     })
+}
+
+fn effective_wall(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    report: &BattleReport,
+    attackers: &[FormationId],
+) -> u32 {
+    if !matches!(report.context, BattleContext::Assault { .. }) {
+        return 1000;
+    }
+    let engines = attackers
+        .iter()
+        .any(|id| campaign.formations[id].kind == crate::data::economy::TroopKind::SiegeEngines);
+    if engines {
+        report
+            .wall_permille
+            .saturating_sub(data.siege.engine_wall_reduction_permille)
+            .max(data.siege.wall_minimum_permille)
+    } else {
+        report.wall_permille
+    }
 }

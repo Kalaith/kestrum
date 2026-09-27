@@ -329,15 +329,21 @@ fn save_reload_replay_and_observed_reports_never_repeat_effects_or_reveal_live_e
     assert_catalogue(&data, &campaign);
     assert_bad_reports(&data, &campaign);
     assert_earlier_save(&data);
-    let (_, mut invalid) = fixture(100, 100);
-    invalid
+    let (_, mut fortified) = fixture(100, 100);
+    fortified
         .world
         .sites
         .iter_mut()
         .find(|site| site.id == SiteId(10))
         .unwrap()
         .military = MilitaryLayer::Fort;
-    let before = invalid.clone();
-    assert!(apply(&mut invalid, &data, Actor::Player, command()).is_err());
-    assert_eq!(invalid, before);
+    let outcome = apply(&mut fortified, &data, Actor::Player, command()).unwrap();
+    assert!(outcome.battle.is_none());
+    assert!(fortified.battles.is_empty());
+    assert_eq!(fortified.sieges[&SiteId(10)].defending, vec![ArmyId(3)]);
+    assert_eq!(fortified.sieges[&SiteId(10)].besieging, vec![ArmyId(1)]);
+    for formation in fortified.formations.values() {
+        assert_eq!(formation.headcount, 100);
+    }
+    fortified.validate(&data).unwrap();
 }

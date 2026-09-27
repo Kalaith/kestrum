@@ -102,6 +102,7 @@ impl PartialEq for RandomStreams {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NextIds {
+    pub siege: super::siege::SiegeId,
     pub order: super::construction::OrderId,
     pub history: HistoryId,
     pub battle: BattleId,
@@ -118,6 +119,10 @@ pub struct NextIds {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DomainFactKind {
+    SiegeChanged {
+        siege: super::siege::Siege,
+        change: super::siege::SiegeChange,
+    },
     ConstructionChanged {
         order: super::construction::ConstructionOrder,
     },
@@ -183,6 +188,7 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub sieges: BTreeMap<SiteId, super::siege::Siege>,
     pub construction:
         BTreeMap<super::construction::OrderId, super::construction::ConstructionOrder>,
     pub history: CampaignHistory,
@@ -236,6 +242,7 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            sieges: BTreeMap::new(),
             construction: BTreeMap::new(),
             history: CampaignHistory::default(),
             knowledge: CampaignKnowledge::default(),
@@ -246,6 +253,7 @@ impl StrategicCampaign {
             seed: scenario.seed,
             rng: RandomStreams::new(scenario.seed),
             next_ids: NextIds {
+                siege: super::siege::SiegeId(1),
                 order: super::construction::OrderId(1),
                 history: HistoryId(1),
                 battle: BattleId(1),

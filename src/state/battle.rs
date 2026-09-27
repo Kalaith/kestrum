@@ -8,7 +8,7 @@ use super::{
 };
 use crate::data::{
     economy::TroopKind,
-    world::{FactionId, FounderClass, SiteId},
+    world::{FactionId, FounderClass, RouteId, SiteId},
 };
 use serde::{Deserialize, Serialize};
 
@@ -36,6 +36,14 @@ pub enum BattleEndReason {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattleReport {
+    #[serde(default)]
+    pub context: BattleContext,
+    #[serde(default = "ordinary_factor")]
+    pub wall_permille: u32,
+    #[serde(default)]
+    pub fort_damage_added: u32,
+    #[serde(default)]
+    pub road_damage: Option<BattleRoadDamage>,
     pub id: BattleId,
     pub completed_rounds: u32,
     pub sequence: u64,
@@ -118,6 +126,8 @@ fn ordinary_factor() -> u32 {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattleExchange {
+    #[serde(default = "ordinary_factor")]
+    pub wall_permille: u32,
     pub number: u32,
     pub losses: Vec<FormationLoss>,
     pub leadership: Vec<ArmyLeadership>,
@@ -143,4 +153,36 @@ pub struct CounterUse {
     pub source: TroopKind,
     pub target: TroopKind,
     pub permille: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum BattleContext {
+    #[default]
+    Field,
+    Assault {
+        siege: super::siege::SiegeId,
+    },
+    Sortie {
+        siege: super::siege::SiegeId,
+    },
+    Escape {
+        siege: super::siege::SiegeId,
+        destination: SiteId,
+    },
+    Relief {
+        siege: super::siege::SiegeId,
+        garrison: Vec<ArmyId>,
+    },
+    BesiegerClash {
+        siege: super::siege::SiegeId,
+        garrison_faction: FactionId,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BattleRoadDamage {
+    pub route: RouteId,
+    pub added: u32,
 }

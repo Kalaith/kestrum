@@ -14,6 +14,12 @@ validate and commit each one, then continue automatically through K18. The user'
 handoff and author-review gate. Remaining gaps are delegated implementation
 decisions recorded in chapter 13; confirmed rules and acceptance gates remain.
 
+The user's 2026-09-27 direction is **game first, UI second**, with regular commits.
+Prioritize complete simulation, meaningful choices and playable campaign outcomes.
+Add the controls and feedback those features need, and keep visual verification
+focused on changed decisions and actual defects. Do not expand screenshot matrices
+or polish secondary screens while required game systems remain unimplemented.
+
 Give an implementation agent one numbered work package at a time, together with
 this entry point. Each package names its prerequisites, source chapters, rule
 sections, intended files, outputs, and five behavioral acceptance cases. Complete
@@ -166,8 +172,10 @@ K08 is **Done**: participation, veterancy, bounded history and observer-safe rec
 pass [K08 evidence](verification/k08-service.md).
 K09 is **Done**: persistent construction, local facilities and conserved settlers
 pass [K09 evidence](verification/k09-construction.md).
-K10–K18 remain **planned, not implemented**.
+K10 is **Done**: persistent sieges and multi-army relief pass
+[K10 evidence](verification/k10-sieges.md).
+K11–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
-army rosters. Minimum-browser display, WASM cache invalidation and physical-touch review remain
-open for K18.
+army rosters. Minimum-browser display and physical-touch review remain open for K18.
+K10 fixed WASM update caching through the existing publisher option.

@@ -79,6 +79,13 @@ impl StrategicCampaign {
             HistoryKind::Construction { ref order } => {
                 self.validate_construction_record(record, order)?;
             }
+            HistoryKind::Siege {
+                defender, besieger, ..
+            } => ensure(
+                record.source_fact.is_some()
+                    && record.visible_to == BTreeSet::from([defender, besieger]),
+                "siege narrative needs its two participating factions",
+            )?,
             _ => ensure(
                 record.source_fact.is_some() && record.visible_to.len() == 1,
                 "private action needs one owner and one source",
@@ -178,6 +185,23 @@ impl StrategicCampaign {
 
     fn validate_history_kind(&self, kind: &HistoryKind, date: u32) -> Result<(), String> {
         match kind {
+            HistoryKind::Siege {
+                siege,
+                defender,
+                besieger,
+                change,
+                elapsed_steps,
+            } => ensure(
+                siege.0 > 0
+                    && *siege < self.next_ids.siege
+                    && defender != besieger
+                    && self.factions.contains_key(defender)
+                    && self.factions.contains_key(besieger)
+                    && u64::from(*elapsed_steps) <= u64::from(date) + 1
+                    && (*change != super::super::siege::SiegeChange::Established
+                        || *elapsed_steps == 0),
+                "invalid siege narrative identity, factions or progress",
+            ),
             HistoryKind::Battle { battle, .. } => ensure(
                 battle.0 > 0 && *battle < self.next_ids.battle,
                 "invalid historical battle identity",
@@ -217,6 +241,15 @@ impl StrategicCampaign {
                     "construction notable has the wrong observer",
                 )?;
             }
+            if let HistoryKind::Siege {
+                defender, besieger, ..
+            } = summary.kind
+            {
+                ensure(
+                    summary.visible_to == BTreeSet::from([defender, besieger]),
+                    "siege notable has the wrong observers",
+                )?;
+            }
             ensure(seen.insert(summary.id), "duplicate notable identity")?;
             ensure(
                 summary.site.as_ref().is_none_or(|entry| {
@@ -238,6 +271,12 @@ impl StrategicCampaign {
 fn valid_record_shape(record: &HistoryRecord) -> bool {
     match record.kind {
         HistoryKind::Battle { .. } => true, // The complete immutable receipt is compared separately.
+        HistoryKind::Siege { .. } => {
+            record.sites.len() == 1
+                && record.armies.is_empty()
+                && record.people.is_empty()
+                && record.formations.is_empty()
+        }
         HistoryKind::Recruited { troop } | HistoryKind::Disbanded { troop } => {
             record.sites.len() == 1
                 && record.armies.len() == 1
@@ -275,6 +314,19 @@ fn valid_record_shape(record: &HistoryRecord) -> bool {
 
 fn source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
     match fact {
+        DomainFactKind::SiegeChanged { siege, change } => {
+            record.kind
+                == HistoryKind::Siege {
+                    siege: siege.id,
+                    defender: siege.defender,
+                    besieger: siege.besieger,
+                    change: *change,
+                    elapsed_steps: siege.elapsed_steps,
+                }
+                && record.visible_to == BTreeSet::from([siege.defender, siege.besieger])
+                && record.sites.len() == 1
+                && record.sites[0].id == siege.site
+        }
         DomainFactKind::ConstructionChanged { order } => {
             record.kind
                 == HistoryKind::Construction {

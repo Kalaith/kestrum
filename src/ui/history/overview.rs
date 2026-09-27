@@ -296,6 +296,11 @@ fn class_name(ctx: &Context<'_>, class: kestrum::data::world::FounderClass) -> S
 
 fn evidence_key(kind: EvidenceKind) -> &'static str {
     match kind {
+        EvidenceKind::AssaultedFort => "evidence_assaulted_fort",
+        EvidenceKind::DefendedFort => "evidence_defended_fort",
+        EvidenceKind::Sortie => "evidence_sortie",
+        EvidenceKind::EscapeAttempt => "evidence_escape_attempt",
+        EvidenceKind::Relief => "evidence_relief",
         EvidenceKind::Battle => "evidence_battle",
         EvidenceKind::MeaningfulEncounter => "evidence_meaningful",
         EvidenceKind::Victory => "evidence_victory",

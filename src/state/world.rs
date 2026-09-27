@@ -28,6 +28,7 @@ pub struct BoundaryCrossing {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignWorld {
+    pub fort_damage: BTreeMap<SiteId, u32>,
     pub population: BTreeMap<SiteId, u32>,
     pub focus: BTreeMap<SiteId, super::construction::Focus>,
     pub markers: Vec<MajorMarker>,
@@ -45,6 +46,7 @@ pub struct CampaignWorld {
 impl CampaignWorld {
     pub fn from_scenario(scenario: &Scenario) -> Self {
         let mut world = Self {
+            fort_damage: BTreeMap::new(),
             population: BTreeMap::new(),
             focus: BTreeMap::new(),
             markers: scenario.markers.clone(),

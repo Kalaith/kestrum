@@ -143,7 +143,7 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) {
 
     y = block(
         ctx,
-        &ctx.text(if campaign.supplied_sites.contains(&army.site) {
+        &ctx.text(if ctx.army.supplied {
             "site_supplied"
         } else {
             "site_unsupplied"

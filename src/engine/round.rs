@@ -37,10 +37,12 @@ fn complete_round(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     // Income and upkeep precede recovery and the new season's calendar.
+    super::siege::reconcile(campaign, data, outcome)?;
     let supply = recovery::snapshot(campaign);
     let medics = super::evidence::recovery_medics(campaign);
     economy::resolve(campaign, data)?;
     super::construction::resolve(campaign, data, &supply, outcome)?;
+    super::siege::progress(campaign, data, outcome)?;
     recovery::resolve(campaign, data, &supply)?;
     person_combat::heal_wounds(campaign, &supply);
     campaign.completed_rounds =

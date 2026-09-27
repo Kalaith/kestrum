@@ -52,14 +52,16 @@ pub(super) fn overview(ctx: &Context<'_>) -> Option<UiAction> {
     lines(
         ctx,
         &format!(
-            "{}: {damage}% · {}: {}",
+            "{}: {damage}% · {}: {} · {}: {}%",
             ctx.text("settlement_damage"),
             ctx.text("settlement_fortification"),
             ctx.text(if site.military == MilitaryLayer::Fort {
                 "construction_fort"
             } else {
                 "none"
-            })
+            }),
+            ctx.text("siege_fort_damage"),
+            view.world.fort_damage.get(&site.id).copied().unwrap_or(0)
         ),
         vec2(112.0, 367.0),
         470.0,

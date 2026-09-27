@@ -162,7 +162,7 @@ repaired but remain sites with a recoverable Fort layer.
 | Assault | Active attacker, at least one participating army with unused movement; all selected besiegers fight all defenders with wall bonus; each participant exhausted |
 | Withdraw | Active besieger moves to a legal adjacent friendly/neutral site; last besieger leaving lifts siege |
 | Sortie | Active defender with unused movement; all chosen defenders attack all besiegers in a field encounter without walls; a defeated defender falls back inside if any defender survives, siege remains |
-| Escape | Active defender with unused movement and at least one legal exit; fight besiegers without walls as an escape encounter; surviving defender force reaches chosen legal retreat destination only if it wins or reaches stalemate; otherwise it falls back inside; casualties persist |
+| Escape | Active defender with unused movement and at least one legal exit; fight besiegers without walls as an escape encounter; surviving defender force reaches chosen legal retreat destination only if it wins; otherwise it falls back inside; casualties persist |
 | Relief | Incoming friendly army attacks all besiegers in a field encounter; all fit defending armies join automatically, without wall bonus; resolve as one joint encounter with distinct army IDs |
 
 On a failed relief, surviving original garrison remains inside; surviving incoming
@@ -172,6 +172,10 @@ survivors and control. Stalemate in sortie/escape leaves garrison inside; in rel
 the relief force retreats and siege remains. Exception context must be explicit in
 the battle outcome, not achieved by restoring dead formations. Sortie/escape
 failure does not run a second battle during fallback.
+
+I09 resolves the earlier contradictory Escape table in favor of this explicit
+stalemate rule: escape requires victory. This is a delegated implementation
+decision, not a newly confirmed author rule.
 
 New friendly besieging armies join the existing besieging side. Reinforcing a
 garrison must resolve Relief; no free walk through the siege. One besieging faction

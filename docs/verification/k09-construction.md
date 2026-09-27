@@ -109,3 +109,7 @@ showed K09. The generated loader uses an unversioned `load("kestrum.wasm")`;
 switching to the fresh localhost origin loaded the verified K09 artifact.
 K18 must fix publication cache invalidation and check updates on an existing
 origin, rather than treating fresh-origin verification as an update-path test.
+
+Resolved in [K10 verification](k10-sieges.md): the existing publisher cache option
+now versions each development WASM request, and the previously used origin loaded
+the new artifact and restored its earlier save successfully.

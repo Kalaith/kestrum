@@ -14,6 +14,7 @@ mod recovery;
 mod recruitment;
 mod retreat;
 mod round;
+pub(crate) mod siege;
 mod transfer;
 
 pub use actions::{
@@ -30,10 +31,12 @@ pub use knowledge::{
 };
 pub use movement::{
     army_remaining, formation_remaining, movement_preview, person_remaining, route_cost, MoveOrder,
-    MovementBlock, MovementOutcome, MovementPreview, MovementStop, RouteStep,
+    MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,
 };
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
-pub use projection::{project, VisibleCampaign, VisibleFaction};
+pub use projection::{project, SiegeRole, VisibleCampaign, VisibleFaction, VisibleSiege};
 pub use recovery::{recovery_preview, RecoveryPreview};
 pub use recruitment::{recruit_options, RecruitOption, RecruitmentResult};
 pub use transfer::person_site;
+
+pub use siege::{reconcile_sieges, siege_view, SiegeActionOption, SiegeView};

@@ -119,6 +119,7 @@ impl Game {
                     if let Some(site) = destination {
                         self.open_armies(site);
                         self.army.status = message;
+                        self.open_siege(site);
                     }
                 }
                 if outcome.battle.is_some() {

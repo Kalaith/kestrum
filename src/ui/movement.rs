@@ -250,6 +250,12 @@ fn route_consequence(ctx: &Context<'_>, preview: &MovementPreview) -> String {
             .map(|site| site.name.as_str())
             .unwrap_or_default();
         format!("{}: {end}. {}", ctx.text("move_stops_at"), stop.reason)
+    } else if let Some(encounter) = &preview.encounter {
+        ctx.text(match encounter {
+            kestrum::engine::MovementEncounter::EstablishSiege => "move_possible_siege",
+            kestrum::engine::MovementEncounter::JoinBesiegers => "move_join_siege",
+            kestrum::engine::MovementEncounter::Relief => "move_relief",
+        })
     } else if !preview.observed_hostile_sites.is_empty() {
         ctx.text("move_observed_hostile")
     } else if preview.uncertain_contact {

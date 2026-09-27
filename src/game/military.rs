@@ -86,6 +86,7 @@ impl Game {
         self.army.remaining = current
             .and_then(|id| engine::army_remaining(campaign, &self.data, id).ok())
             .unwrap_or(0);
+        self.army.supplied = current.is_some_and(|id| campaign.army_is_supplied(id));
         self.army.member_remaining = formation_ids
             .iter()
             .filter_map(|id| {

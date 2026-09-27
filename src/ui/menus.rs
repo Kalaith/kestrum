@@ -138,6 +138,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::MoveReview
         | Overlay::Battle
         | Overlay::History
+        | Overlay::Siege
         | Overlay::Settlement => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
@@ -159,6 +160,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::MoveReview
         | Overlay::Battle
         | Overlay::History
+        | Overlay::Siege
         | Overlay::Settlement => None,
     };
     if action.is_some() {
@@ -279,6 +281,8 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
         &["help_transfer", "help_recovery", "help_transfer_phase"]
     } else if ctx.help_page == 4 {
         &["help_battle", "help_battle_reports", "help_wounds"]
+    } else if ctx.help_page == 7 {
+        &["help_siege", "help_siege_choices", "help_relief"]
     } else if ctx.help_page == 6 {
         &[
             "help_construction",
@@ -331,7 +335,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             ctx,
             Rect::new(766.0, 548.0, 124.0, 48.0),
             &ctx.text("next"),
-            ctx.help_page < 6,
+            ctx.help_page < 7,
             false,
         ) {
             return Some(UiAction::HelpPage(1));

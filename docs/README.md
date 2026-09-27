@@ -11,11 +11,12 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. K01–K09 are complete; K10–K18 remain required work.
+confirmed design decisions. K01–K10 are complete; K11–K18 remain required work.
 
 Persistent construction, local facilities, roads and conserved Outpost settlers are
 playable; see [K09 verification](verification/k09-construction.md) for validation and
-the remaining platform limitations.
+the remaining platform limitations. Persistent sieges, escape and joint relief are
+also playable; see [K10 verification](verification/k10-sieges.md).
 
 | Document | Contents |
 | --- | --- |

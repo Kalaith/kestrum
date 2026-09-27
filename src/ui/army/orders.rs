@@ -141,14 +141,22 @@ fn order_controls(
     army: &Army,
     selected: Option<&Formation>,
 ) -> Option<UiAction> {
+    let siege = campaign
+        .sieges
+        .iter()
+        .any(|siege| siege.own_armies.contains(&army.id));
     if button(
         ctx,
         Rect::new(112.0, 410.0, 496.0, 48.0),
-        &ctx.text("move_army"),
-        campaign.player_turn,
+        &ctx.text(if siege { "siege" } else { "move_army" }),
+        siege || campaign.player_turn,
         true,
     ) {
-        return Some(UiAction::BeginMove(army.id));
+        return Some(if siege {
+            UiAction::OpenSiege(army.site)
+        } else {
+            UiAction::BeginMove(army.id)
+        });
     }
     if button(
         ctx,

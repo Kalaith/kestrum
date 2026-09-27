@@ -60,11 +60,20 @@ fn controls(
     site: Option<&Site>,
 ) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
-    if let Some(site) = site
-        .filter(|site| Some(site.controller) == ctx.campaign_view.map(|view| Some(view.observer)))
-    {
+    let siege = site.is_some_and(|site| {
+        ctx.campaign_view
+            .is_some_and(|view| view.sieges.iter().any(|siege| siege.site == site.id))
+    });
+    if let Some(site) = site.filter(|site| {
+        siege || Some(site.controller) == ctx.campaign_view.map(|view| Some(view.observer))
+    }) {
+        let primary = if siege {
+            ("siege", UiAction::OpenSiege(site.id))
+        } else {
+            ("settlement_manage", UiAction::OpenSettlement(site.id))
+        };
         for (index, (key, action)) in [
-            ("settlement_manage", UiAction::OpenSettlement(site.id)),
+            primary,
             ("armies", UiAction::OpenArmies(site.id)),
             (
                 "history",
@@ -217,7 +226,9 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
         ctx.text("local_control"),
         owner_name(ctx, site.controller, "uncontrolled")
     ));
-    if world.contested_sites.contains(&site.id) {
+    if campaign.sieges.iter().any(|siege| siege.site == site.id) {
+        sections.push(ctx.text("siege_underway"));
+    } else if world.contested_sites.contains(&site.id) {
         sections.push(ctx.text("contested"));
     }
     if let Some(control) = world.region_control(site.marker) {

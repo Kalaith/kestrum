@@ -170,28 +170,7 @@ fn later_budget_or_blocked_edges_keep_the_legal_prefix_without_revealing_hidden_
         hostile.world.site(SiteId(10)).unwrap().controller,
         Some(FactionId(3))
     );
-    let mut neutral_fort = initial.clone();
-    neutral_fort.world.sites[4].military = kestrum::data::world::MilitaryLayer::Fort;
-    rejected(&mut neutral_fort, &data, order(&[1], &[1, 5]));
-
-    let mut hidden = initial.clone();
-    hidden.armies.get_mut(&ArmyId(3)).unwrap().site = SiteId(5);
-    let mut expected =
-        movement_preview(&initial, &data, initial.player, &[ArmyId(1)], SiteId(6)).unwrap();
-    // K08 reveals nearby presence; route cost and hidden strength remain unchanged.
-    expected.observed_hostile_sites.insert(SiteId(5));
-    assert_eq!(
-        movement_preview(&hidden, &data, hidden.player, &[ArmyId(1)], SiteId(6)).unwrap(),
-        expected
-    );
-    assert_eq!(
-        preview(&hidden, &data, Actor::Player, order(&[1], &[1, 5, 6])),
-        preview(&initial, &data, Actor::Player, order(&[1], &[1, 5, 6]))
-    );
-    let contact = apply(&mut hidden, &data, Actor::Player, order(&[1], &[1, 5, 6])).unwrap();
-    assert!(contact.battle.is_some());
-    assert_eq!(contact.movement.unwrap().path, [SiteId(1), SiteId(5)]);
-    assert_eq!(hidden.battles.len(), 1);
+    support::assert_fort_entry_and_hidden_contact(&initial, &data);
     let mut interrupted = initial.clone();
     let moved = apply(
         &mut interrupted,

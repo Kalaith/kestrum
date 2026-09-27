@@ -9,6 +9,7 @@ use super::{
     evidence::Veterancy,
     military::{ArmyId, FormationId},
     people::PersonId,
+    siege::{Siege, SiegeChange, SiegeId},
 };
 use crate::data::{
     economy::TroopKind,
@@ -47,6 +48,13 @@ pub struct FormationLabel {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HistoryKind {
+    Siege {
+        siege: SiegeId,
+        defender: FactionId,
+        besieger: FactionId,
+        change: SiegeChange,
+        elapsed_steps: u32,
+    },
     Battle {
         battle: BattleId,
         outcome: BattleOutcome,
@@ -75,6 +83,7 @@ pub enum HistoryKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HistoryKindFilter {
+    Siege,
     Battle,
     Recruitment,
     Disbanding,
@@ -88,6 +97,7 @@ pub enum HistoryKindFilter {
 impl HistoryKind {
     pub fn category(&self) -> HistoryKindFilter {
         match self {
+            Self::Siege { .. } => HistoryKindFilter::Siege,
             Self::Battle { .. } => HistoryKindFilter::Battle,
             Self::Recruited { .. } => HistoryKindFilter::Recruitment,
             Self::Disbanded { .. } => HistoryKindFilter::Disbanding,
@@ -134,6 +144,38 @@ pub struct CampaignHistory {
 }
 
 impl HistoryRecord {
+    /// A siege's existence is known to its sides, but contact does not reveal
+    /// the other side's roster. Keep those authoritative IDs out of narratives.
+    pub(crate) fn siege(
+        id: HistoryId,
+        completed_rounds: u32,
+        source_fact: FactId,
+        siege: &Siege,
+        change: SiegeChange,
+        site_name: String,
+    ) -> Self {
+        Self {
+            id,
+            completed_rounds,
+            source_fact: Some(source_fact),
+            kind: HistoryKind::Siege {
+                siege: siege.id,
+                defender: siege.defender,
+                besieger: siege.besieger,
+                change,
+                elapsed_steps: siege.elapsed_steps,
+            },
+            sites: vec![EntityLabel {
+                id: siege.site,
+                name: site_name,
+            }],
+            armies: Vec::new(),
+            people: Vec::new(),
+            formations: Vec::new(),
+            visible_to: [siege.defender, siege.besieger].into_iter().collect(),
+        }
+    }
+
     pub(crate) fn battle(
         id: HistoryId,
         report: &BattleReport,

@@ -1,5 +1,26 @@
 # 10 — Interface and accessibility
 
+## K10 siege screen brief
+
+The current decision is whether to maintain the siege, commit selected armies to
+combat, or leave through a legal exit. A selected participating site exposes Siege;
+the focused sheet shows elapsed seasons, lasting fort damage and wall resistance.
+Five owned armies per page retain their names, supply and remaining movement.
+Enemy roster details stay unknown until a witnessed battle report records them.
+
+Choose Siege Order presents the side's real choices, with consequences and blocked
+reasons. Withdraw and Escape select an explicit adjacent destination. Confirmation
+keeps the selected group, destination and casualty risk together. Back returns to
+the group or map without issuing an order. Relief uses the existing group and map
+route flow, so the sheet never obscures route selection. Battle reports distinguish
+assault, sortie, escape, relief and a challenge to the besiegers, and retain actual
+final positions and damage.
+
+All controls are at least 48 logical pixels. Verify 1920 × 1080 and 1280 × 720,
+both sides, spent movement, no legal exit, long names, paged armies, relief routes,
+reported fallbacks and lasting damage. Capture progress and combat through actual
+commands rather than editing outcomes.
+
 ## K09 construction screen brief
 
 The current decision is which local investment to fund and which army can place

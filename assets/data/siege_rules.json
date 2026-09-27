@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "wall_base_permille": 1500,
+  "wall_minimum_permille": 1000,
+  "wall_step_reduction_permille": 75,
+  "wall_damage_reduction_permille": 3,
+  "engine_wall_reduction_permille": 200,
+  "fort_damage_per_step": 5,
+  "assault_structural_damage": 10,
+  "assault_fort_damage": 10,
+  "assault_road_damage": 10,
+  "assault_road_loss_permille": 500
+}

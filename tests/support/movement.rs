@@ -100,3 +100,41 @@ pub(super) fn assert_application_command_gates() {
         4
     );
 }
+
+/// K10 makes empty forts claimable; hidden defenders still cannot change preview strength.
+pub(super) fn assert_fort_entry_and_hidden_contact(initial: &StrategicCampaign, data: &GameData) {
+    let mut neutral_fort = initial.clone();
+    neutral_fort.world.sites[4].military = kestrum::data::world::MilitaryLayer::Fort;
+    let result = apply(&mut neutral_fort, data, Actor::Player, order(&[1], &[1, 5])).unwrap();
+    assert!(result.battle.is_none());
+    assert!(neutral_fort.sieges.is_empty());
+    assert_eq!(
+        neutral_fort.world.site(SiteId(5)).unwrap().controller,
+        Some(initial.player)
+    );
+    assert_eq!(neutral_fort.armies[&ArmyId(1)].site, SiteId(5));
+    assert_eq!(result.movement.unwrap().spent, 2);
+    assert_eq!(neutral_fort.rng, initial.rng);
+    for (id, formation) in &neutral_fort.formations {
+        assert_eq!(formation.headcount, initial.formations[id].headcount);
+    }
+
+    let mut hidden = initial.clone();
+    hidden.armies.get_mut(&ArmyId(3)).unwrap().site = SiteId(5);
+    let mut expected =
+        movement_preview(initial, data, initial.player, &[ArmyId(1)], SiteId(6)).unwrap();
+    // K08 reveals nearby presence; route cost and hidden strength remain unchanged.
+    expected.observed_hostile_sites.insert(SiteId(5));
+    assert_eq!(
+        movement_preview(&hidden, data, hidden.player, &[ArmyId(1)], SiteId(6)).unwrap(),
+        expected
+    );
+    assert_eq!(
+        preview(&hidden, data, Actor::Player, order(&[1], &[1, 5, 6])),
+        preview(initial, data, Actor::Player, order(&[1], &[1, 5, 6]))
+    );
+    let contact = apply(&mut hidden, data, Actor::Player, order(&[1], &[1, 5, 6])).unwrap();
+    assert!(contact.battle.is_some());
+    assert_eq!(contact.movement.unwrap().path, [SiteId(1), SiteId(5)]);
+    assert_eq!(hidden.battles.len(), 1);
+}

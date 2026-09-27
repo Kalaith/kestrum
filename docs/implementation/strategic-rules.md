@@ -56,6 +56,11 @@ HQs. Scenario diplomacy can begin at War to exercise battles. Scenario positions
 troops and resources are durable authored data; tests may construct smaller graphs
 in memory. Example protagonists remain optional labels.
 
+I09 adds a Fort layer to Hawthorn Headquarters in new Rosemarch prototype
+campaigns, providing a defended siege target before K12's active rival policy.
+Its Village and founding army are unchanged. Previously saved worlds retain their
+saved layers; this authored challenge does not change production starting grants.
+
 ## P02 — Faction phases and round order
 
 Sources: D03/O04 and [round resolution](../11-simulation-and-data.md#round-end-resolution).

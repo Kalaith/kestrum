@@ -29,6 +29,7 @@ pub enum Actor {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
+    Siege(crate::state::siege::SiegeOrder),
     StartConstruction {
         target: ConstructionTarget,
         kind: ConstructionKind,
@@ -73,6 +74,7 @@ pub enum Command {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuleError {
+    Siege(String),
     Construction {
         reason: super::ConstructionBlock,
     },
@@ -168,6 +170,7 @@ pub enum RuleError {
 impl fmt::Display for RuleError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Siege(reason) => formatter.write_str(reason),
             Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
             Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),
             Self::InvalidRoute => formatter.write_str(
@@ -315,6 +318,19 @@ pub fn preview(
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    if let Command::Siege(order) = &command {
+        campaign.validate(data).map_err(RuleError::InvalidState)?;
+        validate_command(campaign, actor, &command)?;
+        let owner = match actor {
+            Actor::Player => campaign.player,
+            Actor::Npc(id) => id,
+        };
+        super::siege::validate_order(campaign, data, owner, order)?;
+        return Ok(ActionPreview {
+            active_faction_after: campaign.active_faction(),
+            round_completed: false,
+        });
+    }
     if let Command::Move(order) = &command {
         let observer = match actor {
             Actor::Player => campaign.player,
@@ -369,6 +385,7 @@ fn prepare(
     actor: Actor,
     command: Command,
 ) -> Result<(StrategicCampaign, ActionOutcome), RuleError> {
+    data.siege.validate().map_err(RuleError::InvalidState)?;
     data.economy.validate().map_err(RuleError::InvalidState)?;
     data.rules.validate().map_err(RuleError::InvalidState)?;
     data.troops.validate().map_err(RuleError::InvalidState)?;
@@ -408,6 +425,7 @@ fn prepare(
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     if !outcome.round_completed {
+        super::siege::reconcile(&mut candidate, data, &mut outcome)?;
         super::construction::reconcile(&mut candidate, data, &mut outcome)?;
     }
     super::history::record_facts(&mut candidate, campaign, &outcome.facts)?;
@@ -428,6 +446,7 @@ fn execute(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     match command {
+        Command::Siege(order) => super::siege::execute(candidate, data, owner, order, outcome)?,
         command @ (Command::StartConstruction { .. }
         | Command::CancelConstruction { .. }
         | Command::ReassignBuilder { .. }
@@ -461,7 +480,7 @@ fn execute(
             outcome.disbanded = Some(formation);
         }
         Command::Move(order) => {
-            let moved = movement::execute(candidate, data, &order)?;
+            let moved = movement::execute(candidate, data, &order, outcome)?;
             let receipt = movement::service_snapshot(before, &moved);
             let fact = if let Some(battle) = moved.battle {
                 DomainFactKind::BattleResolved {
@@ -572,6 +591,7 @@ pub(super) fn validate_command(
     }
     match command {
         Command::EndTurn
+        | Command::Siege(_)
         | Command::Recruit { .. }
         | Command::Disband { .. }
         | Command::Move(_)

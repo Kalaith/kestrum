@@ -36,6 +36,7 @@ impl StrategicCampaign {
         self.validate_world(data)?;
         self.validate_military(data)?;
         self.validate_construction(data)?;
+        self.validate_sieges()?;
         self.validate_battles(data)?;
         self.validate_evidence(data)?;
         self.validate_history()?;
@@ -274,6 +275,9 @@ impl StrategicCampaign {
 
     fn validate_fact_subject(&self, fact: &super::campaign::DomainFact) -> Result<(), String> {
         match &fact.kind {
+            DomainFactKind::SiegeChanged { siege, change } => {
+                self.validate_siege_receipt(siege, *change, fact.completed_rounds)?;
+            }
             DomainFactKind::ConstructionChanged { order } => {
                 self.validate_construction_receipt(order, fact.completed_rounds)?
             }

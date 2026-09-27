@@ -44,7 +44,13 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
         BattleOutcome::DefenderVictory => {
             format!("{}: {}", ctx.text("battle_victory"), report.defender.name)
         }
-        BattleOutcome::Stalemate => ctx.text("battle_stalemate"),
+        BattleOutcome::Stalemate => ctx.text(
+            if report.context == kestrum::state::battle::BattleContext::Field {
+                "battle_stalemate"
+            } else {
+                "battle_siege_stalemate"
+            },
+        ),
         BattleOutcome::MutualDestruction => ctx.text("battle_mutual_destruction"),
     };
     let reason = ctx.text(match report.reason {
@@ -79,6 +85,7 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
             ),
         ),
     ];
+    rows.extend(super::siege::outcome(ctx, report));
     for (role, side) in sides(ctx, report) {
         for army in &side.armies {
             let start: u64 = army
@@ -96,11 +103,7 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 .map(|site| {
                     format!(
                         "{}: {}",
-                        ctx.text(if site == report.site {
-                            "battle_holds_site"
-                        } else {
-                            "battle_withdrew"
-                        }),
+                        ctx.text(super::siege::position_key(report, side.faction, site)),
                         place(ctx, site)
                     )
                 })
@@ -248,6 +251,7 @@ fn factors(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
             ),
         ),
     ];
+    rows.extend(super::siege::wall_row(ctx, report));
     for (role, side) in sides(ctx, report) {
         for army in &side.armies {
             let commander = army
@@ -305,11 +309,13 @@ fn exchange_rows(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
         rows.push(row(
             format!("{} {}", ctx.text("battle_exchange"), exchange.number),
             format!(
-                "{}: {} · {}: {}",
+                "{}: {} · {}: {} · {}: {:.1}%",
                 ctx.text("battle_attacker_losses"),
                 losses(&report.attacker),
                 ctx.text("battle_defender_losses"),
-                losses(&report.defender)
+                losses(&report.defender),
+                ctx.text("siege_walls"),
+                exchange.wall_permille as f32 / 10.0
             ),
         ));
         for (_, army, factor) in leadership_changes

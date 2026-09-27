@@ -25,6 +25,14 @@ impl Game {
         let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
             return;
         };
+        // These existing scenes document field combat rather than defended-fort arrival.
+        campaign
+            .world
+            .sites
+            .iter_mut()
+            .find(|site| site.id == SiteId(3))
+            .expect("field fixture site")
+            .military = kestrum::data::world::MilitaryLayer::None;
         if matches!(scene, "battle_wounded" | "battle_succession") {
             capture_commander_wound(campaign, &self.data);
             self.open_battle_reports();

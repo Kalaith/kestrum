@@ -43,6 +43,7 @@ pub enum MovementBlock {
     PeaceBoundary,
     EncounterUnavailable,
     Contested,
+    SiegeExitRequired,
     RouteUnavailable,
 }
 
@@ -59,9 +60,10 @@ impl fmt::Display for MovementBlock {
             Self::PeaceBoundary => {
                 f.write_str("Peace grants no military access to this foreign site.")
             }
-            Self::EncounterUnavailable => f.write_str(
-                "This encounter requires a siege or multiple hostile sides, which are not available yet.",
-            ),
+            Self::EncounterUnavailable => {
+                f.write_str("This encounter involves incompatible military sides.")
+            }
+            Self::SiegeExitRequired => f.write_str("Use Withdraw or Escape to leave this siege."),
             Self::Contested => f.write_str("A contested site requires an encounter before entry."),
             Self::RouteUnavailable => f.write_str("The next physical route is unavailable."),
         }
@@ -76,6 +78,7 @@ pub struct MovementStop {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MovementPreview {
+    pub encounter: Option<MovementEncounter>,
     pub order: MoveOrder,
     pub steps: Vec<RouteStep>,
     pub total_cost: u32,
@@ -87,6 +90,13 @@ pub struct MovementPreview {
     pub uncertain_contact: bool,
     /// Observed at the current positions; future travel never grants remote sight.
     pub observed_hostile_sites: BTreeSet<SiteId>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MovementEncounter {
+    EstablishSiege,
+    JoinBesiegers,
+    Relief,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -246,6 +256,11 @@ pub(super) fn preview_order(
         .ok_or(RuleError::UnknownActor)?
         .headquarters;
     Ok(MovementPreview {
+        encounter: order
+            .path
+            .iter()
+            .skip(1)
+            .find_map(|site| encounter(campaign, observer, *site)),
         order: order.clone(),
         steps,
         total_cost,
@@ -305,6 +320,12 @@ fn validate_order(
     order: &MoveOrder,
 ) -> Result<(SiteId, u32), RuleError> {
     let (origin, remaining) = validate_group(campaign, data, owner, &order.armies)?;
+    if campaign.sieges.contains_key(&origin) {
+        return Err(RuleError::MovementBlocked {
+            site: origin,
+            reason: MovementBlock::SiegeExitRequired,
+        });
+    }
     if order.path.len() < 2
         || order.path.first() != Some(&origin)
         || order.path.iter().copied().collect::<BTreeSet<_>>().len() != order.path.len()
@@ -335,15 +356,30 @@ fn public_block(
         if peace {
             return Some(MovementBlock::PeaceBoundary);
         }
-        if site.military != MilitaryLayer::None {
-            return Some(MovementBlock::EncounterUnavailable);
-        }
     }
-    if campaign.world.contested_sites.contains(&site.id) {
+    if campaign.world.contested_sites.contains(&site.id) && site.military == MilitaryLayer::None {
         return Some(MovementBlock::Contested);
     }
-    if site.controller.is_none() && site.military != MilitaryLayer::None {
-        return Some(MovementBlock::EncounterUnavailable);
-    }
+
     None
+}
+
+fn encounter(
+    campaign: &StrategicCampaign,
+    owner: FactionId,
+    site: SiteId,
+) -> Option<MovementEncounter> {
+    if let Some(siege) = campaign.sieges.get(&site) {
+        if owner == siege.defender {
+            return Some(MovementEncounter::Relief);
+        }
+        if owner == siege.besieger {
+            return Some(MovementEncounter::JoinBesiegers);
+        }
+    }
+    campaign
+        .world
+        .site(site)
+        .filter(|site| site.military != MilitaryLayer::None && site.controller != Some(owner))
+        .map(|_| MovementEncounter::EstablishSiege)
 }

@@ -61,14 +61,11 @@ pub(super) fn classify(
         && report.control_before != Some(own.faction)
         && report.control_after == Some(own.faction);
     let defended = anchor
-        && !attacking
+        && defended_place(report, attacking)
         && formation.end > 0
         && report.control_before == Some(own.faction)
         && report.control_after == Some(own.faction)
-        && matches!(
-            report.outcome,
-            BattleOutcome::DefenderVictory | BattleOutcome::Stalemate
-        );
+        && army.final_site == Some(report.site);
     let meaningful = enemy_power * 1000
         >= own_power * u128::from(rules.meaningful_opposition_permille)
         || (u128::from(formation.combat_losses) + u128::from(formation.encirclement_losses)) * 1000
@@ -99,6 +96,20 @@ pub(super) fn classify(
         xp,
         outnumbered,
     })
+}
+
+fn defended_place(report: &BattleReport, attacking: bool) -> bool {
+    use crate::state::battle::BattleContext;
+    if !attacking {
+        return matches!(
+            report.outcome,
+            BattleOutcome::DefenderVictory | BattleOutcome::Stalemate
+        );
+    }
+    matches!(
+        report.context,
+        BattleContext::Sortie { .. } | BattleContext::Relief { .. }
+    ) && report.outcome == BattleOutcome::AttackerVictory
 }
 
 fn encounter_tags(
@@ -151,7 +162,22 @@ fn encounter_tags(
     {
         add_personal_events(report, army, person, &mut tags);
     }
+    if let Some(tag) = siege_tag(report, context.attacking) {
+        tags.insert(tag);
+    }
     tags
+}
+
+fn siege_tag(report: &BattleReport, attacking: bool) -> Option<EvidenceKind> {
+    use crate::state::battle::BattleContext;
+    match (&report.context, attacking) {
+        (BattleContext::Assault { .. }, true) => Some(EvidenceKind::AssaultedFort),
+        (BattleContext::Assault { .. }, false) => Some(EvidenceKind::DefendedFort),
+        (BattleContext::Sortie { .. }, true) => Some(EvidenceKind::Sortie),
+        (BattleContext::Escape { .. }, true) => Some(EvidenceKind::EscapeAttempt),
+        (BattleContext::Relief { .. }, true) => Some(EvidenceKind::Relief),
+        _ => None,
+    }
 }
 
 pub(super) fn personal_tags(

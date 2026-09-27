@@ -38,6 +38,21 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
+        HistoryKind::Siege {
+            change,
+            elapsed_steps,
+            ..
+        } => format!(
+            "{} · {} · {}: {elapsed_steps}",
+            ctx.text("siege"),
+            ctx.text(match change {
+                kestrum::state::siege::SiegeChange::Established => "siege_established",
+                kestrum::state::siege::SiegeChange::Reinforced => "siege_reinforced",
+                kestrum::state::siege::SiegeChange::Progressed => "siege_progressed",
+                kestrum::state::siege::SiegeChange::Lifted => "siege_lifted",
+            }),
+            ctx.text("siege_elapsed")
+        ),
         HistoryKind::Construction { order } => format!(
             "{} · {} / {} · {}",
             super::super::settlement::kind_name(ctx, order.kind),

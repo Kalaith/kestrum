@@ -9,6 +9,7 @@ pub mod knowledge;
 pub mod military;
 pub mod people;
 pub mod persistence;
+pub mod siege;
 mod validation;
 pub mod world;
 
@@ -48,6 +49,7 @@ pub enum Overlay {
     Battle,
     History,
     Settlement,
+    Siege,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -205,6 +207,8 @@ impl GameState {
             );
         let military_order = military_order
             || (self.overlay == Overlay::MoveReview && matches!(&command, Command::Move(_)));
+        let military_order = military_order
+            || (self.overlay == Overlay::Siege && matches!(&command, Command::Siege(_)));
         let military_order = military_order
             || (self.overlay == Overlay::Settlement
                 && matches!(

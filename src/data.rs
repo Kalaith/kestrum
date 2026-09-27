@@ -6,6 +6,7 @@ pub mod economy;
 pub mod progression;
 pub mod rules;
 mod setup_validation;
+pub mod siege;
 mod validation;
 pub mod world;
 mod world_validation;
@@ -22,6 +23,7 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub siege: siege::SiegeRules,
     pub construction: construction::ConstructionRules,
     pub progression: progression::ProgressionRules,
     pub history: progression::HistoryRules,
@@ -36,6 +38,7 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            siege: macroquad_toolkit::include_json!("../assets/data/siege_rules.json")?,
             construction: macroquad_toolkit::include_json!(
                 "../assets/data/construction_rules.json"
             )?,
@@ -53,6 +56,7 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.siege.validate()?;
         self.construction.validate()?;
         self.progression.validate()?;
         self.history.validate()?;
@@ -81,6 +85,66 @@ pub struct PresentationData {
 }
 
 const REQUIRED_TEXT: &[&str] = &[
+    "battle_siege_stalemate",
+    "battle_outside_walls",
+    "battle_inside_walls",
+    "siege_assault_risk",
+    "siege",
+    "siege_underway",
+    "siege_defending",
+    "siege_besieging",
+    "siege_elapsed",
+    "siege_fort_damage",
+    "siege_walls",
+    "siege_enemy_unknown",
+    "siege_supplied",
+    "siege_cutoff",
+    "siege_orders",
+    "selected",
+    "select",
+    "siege_maintain",
+    "siege_assault",
+    "siege_withdraw",
+    "siege_sortie",
+    "siege_escape",
+    "siege_maintain_help",
+    "siege_assault_help",
+    "siege_withdraw_help",
+    "siege_sortie_help",
+    "siege_escape_help",
+    "siege_battle_risk",
+    "siege_choose_exit",
+    "siege_exit",
+    "siege_no_exit",
+    "siege_selected_forces",
+    "siege_confirm",
+    "siege_order_done",
+    "siege_ended",
+    "siege_established",
+    "siege_reinforced",
+    "siege_progressed",
+    "siege_lifted",
+    "move_possible_siege",
+    "move_join_siege",
+    "move_relief",
+    "help_siege",
+    "help_siege_choices",
+    "help_relief",
+    "evidence_assaulted_fort",
+    "evidence_defended_fort",
+    "evidence_sortie",
+    "evidence_escape_attempt",
+    "evidence_relief",
+    "battle_context_assault",
+    "battle_context_sortie",
+    "battle_context_escape",
+    "battle_context_relief",
+    "battle_context_besiegers",
+    "battle_siege_positions",
+    "battle_road_damage",
+    "battle_lasting_damage",
+    "battle_initial_walls",
+    "battle_walls_help",
     "settlement",
     "settlement_manage",
     "settlement_overview",

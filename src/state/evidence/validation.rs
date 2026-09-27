@@ -152,6 +152,7 @@ impl StrategicCampaign {
                     .attacker
                     .armies
                     .iter()
+                    .filter(|army| travelled_in_report(report, army.id))
                     .flat_map(|army| &army.formations)
                     .map(|entry| entry.id)
                     .collect::<BTreeSet<_>>();
@@ -159,6 +160,7 @@ impl StrategicCampaign {
                     .attacker
                     .armies
                     .iter()
+                    .filter(|army| travelled_in_report(report, army.id))
                     .flat_map(|army| &army.people)
                     .map(|entry| entry.id)
                     .collect::<BTreeSet<_>>();
@@ -211,5 +213,15 @@ impl StrategicCampaign {
         } else {
             Err("pending movement evidence: invalid member or route snapshot".into())
         }
+    }
+}
+
+fn travelled_in_report(
+    report: &crate::state::battle::BattleReport,
+    army: crate::state::military::ArmyId,
+) -> bool {
+    match &report.context {
+        crate::state::battle::BattleContext::Relief { garrison, .. } => !garrison.contains(&army),
+        _ => true,
     }
 }

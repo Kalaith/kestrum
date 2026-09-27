@@ -424,3 +424,49 @@ These are delegated implementation decisions, not newly confirmed author rules.
 [K09 verification](verification/k09-construction.md) records 81 passing tests,
 native visual review, browser construction and reload, publication, and the
 remaining platform limitations.
+
+### I09 — Explicit siege outcomes and real participants
+
+The P14 Escape table originally permitted escape on stalemate, while the next
+paragraph explicitly returned a stalemated sortie or escape to the garrison.
+K10 follows that explicit shared outcome rule: only victory reaches the chosen
+escape destination. Defeat or stalemate leaves surviving selected defenders
+inside; destroyed formations stay destroyed. The preview and report explain
+this risk. This resolves a contradiction without adding a second fallback battle.
+
+All surviving, nonempty original garrison armies join a relief encounter,
+including armies that spent their movement earlier in the round. This uses P12's
+rule that exhaustion never prevents defense. Wounded named people remain with
+their formations but supply no P11 field leadership. Incoming relief and original
+garrison identities remain distinct, so failure can retreat the former and keep
+the latter inside without restoring casualties or granting garrison travel credit.
+
+A failed or stalemated assault returns its surviving participants to their
+existing outside camp. A successful escape moves the selected survivors to the
+chosen exit; surviving besiegers retain their camp. If no garrison remains,
+normal siege reconciliation gives the site to the besieger. These explicit
+location outcomes distinguish taking a fort, breaking the siege, and escaping it.
+All still pay the actual casualties and exhaust participants for the round.
+
+P15's damaged-road threshold uses destroyed defender base power from both combat
+and encirclement losses. Both remove actual formations or headcount in the assault
+outcome; counting starting minus surviving power follows the stated destruction
+threshold. The report keeps these casualty causes separate.
+
+New Rosemarch prototype campaigns give Hawthorn Headquarters a Fort layer while
+keeping its Village habitation and authored founding army. This provides a
+reachable defended fort while the rival turn policy still passes before K12.
+The empty High Fort remains a separate immediate-capture case. Existing saves
+retain their saved layers; no fort or garrison is retroactively added. This is
+an authored prototype challenge, not an additional production-faction grant.
+
+A live siege requires two independent factions. Elimination or submission must
+resolve that faction's participating armies in the same transaction before siege
+reconciliation. A status-only change with unresolved armies is rejected; it cannot
+leave an inactive faction fighting indefinitely or manufacture a withdrawal.
+After military cleanup, reconciliation uses the actual remaining occupants to
+lift the siege or transfer control. Historical receipts remain valid after either
+faction ceases to be independent.
+
+These are delegated implementation decisions. [K10 verification](verification/k10-sieges.md)
+records 96 passing tests, publication and the remaining platform checks.

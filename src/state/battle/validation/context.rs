@@ -53,7 +53,7 @@ pub(super) fn validate_context(
             ensure(
                 campaign.factions.contains_key(garrison_faction)
                     && *garrison_faction != report.attacker.faction
-                    && *garrison_faction != report.defender.faction
+                    && Some(*garrison_faction) != report.defender.faction()
                     && report.control_before == Some(*garrison_faction),
                 "besieger clash has invalid garrison faction",
             )?;
@@ -96,7 +96,7 @@ fn validate_damage(
         )?;
         let (start, lost) = report
             .defender
-            .armies
+            .armies()
             .iter()
             .flat_map(|army| &army.formations)
             .fold((0_u128, 0_u128), |(start, lost), formation| {
@@ -156,20 +156,22 @@ pub(super) fn validate_outcome(
             .map(|formation| u64::from(formation.end))
             .sum::<u64>()
     };
+    let defending = match &report.defender {
+        BattleDefender::Faction(side) => survivors(side),
+        BattleDefender::Threat(side) => u64::from(side.end),
+    };
     let valid = match report.outcome {
         BattleOutcome::AttackerVictory => survivors(&report.attacker) > 0,
-        BattleOutcome::DefenderVictory | BattleOutcome::Stalemate => {
-            survivors(&report.defender) > 0
-        }
-        BattleOutcome::MutualDestruction => {
-            survivors(&report.attacker) == 0 && survivors(&report.defender) == 0
-        }
+        BattleOutcome::DefenderVictory | BattleOutcome::Stalemate => defending > 0,
+        BattleOutcome::MutualDestruction => survivors(&report.attacker) == 0 && defending == 0,
     };
     ensure(
         valid && control_matches(report),
         "outcome disagrees with survivors/control",
     )?;
-    for (attacking, side) in [(true, &report.attacker), (false, &report.defender)] {
+    for (attacking, side) in std::iter::once((true, &report.attacker))
+        .chain(report.defender.faction_side().map(|side| (false, side)))
+    {
         for army in &side.armies {
             if let Some(site) = army.final_site {
                 ensure(
@@ -187,7 +189,7 @@ fn control_matches(report: &BattleReport) -> bool {
     let before = report.control_before;
     let after = report.control_after;
     let attacker = Some(report.attacker.faction);
-    let defender = Some(report.defender.faction);
+    let defender = report.defender.faction();
     match report.context {
         BattleContext::Field => match report.outcome {
             AttackerVictory => after == attacker,

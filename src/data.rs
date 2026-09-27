@@ -2,11 +2,13 @@
 
 pub mod combat;
 pub mod construction;
+pub mod development;
 pub mod economy;
 pub mod progression;
 pub mod rules;
 mod setup_validation;
 pub mod siege;
+pub mod threats;
 mod validation;
 pub mod world;
 mod world_validation;
@@ -23,6 +25,8 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub development: development::DevelopmentRules,
+    pub threats: threats::ThreatRules,
     pub siege: siege::SiegeRules,
     pub construction: construction::ConstructionRules,
     pub progression: progression::ProgressionRules,
@@ -38,6 +42,8 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            development: macroquad_toolkit::include_json!("../assets/data/development.json")?,
+            threats: macroquad_toolkit::include_json!("../assets/data/threats.json")?,
             siege: macroquad_toolkit::include_json!("../assets/data/siege_rules.json")?,
             construction: macroquad_toolkit::include_json!(
                 "../assets/data/construction_rules.json"
@@ -56,6 +62,8 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.development.validate()?;
+        self.threats.validate(&self.scenario)?;
         self.siege.validate()?;
         self.construction.validate()?;
         self.progression.validate()?;
@@ -85,6 +93,62 @@ pub struct PresentationData {
 }
 
 const REQUIRED_TEXT: &[&str] = &[
+    "site_income_unknown",
+    "site_income_stopped",
+    "evidence_bandits",
+    "evidence_wildlife",
+    "evidence_clear_threat",
+    "resettle_no_people",
+    "place_unsafe",
+    "place_safety_unknown",
+    "development_unknown",
+    "income_damage",
+    "history_development",
+    "history_migration",
+    "local_actions",
+    "rename_place",
+    "resettle",
+    "move_capital",
+    "relocate_hq",
+    "rename_place_help",
+    "resettle_help",
+    "move_capital_help",
+    "relocate_hq_help",
+    "resettle_no_destination",
+    "confirm_local_action",
+    "local_action_success",
+    "place_ruined",
+    "occupation",
+    "development_pressure",
+    "development_next",
+    "development_cap",
+    "displaced_population",
+    "ruin_conditions",
+    "clear_threat",
+    "review_clear_threat",
+    "confirm_clear_threat",
+    "threat_none_adjacent",
+    "threat_unavailable",
+    "threat_no_armies",
+    "threat_choose_armies",
+    "threat_review_risk",
+    "threat_reward_offer",
+    "threat_reward_once",
+    "threat_cleared",
+    "threat_remains",
+    "threat_reward_paid",
+    "threat_attack",
+    "threat_resistance",
+    "threat_combat_rules",
+    "help_development",
+    "help_local_actions",
+    "help_threats",
+    "focus_effect_growth",
+    "focus_effect_fortification",
+    "focus_effect_training",
+    "focus_effect_gold",
+    "focus_effect_wood",
+    "focus_effect_stone",
     "battle_siege_stalemate",
     "battle_outside_walls",
     "battle_inside_walls",
@@ -181,7 +245,6 @@ const REQUIRED_TEXT: &[&str] = &[
     "focus_wood",
     "focus_stone",
     "focus_confirm",
-    "focus_current_effect",
     "focus_success",
     "construction_active",
     "construction_paused",

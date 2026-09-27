@@ -39,12 +39,14 @@ fn complete_round(
     // Income and upkeep precede recovery and the new season's calendar.
     super::siege::reconcile(campaign, data, outcome)?;
     let supply = recovery::snapshot(campaign);
+    let development = super::development::snapshot(campaign, data);
     let medics = super::evidence::recovery_medics(campaign);
     economy::resolve(campaign, data)?;
     super::construction::resolve(campaign, data, &supply, outcome)?;
     super::siege::progress(campaign, data, outcome)?;
     recovery::resolve(campaign, data, &supply)?;
     person_combat::heal_wounds(campaign, &supply);
+    super::development::resolve(campaign, data, &development, outcome)?;
     campaign.completed_rounds =
         campaign
             .completed_rounds

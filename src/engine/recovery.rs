@@ -52,9 +52,7 @@ pub(super) fn snapshot(campaign: &StrategicCampaign) -> SupplySnapshot {
             .factions
             .values()
             .map(|faction| {
-                let mut sites = campaign
-                    .world
-                    .supplied_sites(faction.id, faction.headquarters);
+                let mut sites = campaign.supplied_sites(faction.id);
                 let transit = sites.clone();
                 for siege in campaign
                     .sieges

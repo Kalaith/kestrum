@@ -7,6 +7,7 @@ mod battle;
 mod battle_capture;
 mod campaign;
 mod composition;
+mod development_capture;
 mod history;
 mod history_capture;
 mod military;
@@ -20,6 +21,7 @@ mod settlement_capture;
 mod siege;
 mod siege_capture;
 mod storage;
+mod threat;
 mod world;
 use kestrum::{
     data::GameData,
@@ -60,6 +62,7 @@ pub struct Game {
     history: ui::HistoryView,
     settlement: ui::SettlementView,
     siege: ui::SiegePanel,
+    threat: ui::ThreatPanel,
     projection: Option<engine::VisibleCampaign>,
     projection_revision: Option<(kestrum::state::CampaignId, u64)>,
     history_return: Overlay,
@@ -99,6 +102,7 @@ impl Game {
             history: ui::HistoryView::default(),
             settlement: ui::SettlementView::default(),
             siege: ui::SiegePanel::default(),
+            threat: ui::ThreatPanel::default(),
             projection: None,
             projection_revision: None,
             history_return: Overlay::None,
@@ -140,6 +144,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_development_scene(scene) {
+            return;
+        }
         if self.capture_siege_scene(scene) {
             return;
         }
@@ -246,6 +253,7 @@ impl Game {
         self.saves = ui::SaveView::default();
         self.settlement = ui::SettlementView::default();
         self.siege = ui::SiegePanel::default();
+        self.threat = ui::ThreatPanel::default();
         self.movement = ui::MoveView::default();
         self.battle = ui::BattleView::default();
         self.reset_history();
@@ -277,12 +285,14 @@ impl Game {
             self.refresh_army();
             self.refresh_settlement();
             self.refresh_siege();
+            self.refresh_threat();
             self.army_refresh_pending = false;
         }
         self.clamp_pages();
         let ctx = ui::Context {
             settlement: &self.settlement,
             siege: &self.siege,
+            threat: &self.threat,
             data: &self.data.presentation,
             economy: &self.data.economy,
             progression: &self.data.progression,
@@ -361,6 +371,27 @@ impl Game {
                 }));
     }
 
+    fn read_text_entry(&mut self) {
+        let naming = self.state.overlay == Overlay::Saves
+            && matches!(self.saves.mode, ui::SaveMode::Name { .. });
+        let searching =
+            self.state.overlay == Overlay::History && self.history.mode == ui::HistoryMode::Search;
+        let renaming = self.state.overlay == Overlay::Settlement
+            && self.settlement.mode == ui::SettlementMode::Rename;
+        for edit in
+            macroquad_toolkit::ui::text_entry::read_text_edits(naming || searching || renaming)
+        {
+            let action = macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(edit);
+            if renaming {
+                self.edit_place_name(action);
+            } else if searching {
+                self.edit_history_search(action);
+            } else {
+                self.edit_save_name(action);
+            }
+        }
+    }
+
     fn input(&mut self, viewport: &VirtualUi, dt: f32) -> Pointer {
         let mut pointer = Pointer::read(|position| viewport.screen_to_ui(position));
         if self.capture {
@@ -369,18 +400,7 @@ impl Game {
         if is_key_pressed(KeyCode::Escape) {
             self.go_back();
         }
-        let naming = self.state.overlay == Overlay::Saves
-            && matches!(self.saves.mode, ui::SaveMode::Name { .. });
-        let searching =
-            self.state.overlay == Overlay::History && self.history.mode == ui::HistoryMode::Search;
-        for edit in macroquad_toolkit::ui::text_entry::read_text_edits(naming || searching) {
-            let action = macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(edit);
-            if searching {
-                self.edit_history_search(action);
-            } else {
-                self.edit_save_name(action);
-            }
-        }
+        self.read_text_entry();
         // A quick click can press and release between frames. Macroquad still
         // records the press edge even though `down` is already false.
         let started = is_mouse_button_pressed(MouseButton::Left)

@@ -4,7 +4,10 @@ use super::*;
 use kestrum::state::military::{Army, Formation};
 
 pub(super) fn fixture(defending: bool, first: u32, second: u32) -> (GameData, StrategicCampaign) {
-    let data = GameData::load().unwrap();
+    let mut data = GameData::load().unwrap();
+    // Scripted siege forces exercise military admission and retreat destinations.
+    // Independent local occupants are covered by the threat acceptance suite.
+    data.threats.initial.clear();
     let mut campaign = StrategicCampaign::new(&data).unwrap();
     campaign
         .armies
@@ -492,9 +495,7 @@ pub(super) fn assert_engine_destruction() {
 }
 
 pub(super) fn assert_civilian_supply() {
-    use kestrum::state::construction::{
-        ConstructionKind, ConstructionPause, ConstructionStatus, ConstructionTarget,
-    };
+    use kestrum::state::construction::{ConstructionKind, ConstructionStatus, ConstructionTarget};
     let (data, mut campaign) = fixture(false, 100, 100);
     for site in [7, 14] {
         campaign
@@ -536,15 +537,25 @@ pub(super) fn assert_civilian_supply() {
     )
     .unwrap();
     for _ in 0..3 {
+        // Keep the fixture's friendly donor budget empty before construction.
+        // Natural growth happens afterward and cannot fund this same boundary.
+        for site in &campaign.world.sites {
+            if site.controller == Some(FactionId(1)) {
+                campaign.world.population.insert(
+                    site.id,
+                    data.construction.population.minimum[&site.habitation],
+                );
+            }
+        }
         finish(&mut campaign, &data);
     }
     assert_eq!(campaign.world.population[&SiteId(9)], 200);
     assert_eq!(campaign.world.population[&SiteId(14)], 0);
+    assert_eq!(campaign.construction[&order].progress, 2);
+    // New friendly growth makes settlers available for the following boundary.
     assert_eq!(
         campaign.construction[&order].status,
-        ConstructionStatus::Paused {
-            reason: ConstructionPause::NoSettlers
-        }
+        ConstructionStatus::Active
     );
 }
 

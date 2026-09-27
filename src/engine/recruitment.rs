@@ -143,17 +143,23 @@ fn validate_recruit(
     if location.controller != Some(faction.id) {
         return Err(RuleError::SiteNotOwned { site });
     }
+    if campaign.active_threat(site).is_some() {
+        return Err(RuleError::InvalidState(
+            "Clear the local threat before recruiting here.".into(),
+        ));
+    }
+    if campaign.site_is_ruined(site) {
+        return Err(RuleError::InvalidState(
+            "Reclaim this ruined site before recruiting here.".into(),
+        ));
+    }
     if campaign.world.contested_sites.contains(&site) {
         return Err(RuleError::SiteContested { site });
     }
     if location.habitation < Habitation::Outpost {
         return Err(RuleError::RecruitingSiteRequired { site });
     }
-    if !campaign
-        .world
-        .supplied_sites(faction.id, faction.headquarters)
-        .contains(&site)
-    {
+    if !campaign.supplied_sites(faction.id).contains(&site) {
         return Err(RuleError::SiteUnsupplied { site });
     }
     if faction.deficit {

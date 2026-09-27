@@ -305,7 +305,9 @@ pub(super) fn assert_bad_reports(data: &GameData, campaign: &StrategicCampaign) 
                     });
             }
             "remote_retreat" => report.attacker.armies[0].final_site = Some(SiteId(1)),
-            "winner_left" => report.defender.armies[0].final_site = Some(SiteId(11)),
+            "winner_left" => {
+                report.defender.faction_side_mut().unwrap().armies[0].final_site = Some(SiteId(11))
+            }
             _ => report.attacker.armies[0].people[0].starting_formation = FormationId(7),
         }
         assert!(altered.validate(data).is_err(), "{invalid}");

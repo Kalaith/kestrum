@@ -1,74 +1,92 @@
-//! One final integer division per casualty target; no rounded intermediate strength.
+//! Shared exact simultaneous arithmetic for sovereign formations and local threats.
 
 use super::*;
+use crate::state::threat::ThreatId;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum CombatantId {
+    Formation(FormationId),
+    Threat(ThreatId),
+}
+
+struct Combatant {
+    id: CombatantId,
+    headcount: u32,
+    attack: u32,
+    resistance: u32,
+    troop: Option<crate::data::economy::TroopKind>,
+    leadership: u32,
+    veterancy: u32,
+}
 
 pub(super) fn exchanges(
     campaign: &mut StrategicCampaign,
     data: &GameData,
     report: &mut BattleReport,
 ) -> Result<(), RuleError> {
-    let attacker = roster(&report.attacker);
-    let defender = roster(&report.defender);
     let starts = [
-        power(campaign, data, &attacker)?,
-        power(campaign, data, &defender)?,
+        power(&formation_roster(campaign, data, &report.attacker))?,
+        power(&defender_roster(campaign, data, report))?,
     ];
     for number in 0..data.combat.max_exchanges {
+        let a = formation_roster(campaign, data, &report.attacker);
+        let d = defender_roster(campaign, data, report);
         let leadership = leadership_snapshot(campaign, data, report);
-        let a: Vec<_> = attacker
-            .iter()
-            .copied()
-            .filter(|id| campaign.formations[id].headcount > 0)
-            .collect();
-        let d: Vec<_> = defender
-            .iter()
-            .copied()
-            .filter(|id| campaign.formations[id].headcount > 0)
-            .collect();
-        let wall = effective_wall(campaign, data, report, &a);
+        let wall = effective_wall(data, report, &a);
         let mut losses = calculate_losses(
-            campaign,
             data,
-            AttackWave {
-                sources: &a,
-                targets: &d,
-                side: &report.attacker,
-                exchange: number,
-                terrain: report.terrain_permille,
-                wall,
-            },
+            &a,
+            &d,
+            number,
+            report.terrain_permille,
+            wall,
             &mut report.counters,
         )?;
         losses.extend(calculate_losses(
-            campaign,
             data,
-            AttackWave {
-                sources: &d,
-                targets: &a,
-                side: &report.defender,
-                exchange: number,
-                terrain: 1000,
-                wall: 1000,
-            },
+            &d,
+            &a,
+            number,
+            1000,
+            1000,
             &mut report.counters,
         )?);
-        losses.sort_by_key(|loss| loss.formation);
-        for loss in &losses {
-            campaign
-                .formations
-                .get_mut(&loss.formation)
-                .expect("roster member")
-                .headcount -= loss.amount;
+        losses.sort_by_key(|(id, _)| *id);
+        let mut formation_losses = Vec::new();
+        let mut threat_losses = 0;
+        for (id, amount) in losses {
+            match id {
+                CombatantId::Formation(id) => {
+                    campaign
+                        .formations
+                        .get_mut(&id)
+                        .expect("participant")
+                        .headcount -= amount;
+                    formation_losses.push(FormationLoss {
+                        formation: id,
+                        amount,
+                    });
+                }
+                CombatantId::Threat(id) => {
+                    campaign
+                        .threats
+                        .get_mut(&id)
+                        .expect("participant")
+                        .headcount -= amount;
+                    threat_losses = amount;
+                }
+            }
         }
         report.exchanges.push(BattleExchange {
             wall_permille: wall,
             number: number + 1,
-            losses,
+            losses: formation_losses,
+            threat_losses,
             leadership,
         });
         let remaining = [
-            power(campaign, data, &attacker)?,
-            power(campaign, data, &defender)?,
+            power(&formation_roster(campaign, data, &report.attacker))?,
+            power(&defender_roster(campaign, data, report))?,
         ];
         if let Some((outcome, reason)) = result(
             data,
@@ -82,6 +100,58 @@ pub(super) fn exchanges(
         }
     }
     Ok(())
+}
+
+fn formation_roster(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    side: &BattleSideReport,
+) -> Vec<Combatant> {
+    side.armies
+        .iter()
+        .flat_map(|army| {
+            let leadership = campaign
+                .army_leadership_permille(army.id, data)
+                .expect("participant");
+            army.formations.iter().filter_map(move |snapshot| {
+                let formation = &campaign.formations[&snapshot.id];
+                (formation.headcount > 0).then(|| Combatant {
+                    id: CombatantId::Formation(formation.id),
+                    headcount: formation.headcount,
+                    attack: data.troops.formations[&formation.kind].attack,
+                    resistance: data.troops.formations[&formation.kind].resistance,
+                    troop: Some(formation.kind),
+                    leadership,
+                    veterancy: formation.service.tier.permille(&data.progression),
+                })
+            })
+        })
+        .collect()
+}
+
+fn defender_roster(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    report: &BattleReport,
+) -> Vec<Combatant> {
+    match &report.defender {
+        BattleDefender::Faction(side) => formation_roster(campaign, data, side),
+        BattleDefender::Threat(side) => {
+            let threat = &campaign.threats[&side.id];
+            if threat.headcount == 0 {
+                return Vec::new();
+            }
+            vec![Combatant {
+                id: CombatantId::Threat(side.id),
+                headcount: threat.headcount,
+                attack: side.attack,
+                resistance: side.resistance,
+                troop: None,
+                leadership: data.threats.leadership_permille,
+                veterancy: 1000,
+            }]
+        }
+    }
 }
 
 fn result(
@@ -103,17 +173,18 @@ fn result(
         mul(remaining[1], 1000)? <= mul(starts[1], data.combat.rout_permille.into())?,
     ];
     if routed.iter().any(|value| *value) {
-        let outcome = if routed[0] {
-            BattleOutcome::DefenderVictory
-        } else {
-            BattleOutcome::AttackerVictory
-        };
-        return Ok(Some((outcome, BattleEndReason::Rout)));
+        return Ok(Some((
+            if routed[0] {
+                BattleOutcome::DefenderVictory
+            } else {
+                BattleOutcome::AttackerVictory
+            },
+            BattleEndReason::Rout,
+        )));
     }
     if !limit {
         return Ok(None);
     }
-    // Cross multiplication compares exact remaining fractions, without rounding.
     let left = mul(mul(remaining[0], starts[1])?, 1000)?;
     let right = mul(mul(remaining[1], starts[0])?, 1000)?;
     let margin = mul(
@@ -136,10 +207,8 @@ fn leadership_snapshot(
     report: &BattleReport,
 ) -> Vec<ArmyLeadership> {
     let mut leadership: Vec<_> = report
-        .attacker
-        .armies
-        .iter()
-        .chain(&report.defender.armies)
+        .faction_sides()
+        .flat_map(|side| &side.armies)
         .filter(|army| {
             army.formations
                 .iter()
@@ -156,119 +225,72 @@ fn leadership_snapshot(
     leadership
 }
 
-fn roster(side: &BattleSideReport) -> Vec<FormationId> {
-    side.armies
-        .iter()
-        .flat_map(|army| army.formations.iter().map(|formation| formation.id))
-        .collect()
-}
-
-fn power(
-    campaign: &StrategicCampaign,
-    data: &GameData,
-    ids: &[FormationId],
-) -> Result<u128, RuleError> {
-    ids.iter().try_fold(0_u128, |sum, id| {
-        let formation = &campaign.formations[id];
-        add(
-            sum,
-            mul(
-                formation.headcount.into(),
-                data.troops.formations[&formation.kind].attack.into(),
-            )?,
-        )
+fn power(roster: &[Combatant]) -> Result<u128, RuleError> {
+    roster.iter().try_fold(0_u128, |sum, unit| {
+        add(sum, mul(unit.headcount.into(), unit.attack.into())?)
     })
 }
 
-struct AttackWave<'a> {
-    sources: &'a [FormationId],
-    targets: &'a [FormationId],
-    side: &'a BattleSideReport,
+fn calculate_losses(
+    data: &GameData,
+    sources: &[Combatant],
+    targets: &[Combatant],
     exchange: u32,
     terrain: u32,
     wall: u32,
-}
-
-fn calculate_losses(
-    campaign: &StrategicCampaign,
-    data: &GameData,
-    wave: AttackWave<'_>,
     counters: &mut Vec<CounterUse>,
-) -> Result<Vec<FormationLoss>, RuleError> {
-    let AttackWave {
-        sources,
-        targets,
-        side,
-        exchange,
-        terrain,
-        wall,
-    } = wave;
-    let mut assigned = BTreeMap::<FormationId, u128>::new();
-    for (index, id) in sources.iter().enumerate() {
-        let source = &campaign.formations[id];
-        let target = &campaign.formations[&targets[(index + exchange as usize) % targets.len()]];
-        let army = side
-            .armies
-            .iter()
-            .find(|army| army.formations.iter().any(|formation| formation.id == *id))
-            .expect("source army");
-        let leadership = campaign
-            .army_leadership_permille(army.id, data)
-            .expect("source army");
-        let counter = data.combat.counter(source.kind, target.kind);
-        if counter != 1000
-            && !counters
-                .iter()
-                .any(|entry| entry.source == source.kind && entry.target == target.kind)
-        {
-            counters.push(CounterUse {
-                source: source.kind,
-                target: target.kind,
-                permille: counter,
-            });
-        }
-        // Each source keeps its earned factor before summing assigned attacks.
+) -> Result<Vec<(CombatantId, u32)>, RuleError> {
+    let mut assigned = BTreeMap::<CombatantId, u128>::new();
+    for (index, source) in sources.iter().enumerate() {
+        let target = &targets[(index + exchange as usize) % targets.len()];
+        let counter = match (source.troop, target.troop) {
+            (Some(source), Some(target)) => {
+                let permille = data.combat.counter(source, target);
+                if permille != 1000
+                    && !counters
+                        .iter()
+                        .any(|entry| entry.source == source && entry.target == target)
+                {
+                    counters.push(CounterUse {
+                        source,
+                        target,
+                        permille,
+                    });
+                }
+                permille
+            }
+            _ => 1000,
+        };
         let attack = mul(
             mul(
-                mul(
-                    source.headcount.into(),
-                    data.troops.formations[&source.kind].attack.into(),
-                )?,
-                leadership.into(),
+                mul(source.headcount.into(), source.attack.into())?,
+                source.leadership.into(),
             )?,
             counter.into(),
         )?;
-        let attack = mul(
-            attack,
-            source.service.tier.permille(&data.progression).into(),
-        )?;
+        let attack = mul(attack, source.veterancy.into())?;
         let total = assigned.entry(target.id).or_default();
         *total = add(*total, attack)?;
     }
     assigned
         .into_iter()
         .map(|(id, attack)| {
-            let target = &campaign.formations[&id];
-            // Keep source and target veterancy factors until the final division.
-            // Equal factors cancel exactly, preserving ordinary K07 arithmetic.
+            let target = targets
+                .iter()
+                .find(|target| target.id == id)
+                .expect("assigned target");
             let divisor = mul(
                 mul(
                     mul(1000, data.combat.casualty_divisor.into())?,
-                    data.troops.formations[&target.kind].resistance.into(),
+                    target.resistance.into(),
                 )?,
                 terrain.into(),
             )?;
-            let divisor = mul(
-                divisor,
-                target.service.tier.permille(&data.progression).into(),
-            )?;
+            let divisor = mul(divisor, target.veterancy.into())?;
             let amount = (mul(attack, 1000)? / mul(divisor, wall.into())?)
                 .max(u128::from(attack > 0))
                 .min(target.headcount.into()) as u32;
-            Ok(FormationLoss {
-                formation: id,
-                amount,
-            })
+            Ok((id, amount))
         })
         .collect()
 }
@@ -284,19 +306,14 @@ fn add(left: u128, right: u128) -> Result<u128, RuleError> {
     })
 }
 
-fn effective_wall(
-    campaign: &StrategicCampaign,
-    data: &GameData,
-    report: &BattleReport,
-    attackers: &[FormationId],
-) -> u32 {
+fn effective_wall(data: &GameData, report: &BattleReport, attackers: &[Combatant]) -> u32 {
     if !matches!(report.context, BattleContext::Assault { .. }) {
         return 1000;
     }
-    let engines = attackers
+    if attackers
         .iter()
-        .any(|id| campaign.formations[id].kind == crate::data::economy::TroopKind::SiegeEngines);
-    if engines {
+        .any(|unit| unit.troop == Some(crate::data::economy::TroopKind::SiegeEngines))
+    {
         report
             .wall_permille
             .saturating_sub(data.siege.engine_wall_reduction_permille)

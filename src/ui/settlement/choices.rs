@@ -154,7 +154,14 @@ pub(super) fn focus(ctx: &Context<'_>) -> Option<UiAction> {
     );
     lines(
         ctx,
-        &ctx.text("focus_current_effect"),
+        &ctx.text(match ctx.settlement.focus.unwrap_or(Focus::Growth) {
+            Focus::Growth => "focus_effect_growth",
+            Focus::Fortification => "focus_effect_fortification",
+            Focus::TroopTraining => "focus_effect_training",
+            Focus::Gold => "focus_effect_gold",
+            Focus::Wood => "focus_effect_wood",
+            Focus::Stone => "focus_effect_stone",
+        }),
         vec2(112.0, 548.0),
         1056.0,
         2,

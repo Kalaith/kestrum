@@ -29,6 +29,24 @@ pub enum Actor {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
+    ClearThreat {
+        armies: Vec<ArmyId>,
+        threat: crate::state::threat::ThreatId,
+    },
+    Resettle {
+        from: SiteId,
+        to: SiteId,
+    },
+    RenameSite {
+        site: SiteId,
+        name: String,
+    },
+    MoveCapital {
+        site: SiteId,
+    },
+    RelocateHeadquarters {
+        site: SiteId,
+    },
     Siege(crate::state::siege::SiegeOrder),
     StartConstruction {
         target: ConstructionTarget,
@@ -74,6 +92,8 @@ pub enum Command {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuleError {
+    Development(String),
+    Threat(String),
     Siege(String),
     Construction {
         reason: super::ConstructionBlock,
@@ -170,6 +190,7 @@ pub enum RuleError {
 impl fmt::Display for RuleError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Development(reason) | Self::Threat(reason) => formatter.write_str(reason),
             Self::Siege(reason) => formatter.write_str(reason),
             Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
             Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),
@@ -318,6 +339,19 @@ pub fn preview(
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    if let Command::ClearThreat { armies, threat } = &command {
+        campaign.validate(data).map_err(RuleError::InvalidState)?;
+        validate_command(campaign, actor, &command)?;
+        let owner = match actor {
+            Actor::Player => campaign.player,
+            Actor::Npc(id) => id,
+        };
+        super::threats::validate_order(campaign, data, owner, armies, *threat)?;
+        return Ok(ActionPreview {
+            active_faction_after: campaign.active_faction(),
+            round_completed: false,
+        });
+    }
     if let Command::Siege(order) = &command {
         campaign.validate(data).map_err(RuleError::InvalidState)?;
         validate_command(campaign, actor, &command)?;
@@ -385,6 +419,12 @@ fn prepare(
     actor: Actor,
     command: Command,
 ) -> Result<(StrategicCampaign, ActionOutcome), RuleError> {
+    data.development
+        .validate()
+        .map_err(RuleError::InvalidState)?;
+    data.threats
+        .validate(&data.scenario)
+        .map_err(RuleError::InvalidState)?;
     data.siege.validate().map_err(RuleError::InvalidState)?;
     data.economy.validate().map_err(RuleError::InvalidState)?;
     data.rules.validate().map_err(RuleError::InvalidState)?;
@@ -428,6 +468,7 @@ fn prepare(
         super::siege::reconcile(&mut candidate, data, &mut outcome)?;
         super::construction::reconcile(&mut candidate, data, &mut outcome)?;
     }
+    candidate.reconcile_region_control();
     super::history::record_facts(&mut candidate, campaign, &outcome.facts)?;
     if outcome.round_completed {
         super::history::prune(&mut candidate, data);
@@ -446,6 +487,15 @@ fn execute(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     match command {
+        Command::ClearThreat { armies, threat } => {
+            super::threats::execute(candidate, data, owner, &armies, threat, outcome)?;
+        }
+        command @ (Command::Resettle { .. }
+        | Command::RenameSite { .. }
+        | Command::MoveCapital { .. }
+        | Command::RelocateHeadquarters { .. }) => {
+            super::development::execute(candidate, data, owner, command, outcome)?;
+        }
         Command::Siege(order) => super::siege::execute(candidate, data, owner, order, outcome)?,
         command @ (Command::StartConstruction { .. }
         | Command::CancelConstruction { .. }
@@ -480,25 +530,7 @@ fn execute(
             outcome.disbanded = Some(formation);
         }
         Command::Move(order) => {
-            let moved = movement::execute(candidate, data, &order, outcome)?;
-            let receipt = movement::service_snapshot(before, &moved);
-            let fact = if let Some(battle) = moved.battle {
-                DomainFactKind::BattleResolved {
-                    battle,
-                    movement: Some(receipt),
-                }
-            } else {
-                DomainFactKind::ArmiesMoved {
-                    faction: owner,
-                    armies: moved.armies.clone(),
-                    path: moved.path.clone(),
-                    spent: moved.spent,
-                    movement: Some(receipt),
-                }
-            };
-            record_fact(candidate, outcome, fact)?;
-            outcome.battle = moved.battle;
-            outcome.movement = Some(moved);
+            execute_move(candidate, before, data, owner, order, outcome)?;
         }
         Command::TransferFormation {
             formation,
@@ -521,6 +553,36 @@ fn execute(
             outcome.split_army = Some(army);
         }
     }
+    Ok(())
+}
+
+fn execute_move(
+    candidate: &mut StrategicCampaign,
+    before: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    order: MoveOrder,
+    outcome: &mut ActionOutcome,
+) -> Result<(), RuleError> {
+    let moved = movement::execute(candidate, data, &order, outcome)?;
+    let receipt = movement::service_snapshot(before, &moved);
+    let fact = if let Some(battle) = moved.battle {
+        DomainFactKind::BattleResolved {
+            battle,
+            movement: Some(receipt),
+        }
+    } else {
+        DomainFactKind::ArmiesMoved {
+            faction: owner,
+            armies: moved.armies.clone(),
+            path: moved.path.clone(),
+            spent: moved.spent,
+            movement: Some(receipt),
+        }
+    };
+    record_fact(candidate, outcome, fact)?;
+    outcome.battle = moved.battle;
+    outcome.movement = Some(moved);
     Ok(())
 }
 
@@ -591,6 +653,11 @@ pub(super) fn validate_command(
     }
     match command {
         Command::EndTurn
+        | Command::ClearThreat { .. }
+        | Command::Resettle { .. }
+        | Command::RenameSite { .. }
+        | Command::MoveCapital { .. }
+        | Command::RelocateHeadquarters { .. }
         | Command::Siege(_)
         | Command::Recruit { .. }
         | Command::Disband { .. }

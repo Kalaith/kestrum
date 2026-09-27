@@ -38,6 +38,7 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
+        HistoryKind::Development { receipt } => development_label(ctx, receipt),
         HistoryKind::Siege {
             change,
             elapsed_steps,
@@ -89,6 +90,14 @@ pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
 }
 
 fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
+    if matches!(event.kind, HistoryKind::Development { .. }) {
+        return event
+            .sites
+            .iter()
+            .map(|site| site.name.as_str())
+            .collect::<Vec<_>>()
+            .join(" → ");
+    }
     let mut labels = Vec::new();
     if let Some(site) = event.sites.first() {
         labels.push(site.name.clone());
@@ -122,4 +131,35 @@ pub(super) fn tier_text(ctx: &Context<'_>, tier: kestrum::state::evidence::Veter
         Veterancy::Seasoned => "tier_seasoned",
         Veterancy::Veteran => "tier_veteran",
     })
+}
+
+fn development_label(
+    ctx: &Context<'_>,
+    receipt: &kestrum::state::development::DevelopmentReceipt,
+) -> String {
+    use kestrum::state::development::DevelopmentReceipt;
+    match receipt {
+        DevelopmentReceipt::HabitationChanged { from, to, .. } => format!(
+            "{}: {} → {}",
+            ctx.text("history_development"),
+            super::super::settlement::habitation(ctx, *from),
+            super::super::settlement::habitation(ctx, *to)
+        ),
+        DevelopmentReceipt::Ruined { .. } => ctx.text("place_ruined"),
+        DevelopmentReceipt::PopulationMoved {
+            amount, resettled, ..
+        } => format!(
+            "{}: {amount}",
+            ctx.text(if *resettled {
+                "resettle"
+            } else {
+                "history_migration"
+            })
+        ),
+        DevelopmentReceipt::SiteRenamed {
+            old_name, new_name, ..
+        } => format!("{}: {old_name} → {new_name}", ctx.text("rename_place")),
+        DevelopmentReceipt::CapitalMoved { .. } => ctx.text("move_capital"),
+        DevelopmentReceipt::HeadquartersMoved { .. } => ctx.text("relocate_hq"),
+    }
 }

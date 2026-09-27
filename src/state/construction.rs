@@ -61,6 +61,8 @@ pub enum ConstructionPause {
     Contested,
     Combat,
     NoSettlers,
+    Threat,
+    Ruined,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -211,6 +213,8 @@ impl fmt::Display for ConstructionPause {
             Self::Contested => "The work site is contested",
             Self::Combat => "Combat interrupted this season's work",
             Self::NoSettlers => "No settlers available",
+            Self::Threat => "Clear the local threat before work resumes",
+            Self::Ruined => "Reclaim these ruins before other work resumes",
         })
     }
 }

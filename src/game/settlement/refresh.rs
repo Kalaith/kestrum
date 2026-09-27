@@ -59,6 +59,7 @@ impl Game {
             self.settlement.focus = campaign.world.focus.get(&site).copied();
         }
         self.refresh_builders_and_focus();
+        self.refresh_development();
         self.clamp_settlement_page();
     }
 
@@ -145,6 +146,7 @@ impl Game {
     fn clamp_settlement_page(&mut self) {
         let count = match self.settlement.mode {
             SettlementMode::Builders => self.settlement.builders.len(),
+            SettlementMode::Resettle => self.settlement.destinations.len(),
             SettlementMode::Build | SettlementMode::Roads => self
                 .settlement
                 .options

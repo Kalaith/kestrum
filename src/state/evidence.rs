@@ -72,6 +72,9 @@ pub enum EvidenceKind {
     Sortie,
     EscapeAttempt,
     Relief,
+    EncounteredBandits,
+    EncounteredWildlife,
+    ClearedThreat,
 }
 
 impl fmt::Display for EvidenceKind {
@@ -95,6 +98,9 @@ impl fmt::Display for EvidenceKind {
             Self::Sortie => "Fought a sortie",
             Self::EscapeAttempt => "Attempted a siege escape",
             Self::Relief => "Fought to relieve a siege",
+            Self::EncounteredBandits => "Encountered bandits",
+            Self::EncounteredWildlife => "Encountered wildlife",
+            Self::ClearedThreat => "Cleared a local threat",
         })
     }
 }
@@ -138,9 +144,17 @@ pub struct SeasonService {
 #[serde(deny_unknown_fields)]
 pub struct EncounterService {
     pub site: SiteId,
-    pub opponent: FactionId,
+    pub opponent: EncounterOpponent,
     pub tags: BTreeSet<EvidenceKind>,
     pub enemy_types: BTreeSet<TroopKind>,
     pub meaningful: bool,
     pub xp: u32,
+}
+
+/// Earlier sovereign-opponent numbers retain their representation on disk.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(untagged, deny_unknown_fields)]
+pub enum EncounterOpponent {
+    Faction(FactionId),
+    Threat { threat: super::threat::ThreatId },
 }

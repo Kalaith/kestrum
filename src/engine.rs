@@ -3,6 +3,7 @@
 mod actions;
 mod combat;
 pub(crate) mod construction;
+pub(crate) mod development;
 mod economy;
 mod evidence;
 pub(crate) mod history;
@@ -15,6 +16,7 @@ mod recruitment;
 mod retreat;
 mod round;
 pub(crate) mod siege;
+pub(crate) mod threats;
 mod transfer;
 
 pub use actions::{
@@ -39,4 +41,9 @@ pub use recovery::{recovery_preview, RecoveryPreview};
 pub use recruitment::{recruit_options, RecruitOption, RecruitmentResult};
 pub use transfer::person_site;
 
+pub use development::{development_view, DevelopmentCause, DevelopmentView};
 pub use siege::{reconcile_sieges, siege_view, SiegeActionOption, SiegeView};
+pub use threats::{
+    threat_preview, threat_view, visible_threats, ThreatArmyOption, ThreatPreview, ThreatView,
+    VisibleThreat,
+};

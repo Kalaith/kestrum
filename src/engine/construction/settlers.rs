@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) struct SettlerSnapshot {
     world: CampaignWorld,
     remaining: BTreeMap<SiteId, u32>,
+    threats: BTreeSet<SiteId>,
 }
 
 impl SettlerSnapshot {
@@ -26,6 +27,13 @@ impl SettlerSnapshot {
         Self {
             world: campaign.world.clone(),
             remaining,
+            threats: campaign
+                .world
+                .sites
+                .iter()
+                .filter(|site| campaign.active_threat(site.id).is_some())
+                .map(|site| site.id)
+                .collect(),
         }
     }
 
@@ -48,6 +56,8 @@ impl SettlerSnapshot {
             if id != target
                 && self.world.is_secure(id, order.owner)
                 && site.habitation != Habitation::Unsettled
+                && !self.world.development[&id].ruined
+                && !self.threats.contains(&id)
                 && self.remaining[&id] > 0
             {
                 return Some((
@@ -58,6 +68,7 @@ impl SettlerSnapshot {
             for adjacent in self.world.adjacent_sites(id) {
                 if !supply.contains(order.owner, adjacent)
                     || !self.world.is_secure(adjacent, order.owner)
+                    || self.threats.contains(&adjacent)
                 {
                     continue;
                 }
@@ -103,6 +114,12 @@ impl SettlerSnapshot {
             .expect("donor exists") -= count;
         *self.remaining.get_mut(&source).expect("donor budget") -= count;
         campaign.world.population.insert(target, destination);
+        let state = campaign
+            .world
+            .development
+            .get_mut(&source)
+            .expect("donor development");
+        state.displaced = state.displaced.saturating_sub(count);
         Ok(())
     }
 }

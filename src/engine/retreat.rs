@@ -34,6 +34,7 @@ pub(super) fn eligible(
                         && !campaign.world.contested_sites.contains(id)
                 })
                 && !campaign.sieges.contains_key(id)
+                && campaign.active_threat(*id).is_none()
                 && !campaign.armies.values().any(|army| {
                     army.site == *id
                         && hostile(campaign, faction, army.faction)
@@ -53,8 +54,7 @@ pub(super) fn destination(
     excluded: Option<SiteId>,
 ) -> Option<SiteId> {
     let mut sites = eligible(campaign, faction, battle, excluded);
-    let headquarters = campaign.factions.get(&faction)?.headquarters;
-    let supplied = campaign.world.supplied_sites(faction, headquarters);
+    let supplied = campaign.supplied_sites(faction);
     sites.sort_by_key(|site| (Some(*site) != preferred, !supplied.contains(site), *site));
     sites.first().copied()
 }

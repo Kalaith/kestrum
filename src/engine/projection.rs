@@ -34,6 +34,7 @@ pub struct VisibleFaction {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VisibleCampaign {
+    pub threats: Vec<super::threats::VisibleThreat>,
     pub sieges: Vec<VisibleSiege>,
     pub construction: Vec<crate::state::construction::ConstructionOrder>,
     /// Actual encounter snapshots, visible only to participants.
@@ -62,7 +63,7 @@ pub fn project(
     campaign: &StrategicCampaign,
     observer: FactionId,
 ) -> Result<VisibleCampaign, RuleError> {
-    let viewer = campaign
+    campaign
         .factions
         .get(&observer)
         .ok_or(RuleError::UnknownActor)?;
@@ -72,6 +73,7 @@ pub fn project(
         .get(&active_faction)
         .ok_or(RuleError::UnknownActor)?;
     Ok(VisibleCampaign {
+        threats: super::threats::visible_threats(campaign, observer),
         sieges: visible_sieges(campaign, observer),
         construction: campaign
             .construction
@@ -84,7 +86,7 @@ pub fn project(
         completed_rounds: campaign.completed_rounds,
         player: campaign.player,
         observer,
-        supplied_sites: campaign.world.supplied_sites(observer, viewer.headquarters),
+        supplied_sites: campaign.supplied_sites(observer),
         hostile_presence: super::hostile_presence(campaign, observer),
         active_faction,
         active_faction_name: active.name.clone(),

@@ -182,6 +182,7 @@ impl Game {
         match self.state.overlay {
             Overlay::Settlement => self.settlement_back(),
             Overlay::Siege => self.siege_back(),
+            Overlay::Threat => self.threat_back(),
             Overlay::History => self.history_back(),
             Overlay::Battle if self.battle_return.is_some() => {
                 self.state.overlay = self.battle_return.take().unwrap_or(Overlay::None);

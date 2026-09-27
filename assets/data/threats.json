@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "leadership_permille": 1000,
+  "lawless_rounds": 8,
+  "definitions": {
+    "bandits": { "name": "Bandits", "headcount": 60, "attack": 8, "resistance": 8, "reward": { "gold": 30, "wood": 10, "stone": 0 } },
+    "wildlife": { "name": "Wildlife", "headcount": 20, "attack": 15, "resistance": 8, "reward": { "gold": 10, "wood": 0, "stone": 0 } }
+  },
+  "initial": [ { "site": 13, "kind": "bandits" }, { "site": 14, "kind": "wildlife" } ]
+}

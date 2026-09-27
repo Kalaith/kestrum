@@ -14,7 +14,7 @@
   "controls_hint": "Choose New Game to unfold the atlas. Use Full Screen for the best view.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
-    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Manage owned places to found Outposts with real settlers, improve roads, build Forts and add recruitment facilities. Work keeps its progress through interruptions, with visible costs, builders and cancellation refunds. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Hostile field encounters resolve automatically with persistent casualties, retreats and wounds. Meaningful service earns Seasoned and Veteran formations. Menu > Records opens battle reports, searchable known people and filtered histories. Enemy details remain dated to actual encounters. Defended forts become persistent sieges. Choose assault, maintenance, withdrawal, sortie or escape, and bring outside armies through a joint relief battle. Rival kingdoms currently pass."
+    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Manage owned places to found Outposts with real settlers, improve roads, build Forts and add recruitment facilities. Work keeps its progress through interruptions, with visible costs, builders and cancellation refunds. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Hostile field encounters resolve automatically with persistent casualties, retreats and wounds. Meaningful service earns Seasoned and Veteran formations. Menu > Records opens battle reports, searchable known people and filtered histories. Enemy details remain dated to actual encounters. Defended forts become persistent sieges. Choose assault, maintenance, withdrawal, sortie or escape, and bring outside armies through a joint relief battle. Places grow or decline from local conditions, normalize occupation, repair, displace people and become ruins. Resettle refugees and move your capital or headquarters independently. Clear ordinary threats for a single reward. Rival kingdoms currently pass."
   ],
   "controls": [
     {
@@ -108,6 +108,14 @@
     {
       "key": "Menu",
       "desc": "Open saving, loading, settings, help, and the title screen; Escape also opens the menu"
+    },
+    {
+      "key": "Local Actions",
+      "desc": "In Manage, rename the place, resettle displaced people, move the capital or relocate headquarters; review costs and Confirm Action"
+    },
+    {
+      "key": "Clear Threat",
+      "desc": "Select an observed local threat or use army Orders, choose adjacent armies, Review Expedition and Confirm Clear Threat"
     }
   ],
   "details": [

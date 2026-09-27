@@ -18,6 +18,23 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     if let Some(action) = order_controls(ctx, campaign, army, selected) {
         return Some(action);
     }
+    let threats = campaign.threats.iter().any(|threat| {
+        campaign
+            .world
+            .adjacent_sites(army.site)
+            .contains(&threat.site)
+    });
+    if threats
+        && button(
+            ctx,
+            Rect::new(860.0, 548.0, 308.0, 48.0),
+            &ctx.text("clear_threat"),
+            campaign.player_turn,
+            true,
+        )
+    {
+        return Some(UiAction::ArmyThreats(army.id));
+    }
     if ctx.army.status.is_empty() {
         block(
             ctx,
@@ -27,7 +44,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
                 "transfer_paused_help"
             }),
             vec2(112.0, 573.0),
-            1040.0,
+            if threats { 716.0 } else { 1040.0 },
             MUTED,
         );
     }

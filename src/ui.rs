@@ -11,6 +11,7 @@ mod saves;
 mod selection;
 mod settlement;
 mod siege;
+mod threat;
 mod typography;
 mod world;
 
@@ -43,13 +44,22 @@ pub use movement::{
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
 pub use saves::{SaveMode, SaveRow, SaveView};
 pub use settlement::{
-    BuildChoice, BuilderChoice, FocusChoice, SettlementMode, SettlementView, SETTLEMENT_PAGE_SIZE,
+    BuildChoice, BuilderChoice, FocusChoice, LocalAction, LocalDestination, SettlementMode,
+    SettlementView, SETTLEMENT_PAGE_SIZE,
 };
 pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
+pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenThreat(kestrum::state::threat::ThreatId),
+    ArmyThreats(ArmyId),
+    ToggleThreatArmy(ArmyId),
+    ThreatPage(i32),
+    ReviewThreat,
+    ConfirmThreat,
+    ThreatBack,
     OpenSiege(SiteId),
     SiegeMode(SiegeMode),
     ToggleSiegeArmy(ArmyId),
@@ -59,6 +69,10 @@ pub enum UiAction {
     ConfirmSiege,
     SiegeBack,
     OpenSettlement(SiteId),
+    SelectLocalAction(LocalAction),
+    SelectResettleDestination(SiteId),
+    EditPlaceName(macroquad_toolkit::ui::text_entry::TextEntryAction),
+    ConfirmLocalAction,
     SettlementTab(SettlementMode),
     SettlementPage(i32),
     SelectConstruction(
@@ -166,6 +180,18 @@ pub enum UiAction {
 }
 
 impl UiAction {
+    pub fn is_threat(self) -> bool {
+        matches!(
+            self,
+            Self::OpenThreat(_)
+                | Self::ArmyThreats(_)
+                | Self::ToggleThreatArmy(_)
+                | Self::ThreatPage(_)
+                | Self::ReviewThreat
+                | Self::ConfirmThreat
+                | Self::ThreatBack
+        )
+    }
     pub fn is_siege(self) -> bool {
         matches!(
             self,
@@ -184,6 +210,10 @@ impl UiAction {
         matches!(
             self,
             Self::OpenSettlement(_)
+                | Self::SelectLocalAction(_)
+                | Self::SelectResettleDestination(_)
+                | Self::EditPlaceName(_)
+                | Self::ConfirmLocalAction
                 | Self::SettlementTab(_)
                 | Self::SettlementPage(_)
                 | Self::SelectConstruction(_, _)
@@ -223,6 +253,7 @@ impl UiAction {
 }
 
 pub struct Context<'a> {
+    pub threat: &'a ThreatPanel,
     pub siege: &'a SiegePanel,
     pub settlement: &'a SettlementView,
     pub data: &'a PresentationData,
@@ -267,6 +298,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
+    if ctx.state.overlay == Overlay::Threat {
+        return threat::draw(ctx);
+    }
     if ctx.state.overlay == Overlay::Siege {
         siege::draw(ctx)
     } else if ctx.state.overlay == Overlay::Settlement {

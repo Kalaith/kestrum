@@ -19,7 +19,7 @@ use crate::{
 };
 use std::{collections::BTreeSet, fmt};
 
-pub(super) use execute::execute;
+pub(super) use execute::{execute, spend_edge};
 pub(super) use service::service_snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,11 +45,15 @@ pub enum MovementBlock {
     Contested,
     SiegeExitRequired,
     RouteUnavailable,
+    ThreatRequiresClear,
 }
 
 impl fmt::Display for MovementBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ThreatRequiresClear => {
+                f.write_str("A local threat blocks entry. Use Clear Threat to attack it.")
+            }
             Self::InsufficientMovement {
                 required,
                 remaining,
@@ -206,7 +210,7 @@ pub(super) fn preview_order(
     let mut reachable_site = origin;
     let mut left = remaining;
     let mut stop = None;
-    let mut known = campaign.clone();
+    let threats = super::threats::visible_threats(campaign, observer);
     for pair in order.path.windows(2) {
         let [from, to] = [pair[0], pair[1]];
         let Some(route) = campaign.world.connected_route(from, to) else {
@@ -229,32 +233,27 @@ pub(super) fn preview_order(
         if stop.is_some() {
             continue;
         }
-        let reason = public_block(campaign, observer, to).or_else(|| {
-            (cost > left).then_some(MovementBlock::InsufficientMovement {
-                required: cost,
-                remaining: left,
+        let reason = public_block(campaign, observer, to)
+            .or_else(|| {
+                threats
+                    .iter()
+                    .any(|threat| threat.site == to)
+                    .then_some(MovementBlock::ThreatRequiresClear)
             })
-        });
+            .or_else(|| {
+                (cost > left).then_some(MovementBlock::InsufficientMovement {
+                    required: cost,
+                    remaining: left,
+                })
+            });
         if let Some(reason) = reason {
             stop = Some(MovementStop { site: to, reason });
         } else {
             left -= cost;
             reachable_steps += 1;
             reachable_site = to;
-            known
-                .world
-                .sites
-                .iter_mut()
-                .find(|site| site.id == to)
-                .expect("known site")
-                .controller = Some(observer);
         }
     }
-    let headquarters = campaign
-        .factions
-        .get(&observer)
-        .ok_or(RuleError::UnknownActor)?
-        .headquarters;
     Ok(MovementPreview {
         encounter: order
             .path
@@ -268,10 +267,12 @@ pub(super) fn preview_order(
         reachable_steps,
         reachable_site,
         stop,
-        supplied_after: known
-            .world
-            .supplied_sites(observer, headquarters)
-            .contains(&reachable_site),
+        supplied_after: forecast_supply(
+            campaign,
+            observer,
+            &order.path[..=reachable_steps],
+            &threats,
+        ),
         uncertain_contact: order.path.iter().skip(1).any(|site| {
             campaign
                 .world
@@ -285,7 +286,31 @@ pub(super) fn preview_order(
     })
 }
 
-fn validate_group(
+fn forecast_supply(
+    campaign: &StrategicCampaign,
+    observer: FactionId,
+    path: &[SiteId],
+    threats: &[super::threats::VisibleThreat],
+) -> bool {
+    // Hypothetical future ownership cannot discover distant occupants through supply.
+    let mut known = campaign.clone();
+    known
+        .threats
+        .retain(|id, _| threats.iter().any(|threat| threat.id == *id));
+    for id in path.iter().skip(1) {
+        known
+            .world
+            .sites
+            .iter_mut()
+            .find(|site| site.id == *id)
+            .expect("known site")
+            .controller = Some(observer);
+    }
+    path.last()
+        .is_some_and(|site| known.supplied_sites(observer).contains(site))
+}
+
+pub(super) fn validate_group(
     campaign: &StrategicCampaign,
     data: &GameData,
     owner: FactionId,
@@ -339,7 +364,7 @@ fn validate_order(
     Ok((origin, remaining))
 }
 
-fn public_block(
+pub(super) fn public_block(
     campaign: &StrategicCampaign,
     owner: FactionId,
     site: SiteId,

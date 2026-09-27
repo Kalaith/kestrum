@@ -60,6 +60,33 @@ fn controls(
     site: Option<&Site>,
 ) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
+    if let Some(threat) = site.and_then(|site| {
+        ctx.campaign_view?
+            .threats
+            .iter()
+            .find(|threat| threat.site == site.id)
+    }) {
+        for (x, key, action) in [
+            (16.0, "clear_threat", UiAction::OpenThreat(threat.id)),
+            (220.0, "close", UiAction::CloseSelection),
+        ] {
+            if button(
+                ctx,
+                Rect::new(
+                    rect.x + x,
+                    rect.y + rect.h - 62.0,
+                    if x < 100.0 { 192.0 } else { 122.0 },
+                    48.0,
+                ),
+                &ctx.text(key),
+                active,
+                x < 100.0,
+            ) {
+                return Some(action);
+            }
+        }
+        return None;
+    }
     let siege = site.is_some_and(|site| {
         ctx.campaign_view
             .is_some_and(|view| view.sieges.iter().any(|siege| siege.site == site.id))
@@ -218,6 +245,13 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
         return;
     };
     let world = &campaign.world;
+    if let Some(threat) = campaign
+        .threats
+        .iter()
+        .find(|threat| threat.site == site.id)
+    {
+        sections.push(threat.name.clone());
+    }
     if campaign.hostile_presence.contains(&site.id) {
         sections.push(ctx.text("hostile_presence"));
     }

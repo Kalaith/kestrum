@@ -96,7 +96,11 @@ pub fn person_knowledge(
     let available_report = campaign
         .battles
         .get(&snapshot.battle)
-        .filter(|report| report.attacker.faction == observer || report.defender.faction == observer)
+        .filter(|report| {
+            report
+                .participant_factions()
+                .any(|faction| faction == observer)
+        })
         .map(|report| report.id);
     Some(PersonKnowledge::LastEncountered {
         snapshot,
@@ -144,9 +148,12 @@ pub fn known_people(
 
 /// Called once inside the same atomic candidate that commits a real encounter.
 pub(crate) fn observe_battle(knowledge: &mut CampaignKnowledge, report: &BattleReport) {
+    let Some(defender) = report.defender.faction_side() else {
+        return;
+    };
     for (observer, enemy) in [
-        (report.attacker.faction, &report.defender),
-        (report.defender.faction, &report.attacker),
+        (report.attacker.faction, defender),
+        (defender.faction, &report.attacker),
     ] {
         let known = &mut knowledge.observers.entry(observer).or_default().people;
         for snapshot in encounter_people(report, enemy) {

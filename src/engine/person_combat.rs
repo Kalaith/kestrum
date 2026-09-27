@@ -36,7 +36,7 @@ pub struct PersonCombatSide {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PersonCombatContext {
     pub site: SiteId,
-    pub sides: [PersonCombatSide; 2],
+    pub sides: Vec<PersonCombatSide>,
 }
 
 /// The caller has applied final headcounts and retreat positions, retaining zero
@@ -78,7 +78,15 @@ fn validate_context(
 ) -> Result<(), RuleError> {
     let invalid = || RuleError::InvalidState("Person encounter snapshot is inconsistent.".into());
     if campaign.world.site(context.site).is_none()
-        || context.sides[0].faction == context.sides[1].faction
+        || context.sides.is_empty()
+        || context.sides.len() > 2
+        || context
+            .sides
+            .iter()
+            .map(|side| side.faction)
+            .collect::<BTreeSet<_>>()
+            .len()
+            != context.sides.len()
     {
         return Err(invalid());
     }

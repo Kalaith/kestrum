@@ -65,7 +65,11 @@ fn prepaid_cost_and_three_steps_survive_preview_save_and_round_boundaries() {
         Habitation::Outpost
     );
     assert_eq!(campaign.world.population[&SiteId(5)], 50);
-    assert_eq!(campaign.world.population[&SiteId(1)], 200);
+    assert_eq!(
+        campaign.world.population[&SiteId(1)],
+        206,
+        "HQ growth remains after the prepaid settler deduction"
+    );
     assert_migration(&data);
     assert_invalid(&campaign, &data, OrderId(order));
 }
@@ -232,7 +236,6 @@ fn settlers_are_conserved_with_partial_donors_and_frozen_same_round_budgets() {
             .unwrap()
             .habitation = Habitation::Camp;
         campaign.world.population.insert(SiteId(5), 20);
-        let total = population(&campaign);
         let graph = topology(&campaign);
         let order = start(
             &mut campaign,
@@ -241,25 +244,46 @@ fn settlers_are_conserved_with_partial_donors_and_frozen_same_round_budgets() {
             ConstructionKind::Outpost,
             1,
         );
-        for _ in 0..3 {
+        for _ in 0..2 {
             finish(&mut campaign, &data);
         }
-        assert_eq!(population(&campaign), total);
+        // Set the final-step donor budget explicitly after K11 natural growth.
+        campaign.world.population.insert(SiteId(1), starting);
+        campaign.world.population.insert(SiteId(5), 20);
+        let total = population(&campaign);
+        finish(&mut campaign, &data);
+        let camp_growth = u32::from(expected == 0);
+        assert_eq!(population(&campaign), total + 8 + u64::from(camp_growth));
         assert_eq!(topology(&campaign), graph);
-        assert_eq!(campaign.world.population[&SiteId(5)], 20 + expected);
-        assert_eq!(campaign.world.population[&SiteId(1)], starting - expected);
+        assert_eq!(
+            campaign.world.population[&SiteId(5)],
+            20 + expected + camp_growth
+        );
+        assert_eq!(
+            campaign.world.population[&SiteId(1)],
+            starting - expected + 2
+        );
         if expected == 0 {
             assert_eq!(
                 campaign.construction[&order].status,
-                ConstructionStatus::Paused {
-                    reason: ConstructionPause::NoSettlers
-                }
+                ConstructionStatus::Active, // Natural growth creates eligible settlers for the next season.
             );
             assert_eq!(campaign.construction[&order].progress, 2);
+        } else {
+            let destination = campaign.world.population[&SiteId(5)];
+            let donor = campaign.world.population[&SiteId(1)];
+            finish(&mut campaign, &data);
+            assert_eq!(
+                campaign.world.population[&SiteId(5)],
+                destination + 1,
+                "only natural growth follows completed work"
+            );
+            assert_eq!(
+                campaign.world.population[&SiteId(1)],
+                donor + 2,
+                "settlers are deducted only once"
+            );
         }
-        let once = campaign.world.population.clone();
-        finish(&mut campaign, &data);
-        assert_eq!(campaign.world.population, once);
     }
     assert_frozen_donors();
 }

@@ -38,18 +38,7 @@ pub(crate) fn execute(
         } else {
             contact(campaign, owner, to)
         };
-        let reason = if let Some(cost) = cost {
-            public_block(campaign, owner, to)
-                .or_else(|| {
-                    (cost > remaining).then_some(MovementBlock::InsufficientMovement {
-                        required: cost,
-                        remaining,
-                    })
-                })
-                .or(contact.block.clone())
-        } else {
-            Some(MovementBlock::RouteUnavailable)
-        };
+        let reason = step_block(campaign, owner, to, cost, remaining, &contact);
         if let Some(reason) = reason {
             if outcome.path.len() == 1 {
                 return Err(RuleError::MovementBlocked { site: to, reason });
@@ -85,6 +74,32 @@ pub(crate) fn execute(
         }
     }
     Ok(outcome)
+}
+
+fn step_block(
+    campaign: &StrategicCampaign,
+    owner: FactionId,
+    site: SiteId,
+    cost: Option<u32>,
+    remaining: u32,
+    contact: &Contact,
+) -> Option<MovementBlock> {
+    let Some(cost) = cost else {
+        return Some(MovementBlock::RouteUnavailable);
+    };
+    public_block(campaign, owner, site)
+        .or_else(|| {
+            campaign
+                .active_threat(site)
+                .map(|_| MovementBlock::ThreatRequiresClear)
+        })
+        .or_else(|| {
+            (cost > remaining).then_some(MovementBlock::InsufficientMovement {
+                required: cost,
+                remaining,
+            })
+        })
+        .or(contact.block.clone())
 }
 
 struct Contact {
@@ -140,7 +155,7 @@ fn contact(campaign: &StrategicCampaign, owner: FactionId, to: SiteId) -> Contac
     }
 }
 
-fn spend_edge(
+pub(in crate::engine) fn spend_edge(
     campaign: &mut StrategicCampaign,
     armies: &[ArmyId],
     destination: SiteId,

@@ -1,6 +1,8 @@
 //! Stable army and formation identities with exactly six optional formation slots.
 
 mod cleanup;
+mod income;
+pub use income::{SettlementIncomeStatement, SiteIncomeStatement};
 mod setup;
 mod validation;
 
@@ -60,6 +62,8 @@ pub struct Formation {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EconomyStatement {
+    #[serde(default)]
+    pub settlement_inputs: Option<SettlementIncomeStatement>,
     pub completed_rounds: u32,
     pub income: Resources,
     pub upkeep_due: i64,

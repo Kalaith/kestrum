@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::{
-    data::world::FounderClass,
+    data::world::{FactionId, FounderClass},
     state::people::{PersonAssignment, PersonStatus},
 };
 

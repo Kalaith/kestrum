@@ -63,7 +63,7 @@ pub(super) fn target_name(ctx: &Context<'_>, target: ConstructionTarget) -> Stri
     }
 }
 
-pub(super) fn habitation(ctx: &Context<'_>, value: Habitation) -> String {
+pub fn habitation(ctx: &Context<'_>, value: Habitation) -> String {
     ctx.text(match value {
         Habitation::Unsettled => "habitation_unsettled",
         Habitation::Camp => "habitation_camp",

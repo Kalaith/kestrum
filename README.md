@@ -239,6 +239,32 @@ K10 is complete; [verification](docs/verification/k10-sieges.md) records 96 pass
 tests, publication and the remaining platform checks.
 K11–K18 remain required release work.
 
+### K11 — Living places and local threats
+
+Safe connected settlements grow gradually, while battles, isolation, damage and
+occupation reduce their prospects. Population, habitation, walls, damage, civic
+identity and kingdom roles remain separate. Seasonal income records its actual
+site inputs; Growth, resource and Fortification focuses affect the relevant rules.
+Displaced inhabitants migrate along friendly routes with conserved population,
+and Resettle moves up to fifty for 10 Gold where capacity permits.
+
+Use the existing Manage screen's Local Actions to rename a place, resettle people,
+move the capital or relocate headquarters. HQ relocation creates the kingdom's
+new single supply root and has a four-round cooldown. The settlement overview
+explains its pressure, population limits and blocked development.
+
+Nearby Bandits and Wildlife appear as local threat cues. Clear Threat selects
+adjacent armies and resolves actual combat, casualties and a single-use reward.
+Occupants block travel, supply and building. Clear Ruined Hold before reclaiming
+it with the normal three-step Outpost order. Ruins retain their site and walls;
+a later distinct ruination can create one new bandit occupation after eight
+unpoliced rounds. Older saves acquire no invented occupants or development history.
+
+All 111 tests, formatting, strict Clippy, source gate, representative native review
+and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
+records browser seasonal growth and reload, decisions and platform limitations.
+K12–K18 remain required.
+
 ## Screen brief
 
 | Question | Current answer |

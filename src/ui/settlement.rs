@@ -2,6 +2,7 @@
 
 mod choices;
 mod details;
+mod development;
 mod labels;
 
 use super::{components::*, Context, UiAction};
@@ -16,13 +17,17 @@ use kestrum::{
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 
-pub use labels::{focus_key, kind_name, order_status};
+pub use labels::{focus_key, habitation, kind_name, order_status};
 pub const SETTLEMENT_PAGE_SIZE: usize = 4;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum SettlementMode {
     #[default]
     Overview,
+    LocalActions,
+    Rename,
+    Resettle,
+    LocalReview,
     Build,
     Roads,
     Review,
@@ -30,6 +35,21 @@ pub enum SettlementMode {
     Order,
     Cancel,
     Focus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalAction {
+    Rename,
+    Resettle,
+    MoveCapital,
+    RelocateHeadquarters,
+}
+
+#[derive(Debug)]
+pub struct LocalDestination {
+    pub site: SiteId,
+    pub name: String,
+    pub blocked: Option<String>,
 }
 
 #[derive(Debug)]
@@ -55,6 +75,12 @@ pub struct FocusChoice {
 #[derive(Debug, Default)]
 pub struct SettlementView {
     pub site: Option<SiteId>,
+    pub development: Option<kestrum::engine::DevelopmentView>,
+    pub local_action: Option<LocalAction>,
+    pub destination: Option<SiteId>,
+    pub destinations: Vec<LocalDestination>,
+    pub name: String,
+    pub keyboard_page: macroquad_toolkit::ui::text_entry::KeyboardPage,
     pub mode: SettlementMode,
     pub page: usize,
     pub choice: Option<(ConstructionTarget, ConstructionKind)>,
@@ -75,6 +101,10 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     heading(ctx);
     let action = match ctx.settlement.mode {
         SettlementMode::Overview => details::overview(ctx),
+        SettlementMode::LocalActions => development::actions(ctx),
+        SettlementMode::Rename => development::rename(ctx),
+        SettlementMode::Resettle => development::destinations(ctx),
+        SettlementMode::LocalReview => development::review(ctx),
         SettlementMode::Build | SettlementMode::Roads => choices::build(ctx),
         SettlementMode::Review => details::review(ctx),
         SettlementMode::Builders => choices::builders(ctx),
@@ -84,14 +114,16 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     if let Some(action) = action.or_else(|| tabs(ctx)) {
         return Some(action);
     }
-    lines(
-        ctx,
-        &ctx.settlement.status,
-        vec2(112.0, 603.0),
-        1056.0,
-        1,
-        BRASS,
-    );
+    if ctx.settlement.mode != SettlementMode::Rename {
+        lines(
+            ctx,
+            &ctx.settlement.status,
+            vec2(112.0, 603.0),
+            1056.0,
+            1,
+            BRASS,
+        );
+    }
     control(
         ctx,
         Rect::new(112.0, 626.0, 166.0, 48.0),
@@ -141,13 +173,14 @@ fn tabs(ctx: &Context<'_>) -> Option<UiAction> {
         (SettlementMode::Build, "settlement_build"),
         (SettlementMode::Roads, "settlement_roads"),
         (SettlementMode::Focus, "settlement_focus"),
+        (SettlementMode::LocalActions, "local_actions"),
     ]
     .into_iter()
     .enumerate()
     {
         if control(
             ctx,
-            Rect::new(112.0 + index as f32 * 268.0, 151.0, 252.0, 48.0),
+            Rect::new(112.0 + index as f32 * 214.0, 151.0, 198.0, 48.0),
             key,
             true,
             ctx.settlement.mode == mode,
@@ -221,7 +254,8 @@ fn page_controls(ctx: &Context<'_>, count: usize) -> Option<UiAction> {
 }
 
 pub fn prepare_text(ctx: &Context<'_>) {
-    let mut strings = vec![ctx.settlement.status.clone()];
+    let mut strings = vec![ctx.settlement.status.clone(), ctx.settlement.name.clone()];
+    strings.extend(development::dynamic_text(ctx));
     if let Some(reason) = &ctx.settlement.blocked {
         strings.push(reason.clone());
     }
@@ -255,7 +289,7 @@ pub fn prepare_text(ctx: &Context<'_>) {
     if let Some(font) = ctx.body_font() {
         let samples: Vec<_> = strings
             .iter()
-            .flat_map(|s| [(18, s.as_str()), (20, s.as_str())])
+            .flat_map(|s| [(18, s.as_str()), (20, s.as_str()), (23, s.as_str())])
             .collect();
         macroquad_toolkit::ui::prepare_font_text(font, &samples);
     }

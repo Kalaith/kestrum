@@ -2,6 +2,7 @@
 
 use super::StrategicCampaign;
 mod construction;
+mod development;
 mod evidence;
 mod siege;
 
@@ -14,6 +15,7 @@ impl StrategicCampaign {
         let earlier_evidence = evidence::initialize(&mut value)?;
         let earlier_construction = construction::initialize(&mut value);
         siege::initialize(&mut value)?;
+        development::initialize(&mut value)?;
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.

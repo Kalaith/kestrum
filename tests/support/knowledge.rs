@@ -249,7 +249,7 @@ pub(super) fn assert_earlier_save(data: &GameData, campaign: &StrategicCampaign)
     assert!(migrated
         .battles
         .values()
-        .flat_map(|report| [&report.attacker, &report.defender])
+        .flat_map(|report| report.faction_sides())
         .flat_map(|side| &side.armies)
         .flat_map(|army| &army.people)
         .all(|person| person.starting_status.is_none()));
@@ -302,7 +302,12 @@ fn strip_k08(value: &mut serde_json::Value) {
     }
     for report in value["battles"].as_object_mut().unwrap().values_mut() {
         for side in ["attacker", "defender"] {
-            for army in report[side]["armies"].as_array_mut().unwrap() {
+            let side = if side == "defender" {
+                &mut report[side]["side"]
+            } else {
+                &mut report[side]
+            };
+            for army in side["armies"].as_array_mut().unwrap() {
                 for person in army["people"].as_array_mut().unwrap() {
                     person.as_object_mut().unwrap().remove("starting_status");
                 }

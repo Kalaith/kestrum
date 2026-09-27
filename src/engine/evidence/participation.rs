@@ -12,7 +12,7 @@ use crate::{
 #[derive(Clone)]
 pub(super) struct Participation {
     pub site: SiteId,
-    pub opponent: FactionId,
+    pub opponent: EncounterOpponent,
     pub troop: TroopKind,
     pub enemy_types: BTreeSet<TroopKind>,
     pub meaningful: bool,
@@ -25,8 +25,37 @@ pub(super) struct Participation {
 pub(super) struct BattleContext<'a> {
     pub report: &'a BattleReport,
     pub own: &'a BattleSideReport,
-    pub enemy: &'a BattleSideReport,
+    pub enemy: Opponent<'a>,
     pub attacking: bool,
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum Opponent<'a> {
+    Faction(&'a BattleSideReport),
+    Threat(&'a crate::state::battle::ThreatSideReport),
+}
+
+impl Opponent<'_> {
+    pub(super) fn identity(self) -> EncounterOpponent {
+        match self {
+            Self::Faction(side) => EncounterOpponent::Faction(side.faction),
+            Self::Threat(threat) => EncounterOpponent::Threat { threat: threat.id },
+        }
+    }
+
+    fn power(self, data: &GameData) -> Result<u128, RuleError> {
+        match self {
+            Self::Faction(side) => power(side, data),
+            Self::Threat(threat) => Ok(u128::from(threat.start) * u128::from(threat.attack)),
+        }
+    }
+
+    fn armies(&self) -> &[BattleArmyReport] {
+        match self {
+            Self::Faction(side) => &side.armies,
+            Self::Threat(_) => &[],
+        }
+    }
 }
 
 pub(super) fn classify(
@@ -44,7 +73,7 @@ pub(super) fn classify(
     } = context;
     let rules = &data.progression;
     let own_power = power(own, data)?;
-    let enemy_power = power(enemy, data)?;
+    let enemy_power = enemy.power(data)?;
     let outnumbered = enemy_power * 1000 >= own_power * u128::from(rules.outnumbered_permille);
     let victory = matches!(
         (attacking, report.outcome),
@@ -83,10 +112,10 @@ pub(super) fn classify(
         + u32::from(outnumbered && formation.end > 0) * rules.outnumbered_xp;
     Ok(Participation {
         site: report.site,
-        opponent: enemy.faction,
+        opponent: enemy.identity(),
         troop: formation.kind,
         enemy_types: enemy
-            .armies
+            .armies()
             .iter()
             .flat_map(|army| &army.formations)
             .map(|formation| formation.kind)
@@ -149,7 +178,7 @@ fn encounter_tags(
     }
     if victory
         && enemy
-            .armies
+            .armies()
             .iter()
             .any(|army| army.final_site.is_some_and(|site| site != report.site))
     {
@@ -164,6 +193,15 @@ fn encounter_tags(
     }
     if let Some(tag) = siege_tag(report, context.attacking) {
         tags.insert(tag);
+    }
+    if let Opponent::Threat(threat) = enemy {
+        tags.insert(match threat.kind {
+            crate::data::threats::ThreatKind::Bandits => EvidenceKind::EncounteredBandits,
+            crate::data::threats::ThreatKind::Wildlife => EvidenceKind::EncounteredWildlife,
+        });
+        if victory {
+            tags.insert(EvidenceKind::ClearedThreat);
+        }
     }
     tags
 }
@@ -200,7 +238,10 @@ pub(super) fn personal_tags(
     {
         &report.attacker
     } else {
-        &report.defender
+        report
+            .defender
+            .faction_side()
+            .expect("real participating defender")
     };
     if alive
         && person.starting_status == Some(PersonStatus::Fit)

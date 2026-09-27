@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "geography_caps": {
+    "plains": "major_city",
+    "river": "major_city",
+    "valley": "major_city",
+    "coast": "major_city",
+    "forest": "town",
+    "hill": "town",
+    "marsh": "village",
+    "pass": "village",
+    "island": "village"
+  },
+  "pressure": {
+    "safe": 2,
+    "connected": 1,
+    "trade": 1,
+    "food": 1,
+    "capital": 1,
+    "growth_focus": 2,
+    "battle": -3,
+    "cut_off": -2,
+    "damaged": -2,
+    "occupied": -2,
+    "per_round_min": -6,
+    "per_round_max": 6,
+    "minimum": -24,
+    "maximum": 24,
+    "upgrade_threshold": 24,
+    "downgrade_threshold": 16
+  },
+  "population": {
+    "capacity_percent": 150,
+    "growth_divisor": 100,
+    "minimum_growth": 1,
+    "displacement_divisor": 20,
+    "migration_max_edges": 3,
+    "resettle_limit": 50,
+    "resettle_cost": {
+      "gold": 10,
+      "wood": 0,
+      "stone": 0
+    }
+  },
+  "conditions": {
+    "food_damage": 50,
+    "pressure_damage": 50,
+    "occupation_threshold": 50,
+    "displacement_damage": 75,
+    "ruin_damage": 90,
+    "ruin_population": 20,
+    "ruin_steps": 4,
+    "reclamation_damage": 50,
+    "occupation_garrison_decay": 10,
+    "occupation_safe_decay": 5,
+    "structural_repair": 5,
+    "fort_repair": 2,
+    "fort_focus_repair": 5,
+    "functional_fort_damage": 50
+  },
+  "administration": {
+    "capital_cost": {
+      "gold": 100,
+      "wood": 0,
+      "stone": 0
+    },
+    "capital_minimum": "town",
+    "capital_max_occupation": 25,
+    "headquarters_cost": {
+      "gold": 80,
+      "wood": 40,
+      "stone": 20
+    },
+    "headquarters_minimum": "village",
+    "headquarters_cooldown": 4
+  },
+  "income_focus_bonus_percent": 25,
+  "occupation_income_percent": 50
+}

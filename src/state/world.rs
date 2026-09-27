@@ -1,6 +1,7 @@
 //! Instantiated fixed geography with campaign-owned mutable site contents.
 
 mod control;
+mod supply;
 
 use crate::data::world::{
     FactionId, MajorMarker, MarkerId, MarkerLocation, Route, RouteId, Scenario, Site, SiteId,
@@ -28,6 +29,7 @@ pub struct BoundaryCrossing {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignWorld {
+    pub development: BTreeMap<SiteId, super::development::SiteDevelopment>,
     pub fort_damage: BTreeMap<SiteId, u32>,
     pub population: BTreeMap<SiteId, u32>,
     pub focus: BTreeMap<SiteId, super::construction::Focus>,
@@ -46,6 +48,11 @@ pub struct CampaignWorld {
 impl CampaignWorld {
     pub fn from_scenario(scenario: &Scenario) -> Self {
         let mut world = Self {
+            development: scenario
+                .sites
+                .iter()
+                .map(|site| (site.id, Default::default()))
+                .collect(),
             fort_damage: BTreeMap::new(),
             population: BTreeMap::new(),
             focus: BTreeMap::new(),
@@ -169,9 +176,20 @@ impl CampaignWorld {
 
     /// Foreign sites block supply even during peace. Roads never alter connectivity.
     pub fn supplied_sites(&self, faction: FactionId, headquarters: SiteId) -> BTreeSet<SiteId> {
-        self.paths_from(headquarters, |site| self.is_secure(site, faction))
-            .into_keys()
-            .collect()
+        self.supplied_sites_avoiding(faction, headquarters, &BTreeSet::new())
+    }
+
+    pub(crate) fn supplied_sites_avoiding(
+        &self,
+        faction: FactionId,
+        headquarters: SiteId,
+        blocked: &BTreeSet<SiteId>,
+    ) -> BTreeSet<SiteId> {
+        self.paths_from(headquarters, |site| {
+            self.is_secure(site, faction) && !blocked.contains(&site)
+        })
+        .into_keys()
+        .collect()
     }
 
     /// A deterministic shortest-edge supply path for explanation, not movement cost.
@@ -181,7 +199,19 @@ impl CampaignWorld {
         headquarters: SiteId,
         destination: SiteId,
     ) -> Option<Vec<SiteId>> {
-        let paths = self.paths_from(headquarters, |site| self.is_secure(site, faction));
+        self.supply_path_avoiding(faction, headquarters, destination, &BTreeSet::new())
+    }
+
+    pub(crate) fn supply_path_avoiding(
+        &self,
+        faction: FactionId,
+        headquarters: SiteId,
+        destination: SiteId,
+        blocked: &BTreeSet<SiteId>,
+    ) -> Option<Vec<SiteId>> {
+        let paths = self.paths_from(headquarters, |site| {
+            self.is_secure(site, faction) && !blocked.contains(&site)
+        });
         let mut cursor = destination;
         let mut path = vec![cursor];
         while let Some(previous) = paths.get(&cursor)? {

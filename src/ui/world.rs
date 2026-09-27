@@ -177,7 +177,10 @@ fn army_presence(ctx: &Context<'_>, target: &MapTarget) {
         MapSelection::Site(site) => Some(site),
         MapSelection::Marker(marker) => campaign.world.physical_site(marker),
     };
-    if physical_site.is_some_and(|site| campaign.hostile_presence.contains(&site)) {
+    if physical_site.is_some_and(|site| {
+        campaign.hostile_presence.contains(&site)
+            || campaign.threats.iter().any(|threat| threat.site == site)
+    }) {
         let at = target.center + vec2(-30.0, -30.0);
         draw_circle(at.x, at.y, 13.0, INK);
         draw_circle_lines(at.x, at.y, 12.0, 2.0, Color::new(0.86, 0.51, 0.39, 1.0));

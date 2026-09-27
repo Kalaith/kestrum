@@ -2,6 +2,7 @@
 
 mod rows;
 mod siege;
+mod threat;
 
 use super::{components::*, Context, UiAction};
 use kestrum::state::battle::BattleReport;
@@ -36,10 +37,18 @@ impl BattleView {
     }
 
     pub fn page_count(&self, report: &BattleReport) -> usize {
-        let armies = report.attacker.armies.iter().chain(&report.defender.armies);
+        let armies = report
+            .attacker
+            .armies
+            .iter()
+            .chain(report.defender.armies());
+        let threat = usize::from(matches!(
+            report.defender,
+            kestrum::state::battle::BattleDefender::Threat(_)
+        ));
         let count = match self.tab {
-            BattleTab::Outcome => 2 + armies.count() + siege::extra_rows(report),
-            BattleTab::Forces => armies.map(|army| army.formations.len()).sum(),
+            BattleTab::Outcome => 2 + armies.count() + siege::extra_rows(report) + threat,
+            BattleTab::Forces => armies.map(|army| army.formations.len()).sum::<usize>() + threat,
             BattleTab::People => {
                 armies.map(|army| army.people.len()).sum::<usize>()
                     + report.person_events.len()
@@ -56,6 +65,7 @@ impl BattleView {
             }
             BattleTab::Factors => {
                 2 + armies.count()
+                    + threat
                     + usize::from(report.context != kestrum::state::battle::BattleContext::Field)
                     + report.counters.len()
                     + report.exchanges.len()

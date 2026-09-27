@@ -1,100 +1,10 @@
 //! Construction previews show prepaid costs, persistent work and exact refunds.
 
 use super::*;
-use kestrum::data::world::MilitaryLayer;
 
 pub(super) fn overview(ctx: &Context<'_>) -> Option<UiAction> {
-    let view = ctx.campaign_view?;
-    let site = view.world.site(ctx.settlement.site?)?;
-    body(
-        ctx,
-        &labels::habitation(ctx, site.habitation),
-        vec2(112.0, 236.0),
-        20.0,
-        CREAM,
-    );
-    let population = view.world.population.get(&site.id).copied().unwrap_or(0);
-    lines(
-        ctx,
-        &format!("{}: {population}", ctx.text("settlement_population")),
-        vec2(112.0, 264.0),
-        470.0,
-        1,
-        MUTED,
-    );
-    lines(
-        ctx,
-        &ctx.text(if view.supplied_sites.contains(&site.id) {
-            "site_supplied"
-        } else {
-            "site_unsupplied"
-        }),
-        vec2(112.0, 292.0),
-        470.0,
-        2,
-        MUTED,
-    );
-    let focus = view
-        .world
-        .focus
-        .get(&site.id)
-        .map(|focus| ctx.text(focus_key(*focus)))
-        .unwrap_or_else(|| ctx.text("none"));
-    lines(
-        ctx,
-        &format!("{}: {focus}", ctx.text("settlement_focus")),
-        vec2(112.0, 338.0),
-        470.0,
-        1,
-        CREAM,
-    );
-    let damage = view.world.site_damage.get(&site.id).copied().unwrap_or(0);
-    lines(
-        ctx,
-        &format!(
-            "{}: {damage}% · {}: {} · {}: {}%",
-            ctx.text("settlement_damage"),
-            ctx.text("settlement_fortification"),
-            ctx.text(if site.military == MilitaryLayer::Fort {
-                "construction_fort"
-            } else {
-                "none"
-            }),
-            ctx.text("siege_fort_damage"),
-            view.world.fort_damage.get(&site.id).copied().unwrap_or(0)
-        ),
-        vec2(112.0, 367.0),
-        470.0,
-        2,
-        MUTED,
-    );
-    body(
-        ctx,
-        &ctx.text("settlement_facilities"),
-        vec2(112.0, 427.0),
-        20.0,
-        CREAM,
-    );
-    let facilities = if site.facilities.is_empty() {
-        ctx.text("none")
-    } else {
-        site.facilities
-            .iter()
-            .map(|f| ctx.text(labels::facility_key(*f)))
-            .collect::<Vec<_>>()
-            .join(", ")
-    };
-    lines(ctx, &facilities, vec2(112.0, 456.0), 470.0, 3, MUTED);
-    if damage >= ctx.economy.facility_failure_damage {
-        lines(
-            ctx,
-            &ctx.text("facility_damaged"),
-            vec2(112.0, 545.0),
-            470.0,
-            2,
-            BRASS,
-        );
-    }
+    development::summary(ctx);
+    development::income(ctx);
     local_orders(ctx)
 }
 
@@ -116,7 +26,7 @@ fn local_orders(ctx: &Context<'_>) -> Option<UiAction> {
     body(
         ctx,
         &ctx.text("construction_orders"),
-        vec2(652.0, 236.0),
+        vec2(652.0, 300.0),
         20.0,
         CREAM,
     );
@@ -124,7 +34,7 @@ fn local_orders(ctx: &Context<'_>) -> Option<UiAction> {
         lines(
             ctx,
             &ctx.text("construction_no_orders"),
-            vec2(652.0, 273.0),
+            vec2(652.0, 337.0),
             516.0,
             2,
             MUTED,
@@ -136,7 +46,7 @@ fn local_orders(ctx: &Context<'_>) -> Option<UiAction> {
         .take(4)
         .enumerate()
     {
-        let y = 272.0 + index as f32 * 76.0;
+        let y = 336.0 + index as f32 * 64.0;
         let label = format!(
             "{} · {} / {}",
             kind_name(ctx, order.kind),

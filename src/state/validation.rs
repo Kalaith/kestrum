@@ -36,6 +36,8 @@ impl StrategicCampaign {
         self.validate_world(data)?;
         self.validate_military(data)?;
         self.validate_construction(data)?;
+        self.validate_development(data)?;
+        self.validate_threats(data)?;
         self.validate_sieges()?;
         self.validate_battles(data)?;
         self.validate_evidence(data)?;
@@ -131,8 +133,19 @@ impl StrategicCampaign {
             "IDs must be unique and ordered",
         )?;
         for marker in &self.world.markers {
+            let mut original = data
+                .scenario
+                .marker(marker.id)
+                .cloned()
+                .ok_or("campaign.world.markers: unknown marker")?;
+            if matches!(
+                marker.location,
+                crate::data::world::MarkerLocation::Site { .. }
+            ) {
+                original.name = marker.name.clone();
+            }
             require(
-                data.scenario.marker(marker.id) == Some(marker),
+                original == *marker && !marker.name.trim().is_empty(),
                 "world.markers",
                 "fixed marker or entrance mapping changed",
             )?;
@@ -275,6 +288,9 @@ impl StrategicCampaign {
 
     fn validate_fact_subject(&self, fact: &super::campaign::DomainFact) -> Result<(), String> {
         match &fact.kind {
+            DomainFactKind::DevelopmentChanged { receipt } => {
+                self.validate_development_receipt(receipt)?;
+            }
             DomainFactKind::SiegeChanged { siege, change } => {
                 self.validate_siege_receipt(siege, *change, fact.completed_rounds)?;
             }
@@ -295,6 +311,13 @@ impl StrategicCampaign {
                 "missing or mismatched encounter receipt",
             )?,
             DomainFactKind::FactionPassed { .. } => {}
+            _ => self.validate_military_fact_subject(&fact.kind)?,
+        }
+        Ok(())
+    }
+
+    fn validate_military_fact_subject(&self, kind: &DomainFactKind) -> Result<(), String> {
+        match kind {
             DomainFactKind::FormationRecruited {
                 faction,
                 army,
@@ -369,6 +392,7 @@ impl StrategicCampaign {
                 "pending_facts.transfer",
                 "invalid historical person or formation reference",
             )?,
+            _ => return Err("campaign.pending_facts: unexpected military fact".into()),
         }
         Ok(())
     }

@@ -93,7 +93,7 @@ impl StrategicCampaign {
             )?;
         }
         self.validate_people(data)?;
-        self.validate_economy_statements()?;
+        self.validate_economy_statements(data)?;
         self.validate_recovery_statements(data)?;
         require(
             self.world
@@ -105,11 +105,12 @@ impl StrategicCampaign {
         )
     }
 
-    fn validate_economy_statements(&self) -> Result<(), String> {
+    fn validate_economy_statements(&self, data: &GameData) -> Result<(), String> {
         for faction in self.factions.values() {
             let Some(statement) = &faction.last_economy else {
                 continue;
             };
+            self.validate_income_inputs(statement, data)?;
             statement
                 .income
                 .validate("campaign", "factions.last_economy.income")?;

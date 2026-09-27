@@ -65,9 +65,7 @@ pub(in crate::engine) fn validate_start(
     {
         return Err(blocked(ConstructionBlock::DuplicateOrder));
     }
-    let supplied = campaign
-        .world
-        .supplied_sites(owner, campaign.factions[&owner].headquarters);
+    let supplied = campaign.supplied_sites(owner);
     if target_sites
         .iter()
         .any(|site| campaign.world.contested_sites.contains(site))
@@ -76,6 +74,23 @@ pub(in crate::engine) fn validate_start(
     }
     if target_sites.iter().any(|site| !supplied.contains(site)) {
         return Err(blocked(ConstructionBlock::Unsupplied));
+    }
+    if target_sites
+        .iter()
+        .any(|site| campaign.active_threat(*site).is_some())
+    {
+        return Err(RuleError::Development(
+            "Clear the local threat before beginning construction.".into(),
+        ));
+    }
+    if kind != ConstructionKind::Outpost
+        && target_sites
+            .iter()
+            .any(|site| campaign.site_is_ruined(*site))
+    {
+        return Err(RuleError::Development(
+            "Reclaim these ruins with an Outpost order first.".into(),
+        ));
     }
     validate_improvement(campaign, data, target, kind)?;
     validate_builder(campaign, owner, target, builder, None)?;
@@ -90,7 +105,9 @@ fn validate_improvement(
 ) -> Result<(), RuleError> {
     match (target, kind) {
         (ConstructionTarget::Site(id), ConstructionKind::Outpost) => {
-            if campaign.world.site(id).expect("valid site").habitation > Habitation::Camp {
+            if !campaign.site_is_ruined(id)
+                && campaign.world.site(id).expect("valid site").habitation > Habitation::Camp
+            {
                 return Err(blocked(ConstructionBlock::OutpostSiteRequired));
             }
         }
@@ -202,6 +219,14 @@ pub(in crate::engine) fn set_focus(
 ) -> Result<DomainFactKind, RuleError> {
     if !campaign.owns_construction_target(owner, ConstructionTarget::Site(site)) {
         return Err(blocked(ConstructionBlock::NotOwned));
+    }
+    if !super::super::development::focus_suitable(
+        campaign.world.site(site).expect("owned site"),
+        focus,
+    ) {
+        return Err(RuleError::Development(
+            "This resource focus needs the matching local terrain or resource tag.".into(),
+        ));
     }
     if campaign.world.focus.get(&site) == Some(&focus) {
         return Err(blocked(ConstructionBlock::FocusUnchanged));

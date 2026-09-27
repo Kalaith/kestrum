@@ -65,12 +65,7 @@ impl StrategicCampaign {
         let Some(army) = self.armies.get(&id) else {
             return false;
         };
-        let Some(faction) = self.factions.get(&army.faction) else {
-            return false;
-        };
-        let supplied = self
-            .world
-            .supplied_sites(army.faction, faction.headquarters);
+        let supplied = self.supplied_sites(army.faction);
         if let Some(siege) = self.sieges.get(&army.site) {
             siege.besieger == army.faction
                 && self

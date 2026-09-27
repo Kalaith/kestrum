@@ -55,6 +55,9 @@ impl StrategicCampaign {
             "invalid participants for narrative kind",
         )?;
         match record.kind {
+            HistoryKind::Development { ref receipt } => {
+                self.validate_development_record(record, receipt)?
+            }
             HistoryKind::Battle { battle, .. } => {
                 let report = self
                     .battles
@@ -185,6 +188,7 @@ impl StrategicCampaign {
 
     fn validate_history_kind(&self, kind: &HistoryKind, date: u32) -> Result<(), String> {
         match kind {
+            HistoryKind::Development { receipt } => self.validate_development_receipt(receipt),
             HistoryKind::Siege {
                 siege,
                 defender,
@@ -270,6 +274,9 @@ impl StrategicCampaign {
 
 fn valid_record_shape(record: &HistoryRecord) -> bool {
     match record.kind {
+        HistoryKind::Development { .. } => {
+            record.armies.is_empty() && record.people.is_empty() && record.formations.is_empty()
+        }
         HistoryKind::Battle { .. } => true, // The complete immutable receipt is compared separately.
         HistoryKind::Siege { .. } => {
             record.sites.len() == 1
@@ -314,6 +321,12 @@ fn valid_record_shape(record: &HistoryRecord) -> bool {
 
 fn source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
     match fact {
+        DomainFactKind::DevelopmentChanged { receipt } => {
+            record.kind
+                == HistoryKind::Development {
+                    receipt: receipt.clone(),
+                }
+        }
         DomainFactKind::SiegeChanged { siege, change } => {
             record.kind
                 == HistoryKind::Siege {

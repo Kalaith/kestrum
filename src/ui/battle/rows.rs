@@ -29,11 +29,12 @@ fn row(heading: String, detail: String) -> ReportRow {
     }
 }
 
-fn sides<'a>(ctx: &Context<'_>, report: &'a BattleReport) -> [(String, &'a BattleSideReport); 2] {
-    [
-        (ctx.text("battle_attacker"), &report.attacker),
-        (ctx.text("battle_defender"), &report.defender),
-    ]
+fn sides<'a>(ctx: &Context<'_>, report: &'a BattleReport) -> Vec<(String, &'a BattleSideReport)> {
+    let mut sides = vec![(ctx.text("battle_attacker"), &report.attacker)];
+    if let Some(side) = report.defender.faction_side() {
+        sides.push((ctx.text("battle_defender"), side));
+    }
+    sides
 }
 
 fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
@@ -42,7 +43,7 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
             format!("{}: {}", ctx.text("battle_victory"), report.attacker.name)
         }
         BattleOutcome::DefenderVictory => {
-            format!("{}: {}", ctx.text("battle_victory"), report.defender.name)
+            format!("{}: {}", ctx.text("battle_victory"), report.defender.name())
         }
         BattleOutcome::Stalemate => ctx.text(
             if report.context == kestrum::state::battle::BattleContext::Field {
@@ -86,6 +87,7 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
         ),
     ];
     rows.extend(super::siege::outcome(ctx, report));
+    rows.extend(super::threat::outcome(ctx, report));
     for (role, side) in sides(ctx, report) {
         for army in &side.armies {
             let start: u64 = army
@@ -121,7 +123,7 @@ fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
 }
 
 fn forces(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
-    let mut rows = Vec::new();
+    let mut rows: Vec<_> = super::threat::forces(ctx, report).into_iter().collect();
     for (role, side) in sides(ctx, report) {
         for army in &side.armies {
             for formation in &army.formations {
@@ -207,7 +209,11 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 assignment(ctx, report, *target)
             ),
             PersonCombatOutcome::AssumedCommand { army, previous } => {
-                let armies = report.attacker.armies.iter().chain(&report.defender.armies);
+                let armies = report
+                    .attacker
+                    .armies
+                    .iter()
+                    .chain(report.defender.armies());
                 let name = armies
                     .clone()
                     .find(|entry| entry.id == *army)
@@ -252,6 +258,7 @@ fn factors(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
         ),
     ];
     rows.extend(super::siege::wall_row(ctx, report));
+    rows.extend(super::threat::factors(ctx, report));
     for (role, side) in sides(ctx, report) {
         for army in &side.armies {
             let commander = army
@@ -313,7 +320,10 @@ fn exchange_rows(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 ctx.text("battle_attacker_losses"),
                 losses(&report.attacker),
                 ctx.text("battle_defender_losses"),
-                losses(&report.defender),
+                report
+                    .defender
+                    .faction_side()
+                    .map_or(u64::from(exchange.threat_losses), losses),
                 ctx.text("siege_walls"),
                 exchange.wall_permille as f32 / 10.0
             ),
@@ -326,7 +336,7 @@ fn exchange_rows(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 .attacker
                 .armies
                 .iter()
-                .chain(&report.defender.armies)
+                .chain(report.defender.armies())
                 .find(|entry| entry.id == *army)
                 .map(|army| army.name.as_str())
                 .unwrap_or_default();
@@ -354,7 +364,7 @@ pub(super) fn leadership_changes(
         .attacker
         .armies
         .iter()
-        .chain(&report.defender.armies)
+        .chain(report.defender.armies())
         .map(|army| (army.id, army.leadership_permille))
         .collect();
     let mut changes = Vec::new();
@@ -381,7 +391,7 @@ fn place(ctx: &Context<'_>, site: SiteId) -> String {
 fn faction(ctx: &Context<'_>, report: &BattleReport, id: Option<FactionId>) -> String {
     match id {
         Some(id) if id == report.attacker.faction => report.attacker.name.clone(),
-        Some(id) if id == report.defender.faction => report.defender.name.clone(),
+        Some(id) if Some(id) == report.defender.faction() => report.defender.name().to_owned(),
         Some(id) => ctx
             .campaign_view
             .and_then(|campaign| campaign.factions.iter().find(|faction| faction.id == id))
@@ -397,7 +407,7 @@ fn assignment(ctx: &Context<'_>, report: &BattleReport, target: PersonAssignment
             .attacker
             .armies
             .iter()
-            .chain(&report.defender.armies)
+            .chain(report.defender.armies())
             .find_map(|army| {
                 army.formations
                     .iter()

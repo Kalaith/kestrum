@@ -52,7 +52,7 @@ fn referenced_people(campaign: &StrategicCampaign) -> BTreeSet<PersonId> {
         match &fact.kind {
             DomainFactKind::BattleResolved { battle, movement } => {
                 if let Some(report) = campaign.battles.get(battle) {
-                    for side in [&report.attacker, &report.defender] {
+                    for side in report.faction_sides() {
                         references.extend(
                             side.armies
                                 .iter()

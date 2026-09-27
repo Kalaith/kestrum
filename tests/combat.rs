@@ -190,7 +190,7 @@ fn selected_armies_and_all_defenders_keep_stable_slot_targeting_and_casualty_ide
     assert_eq!(
         report
             .defender
-            .armies
+            .armies()
             .iter()
             .map(|army| army.id)
             .collect::<Vec<_>>(),
@@ -223,7 +223,7 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
     assert_eq!(campaign.armies[&ArmyId(3)].site, SiteId(9)); // lowest eligible ID, origin8 forbidden
     assert_eq!(campaign.formations[&FormationId(7)].headcount, 7);
     assert_eq!(
-        report.defender.armies[0].formations[0].encirclement_losses,
+        report.defender.armies()[0].formations[0].encirclement_losses,
         0
     );
     assert_eq!(report.structural_damage_added, 15);
@@ -240,10 +240,10 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
     }
     let report = fight(&mut trapped, &data);
     assert_eq!(
-        report.defender.armies[0].formations[0].encirclement_losses,
+        report.defender.armies()[0].formations[0].encirclement_losses,
         7
     );
-    assert!(report.defender.armies[0].final_site.is_none());
+    assert!(report.defender.armies()[0].final_site.is_none());
     assert!(
         !trapped.armies.contains_key(&ArmyId(3))
             && !trapped.formations.contains_key(&FormationId(7))

@@ -94,7 +94,7 @@ fn round_cap_tiers_and_combat_factors_follow_surviving_stable_formations() {
             .amount
     };
     assert!(loss(&report, FormationId(1)) < loss(&ordinary_report, FormationId(1)));
-    let enemy = report.defender.armies[0].formations[0].id;
+    let enemy = report.defender.armies()[0].formations[0].id;
     assert!(loss(&report, enemy) > loss(&ordinary_report, enemy));
     let service = campaign.formations[&FormationId(1)].service.clone();
     apply(
@@ -245,6 +245,7 @@ fn pruning_bounds_recent_service_and_narrative_without_erasing_gameplay_evidence
     encounter(&mut campaign, &data, 5, 6, 100);
     finish(&mut campaign, &data);
     let earned = campaign.formations[&FormationId(1)].service.clone();
+    let previous_events: Vec<_> = campaign.history.events.keys().copied().collect();
     for _ in 0..41 {
         finish(&mut campaign, &data);
     }
@@ -253,7 +254,9 @@ fn pruning_bounds_recent_service_and_narrative_without_erasing_gameplay_evidence
     assert_eq!(service.ledger, earned.ledger);
     assert!(service.recent.is_empty());
     assert!(campaign.battles.is_empty());
-    assert!(campaign.history.events.is_empty());
+    assert!(previous_events
+        .iter()
+        .all(|id| !campaign.history.events.contains_key(id)));
     assert!(!campaign.history.person_notables[&PersonId(1)].is_empty());
     assert_eq!(reload(&campaign, &data), campaign);
     for _ in 0..40 {

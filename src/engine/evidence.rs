@@ -6,11 +6,7 @@ pub(crate) use treatment::{record_recovery, recovery_medics};
 
 use super::{history, RuleError};
 use crate::{
-    data::{
-        economy::TroopKind,
-        world::{FactionId, SiteId},
-        GameData,
-    },
+    data::{economy::TroopKind, world::SiteId, GameData},
     state::{
         battle::{BattleReport, BattleSideReport},
         campaign::{DomainFact, DomainFactKind},
@@ -23,7 +19,7 @@ use crate::{
 use participation::{classify, Participation};
 use std::collections::{BTreeMap, BTreeSet};
 
-type PlaceKey = (SiteId, FactionId);
+type PlaceKey = (SiteId, EncounterOpponent);
 
 #[derive(Default)]
 struct RoundCredit {
@@ -64,11 +60,40 @@ pub(crate) fn consume(
                     RuleError::InvalidState("Pending battle receipt is missing.".into())
                 })?
                 .clone();
-            for (own, enemy, attacking) in [
-                (&report.attacker, &report.defender, true),
-                (&report.defender, &report.attacker, false),
-            ] {
-                consume_side(campaign, data, &report, own, enemy, attacking, &mut credit)?;
+            use crate::state::battle::BattleDefender;
+            use participation::Opponent;
+            match &report.defender {
+                BattleDefender::Faction(defender) => {
+                    consume_side(
+                        campaign,
+                        data,
+                        &report,
+                        &report.attacker,
+                        Opponent::Faction(defender),
+                        true,
+                        &mut credit,
+                    )?;
+                    consume_side(
+                        campaign,
+                        data,
+                        &report,
+                        defender,
+                        Opponent::Faction(&report.attacker),
+                        false,
+                        &mut credit,
+                    )?;
+                }
+                BattleDefender::Threat(threat) => {
+                    consume_side(
+                        campaign,
+                        data,
+                        &report,
+                        &report.attacker,
+                        Opponent::Threat(threat),
+                        true,
+                        &mut credit,
+                    )?;
+                }
             }
         }
     }
@@ -97,7 +122,7 @@ fn consume_side(
     data: &GameData,
     report: &BattleReport,
     own: &BattleSideReport,
-    enemy: &BattleSideReport,
+    enemy: participation::Opponent<'_>,
     attacking: bool,
     credit: &mut RoundCredit,
 ) -> Result<(), RuleError> {
@@ -138,7 +163,7 @@ fn consume_side(
                 personal.tags.remove(&EvidenceKind::AssumedCommand);
                 personal.tags.remove(&EvidenceKind::CommandedVictory);
                 participation::personal_tags(report, army, person, &mut personal);
-                let key = (person.id, (report.site, enemy.faction));
+                let key = (person.id, (report.site, enemy.identity()));
                 let first = !credit.people.contains_key(&key);
                 let meaningful =
                     personal.meaningful && !credit.people.get(&key).copied().unwrap_or(false);

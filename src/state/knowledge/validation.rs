@@ -32,9 +32,13 @@ impl StrategicCampaign {
                     "invalid witnessed label",
                 )?;
                 if let Some(report) = self.battles.get(&person.battle) {
+                    let defender = report
+                        .defender
+                        .faction_side()
+                        .ok_or("knowledge: local threat cannot reveal enemy people")?;
                     let enemy = if report.attacker.faction == *observer {
-                        &report.defender
-                    } else if report.defender.faction == *observer {
+                        defender
+                    } else if defender.faction == *observer {
                         &report.attacker
                     } else {
                         return Err(

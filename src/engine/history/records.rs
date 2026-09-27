@@ -22,7 +22,9 @@ pub(crate) fn record_facts(
             continue;
         }
         let id = allocate(campaign)?;
-        let record = if let DomainFactKind::BattleResolved { battle, .. } = fact.kind {
+        let record = if let DomainFactKind::DevelopmentChanged { ref receipt } = fact.kind {
+            HistoryRecord::development(id, fact.completed_rounds, fact.id, receipt, campaign)
+        } else if let DomainFactKind::BattleResolved { battle, .. } = fact.kind {
             HistoryRecord::battle(id, &campaign.battles[&battle], Some(fact.id))
         } else if let DomainFactKind::SiegeChanged { ref siege, change } = fact.kind {
             HistoryRecord::siege(
@@ -371,6 +373,8 @@ fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
     );
     if completed_construction
         || notable_siege
+        || matches!(&record.kind, HistoryKind::Development { receipt }
+            if !matches!(receipt, crate::state::development::DevelopmentReceipt::PopulationMoved { .. }))
         || matches!(
             record.kind,
             HistoryKind::Battle { .. } | HistoryKind::VeterancyEarned { .. }

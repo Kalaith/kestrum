@@ -120,10 +120,18 @@ fn forgotten_construction_cannot_reopen_paid_work_or_forge_its_owner() {
         .visible_to = [FactionId(2)].into_iter().collect();
     assert!(corrupt.validate(&data).is_err());
     let paid = campaign.construction.clone();
+    let previous_events: Vec<_> = campaign.history.events.keys().copied().collect();
     for _ in 0..41 {
         finish(&mut campaign, &data);
     }
-    assert!(campaign.history.events.is_empty());
+    assert!(previous_events
+        .iter()
+        .all(|id| !campaign.history.events.contains_key(id)));
+    assert!(campaign
+        .history
+        .events
+        .values()
+        .all(|event| !matches!(event.kind, HistoryKind::Construction { .. })));
     assert_eq!(campaign.construction, paid);
     campaign = reload(&campaign, &data);
     let before = campaign.clone();

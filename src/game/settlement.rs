@@ -1,5 +1,6 @@
 //! Application-owned construction navigation submits the ordinary atomic commands.
 
+mod development;
 mod refresh;
 
 use super::*;
@@ -41,6 +42,9 @@ impl Game {
     }
 
     pub(super) fn apply_settlement_action(&mut self, action: UiAction) {
+        if self.apply_local_action(action) {
+            return;
+        }
         self.settlement.status.clear();
         match action {
             UiAction::OpenSettlement(site) => {
@@ -154,6 +158,15 @@ impl Game {
             | SettlementMode::Focus => {
                 self.state.overlay = Overlay::None;
                 return;
+            }
+            SettlementMode::LocalActions => SettlementMode::Overview,
+            SettlementMode::Rename | SettlementMode::Resettle => SettlementMode::LocalActions,
+            SettlementMode::LocalReview => {
+                if self.settlement.local_action == Some(ui::LocalAction::Resettle) {
+                    SettlementMode::Resettle
+                } else {
+                    SettlementMode::LocalActions
+                }
             }
             SettlementMode::Review => {
                 if matches!(

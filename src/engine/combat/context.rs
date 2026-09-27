@@ -8,7 +8,10 @@ pub(super) fn withdrawals(campaign: &mut StrategicCampaign, report: &mut BattleR
         BattleContext::Field => match report.outcome {
             BattleOutcome::AttackerVictory => withdraw(
                 campaign,
-                &mut report.defender,
+                report
+                    .defender
+                    .faction_side_mut()
+                    .expect("faction encounter"),
                 report.site,
                 None,
                 Some(report.origin),
@@ -23,7 +26,16 @@ pub(super) fn withdrawals(campaign: &mut StrategicCampaign, report: &mut BattleR
             BattleOutcome::MutualDestruction => {}
         },
         BattleContext::Assault { .. } | BattleContext::Sortie { .. } if won => {
-            withdraw(campaign, &mut report.defender, report.site, None, None);
+            withdraw(
+                campaign,
+                report
+                    .defender
+                    .faction_side_mut()
+                    .expect("faction encounter"),
+                report.site,
+                None,
+                None,
+            );
         }
         BattleContext::Escape { destination, .. } if won => {
             for army in &report.attacker.armies {
@@ -34,7 +46,10 @@ pub(super) fn withdrawals(campaign: &mut StrategicCampaign, report: &mut BattleR
             if won {
                 withdraw(
                     campaign,
-                    &mut report.defender,
+                    report
+                        .defender
+                        .faction_side_mut()
+                        .expect("faction encounter"),
                     report.site,
                     None,
                     Some(report.origin),
@@ -65,7 +80,10 @@ pub(super) fn withdrawals(campaign: &mut StrategicCampaign, report: &mut BattleR
             if won {
                 withdraw(
                     campaign,
-                    &mut report.defender,
+                    report
+                        .defender
+                        .faction_side_mut()
+                        .expect("faction encounter"),
                     report.site,
                     None,
                     Some(report.origin),
@@ -158,7 +176,7 @@ fn assault_damage(campaign: &mut StrategicCampaign, data: &GameData, report: &mu
     report.fort_damage_added = *damage - before;
     let (start, lost) = report
         .defender
-        .armies
+        .armies()
         .iter()
         .flat_map(|army| &army.formations)
         .fold((0_u128, 0_u128), |(start, lost), formation| {

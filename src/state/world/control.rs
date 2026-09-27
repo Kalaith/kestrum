@@ -76,10 +76,7 @@ impl StrategicCampaign {
                 let qualifies = |id: FactionId| {
                     self.factions.get(&id).is_some_and(|faction| {
                         faction.status != FactionStatus::Eliminated
-                            && self
-                                .world
-                                .anchors_satisfied(marker.id, id, faction.headquarters)
-                                == Some(true)
+                            && self.regional_anchors_satisfied(marker.id, id) == Some(true)
                     })
                 };
                 let claimant = previous

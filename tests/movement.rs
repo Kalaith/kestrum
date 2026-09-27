@@ -21,7 +21,10 @@ use kestrum::{
 mod support;
 
 fn fixture() -> (GameData, StrategicCampaign) {
-    let data = GameData::load().unwrap();
+    let mut data = GameData::load().unwrap();
+    // These fixtures isolate movement budgets and sovereign encounters.
+    // Local occupant admission has its own explicit Clear Threat acceptance cases.
+    data.threats.initial.clear();
     let campaign = StrategicCampaign::new(&data).unwrap();
     (data, campaign)
 }

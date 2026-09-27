@@ -192,7 +192,17 @@ pub(super) fn assert_missing_builder() {
 }
 
 pub(super) fn assert_frozen_donors() {
-    let (data, mut campaign) = builder();
+    let mut data = GameData::load().unwrap();
+    data.threats.initial.clear();
+    data.scenario
+        .sites
+        .iter_mut()
+        .find(|site| site.id == SiteId(13))
+        .unwrap()
+        .tags
+        .retain(|tag| *tag != kestrum::data::world::SiteTag::Ruins);
+    let mut campaign = StrategicCampaign::new(&data).unwrap();
+    apply(&mut campaign, &data, Actor::Player, move_order(1, &[1, 5])).unwrap();
     for id in [6, 8, 10, 12, 13] {
         campaign
             .set_site_control(&data, SiteId(id), Some(FactionId(1)), false)
@@ -226,17 +236,36 @@ pub(super) fn assert_frozen_donors() {
         ConstructionKind::Outpost,
         second.0,
     );
-    let total = population(&campaign);
-    for _ in 0..3 {
+    for _ in 0..2 {
         finish(&mut campaign, &data);
     }
+    // This acceptance snapshot has exactly one eligible50-person donor before either final step.
+    for site in &campaign.world.sites {
+        if site.controller == Some(FactionId(1)) {
+            campaign.world.population.insert(
+                site.id,
+                data.construction.population.minimum[&site.habitation],
+            );
+        }
+    }
+    campaign.world.population.insert(SiteId(1), 250);
+    let total = population(&campaign);
+    finish(&mut campaign, &data);
     assert_eq!(campaign.construction[&camp].progress, 3);
     assert_eq!(campaign.construction[&empty].progress, 2);
     assert_eq!(campaign.world.population[&SiteId(12)], 70);
     assert_eq!(campaign.world.population[&SiteId(13)], 0);
-    assert_eq!(population(&campaign), total);
+    assert_eq!(
+        population(&campaign),
+        total + 23,
+        "four HQs, the Town and City grow after construction"
+    );
     finish(&mut campaign, &data);
-    assert_eq!(campaign.world.population[&SiteId(12)], 50);
+    assert_eq!(campaign.world.population[&SiteId(12)], 51);
     assert_eq!(campaign.world.population[&SiteId(13)], 20);
-    assert_eq!(population(&campaign), total);
+    assert_eq!(
+        population(&campaign),
+        total + 47,
+        "the completed Outpost also grows on the following boundary"
+    );
 }

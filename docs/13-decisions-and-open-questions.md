@@ -470,3 +470,48 @@ faction ceases to be independent.
 
 These are delegated implementation decisions. [K10 verification](verification/k10-sieges.md)
 records 96 passing tests, publication and the remaining platform checks.
+
+### I10 — Conserved population and local threats
+
+K11 freezes seasonal conditions before construction and recovery, then reads
+population after construction has applied its settlers. Natural changes are
+planned together; migration uses fixed departure and arrival budgets. A newly
+founded or reclaimed place first receives natural development at the following
+boundary. This preserves P02 ordering without restoring spent settlers or moving
+the same arrivals repeatedly. Civil identities describe existing geography,
+facilities and roles; they do not introduce another progression currency.
+
+A lawless ruin has no nonempty local army, functional fort or active ordinary
+threat. A nominal claim alone does not police
+an abandoned ruin. Eight consecutive eligible boundaries can create one Bandit
+threat for that ruination. Each site keeps a monotonic ruination identity and a
+creation flag independently of narrative retention. Later ruination may replace
+an older cleared spawned record; historical reports keep weak threat IDs. Initial
+authored occupants persist and cannot respawn from forgetting a report.
+
+Threats have their own identities and a typed battle side. They use the shared
+exchange arithmetic without creating a faction, army, formation or enemy person.
+They cannot retreat; routed remnants are recorded as encirclement losses. Mutual
+destruction clears the occupant with no reward. Actual survivors receive ordinary
+significance-gated participation evidence, with distinct Bandit and Wildlife
+encounter facts. Active threats block supply and civilian passage through even a
+claimed site, as well as ordinary entry, recruitment and construction.
+
+New campaigns place Bandits at Ruined Hold and Wildlife at the Hill. Earlier
+strategic saves receive neutral current development values and no retroactive
+occupants, growth, rewards or facts. Earlier faction battle reports retain their
+actual sides in the new typed representation. Partial compatibility groups are
+rejected. Older economy statements explicitly lack site inputs; new statements
+save the operands and final one-floor income calculation from their boundary.
+
+Place tier, ruin, rename and role changes create public dated place records.
+Population movements remain private to their owner. Records retain the place
+labels from their date; renaming never changes stable identities or old prose.
+These are delegated implementation decisions, not newly confirmed author rules.
+
+Current settlement forecasts require own-army observation of the site and its
+neighbors. Without that coverage the current safety and pressure contribution
+are unknown; actual saved pressure remains visible. Resettlement suggestions use
+observed destinations. The engine still applies the real physical conditions to
+an actual submitted order and to seasonal simulation. Forecasts do not expose
+unseen enemy movement by changing a remote site's safety label.

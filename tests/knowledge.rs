@@ -95,7 +95,7 @@ fn an_actual_battle_reveals_only_participating_people_to_its_two_observers() {
     assert_eq!(observed.id, PersonId(3));
     assert_eq!(observed.name, "Enemy witness 003");
     assert_eq!(observed.army, ArmyId(3));
-    assert_eq!(observed.army_name, report.defender.armies[0].name);
+    assert_eq!(observed.army_name, report.defender.armies()[0].name);
     assert_eq!(
         (observed.battle, observed.completed_rounds, observed.site),
         (report.id, 0, SiteId(10))

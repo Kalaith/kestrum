@@ -119,6 +119,19 @@ fn pause_reason(
     }
     if target_sites
         .iter()
+        .any(|site| campaign.active_threat(*site).is_some())
+    {
+        return Some(ConstructionPause::Threat);
+    }
+    if order.kind != ConstructionKind::Outpost
+        && target_sites
+            .iter()
+            .any(|site| campaign.site_is_ruined(*site))
+    {
+        return Some(ConstructionPause::Ruined);
+    }
+    if target_sites
+        .iter()
         .any(|id| campaign.world.contested_sites.contains(id))
     {
         return Some(ConstructionPause::Contested);
@@ -147,7 +160,7 @@ fn pause_reason(
                     .attacker
                     .armies
                     .iter()
-                    .chain(&report.defender.armies)
+                    .chain(report.defender.armies())
                     .any(|army| Some(army.id) == order.builder)
         })
     {
@@ -172,6 +185,22 @@ fn complete(
     match (order.target, order.kind) {
         (ConstructionTarget::Site(id), ConstructionKind::Outpost) => {
             settlers.transfer(campaign, data, supply, order)?;
+            if campaign.site_is_ruined(id) {
+                let state = campaign
+                    .world
+                    .development
+                    .get_mut(&id)
+                    .expect("site development");
+                state.ruined = false;
+                state.ruined_round = None;
+                state.ruin_streak = 0;
+                state.lawless_rounds = 0;
+                state.pressure = 0;
+                campaign
+                    .world
+                    .site_damage
+                    .insert(id, data.development.conditions.reclamation_damage);
+            }
             campaign
                 .world
                 .sites

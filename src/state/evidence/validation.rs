@@ -106,8 +106,16 @@ impl StrategicCampaign {
                 == u64::from(season.xp)
             && season.encounters.iter().all(|entry| {
                 self.world.site(entry.site).is_some()
-                    && entry.opponent != owner
-                    && self.factions.contains_key(&entry.opponent)
+                    && match entry.opponent {
+                        EncounterOpponent::Faction(faction) => {
+                            faction != owner && self.factions.contains_key(&faction)
+                        }
+                        EncounterOpponent::Threat { threat } => {
+                            threat.0 > 0
+                                && threat < self.next_ids.threat
+                                && entry.enemy_types.is_empty()
+                        }
+                    }
                     && entry.tags.contains(&EvidenceKind::Battle)
                     && entry.meaningful == entry.tags.contains(&EvidenceKind::MeaningfulEncounter)
                     && (entry.meaningful || entry.xp == 0)

@@ -50,6 +50,7 @@ pub struct Faction {
     pub deficit: bool,
     pub headquarters: SiteId,
     pub capital: SiteId,
+    pub last_hq_relocation: Option<u32>,
     #[serde(default)]
     pub last_economy: Option<EconomyStatement>,
     #[serde(default)]
@@ -102,6 +103,7 @@ impl PartialEq for RandomStreams {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NextIds {
+    pub threat: super::threat::ThreatId,
     pub siege: super::siege::SiegeId,
     pub order: super::construction::OrderId,
     pub history: HistoryId,
@@ -119,6 +121,9 @@ pub struct NextIds {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DomainFactKind {
+    DevelopmentChanged {
+        receipt: super::development::DevelopmentReceipt,
+    },
     SiegeChanged {
         siege: super::siege::Siege,
         change: super::siege::SiegeChange,
@@ -188,6 +193,7 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub threats: BTreeMap<super::threat::ThreatId, super::threat::Threat>,
     pub sieges: BTreeMap<SiteId, super::siege::Siege>,
     pub construction:
         BTreeMap<super::construction::OrderId, super::construction::ConstructionOrder>,
@@ -235,6 +241,7 @@ impl StrategicCampaign {
                         deficit: false,
                         headquarters: setup.headquarters,
                         capital: setup.capital,
+                        last_hq_relocation: None,
                         last_economy: None,
                         last_recovery: None,
                     },
@@ -242,6 +249,7 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            threats: super::threat::initialize_threats(data)?,
             sieges: BTreeMap::new(),
             construction: BTreeMap::new(),
             history: CampaignHistory::default(),
@@ -253,6 +261,7 @@ impl StrategicCampaign {
             seed: scenario.seed,
             rng: RandomStreams::new(scenario.seed),
             next_ids: NextIds {
+                threat: super::threat::ThreatId(1),
                 siege: super::siege::SiegeId(1),
                 order: super::construction::OrderId(1),
                 history: HistoryId(1),
@@ -288,6 +297,9 @@ impl StrategicCampaign {
         campaign.round_order = campaign.independent_order();
         campaign.instantiate_starting_military(data)?;
         campaign.initialize_population(&data.construction);
+        campaign.initialize_development(data)?;
+        campaign.next_ids.threat =
+            super::threat::ThreatId(next(campaign.threats.keys().map(|id| id.0))?);
         campaign.reconcile_region_control();
         campaign.validate(data)?;
         Ok(campaign)

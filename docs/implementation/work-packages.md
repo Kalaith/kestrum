@@ -3,7 +3,7 @@
 [Plan and handoff prompt](../implementation-plan.md) · [Contracts](contracts.md) ·
 [Verification and coverage](acceptance.md)
 
-K01–K10 are **Done**; K11 is the next eligible task. See the completion record in
+K01–K11 are **Done**; K12 is the next eligible task. See the completion record in
 [acceptance](acceptance.md#completion-record). Numbered rule links
 refer to the provisional packets; D/O identifiers refer to chapter 13. A package
 is a reviewable feature, not permission for one oversized Rust file or commit.

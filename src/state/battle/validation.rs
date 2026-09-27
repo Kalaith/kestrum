@@ -1,6 +1,7 @@
 //! Historical references validate against counters, never against live enemy rosters.
 
 mod context;
+mod threat;
 
 use super::*;
 use crate::{
@@ -32,6 +33,7 @@ impl StrategicCampaign {
             validate_exchanges(data, report, &roster)?;
             validate_result(self, data, report)?;
             validate_people(report)?;
+            threat::validate(self, data, report)?;
         }
         Ok(())
     }
@@ -59,9 +61,12 @@ fn validate_header(
     )?;
     ensure(
         !report.site_name.trim().is_empty()
-            && report.attacker.faction != report.defender.faction
+            && Some(report.attacker.faction) != report.defender.faction()
             && campaign.factions.contains_key(&report.attacker.faction)
-            && campaign.factions.contains_key(&report.defender.faction)
+            && report
+                .defender
+                .faction()
+                .is_none_or(|faction| campaign.factions.contains_key(&faction))
             && report
                 .control_before
                 .is_none_or(|id| campaign.factions.contains_key(&id))
@@ -88,7 +93,7 @@ fn validate_roster<'a>(
     report: &'a BattleReport,
 ) -> Result<Roster<'a>, String> {
     let mut identities = RosterBuilder::default();
-    for side in [&report.attacker, &report.defender] {
+    for side in report.faction_sides() {
         ensure(
             !side.name.trim().is_empty()
                 && !side.armies.is_empty()
@@ -335,7 +340,7 @@ fn validate_result(
 
 fn validate_people(report: &BattleReport) -> Result<(), String> {
     let mut events = BTreeSet::new();
-    for side in [&report.attacker, &report.defender] {
+    for side in report.faction_sides() {
         let witnessed: BTreeMap<_, _> = side
             .armies
             .iter()

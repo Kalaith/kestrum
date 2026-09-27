@@ -1,5 +1,12 @@
 # 10 — Interface and accessibility
 
+## K11 local decisions
+
+Manage keeps construction and adds Local Actions for renaming, resettlement and moving the capital or headquarters. The selected place and the intervention's cost, conditions and single confirmation are the focus; the world remains the default play view. The overview explains population, pressure, causes, occupation, damage and blocked growth. Rename uses the existing touch keyboard. Resettle pages known eligible destinations.
+
+A visible local threat offers Clear Threat. Its own adjacent armies and route cost are reviewed before the ordinary combat command; enemy headcounts appear only in the actual report. The reward is an authored offer and is paid once on victory. Existing paged group and report geometry keeps targets at least 48 logical pixels at 1280×720 and 1920×1080. Four representative native scenes per size cover changed decisions; broader presentation review is deferred to integrated acceptance.
+
+
 ## K10 siege screen brief
 
 The current decision is whether to maintain the siege, commit selected armies to

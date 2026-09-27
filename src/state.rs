@@ -3,6 +3,7 @@
 pub mod battle;
 pub mod campaign;
 pub mod construction;
+pub mod development;
 pub mod evidence;
 pub mod history;
 pub mod knowledge;
@@ -10,6 +11,7 @@ pub mod military;
 pub mod people;
 pub mod persistence;
 pub mod siege;
+pub mod threat;
 mod validation;
 pub mod world;
 
@@ -50,6 +52,7 @@ pub enum Overlay {
     History,
     Settlement,
     Siege,
+    Threat,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -208,7 +211,8 @@ impl GameState {
         let military_order = military_order
             || (self.overlay == Overlay::MoveReview && matches!(&command, Command::Move(_)));
         let military_order = military_order
-            || (self.overlay == Overlay::Siege && matches!(&command, Command::Siege(_)));
+            || (self.overlay == Overlay::Siege && matches!(&command, Command::Siege(_)))
+            || (self.overlay == Overlay::Threat && matches!(&command, Command::ClearThreat { .. }));
         let military_order = military_order
             || (self.overlay == Overlay::Settlement
                 && matches!(
@@ -217,6 +221,10 @@ impl GameState {
                         | Command::CancelConstruction { .. }
                         | Command::ReassignBuilder { .. }
                         | Command::SetFocus { .. }
+                        | Command::RenameSite { .. }
+                        | Command::Resettle { .. }
+                        | Command::MoveCapital { .. }
+                        | Command::RelocateHeadquarters { .. }
                 ));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);

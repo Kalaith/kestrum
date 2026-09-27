@@ -2,8 +2,15 @@
 
 use super::RuleError;
 use crate::{
-    data::{economy::Resources, world::FactionId, GameData},
-    state::{military::EconomyStatement, StrategicCampaign},
+    data::{
+        economy::Resources,
+        world::{FactionId, Site},
+        GameData,
+    },
+    state::{
+        military::{EconomyStatement, SettlementIncomeStatement, SiteIncomeStatement},
+        StrategicCampaign,
+    },
 };
 
 pub(super) fn resolve(campaign: &mut StrategicCampaign, data: &GameData) -> Result<(), RuleError> {
@@ -43,24 +50,29 @@ fn statement(
         wood: 0,
         stone: 0,
     };
+    let mut inputs = SettlementIncomeStatement {
+        sites: Vec::new(),
+        headquarters_bonus: Resources {
+            gold: 0,
+            wood: 0,
+            stone: 0,
+        },
+    };
     if campaign.is_independent(faction) {
         for site in &campaign.world.sites {
-            if !campaign.world.is_secure(site.id, faction) {
+            if site.controller != Some(faction) {
                 continue;
             }
-            let base = data.economy.settlement_income[&site.habitation];
-            // P19 applies one final floor per resource; the role bonus stays unmodified.
-            let percent = 100
-                - campaign.world.structural_damage(site.id) / data.economy.income_damage_divisor;
-            let amount = Resources {
-                gold: scaled(base.gold, percent)?,
-                wood: scaled(base.wood, percent)?,
-                stone: scaled(base.stone, percent)?,
-            };
-            income = checked_add(income, amount)?;
+            let entry = site_income(campaign, data, site)?;
+            income = checked_add(income, entry.income)?;
+            inputs.sites.push(entry);
         }
-        if campaign.world.is_secure(owner.headquarters, faction) {
-            income = checked_add(income, data.economy.headquarters_income_bonus)?;
+        if campaign.world.is_secure(owner.headquarters, faction)
+            && !campaign.site_is_ruined(owner.headquarters)
+            && campaign.active_threat(owner.headquarters).is_none()
+        {
+            inputs.headquarters_bonus = data.economy.headquarters_income_bonus;
+            income = checked_add(income, inputs.headquarters_bonus)?;
         }
     }
     let upkeep_due = campaign
@@ -78,6 +90,7 @@ fn statement(
     let upkeep_paid = closing.gold.min(upkeep_due);
     closing.gold -= upkeep_paid;
     Ok(EconomyStatement {
+        settlement_inputs: Some(inputs),
         completed_rounds,
         income,
         upkeep_due,
@@ -87,10 +100,50 @@ fn statement(
     })
 }
 
-fn scaled(amount: i64, percent: u32) -> Result<i64, RuleError> {
-    i64::try_from(i128::from(amount) * i128::from(percent) / 100).map_err(|_| RuleError::Overflow {
+fn site_income(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    site: &Site,
+) -> Result<SiteIncomeStatement, RuleError> {
+    let occupation = campaign
+        .world
+        .occupation
+        .get(&site.id)
+        .copied()
+        .unwrap_or(0);
+    let damage = campaign.world.structural_damage(site.id);
+    let mut entry = SiteIncomeStatement {
+        site: site.id,
+        habitation: site.habitation,
+        base: data.economy.settlement_income[&site.habitation],
+        structural_damage: damage,
+        occupation,
+        focus: campaign
+            .world
+            .focus
+            .get(&site.id)
+            .copied()
+            .filter(|focus| super::development::focus_suitable(site, *focus)),
+        damage_percent: 100 - damage / data.economy.income_damage_divisor,
+        occupation_percent: if occupation >= data.development.conditions.occupation_threshold {
+            data.development.occupation_income_percent
+        } else {
+            100
+        },
+        focus_bonus_percent: data.development.income_focus_bonus_percent,
+        ruined: campaign.site_is_ruined(site.id),
+        besieged: campaign.world.contested_sites.contains(&site.id),
+        local_threat: campaign.active_threat(site.id).is_some(),
+        income: Resources {
+            gold: 0,
+            wood: 0,
+            stone: 0,
+        },
+    };
+    entry.income = entry.calculated().ok_or(RuleError::Overflow {
         field: "settlement income",
-    })
+    })?;
+    Ok(entry)
 }
 
 fn checked_add(left: Resources, right: Resources) -> Result<Resources, RuleError> {

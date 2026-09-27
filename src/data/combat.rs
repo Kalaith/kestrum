@@ -125,7 +125,10 @@ impl CombatRules {
     }
 
     pub fn terrain(&self, site: &Site) -> u32 {
-        if site.tags.contains(&SiteTag::Bridge) || site.tags.contains(&SiteTag::Pass) {
+        if site.tags.contains(&SiteTag::Bridge)
+            || site.tags.contains(&SiteTag::Pass)
+            || site.geography == Geography::Pass
+        {
             self.bridge_pass_permille
         } else if matches!(site.geography, Geography::Forest | Geography::Hill) {
             self.forest_hill_permille

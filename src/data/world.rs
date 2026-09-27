@@ -26,9 +26,14 @@ pub enum ScenarioKind {
     RosemarchPrototype,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Geography {
+    Valley,
+    Coast,
+    Marsh,
+    Pass,
+    Island,
     Plains,
     Forest,
     Hill,
@@ -38,6 +43,7 @@ pub enum Geography {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SiteTag {
+    Ruins,
     Bridge,
     Pass,
     HorseAccess,

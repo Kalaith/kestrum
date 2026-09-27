@@ -1,5 +1,6 @@
 //! Bounded, observer-labeled narratives; these records never authorize rewards.
 
+mod development;
 mod validation;
 
 use super::{
@@ -48,6 +49,9 @@ pub struct FormationLabel {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HistoryKind {
+    Development {
+        receipt: super::development::DevelopmentReceipt,
+    },
     Siege {
         siege: SiegeId,
         defender: FactionId,
@@ -83,6 +87,7 @@ pub enum HistoryKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HistoryKindFilter {
+    Development,
     Siege,
     Battle,
     Recruitment,
@@ -97,6 +102,7 @@ pub enum HistoryKindFilter {
 impl HistoryKind {
     pub fn category(&self) -> HistoryKindFilter {
         match self {
+            Self::Development { .. } => HistoryKindFilter::Development,
             Self::Siege { .. } => HistoryKindFilter::Siege,
             Self::Battle { .. } => HistoryKindFilter::Battle,
             Self::Recruited { .. } => HistoryKindFilter::Recruitment,
@@ -181,7 +187,9 @@ impl HistoryRecord {
         report: &BattleReport,
         source_fact: Option<FactId>,
     ) -> Self {
-        let sides = [&report.attacker, &report.defender];
+        let sides: Vec<_> = std::iter::once(&report.attacker)
+            .chain(report.defender.faction_side())
+            .collect();
         let mut armies: Vec<_> = sides
             .iter()
             .flat_map(|side| side.armies.iter())
@@ -226,8 +234,8 @@ impl HistoryRecord {
             armies,
             people,
             formations,
-            visible_to: [report.attacker.faction, report.defender.faction]
-                .into_iter()
+            visible_to: std::iter::once(report.attacker.faction)
+                .chain(report.defender.faction())
                 .collect(),
         }
     }

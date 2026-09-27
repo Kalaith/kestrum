@@ -2,6 +2,8 @@
 
 mod arithmetic;
 mod context;
+mod threat;
+pub(super) use threat::resolve_threat;
 
 use super::{resolve_person_combat, retreat, PersonCombatContext, PersonCombatSide, RuleError};
 use crate::{
@@ -24,7 +26,11 @@ pub fn battle_reports(campaign: &StrategicCampaign, observer: FactionId) -> Vec<
     campaign
         .battles
         .values()
-        .filter(|report| report.attacker.faction == observer || report.defender.faction == observer)
+        .filter(|report| {
+            report
+                .participant_factions()
+                .any(|faction| faction == observer)
+        })
         .cloned()
         .collect()
 }
@@ -64,7 +70,11 @@ pub(super) fn resolve_encounter(
     encounter: Encounter,
 ) -> Result<BattleId, RuleError> {
     let mut report = new_report(campaign, data, &encounter)?;
-    if !retreat::hostile(campaign, report.attacker.faction, report.defender.faction) {
+    if !retreat::hostile(
+        campaign,
+        report.attacker.faction,
+        report.defender.faction().expect("faction encounter"),
+    ) {
         return Err(RuleError::InvalidState(
             "Encounter participants are not hostile.".into(),
         ));
@@ -74,9 +84,13 @@ pub(super) fn resolve_encounter(
     })?);
     let mut people = PersonCombatContext {
         site: report.site,
-        sides: [
+        sides: vec![
             person_side(campaign, data, &report.attacker),
-            person_side(campaign, data, &report.defender),
+            person_side(
+                campaign,
+                data,
+                report.defender.faction_side().expect("faction encounter"),
+            ),
         ],
     };
     arithmetic::exchanges(campaign, data, &mut report)?;
@@ -86,14 +100,20 @@ pub(super) fn resolve_encounter(
         retreat::refuges(campaign, report.attacker.faction, report.site, None);
     people.sides[1].refuges = retreat::refuges(
         campaign,
-        report.defender.faction,
+        report.defender.faction().expect("faction encounter"),
         report.site,
         Some(report.origin),
     );
     report.person_events = resolve_person_combat(campaign, data, &people)?;
     cleanup(campaign);
     finish_side(campaign, &mut report.attacker);
-    finish_side(campaign, &mut report.defender);
+    finish_side(
+        campaign,
+        report
+            .defender
+            .faction_side_mut()
+            .expect("faction encounter"),
+    );
     context::site_result(campaign, data, &mut report);
     super::knowledge::observe_battle(&mut campaign.knowledge, &report);
     let id = report.id;
@@ -102,7 +122,7 @@ pub(super) fn resolve_encounter(
 }
 
 fn record_losses(campaign: &mut StrategicCampaign, data: &GameData, report: &mut BattleReport) {
-    for side in [&mut report.attacker, &mut report.defender] {
+    for side in std::iter::once(&mut report.attacker).chain(report.defender.faction_side_mut()) {
         for army in &mut side.armies {
             for formation in &mut army.formations {
                 let actual = campaign
@@ -175,7 +195,7 @@ fn new_report(
         reason: BattleEndReason::ExchangeLimit,
         exchanges: Vec::new(),
         attacker: snapshot(campaign, data, &encounter.attackers)?,
-        defender: snapshot(campaign, data, &encounter.defenders)?,
+        defender: BattleDefender::Faction(snapshot(campaign, data, &encounter.defenders)?),
         terrain_permille: data.combat.terrain(target),
         counters: Vec::new(),
         control_before: target.controller,

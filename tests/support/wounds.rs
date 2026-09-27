@@ -18,7 +18,7 @@ pub(super) fn fixture() -> (GameData, StrategicCampaign) {
 pub(super) fn context(campaign: &StrategicCampaign) -> PersonCombatContext {
     PersonCombatContext {
         site: SiteId(5),
-        sides: [
+        sides: vec![
             side(campaign, FactionId(1), vec![ArmyId(1)]),
             side(campaign, FactionId(2), vec![ArmyId(2)]),
         ],

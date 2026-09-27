@@ -691,6 +691,7 @@ fn designate(
             political_role_witnessed: link == SuccessorLink::Political
                 && (campaign.people[&predecessor].career.site_role.is_some()
                     || campaign.people[&successor].career.site_role.is_some()),
+            link_witnessed: matches!(link, SuccessorLink::Martial | SuccessorLink::Religious),
             army,
             site,
         },

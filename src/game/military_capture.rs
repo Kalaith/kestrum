@@ -28,6 +28,22 @@ impl Game {
         use std::collections::{BTreeMap, BTreeSet};
 
         self.capture_campaign();
+        let (companion_id, ward_id) = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .map(|campaign| {
+                let companion = campaign.next_ids.person;
+                let ward = PersonId(
+                    companion
+                        .0
+                        .checked_add(1)
+                        .expect("capture person identifiers have room"),
+                );
+                (companion, ward)
+            })
+            .expect("capture campaign");
         if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
             let site = campaign
                 .world
@@ -103,7 +119,7 @@ impl Game {
                     steps_completed: 1,
                 });
             let mut companion = person.clone();
-            companion.id = PersonId(4);
+            companion.id = companion_id;
             companion.name = "Mira Reed".into();
             companion.birth_round = -80;
             companion.career = Default::default();
@@ -120,8 +136,8 @@ impl Game {
             companion.assignment = PersonAssignment::Formation {
                 formation: FormationId(1),
             };
-            campaign.people.insert(PersonId(4), companion);
-            campaign.next_ids.person = PersonId(5);
+            campaign.people.insert(companion_id, companion);
+            campaign.next_ids.person = PersonId(ward_id.0 + 1);
             campaign
                 .people
                 .get_mut(&PersonId(1))
@@ -129,7 +145,7 @@ impl Game {
                 .career
                 .relationships
                 .insert(
-                    PersonId(4),
+                    companion_id,
                     PersonRelationship {
                         shared_service_seasons: 1,
                         last_shared_service_round: Some(0),
@@ -153,8 +169,8 @@ impl Game {
                 founder
                     .career
                     .relationships
-                    .insert(PersonId(4), shared.clone());
-                let companion = campaign.people.get_mut(&PersonId(4)).expect("companion");
+                    .insert(companion_id, shared.clone());
+                let companion = campaign.people.get_mut(&companion_id).expect("companion");
                 companion.birth_round = -80;
                 companion.assignment = PersonAssignment::Site { site: SiteId(1) };
                 companion.career.relationships.insert(PersonId(1), shared);
@@ -164,7 +180,7 @@ impl Game {
                     Household {
                         id: household,
                         faction: campaign.player,
-                        partners: [PersonId(1), PersonId(4)],
+                        partners: [PersonId(1), companion_id],
                         home: SiteId(1),
                         formed_round: 0,
                         status: HouseholdStatus::Active,
@@ -174,16 +190,16 @@ impl Game {
                     },
                 );
                 campaign.next_ids.household = HouseholdId(2);
-                let mut ward = campaign.people[&PersonId(4)].clone();
-                ward.id = PersonId(5);
+                let mut ward = campaign.people[&companion_id].clone();
+                ward.id = ward_id;
                 ward.name = "Rowan Reed".into();
                 ward.birth_round = -28;
                 ward.assignment = PersonAssignment::Dependent { site: SiteId(1) };
                 ward.career = Default::default();
                 ward.evidence = Default::default();
-                campaign.people.insert(ward.id, ward);
+                campaign.people.insert(ward_id, ward);
                 campaign.families.insert(
-                    PersonId(5),
+                    ward_id,
                     PersonFamily {
                         origin: FamilyOrigin::AdoptedWard,
                         origin_site: SiteId(1),
@@ -191,17 +207,18 @@ impl Game {
                         links: BTreeMap::from([(PersonId(1), FamilyLink::AdoptiveGuardian)]),
                     },
                 );
-                campaign.next_ids.person = PersonId(6);
+                campaign.next_ids.person = PersonId(ward_id.0 + 1);
                 campaign.successors.entry(PersonId(1)).or_default().insert(
                     LegacyCategory::Household,
                     SuccessorDesignation {
                         predecessor: PersonId(1),
-                        successor: PersonId(5),
+                        successor: ward_id,
                         category: LegacyCategory::Household,
                         link: SuccessorLink::Adopted,
                         designated_round: 4,
                         shared_seasons: 0,
                         political_role_witnessed: false,
+                        link_witnessed: false,
                         army: None,
                         site: None,
                     },
@@ -233,7 +250,7 @@ impl Game {
                         remaining_steps: 2,
                     };
                     campaign.mentorships.insert(
-                        PersonId(4),
+                        companion_id,
                         Mentorship {
                             mentor: PersonId(1),
                             discipline: TrainingDiscipline::Command,
@@ -294,7 +311,7 @@ impl Game {
         }
         self.open_armies(SiteId(1));
         self.army.mode = match scene.trim_end_matches("_minimum") {
-            "mentorship" | "mentorship_paused" => ui::ArmyMode::Mentorship(PersonId(4)),
+            "mentorship" | "mentorship_paused" => ui::ArmyMode::Mentorship(companion_id),
             "households" => ui::ArmyMode::Households,
             "succession" => ui::ArmyMode::Legacy,
             "lifecycle" | "lifecycle_wounded" | "career" | "career_training" => {
@@ -310,9 +327,9 @@ impl Game {
             self.army.household_first = Some(PersonId(1));
             self.army.household_second =
                 Some(if scene.trim_end_matches("_minimum") == "households" {
-                    PersonId(4)
+                    companion_id
                 } else {
-                    PersonId(5)
+                    ward_id
                 });
         }
         if scene.trim_end_matches("_minimum") == "succession" {

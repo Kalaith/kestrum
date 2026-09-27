@@ -110,6 +110,9 @@ pub struct SuccessorDesignation {
     pub shared_seasons: u32,
     #[serde(default)]
     pub political_role_witnessed: bool,
+    /// The validated command records transient Martial/Religious links as historical evidence.
+    #[serde(default)]
+    pub link_witnessed: bool,
     #[serde(default)]
     pub army: Option<ArmyId>,
     #[serde(default)]
@@ -208,10 +211,7 @@ impl StrategicCampaign {
             )?;
         }
         for (person_id, family) in &self.families {
-            let person = self
-                .people
-                .get(person_id)
-                .ok_or("campaign.families: unknown person")?;
+            let person = self.people.get(person_id);
             require(
                 person_id.0 > 0
                     && *person_id < self.next_ids.person
@@ -224,9 +224,11 @@ impl StrategicCampaign {
                         relative.0 > 0
                             && *relative < self.next_ids.person
                             && relative != person_id
-                            && self.people.get(relative).is_none_or(|other| {
-                                other.faction == person.faction
-                                    && other.birth_round < person.birth_round
+                            && person.is_none_or(|person| {
+                                self.people.get(relative).is_none_or(|other| {
+                                    other.faction == person.faction
+                                        && other.birth_round < person.birth_round
+                                })
                             })
                             && match family.origin {
                                 FamilyOrigin::Birth => *link == FamilyLink::BiologicalParent,
@@ -240,13 +242,15 @@ impl StrategicCampaign {
             match family.origin {
                 FamilyOrigin::Birth => require(
                     family.links.len() == 2
-                        && family.household.is_some_and(|id| {
+                        && family.household.is_none_or(|id| {
                             self.households.get(&id).is_some_and(|household| {
                                 family.links.keys().copied().collect::<Vec<_>>()
                                     == household.partners.to_vec()
                             })
                         })
-                        && person.class == crate::data::world::PersonClass::Recruit,
+                        && person.is_none_or(|person| {
+                            person.class == crate::data::world::PersonClass::Recruit
+                        }),
                     "families.birth",
                     "a birth needs two biological parents and an untrained recruit",
                 )?,
@@ -280,7 +284,7 @@ impl StrategicCampaign {
             if let Some(household_id) = family.household {
                 let household = &self.households[&household_id];
                 require(
-                    household.faction == person.faction,
+                    person.is_none_or(|person| household.faction == person.faction),
                     "families.household",
                     "household belongs to another faction",
                 )?;
@@ -400,14 +404,19 @@ impl StrategicCampaign {
         match designation.link {
             SuccessorLink::Blood => self.known_blood_relation(predecessor, designation.successor),
             SuccessorLink::Adopted => self.adopted_relation(predecessor, designation.successor),
-            SuccessorLink::Martial => self.is_pupil(predecessor, designation.successor),
-            SuccessorLink::Religious => designation.site.is_some_and(|site| {
-                self.world.site(site).is_some_and(|entry| {
-                    entry
-                        .facilities
-                        .contains(&crate::data::world::Facility::Temple)
-                }) && self.is_pupil(predecessor, designation.successor)
-            }),
+            SuccessorLink::Martial => {
+                designation.link_witnessed || self.is_pupil(predecessor, designation.successor)
+            }
+            SuccessorLink::Religious => {
+                designation.link_witnessed
+                    || designation.site.is_some_and(|site| {
+                        self.world.site(site).is_some_and(|entry| {
+                            entry
+                                .facilities
+                                .contains(&crate::data::world::Facility::Temple)
+                        }) && self.is_pupil(predecessor, designation.successor)
+                    })
+            }
             SuccessorLink::Political => {
                 designation.shared_seasons >= 4
                     && designation.political_role_witnessed

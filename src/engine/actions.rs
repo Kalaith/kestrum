@@ -121,7 +121,6 @@ pub fn advance_npc(
             apply(&mut candidate, data, Actor::Npc(faction), Command::EndTurn)?
         }
     };
-    candidate.validate(data).map_err(RuleError::InvalidState)?;
     *campaign = candidate;
     Ok(outcome)
 }
@@ -212,10 +211,22 @@ fn finish(
     }
     super::diplomacy::reconcile(before, candidate, data, outcome)?;
     let already_completed = outcome.round_completed;
-    let before_phase = candidate.clone();
+    let before_phase = (!candidate.diplomacy.is_blocked()
+        && !candidate
+            .round_order
+            .iter()
+            .any(|id| candidate.is_independent(*id) && !candidate.acted.contains(id)))
+    .then(|| candidate.clone());
     round::reconcile_phase(candidate, data, outcome)?;
     if outcome.round_completed && !already_completed {
-        super::diplomacy::reconcile(&before_phase, candidate, data, outcome)?;
+        super::diplomacy::reconcile(
+            before_phase
+                .as_ref()
+                .expect("a completed round has a phase snapshot"),
+            candidate,
+            data,
+            outcome,
+        )?;
     }
     candidate.reconcile_region_control();
     super::mentorship::reconcile(candidate, data);

@@ -4,7 +4,7 @@ use super::*;
 use kestrum::{
     data::{
         economy::TroopKind,
-        world::{DiplomaticState, FactionId, SiteId},
+        world::{FactionId, SiteId},
     },
     engine::{Actor, MoveOrder},
     state::{
@@ -110,12 +110,15 @@ fn capture_commander_wound(campaign: &mut StrategicCampaign, data: &GameData) {
     successor.name = "Elian of the Western Crossing".into();
     campaign.people.insert(successor.id, successor);
     campaign.next_ids.person = PersonId(6);
-    campaign
-        .relations
-        .iter_mut()
-        .find(|relation| relation.factions == [FactionId(1), FactionId(2)])
-        .expect("capture relation")
-        .state = DiplomaticState::War;
+    engine::apply(
+        campaign,
+        data,
+        Actor::Player,
+        Command::DeclareWar {
+            faction: FactionId(2),
+        },
+    )
+    .expect("capture declares a real war");
     campaign.armies.get_mut(&ArmyId(2)).expect("defender").site = SiteId(5);
     campaign
         .set_site_control(data, SiteId(5), Some(FactionId(2)), false)

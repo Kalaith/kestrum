@@ -307,35 +307,51 @@ fn cleanup(campaign: &mut StrategicCampaign, data: &GameData) {
         .filter(|formation| formation.headcount == 0)
         .map(|formation| formation.id)
         .collect();
-    let site_relocated_passengers = campaign
+    let stranded_people = campaign
         .people
         .values()
         .filter_map(|person| {
             let PersonAssignment::Formation { formation } = person.assignment else {
                 return None;
             };
-            (destroyed.contains(&formation)
-                && person.age_years(campaign.completed_rounds) >= data.lifecycle.elder_age_years
-                && !campaign
-                    .armies
-                    .values()
-                    .any(|army| army.commander == Some(person.id)))
-            .then(|| {
-                campaign
-                    .armies
-                    .values()
-                    .find(|army| army.formation_ids().any(|member| member == formation))
-                    .map(|army| (person.id, army.site))
-            })
-            .flatten()
+            destroyed.contains(&formation).then_some(person.id)
         })
         .collect::<Vec<_>>();
-    for (person, site) in site_relocated_passengers {
+    for person_id in stranded_people {
+        let person = &campaign.people[&person_id];
+        let PersonAssignment::Formation { formation } = person.assignment else {
+            unreachable!("stranded person still has a formation assignment");
+        };
+        let army = campaign
+            .armies
+            .values()
+            .find(|army| army.formation_ids().any(|member| member == formation))
+            .expect("destroyed formation remains in its army during combat cleanup");
+        let site = army.site;
+        let elder_passenger = person.age_years(campaign.completed_rounds)
+            >= data.lifecycle.elder_age_years
+            && !campaign
+                .armies
+                .values()
+                .any(|army| army.commander == Some(person_id));
+        let recipient = (!elder_passenger)
+            .then(|| {
+                army.formation_ids().find(|id| {
+                    !destroyed.contains(id)
+                        && campaign
+                            .formations
+                            .get(id)
+                            .is_some_and(|formation| formation.headcount > 0)
+                })
+            })
+            .flatten();
         campaign
             .people
-            .get_mut(&person)
-            .expect("older passenger")
-            .assignment = PersonAssignment::Site { site };
+            .get_mut(&person_id)
+            .expect("stranded person")
+            .assignment = recipient.map_or(PersonAssignment::Site { site }, |formation| {
+            PersonAssignment::Formation { formation }
+        });
     }
     campaign.formations.retain(|id, _| !destroyed.contains(id));
     for army in campaign.armies.values_mut() {

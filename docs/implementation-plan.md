@@ -10,9 +10,14 @@ provisional defaults for unresolved mechanics, clearly labelled for review.
 
 K01–K17 are complete and committed in order. Normal New Campaign now creates the
 80-major/152-physical production world with deterministic 4–8 faction setup;
-Rosemarch remains the small regression fixture. K18 integrated campaign and
-platform acceptance is the remaining release package. The acceptance ledger and
-K17 verification record carry the current validation and evidence boundaries.
+Rosemarch remains the small regression fixture. K18 integrated scenarios,
+long-run retention/replay, measured campaign profiles, native screen review and
+no-argument publishing pass. A production-world battle now validates through
+combat and save reload, but production-AI victory is still uncovered. K18 remains
+In progress because the Preview browser route is unavailable, physical-touch
+acceptance needs hardware, and the 8-faction NPC phase p95 exceeds the provisional
+review target. See the acceptance ledger and
+[K18 verification](verification/k18-integrated.md).
 
 ## How to use this plan
 

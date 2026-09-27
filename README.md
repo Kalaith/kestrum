@@ -11,6 +11,15 @@ name, botanical emblem, 4–8 factions and displayed seed. A confirmed setup cre
 the authored 80-major / 152-physical-site campaign over the illustrated atlas.
 Rosemarch remains a separate small scenario for regression tests and captures.
 
+K13–K17 are complete. K18 integrates production campaigns, long-run continuity,
+retention, save reload and native screen review. A real production-world battle
+now survives validation and save reload after combat cleanup reassigns people
+from destroyed formations. K18 remains in progress: production-AI victory is not
+yet demonstrated, the current Preview browser route is unavailable,
+physical-touch review needs a device, and the 8-faction phase-timing tail is
+above its provisional target. See [K18 verification](docs/verification/k18-integrated.md)
+for results and remaining acceptance work.
+
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
 visible. End Turn passes to the next faction; rivals recruit, build, expand and
@@ -459,6 +468,24 @@ generation cases, full project validation, normal/minimum setup, touch-keyboard,
 world and region captures, and Windows/WebGL Preview publishing. K18 integrated
 campaign performance, browser play and platform acceptance remain.
 
+### K18 — Integrated campaigns and release acceptance
+
+K18 adds save-continuous Rosemarch combat and character development, isolation,
+siege and relief, non-blood succession, layered settlement changes, a real
+production-world battle and defeat against actual AI, and 200/400-round
+4/8-faction replay and retention checks. A 20-screen native review at
+fullscreen and 1280 × 720 found and fixed a wrapped-text overlap in the dense
+army roster.
+
+The locked all-features suite, formatting, strict Clippy, all-target check, and
+no-argument Windows/WebGL Preview publish pass. K18 remains **In progress**:
+production-AI victory is still uncovered, the current local Preview server
+cannot be reached from this session, real touch hardware is unavailable, and
+isolated 8-faction NPC phase p95 is 278 ms against the provisional 250 ms review
+target. Browser scaling and touch-only navigation therefore remain unverified.
+[K18 verification](docs/verification/k18-integrated.md) records the evidence
+and open checks.
+
 ## Development
 
 Kestrum is a registered member of the real shared Cargo workspace. The toolkit
@@ -504,8 +531,9 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. K17 is complete and K18
-is the remaining required package.
+reusable prompt for implementing one package at a time. K18 has integrated code
+and test coverage but remains open for browser and physical-touch acceptance and
+the measured phase-timing tail; see the acceptance ledger.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

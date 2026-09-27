@@ -72,11 +72,26 @@ impl StrategicCampaign {
                 }
                 PersonAssignment::Dead => !person.is_alive(),
             };
-            require(
-                valid_assignment,
-                "assignment",
-                "unknown, foreign or incompatible assignment or field age",
-            )?;
+            if !valid_assignment {
+                let assigned_formation_faction = match person.assignment {
+                    PersonAssignment::Formation { formation } => {
+                        self.formations.get(&formation).map(|entry| entry.faction)
+                    }
+                    _ => None,
+                };
+                return Err(format!(
+                    "campaign.people.assignment: {:?} of faction {:?} has incompatible {:?} assignment at age {} (assigned formation faction {:?}, class {:?}, status {:?}, retired {}, course {:?})",
+                    person.id,
+                    person.faction,
+                    person.assignment,
+                    person.age_years(self.completed_rounds),
+                    assigned_formation_faction,
+                    person.class,
+                    person.status,
+                    person.career.retired,
+                    person.career.course,
+                ));
+            }
             self.validate_career(person, data)?;
         }
         self.validate_mentorships(data)?;

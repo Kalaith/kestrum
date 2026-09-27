@@ -191,7 +191,22 @@ pub(crate) fn mark_dead(
     id: PersonId,
     site: crate::data::world::SiteId,
 ) {
+    let relationships = campaign
+        .people
+        .get(&id)
+        .expect("dead person")
+        .career
+        .relationships
+        .keys()
+        .copied()
+        .collect::<Vec<_>>();
+    for other in relationships {
+        if let Some(person) = campaign.people.get_mut(&other) {
+            person.career.relationships.remove(&id);
+        }
+    }
     let person = campaign.people.get_mut(&id).expect("dead person");
+    person.career.relationships.clear();
     person.status = PersonStatus::Dead {
         completed_rounds: campaign.completed_rounds,
         site,

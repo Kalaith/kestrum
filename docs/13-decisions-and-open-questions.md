@@ -733,3 +733,43 @@ Rosemarch. These are delegated
 implementation decisions under O01/O08/O24/O25 and P01, not new confirmed author
 rules. Validation and map review are recorded in
 [the K17 verification](verification/k17-production.md).
+
+### I18 — Preserve a witnessed succession link
+
+K18's full production run exposed a campaign failure when a mentor died while
+their active pupil was the named heir to an item. A validated designation now
+stores its accepted Martial or Religious link as witnessed evidence, so ending
+the active mentorship does not invalidate a succession record that was legal
+when made. Older designations without this field retain the existing live-link
+validation; only designations accepted after normal command validation gain the
+durable witness.
+This preserves the named heir and item custody at the death site without
+advancing mentorship or inventing a completed apprenticeship. This is a
+delegated implementation decision under P22/P23, not a new confirmed author
+rule. Regression evidence is recorded in
+[the K18 verification](verification/k18-integrated.md).
+
+### I19 — Keep phase-timing acceptance open when the tail exceeds the target
+
+The isolated 8-faction/80-major-node/400-round replay measured NPC phase
+planning at 64.112 ms median, 277.510 ms p95 and 452.659 ms maximum. The median is below the
+provisional 250 ms review target; the p95 and maximum exceed it. K18 records both
+instead of treating the median as proof that the full phase distribution meets
+the target. Runtime command order remains unchanged, and `advance_npc` still
+performs one atomic policy action per call. End-to-end frame pacing and the
+minimum-WebGL browser remain unmeasured. This is a delegated implementation
+decision about reporting and package status, not a new confirmed author rule.
+See [the K18 verification](verification/k18-integrated.md).
+
+### I20 — Reassign people when combat destroys their formation
+
+A production-world battle exposed a wounded person still assigned to a
+formation after combat cleanup removed its zero-headcount record. Combat cleanup
+now moves remaining people to a surviving formation in the same army when one
+exists, or to the army's battle site otherwise. Existing elder passengers who
+are no longer field commanders continue to be placed at the site. This preserves
+the wounded person's state and prevents later commands or saves from inheriting
+a stale formation reference. The production regression validates the battle
+result and exact save reload after 87 actual NPC actions; it does not claim a
+production-AI victory. See
+[the K18 verification](verification/k18-integrated.md).

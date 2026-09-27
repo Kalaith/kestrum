@@ -14,11 +14,11 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             return Some(action);
         }
 
-        army_summary(ctx, campaign, army);
+        let action_y = army_summary(ctx, campaign, army).max(403.0);
         if let Some(formation) = ctx.army.selected {
             if button(
                 ctx,
-                Rect::new(704.0, 403.0, 464.0, 44.0),
+                Rect::new(704.0, action_y, 464.0, 44.0),
                 &ctx.text("formation_develop"),
                 true,
                 false,
@@ -99,7 +99,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     None
 }
 
-fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) {
+fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> f32 {
     let upkeep: i64 = army
         .slots
         .iter()
@@ -170,7 +170,7 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) {
         .find(|faction| faction.id == campaign.observer);
 
     if viewer.is_some_and(|faction| faction.deficit == Some(true)) {
-        block(
+        y = block(
             ctx,
             &ctx.text("upkeep_deficit"),
             vec2(704.0, y),
@@ -178,6 +178,7 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) {
             BRASS,
         );
     }
+    y + 10.0
 }
 
 fn army_header(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> Option<UiAction> {

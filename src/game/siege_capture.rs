@@ -6,6 +6,7 @@ use kestrum::{
     engine::{Actor, MoveOrder},
     navigation::MapSelection,
     state::{
+        legacy::LegacyItemCustody,
         military::{ArmyId, FormationId},
         people::PersonId,
         siege::{SiegeAction, SiegeOrder},
@@ -209,6 +210,23 @@ fn fixture(data: &GameData, defending: bool) -> StrategicCampaign {
     campaign
         .people
         .retain(|id, _| [PersonId(1), PersonId(3)].contains(id));
+    for item in campaign.legacy_items.values_mut() {
+        let retained_custodian = match item.custody {
+            LegacyItemCustody::Person(person) => campaign
+                .people
+                .get(&person)
+                .is_some_and(|person| person.is_alive() && person.faction == item.faction),
+            LegacyItemCustody::SiteEstate(_) => true,
+        };
+        if !retained_custodian {
+            let estate = campaign
+                .factions
+                .get(&item.faction)
+                .expect("item faction is retained")
+                .headquarters;
+            item.custody = LegacyItemCustody::SiteEstate(estate);
+        }
+    }
     for (army_id, formation_id) in [(1, 1), (3, 7)] {
         let army = campaign.armies.get_mut(&ArmyId(army_id)).expect("army");
         army.slots = [
@@ -251,7 +269,17 @@ fn establish(campaign: &mut StrategicCampaign, data: &GameData, defending: bool)
     if defending {
         engine::apply(campaign, data, Actor::Player, Command::EndTurn)
             .expect("defender turn ended");
-        engine::advance_npc(campaign, data).expect("Oak turn");
+        while matches!(campaign.phase, CampaignPhase::NpcTurn { faction, .. } if faction != FactionId(3))
+        {
+            engine::advance_npc(campaign, data).expect("earlier rival action");
+        }
+        assert!(matches!(
+            campaign.phase,
+            CampaignPhase::NpcTurn {
+                faction: FactionId(3),
+                paused: false
+            }
+        ));
     }
     let actor = if defending {
         Actor::Npc(FactionId(3))

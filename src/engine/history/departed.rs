@@ -47,6 +47,29 @@ pub(super) fn prune(campaign: &mut StrategicCampaign, rules: &HistoryRules) {
         removed.insert(id);
     }
     if !removed.is_empty() {
+        let removed_households = campaign
+            .households
+            .iter()
+            .filter_map(|(id, household)| {
+                household
+                    .partners
+                    .iter()
+                    .any(|partner| removed.contains(partner))
+                    .then_some(*id)
+            })
+            .collect::<BTreeSet<_>>();
+        campaign
+            .households
+            .retain(|id, _| !removed_households.contains(id));
+        for family in campaign.families.values_mut() {
+            if family
+                .household
+                .is_some_and(|id| removed_households.contains(&id))
+            {
+                family.household = None;
+            }
+        }
+
         campaign
             .successors
             .retain(|predecessor, _| !removed.contains(predecessor));
@@ -66,6 +89,21 @@ pub(super) fn prune(campaign: &mut StrategicCampaign, rules: &HistoryRules) {
                 .completed_mentors
                 .retain(|record| !removed.contains(&record.mentor));
         }
+
+        let mut retained_families = campaign.people.keys().copied().collect::<BTreeSet<_>>();
+        let mut relatives = retained_families.iter().copied().collect::<Vec<_>>();
+        while let Some(person) = relatives.pop() {
+            if let Some(family) = campaign.families.get(&person) {
+                for relative in family.links.keys() {
+                    if retained_families.insert(*relative) {
+                        relatives.push(*relative);
+                    }
+                }
+            }
+        }
+        campaign
+            .families
+            .retain(|person, _| retained_families.contains(person));
     }
 }
 

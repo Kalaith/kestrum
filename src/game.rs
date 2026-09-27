@@ -20,6 +20,7 @@ mod resources;
 mod saves;
 mod settlement;
 mod settlement_capture;
+mod setup;
 mod siege;
 mod siege_capture;
 mod storage;
@@ -57,6 +58,7 @@ pub struct Game {
     library: Option<kestrum::state::persistence::SaveLibrary>,
     storage_checked: bool,
     saves: ui::SaveView,
+    setup: ui::SetupView,
     army: ui::ArmyView,
     army_refresh_pending: bool,
     movement: ui::MoveView,
@@ -91,6 +93,11 @@ impl Game {
         let data = GameData::load()?;
         let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some();
         let assets = resources::load(&data).await?;
+        let setup = ui::SetupView {
+            seed: data.production_layout.default_seed,
+            factions: data.rules.default_factions,
+            ..ui::SetupView::default()
+        };
         let mut game = Self {
             save_exists: false,
             legacy_save_exists: !capture && slot_exists(&data.presentation.game_id, SAVE_SLOT),
@@ -100,6 +107,7 @@ impl Game {
             library: None,
             storage_checked: false,
             saves: ui::SaveView::default(),
+            setup,
             army: ui::ArmyView::default(),
             army_refresh_pending: true,
             movement: ui::MoveView::default(),
@@ -166,6 +174,44 @@ impl Game {
         }
         match scene.trim_end_matches("_minimum") {
             "title" => {}
+            "production_setup" => self.state.overlay = Overlay::Setup,
+            "production_setup_name" => {
+                self.state.overlay = Overlay::Setup;
+                self.setup.editing_name = true;
+            }
+            "production_world" | "production_region" => {
+                self.setup.factions = 8;
+                self.setup.seed = self.data.production_layout.default_seed;
+                self.start_game();
+                if scene.trim_end_matches("_minimum") == "production_region" {
+                    use kestrum::{data::world::MarkerId, navigation::MapSelection};
+                    if let Some(campaign) =
+                        self.state.campaign.as_ref().and_then(Campaign::strategic)
+                    {
+                        let _ = self.navigation.enter_region(
+                            &campaign.world,
+                            MarkerId(73),
+                            &mut self.view,
+                        );
+                        let _ = self.navigation.select(
+                            &campaign.world,
+                            MapSelection::Site(kestrum::data::world::SiteId(1001)),
+                        );
+                    }
+                }
+            }
+            "production_region_map" => {
+                self.setup.factions = 8;
+                self.setup.seed = self.data.production_layout.default_seed;
+                self.start_game();
+                use kestrum::data::world::MarkerId;
+                if let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
+                    let _ =
+                        self.navigation
+                            .enter_region(&campaign.world, MarkerId(73), &mut self.view);
+                    self.navigation.clear_selection();
+                }
+            }
             "gameplay" => self.capture_campaign(),
             "npc_paused" | "npc_menu" | "npc_long_name" => {
                 self.capture_campaign();
@@ -347,6 +393,7 @@ impl Game {
             import_save_exists: self.import_save_exists,
             saves: &self.saves,
             save_error: &self.save_error,
+            setup: &self.setup,
             campaign_view: self.projection.as_ref(),
         };
         let message = self
@@ -412,14 +459,17 @@ impl Game {
             self.state.overlay == Overlay::History && self.history.mode == ui::HistoryMode::Search;
         let renaming = self.state.overlay == Overlay::Settlement
             && self.settlement.mode == ui::SettlementMode::Rename;
-        for edit in
-            macroquad_toolkit::ui::text_entry::read_text_edits(naming || searching || renaming)
-        {
+        let setup_name = self.state.overlay == Overlay::Setup && self.setup.editing_name;
+        for edit in macroquad_toolkit::ui::text_entry::read_text_edits(
+            naming || searching || renaming || setup_name,
+        ) {
             let action = macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(edit);
             if renaming {
                 self.edit_place_name(action);
             } else if searching {
                 self.edit_history_search(action);
+            } else if setup_name {
+                self.edit_setup_name(action);
             } else {
                 self.edit_save_name(action);
             }

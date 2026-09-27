@@ -20,8 +20,14 @@ pub fn draw(ctx: &Context<'_>) {
     };
     let world = &campaign.world;
     let targets = ctx.navigation.targets(world, ctx.view);
+    let panel = selection::bounds(ctx.navigation, world, ctx.view);
     draw_routes(ctx);
     for target in &targets {
+        if panel.is_some_and(|panel| {
+            panel.contains(target.center) && ctx.navigation.selection() != Some(target.selection)
+        }) {
+            continue;
+        }
         draw_target(ctx, target);
         army_presence(ctx, target);
     }
@@ -32,6 +38,7 @@ fn draw_routes(ctx: &Context<'_>) {
         return;
     };
     let world = &campaign.world;
+    let production_world = ctx.navigation.scope() == MapScope::World && world.markers.len() > 24;
     for route in &world.routes {
         let endpoints = match ctx.navigation.scope() {
             MapScope::World => route.major_connection.and_then(|[from, to]| {
@@ -49,8 +56,18 @@ fn draw_routes(ctx: &Context<'_>) {
         if let Some((from, to)) = endpoints {
             let from = ctx.view.project_normalized(from);
             let to = ctx.view.project_normalized(to);
-            draw_line(from.x, from.y, to.x, to.y, 7.0, INK);
-            draw_line(from.x, from.y, to.x, to.y, 2.5, BRASS);
+            let (outline, road, outline_color, road_color) = if production_world {
+                (
+                    3.0,
+                    1.0,
+                    Color::new(INK.r, INK.g, INK.b, 0.62),
+                    Color::new(BRASS.r, BRASS.g, BRASS.b, 0.76),
+                )
+            } else {
+                (7.0, 2.5, INK, BRASS)
+            };
+            draw_line(from.x, from.y, to.x, to.y, outline, outline_color);
+            draw_line(from.x, from.y, to.x, to.y, road, road_color);
             if let Some((index, step, preview)) = ctx
                 .movement
                 .preview
@@ -90,13 +107,16 @@ fn draw_target(ctx: &Context<'_>, target: &MapTarget) {
         return;
     };
     let world = &campaign.world;
+    let production_world = ctx.navigation.scope() == MapScope::World && world.markers.len() > 24;
     match target.selection {
         MapSelection::Marker(id) => {
             if let Some(marker) = world.marker(id) {
                 match &marker.location {
                     MarkerLocation::Site { site } => {
                         if let Some(site) = world.site(*site) {
-                            draw_site(ctx, target, site, &marker.name, false, false);
+                            let label = !production_world
+                                || ctx.navigation.selection() == Some(target.selection);
+                            draw_site(ctx, target, site, &marker.name, false, false, label);
                         }
                     }
                     MarkerLocation::Region { sites, .. } => {
@@ -124,7 +144,12 @@ fn draw_target(ctx: &Context<'_>, target: &MapTarget) {
                         if state.is_some_and(|state| state.contested) {
                             contested(target.center);
                         }
-                        map_label(ctx, &marker.name, target.center, true);
+                        let label_center = if production_world {
+                            target.center - vec2(0.0, 108.0)
+                        } else {
+                            target.center
+                        };
+                        map_label(ctx, &marker.name, label_center, true);
                     }
                 }
             }
@@ -143,7 +168,7 @@ fn draw_target(ctx: &Context<'_>, target: &MapTarget) {
                         _ => None,
                     })
                     .unwrap_or_default();
-                draw_site(ctx, target, site, &site.name, gate, anchor);
+                draw_site(ctx, target, site, &site.name, gate, anchor, true);
             }
         }
     }
@@ -153,6 +178,8 @@ fn army_presence(ctx: &Context<'_>, target: &MapTarget) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
+    let production_world =
+        ctx.navigation.scope() == MapScope::World && campaign.world.markers.len() > 24;
     let own_armies = campaign
         .armies
         .iter()
@@ -165,12 +192,26 @@ fn army_presence(ctx: &Context<'_>, target: &MapTarget) {
         })
         .count();
     if own_armies > 0 {
-        let label = format!("{}: {own_armies}", ctx.text("own_armies"));
-        let width = measure_text(&label, ctx.body_font(), 16, 1.0).width;
-        let x = (target.center.x - width * 0.5).clamp(12.0, 1268.0 - width);
-        let y = target.center.y + 76.0;
-        draw_rectangle(x - 7.0, y - 18.0, width + 14.0, 25.0, INK);
-        body(ctx, &label, vec2(x, y), 16.0, BRASS);
+        if production_world {
+            let at = target.center + vec2(26.0, -24.0);
+            draw_circle(at.x, at.y, 15.0, INK);
+            draw_circle_lines(at.x, at.y, 14.0, 1.5, BRASS);
+            let count = own_armies.to_string();
+            centered(
+                ctx,
+                &count,
+                at + vec2(0.0, 5.0),
+                if own_armies > 9 { 13.0 } else { 16.0 },
+                CREAM,
+            );
+        } else {
+            let label = format!("{}: {own_armies}", ctx.text("own_armies"));
+            let width = measure_text(&label, ctx.body_font(), 16, 1.0).width;
+            let x = (target.center.x - width * 0.5).clamp(12.0, 1268.0 - width);
+            let y = target.center.y + 76.0;
+            draw_rectangle(x - 7.0, y - 18.0, width + 14.0, 25.0, INK);
+            body(ctx, &label, vec2(x, y), 16.0, BRASS);
+        }
     }
 
     let physical_site = match target.selection {
@@ -225,6 +266,7 @@ fn draw_site(
     name: &str,
     gate: bool,
     anchor: bool,
+    show_label: bool,
 ) {
     marker_base(ctx, target, site.controller);
     let center = target.center;
@@ -252,7 +294,9 @@ fn draw_site(
     {
         contested(center);
     }
-    map_label(ctx, name, center, gate);
+    if show_label {
+        map_label(ctx, name, center, gate);
+    }
 }
 
 fn contested(center: Vec2) {

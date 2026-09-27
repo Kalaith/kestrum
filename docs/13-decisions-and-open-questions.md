@@ -700,3 +700,36 @@ fabricated deed, site foundation or war start. Defeat closes an active pair's wa
 date while retaining the historical diplomatic relation. These are delegated
 implementation decisions under P23, not newly confirmed author rules. See
 [the K16 verification](verification/k16-heirlooms.md).
+
+### I17 — Authored production atlas and seeded founding
+
+K17 keeps Rosemarch as a named four-faction fixture and adds a separate authored
+production graph: 80 major markers, eight ten-site regions, 72 single-site
+markers, and 152 physical sites connected by 191 explicit routes. Markers use
+normalized placements on the supplied Kestrum atlas; crossings at the central
+river are explicitly tagged as bridges. All eight neutral Village candidates
+are simple world sites, have Horse Access, are at least four physical routes
+apart, and have nearby wood and stone sources. The seed shuffles these candidates
+and selects 4–8; two neutral adjacent sites receive one Bandit and one Wildlife
+threat for every selected start.
+
+The seed also assigns neutral settlement tiers with a 40/10/10/18/19/3 percent
+distribution across Unsettled, Camp, Outpost, Hamlet, Village and Town. Other
+sites begin without facilities or faction control. Every kingdom receives the
+same economy grant, three full human formations and one age-24 Officer founder;
+relations start at Peace. The player supplies the kingdom name and chooses one
+botanical emblem. Rivals use distinct remaining emblems and names built from the
+consumed human-name pool. These seeded weights and naming choices fill details
+left open by P01; they do not grant hidden difficulty bonuses or fabricate
+service history.
+
+At world scale, the production atlas shows region names, faction emblems, compact
+stationed-army counts, observed threats and selected site names; selecting any
+marker opens its full name and facts. Regional maps show their ten site names.
+This keeps the 80-node map readable while preserving the shared 48-pixel touch
+targets. Production save validation compares fixed geography with
+`world_layout.json`, while the prototype path continues to validate against
+Rosemarch. These are delegated
+implementation decisions under O01/O08/O24/O25 and P01, not new confirmed author
+rules. Validation and map review are recorded in
+[the K17 verification](verification/k17-production.md).

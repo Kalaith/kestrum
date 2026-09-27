@@ -6,6 +6,14 @@ Prepared 2026-09-26 against `3a2b5b4` on `master`. This is an implementation
 handoff, not evidence that the planned systems exist. The user requested concrete
 provisional defaults for unresolved mechanics, clearly labelled for review.
 
+## Progress checkpoint — 2026-09-28
+
+K01–K17 are complete and committed in order. Normal New Campaign now creates the
+80-major/152-physical production world with deterministic 4–8 faction setup;
+Rosemarch remains the small regression fixture. K18 integrated campaign and
+platform acceptance is the remaining release package. The acceptance ledger and
+K17 verification record carry the current validation and evidence boundaries.
+
 ## How to use this plan
 
 For the current full-release assignment, implement successive numbered packages,

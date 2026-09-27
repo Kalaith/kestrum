@@ -64,7 +64,7 @@ pub(super) fn advance(
             campaign.people.get_mut(&id).expect("person").career.course = None;
             continue;
         }
-        let valid_site = specialization::course_site(campaign, data, owner, site, facility)
+        let valid_site = specialization::course_site(campaign, owner, site, facility)
             && person_site(campaign, id) == Some(site);
         if !valid_site || person.status != PersonStatus::Fit || moved_people.contains(&id) {
             continue;
@@ -135,13 +135,7 @@ pub(super) fn advance(
             continue;
         };
         if army.site != course.site
-            || !specialization::course_site(
-                campaign,
-                data,
-                owner,
-                course.site,
-                Facility::TrainingGround,
-            )
+            || !specialization::course_site(campaign, owner, course.site, Facility::TrainingGround)
             || moved_formations.contains(&id)
         {
             continue;

@@ -48,6 +48,7 @@ pub enum Overlay {
     Help,
     Credits,
     ConfirmNew,
+    Setup,
     Saves,
     SaveRecovery,
     Armies,

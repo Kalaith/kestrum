@@ -11,11 +11,16 @@ impl Scenario {
         rules: &CampaignRules,
         economy: &Economy,
     ) -> Result<(), String> {
+        let valid_count = if self.kind == ScenarioKind::RosemarchPrototype {
+            self.factions.len() == rules.default_factions
+        } else {
+            (rules.min_factions..=rules.max_factions).contains(&self.factions.len())
+        };
         require(
             SOURCE,
             "factions",
-            self.factions.len() == rules.default_factions,
-            "Rosemarch requires four factions",
+            valid_count,
+            "faction count is outside the supported setup",
         )?;
         require(
             SOURCE,

@@ -13,7 +13,10 @@ impl Game {
 
     pub(super) fn start_game(&mut self) {
         let result = (|| {
-            let mut campaign = kestrum::state::StrategicCampaign::new(&self.data)?;
+            let mut campaign = kestrum::state::StrategicCampaign::new_production(
+                &self.data,
+                &self.setup.campaign_setup(),
+            )?;
             if !self.capture {
                 let library = self
                     .library

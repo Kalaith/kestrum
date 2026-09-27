@@ -6,6 +6,7 @@ pub mod construction;
 pub mod development;
 pub mod diplomacy;
 pub mod economy;
+pub mod generation;
 pub mod households;
 pub mod lifecycle;
 pub mod progression;
@@ -15,6 +16,7 @@ pub mod siege;
 pub mod threats;
 mod validation;
 pub mod world;
+mod world_layout_validation;
 mod world_validation;
 
 mod presentation;
@@ -38,7 +40,9 @@ pub struct GameData {
     pub presentation: PresentationData,
     pub economy: economy::Economy,
     pub rules: rules::CampaignRules,
+    /// Small authored warfare fixture retained for tests and captures.
     pub scenario: world::Scenario,
+    pub production_layout: world::WorldLayout,
 }
 
 impl GameData {
@@ -63,6 +67,9 @@ impl GameData {
             economy: macroquad_toolkit::include_json!("../assets/data/economy.json")?,
             rules: macroquad_toolkit::include_json!("../assets/data/campaign_rules.json")?,
             scenario: macroquad_toolkit::include_json!("../assets/data/scenarios/rosemarch.json")?,
+            production_layout: macroquad_toolkit::include_json!(
+                "../assets/data/world_layout.json"
+            )?,
         };
         data.validate()?;
         Ok(data)
@@ -94,6 +101,7 @@ impl GameData {
         self.presentation.validate()?;
         self.economy.validate()?;
         self.rules.validate()?;
-        self.scenario.validate(&self.rules, &self.economy)
+        self.scenario.validate(&self.rules, &self.economy)?;
+        self.production_layout.validate(&self.rules, &self.economy)
     }
 }

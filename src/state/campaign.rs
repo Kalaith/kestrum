@@ -5,7 +5,7 @@ mod compatibility;
 use crate::data::{
     economy::{Resources, TroopKind},
     rules::Emblem,
-    world::{FactionId, MarkerId, Relation, RouteId, SiteId},
+    world::{FactionId, MarkerId, Relation, RouteId, ScenarioKind, SiteId},
     GameData,
 };
 use macroquad_toolkit::rng::SeededRng;
@@ -24,6 +24,10 @@ use super::{
 };
 
 pub const STRATEGIC_VERSION: u32 = 2;
+
+fn default_scenario_kind() -> ScenarioKind {
+    ScenarioKind::RosemarchPrototype
+}
 
 fn first_household_id() -> HouseholdId {
     HouseholdId(1)
@@ -213,6 +217,8 @@ pub struct StrategicCampaign {
     pub diplomacy: super::diplomacy::CampaignDiplomacy,
     pub ai: super::ai::AiState,
     pub threats: BTreeMap<super::threat::ThreatId, super::threat::Threat>,
+    #[serde(default)]
+    pub initial_threats: BTreeMap<SiteId, crate::data::threats::ThreatKind>,
     pub sieges: BTreeMap<SiteId, super::siege::Siege>,
     pub construction:
         BTreeMap<super::construction::OrderId, super::construction::ConstructionOrder>,
@@ -221,6 +227,8 @@ pub struct StrategicCampaign {
     pub battles: BTreeMap<BattleId, BattleReport>,
     pub version: u32,
     pub content_version: u32,
+    #[serde(default = "default_scenario_kind")]
+    pub scenario_kind: ScenarioKind,
     pub campaign_id: CampaignId,
     pub seed: u64,
     pub rng: RandomStreams,
@@ -256,7 +264,23 @@ pub struct StrategicCampaign {
 impl StrategicCampaign {
     pub fn new(data: &GameData) -> Result<Self, String> {
         data.validate()?;
-        let scenario = &data.scenario;
+        Self::from_scenario(data, &data.scenario, &data.threats.initial)
+    }
+
+    pub fn new_production(
+        data: &GameData,
+        setup: &crate::data::generation::ProductionSetup,
+    ) -> Result<Self, String> {
+        data.validate()?;
+        let generated = data.production_layout.generate(data, setup)?;
+        Self::from_scenario(data, &generated.scenario, &generated.initial_threats)
+    }
+
+    fn from_scenario(
+        data: &GameData,
+        scenario: &crate::data::world::Scenario,
+        initial_threats: &[crate::data::threats::InitialThreat],
+    ) -> Result<Self, String> {
         let factions = scenario
             .factions
             .iter()
@@ -282,7 +306,11 @@ impl StrategicCampaign {
         let mut campaign = Self {
             diplomacy: Default::default(),
             ai: Default::default(),
-            threats: super::threat::initialize_threats(data)?,
+            threats: super::threat::initialize_threats(data, scenario, initial_threats)?,
+            initial_threats: initial_threats
+                .iter()
+                .map(|threat| (threat.site, threat.kind))
+                .collect(),
             sieges: BTreeMap::new(),
             construction: BTreeMap::new(),
             history: CampaignHistory::default(),
@@ -290,6 +318,7 @@ impl StrategicCampaign {
             battles: BTreeMap::new(),
             version: STRATEGIC_VERSION,
             content_version: scenario.content_version,
+            scenario_kind: scenario.kind,
             campaign_id: CampaignId(scenario.seed),
             seed: scenario.seed,
             rng: RandomStreams::new(scenario.seed),
@@ -337,7 +366,7 @@ impl StrategicCampaign {
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.initialize_diplomacy();
         campaign.round_order = campaign.independent_order();
-        campaign.instantiate_starting_military(data)?;
+        campaign.instantiate_starting_military(data, scenario)?;
         campaign.initialize_population(&data.construction);
         campaign.initialize_development(data)?;
         campaign.initialize_legacy_items()?;

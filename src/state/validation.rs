@@ -3,7 +3,10 @@
 use super::campaign::{
     CampaignPhase, DomainFactKind, FactionStatus, StrategicCampaign, STRATEGIC_VERSION,
 };
-use crate::data::{world::FactionId, GameData};
+use crate::data::{
+    world::{FactionId, ScenarioKind},
+    GameData,
+};
 use std::collections::BTreeSet;
 
 impl StrategicCampaign {
@@ -15,7 +18,11 @@ impl StrategicCampaign {
         )?;
         require(
             self.content_version == data.rules.content_version
-                && self.content_version == data.scenario.content_version,
+                && self.content_version
+                    == match self.scenario_kind {
+                        ScenarioKind::RosemarchPrototype => data.scenario.content_version,
+                        ScenarioKind::Production => data.production_layout.content_version,
+                    },
             "content_version",
             "unsupported content rules",
         )?;
@@ -116,10 +123,22 @@ impl StrategicCampaign {
     }
 
     fn validate_world(&self, data: &GameData) -> Result<(), String> {
+        let (markers, sites, routes): (&[_], &[_], &[_]) = match self.scenario_kind {
+            ScenarioKind::RosemarchPrototype => (
+                &data.scenario.markers,
+                &data.scenario.sites,
+                &data.scenario.routes,
+            ),
+            ScenarioKind::Production => (
+                &data.production_layout.markers,
+                &data.production_layout.sites,
+                &data.production_layout.routes,
+            ),
+        };
         require(
-            self.world.sites.len() == data.scenario.sites.len()
-                && self.world.routes.len() == data.scenario.routes.len()
-                && self.world.markers.len() == data.scenario.markers.len(),
+            self.world.sites.len() == sites.len()
+                && self.world.routes.len() == routes.len()
+                && self.world.markers.len() == markers.len(),
             "world",
             "fixed topology counts changed",
         )?;
@@ -142,9 +161,9 @@ impl StrategicCampaign {
             "IDs must be unique and ordered",
         )?;
         for marker in &self.world.markers {
-            let mut original = data
-                .scenario
-                .marker(marker.id)
+            let mut original = markers
+                .iter()
+                .find(|authored| authored.id == marker.id)
                 .cloned()
                 .ok_or("campaign.world.markers: unknown marker")?;
             if matches!(
@@ -160,9 +179,9 @@ impl StrategicCampaign {
             )?;
         }
         for site in &self.world.sites {
-            let original = data
-                .scenario
-                .site(site.id)
+            let original = sites
+                .iter()
+                .find(|authored| authored.id == site.id)
                 .ok_or("campaign.world.sites: unknown site")?;
             require(
                 site.marker == original.marker
@@ -192,9 +211,9 @@ impl StrategicCampaign {
             )?;
         }
         for route in &self.world.routes {
-            let original = data
-                .scenario
-                .route(route.id)
+            let original = routes
+                .iter()
+                .find(|authored| authored.id == route.id)
                 .ok_or("campaign.world.routes: unknown route")?;
             require(
                 route.from == original.from

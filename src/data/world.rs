@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 pub const SOURCE: &str = "assets/data/scenarios/rosemarch.json";
+pub const LAYOUT_SOURCE: &str = "assets/data/world_layout.json";
 
 macro_rules! stable_id {
     ($name:ident) => {
@@ -24,6 +25,46 @@ stable_id!(FactionId);
 #[serde(rename_all = "snake_case")]
 pub enum ScenarioKind {
     RosemarchPrototype,
+    Production,
+}
+
+/// Authored production geography. Campaign ownership and ordinary settlement
+/// contents are assigned only when a player confirms a seeded setup.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WorldLayout {
+    pub schema_version: u32,
+    pub content_version: u32,
+    pub default_seed: u64,
+    pub markers: Vec<MajorMarker>,
+    pub sites: Vec<Site>,
+    pub routes: Vec<Route>,
+    pub headquarters_candidates: Vec<SiteId>,
+}
+
+impl WorldLayout {
+    pub fn site(&self, id: SiteId) -> Option<&Site> {
+        self.sites.iter().find(|site| site.id == id)
+    }
+
+    pub fn marker(&self, id: MarkerId) -> Option<&MajorMarker> {
+        self.markers.iter().find(|marker| marker.id == id)
+    }
+
+    pub fn reachable_sites(&self, start: SiteId) -> BTreeSet<SiteId> {
+        let mut visited = BTreeSet::new();
+        let mut pending = vec![start];
+        while let Some(site) = pending.pop() {
+            if self.site(site).is_some() && visited.insert(site) {
+                pending.extend(
+                    self.routes
+                        .iter()
+                        .filter_map(|route| route.other_endpoint(site)),
+                );
+            }
+        }
+        visited
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

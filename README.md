@@ -4,11 +4,12 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
-The campaign foundation is implemented in Rust, Macroquad, and Macroquad Toolkit.
+The production campaign is implemented in Rust, Macroquad, and Macroquad Toolkit.
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
-Play, Credits, and native Quit Game. New Game starts Rosemarch's strategic state
-over the illustrated atlas, with selectable headquarters and a regional marker.
-Select your headquarters and open Armies to inspect or recruit your forces.
+Play, Credits, and native Quit Game. New Game opens production setup for a kingdom
+name, botanical emblem, 4–8 factions and displayed seed. A confirmed setup creates
+the authored 80-major / 152-physical-site campaign over the illustrated atlas.
+Rosemarch remains a separate small scenario for regression tests and captures.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -17,15 +18,21 @@ fight using the same campaign rules. Pause,
 Step and Resume control rival progression between atomic actions. A full round
 advances one season and saves the campaign. The menu contains manual save/load,
 settings, help, and the route back to the title. Continue restores the current
-campaign or its disk/browser save. Starting over requires confirmation.
+campaign or its disk/browser save. Starting over requires confirmation before
+production setup.
 
 The save catalogue keeps each round checkpoint and each new named save. It offers
 explicit overwrite/deletion and retries failed writes without replaying the round.
-Enter Region opens Rosemarch's ten connected sites. Six-slot armies, recruitment,
+Enter Region opens the selected region's ten connected sites. Six-slot armies, recruitment,
 disbanding, income, upkeep, movement, transfers and supplied recovery are playable.
 Hostile field encounters resolve automatically, with lasting casualties, retreat,
 person wounds and recorded reports. Persistent fortified encounters, escape and joint relief are playable.
 Terrain labels are distinct from selectable place markers.
+
+Production setup uses the displayed seed to choose neutral headquarters from eight
+spaced Village candidates, name every founding faction, and place local threats.
+Region names and faction seals keep the 80-node world legible; select any marker
+for its full name and facts. Each region's ten detailed sites appear when entered.
 
 ### K01 — Typed content and Rosemarch
 
@@ -66,7 +73,8 @@ read-only, with no invented strategic history.
 K02 passes 23 tests, formatting, strict Clippy, both-size native visual review and
 Windows/WebGL Preview publishing. Browser checks cover phase controls and save
 restoration after reload. [K02 evidence](docs/verification/k02-campaign.md) records
-the remaining fullscreen/physical-touch limitations. K04–K18 remain required.
+the remaining fullscreen/physical-touch limitations. K18 integrated/platform
+acceptance remains.
 
 ### K03 — Recoverable campaign saves
 
@@ -103,7 +111,8 @@ Earlier v2 saves gain these derived fields without changing their original bytes
 All 33 tests, formatting, strict Clippy, native review at both supported sizes and
 Windows/WebGL Preview publishing pass. [K04 evidence](docs/verification/k04-geography.md)
 records browser navigation checks and the inherited minimum-browser display issue.
-K05 extends this foundation below. K06–K18 remain required before the full release.
+K05 extends this foundation below. K18 integrated/platform acceptance remains
+before the full release.
 
 ### K05 — Armies, recruitment and round economy
 
@@ -144,7 +153,7 @@ forecast and actual last-round recovery. Cut supply and unpaid upkeep block it.
 All 48 tests, strict Clippy, formatting, source-size checks, native visual review,
 browser movement/transfer/reload and Windows/WebGL Preview publishing pass.
 [K06 evidence](docs/verification/k06-logistics.md) records the checks and remaining
-platform limitations. K07–K18 remain required.
+platform limitations. K18 integrated/platform acceptance remains.
 
 ### K07 — Automatic battles and recorded consequences
 
@@ -168,7 +177,8 @@ and recover after two supplied seasonal boundaries. Earlier saves gain no invent
 encounters, injuries or occupation. All 58 tests, strict Clippy, formatting,
 source-size checks, both-size native review, published browser battle/recovery/
 reload and Windows/WebGL Preview publishing pass. [K07 evidence](docs/verification/k07-combat.md)
-records the checks and remaining platform limitations. K08–K18 remain required.
+records the checks and remaining platform limitations. K18 integrated/platform
+acceptance remains.
 
 ### K08 — Service and known histories
 
@@ -188,7 +198,8 @@ All 68 tests, formatting, strict Clippy and source-size checks pass. Forty-two
 normal/minimum native captures and published browser service, search, filters,
 report links and reload were reviewed. Windows/WebGL Preview publication passed;
 Project Roost tracking was unavailable. [K08 evidence](docs/verification/k08-service.md)
-records the checks and remaining platform limitations. K09–K18 remain required.
+records the checks and remaining platform limitations. K18 integrated/platform
+acceptance remains.
 
 ### K09 — Persistent construction
 
@@ -211,7 +222,8 @@ Saves and owner-visible histories retain actual orders and outcomes.
 [K09 verification](docs/verification/k09-construction.md) records 81 passing tests,
 strict Clippy, native visual review and published browser construction/reload checks.
 Windows and WebGL Preview publishing passed. Minimum-browser sizing, cache
-invalidation and physical-touch checks remain open for K18. K10–K18 remain required.
+invalidation and physical-touch checks remain open for K18. Integrated/platform
+acceptance is the remaining package.
 
 ### K10 — Persistent sieges and relief
 
@@ -240,7 +252,7 @@ assault, defense, sortie, escape or relief service evidence.
 
 K10 is complete; [verification](docs/verification/k10-sieges.md) records 96 passing
 tests, publication and the remaining platform checks.
-K11–K18 remain required release work.
+K18 integrated/platform acceptance remains as the final required package.
 
 ### K11 — Living places and local threats
 
@@ -266,9 +278,21 @@ unpoliced rounds. Older saves acquire no invented occupants or development histo
 All 111 tests, formatting, strict Clippy, source gate, representative native review
 and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
 records browser seasonal growth and reload, decisions and platform limitations.
-K17–K18 remain required.
+K18 integrated/platform acceptance remains required.
 
 ## Screen brief
+
+### Production campaign setup
+
+| Question | Current answer |
+| --- | --- |
+| Current decision | Choose a kingdom name and emblem, how many total factions to face, and the world seed. |
+| Dominant focus | One focused setup sheet above the atlas. |
+| Primary action | Create Campaign is enabled for a trimmed name of 1–32 Unicode characters. It uses the displayed seed and normal difficulty. |
+| Supporting information | Faction count includes the player; every start has equal troops/resources and two nearby local threats. The seed randomizer is explicit. |
+| Deferred information | Geography and site names appear on the atlas; deeper scenario controls do not appear in production setup. |
+| Layout and camera | At 1280 × 720, choices appear together. Name entry opens the visible touch keyboard on its own step; the atlas remains visible behind the sheet. |
+| Input and feedback | Tap an emblem, − / +, or Randomize Seed. Tap Enter a Name for the touch keyboard. The displayed 4–8 count, selected emblem and seed show each change. |
 
 ### History item inspector
 
@@ -303,6 +327,10 @@ is shown in [the chronicle](docs/verification/ui_history_item_deed.png) and its
 Approximately 80% of the minimum canvas sits between the shallow edge controls;
 the terrain continues beneath them. No framed central map widget or persistent
 sidebar exists. A selected place adds one inspector opposite its map position.
+The 80-marker production world lowers route-line weight and shows region names,
+faction seals, stationed-army counts, observed local threats and the selected
+location. Selecting a marker reveals its full name and facts. Regional maps show
+all ten internal site names.
 
 ### K12 — Rival kingdoms, diplomacy and endings
 
@@ -324,7 +352,8 @@ eliminated or your vassal, the kingdom milestone ends in victory. Losing your ow
 last base and army ends in defeat. The saved result preserves the final battle's
 service and allows Records, Save, Menu and New Game. Simulation stops there.
 
-K17–K18 remain required for the full generational release.
+K17 completes the production world and setup. K18 integrated and platform
+acceptance remains required for the full generational release.
 
 [K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
 Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
@@ -347,8 +376,8 @@ Rivals use the same evidence options and validated course/appointment commands.
 
 [K13 verification](docs/verification/k13-careers.md) records nine progression cases,
 136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum
-screen review and Windows/WebGL Preview publishing. K17–K18 remain required;
-minimum WebGL campaign scaling and physical-touch acceptance remain open.
+screen review and Windows/WebGL Preview publishing. K17 is complete; K18 remains
+required, including minimum-WebGL campaign scaling and physical-touch acceptance.
 
 ### K14 — Elders keep serving in new ways
 
@@ -412,8 +441,23 @@ start is unknown say so.
 
 [K16 verification](docs/verification/k16-heirlooms.md) records the focused and
 full-suite results, both-size native review, publisher outcome and any remaining
-browser/touch limitations. K17's production campaign and K18's integrated platform
-acceptance remain.
+browser/touch limitations. K17's production campaign is complete; K18 integrated
+platform acceptance remains.
+
+### K17 — Production worlds and seeded kingdoms
+
+New Campaign now opens a focused setup for the kingdom name, botanical emblem,
+total faction count and displayed seed. The authored production world contains 80
+major locations, 152 physical sites and 191 routes, with eight separated neutral
+Village headquarters candidates. Four to eight kingdoms receive equal starting
+forces, distinct human names and emblems, Peace relations and two local threats.
+The seed determines their starts, settlement tiers and names. Rosemarch remains
+available as the small, fixed regression scenario.
+
+[K17 verification](docs/verification/k17-production.md) records five production
+generation cases, full project validation, normal/minimum setup, touch-keyboard,
+world and region captures, and Windows/WebGL Preview publishing. K18 integrated
+campaign performance, browser play and platform acceptance remain.
 
 ## Development
 
@@ -448,6 +492,7 @@ capture, with no additional image processing.
 - `assets/data/economy.json`: validated recruitment, upkeep, income and recovery defaults; K05 consumes recruitment and seasonal economy.
 - `assets/data/campaign_rules.json`: supported setup policy and eight botanical emblems.
 - `assets/data/scenarios/rosemarch.json`: versioned small scenario, topology and founding grants.
+- `assets/data/world_layout.json`: production topology, 80 major markers, 152 physical sites and eight reserved starts.
 
 ## Documentation and verification
 
@@ -459,8 +504,8 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. K17 is the next required
-package; K17–K18 remain planned.
+reusable prompt for implementing one package at a time. K17 is complete and K18
+is the remaining required package.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

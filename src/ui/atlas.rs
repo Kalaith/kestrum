@@ -61,7 +61,11 @@ pub fn draw_landscape(ctx: &Context<'_>) {
                 HEIGHT,
                 Color::new(INK.r, INK.g, INK.b, 0.62),
             );
-        } else if !ctx.preferences.hide_labels {
+        } else if !ctx.preferences.hide_labels
+            && !ctx
+                .campaign_view
+                .is_some_and(|campaign| campaign.world.markers.len() > 24)
+        {
             geography(ctx);
         }
         for row in 0..100 {

@@ -97,7 +97,6 @@ pub fn specialization_options(
 
 pub(super) fn course_site(
     campaign: &StrategicCampaign,
-    data: &GameData,
     owner: crate::data::world::FactionId,
     site: SiteId,
     facility: Facility,
@@ -108,10 +107,5 @@ pub(super) fn course_site(
             && campaign.world.structural_damage(site) == 0
             && campaign.supplied_sites(owner).contains(&site)
             && !campaign.sieges.contains_key(&site)
-            && data
-                .scenario
-                .sites
-                .iter()
-                .any(|authored| authored.id == site)
     })
 }

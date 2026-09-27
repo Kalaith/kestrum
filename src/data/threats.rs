@@ -46,6 +46,10 @@ pub struct ThreatRules {
 
 impl ThreatRules {
     pub fn validate(&self, scenario: &Scenario) -> Result<(), String> {
+        self.validate_initials(scenario, &self.initial)
+    }
+
+    pub fn validate_definitions(&self) -> Result<(), String> {
         let invalid = |reason| format!("{SOURCE}: {reason}");
         if self.schema_version != 1 || self.leadership_permille != 1000 || self.lawless_rounds == 0
         {
@@ -71,8 +75,18 @@ impl ThreatRules {
             }
             entry.reward.validate(SOURCE, "reward")?;
         }
+        Ok(())
+    }
+
+    pub fn validate_initials(
+        &self,
+        scenario: &Scenario,
+        initial: &[InitialThreat],
+    ) -> Result<(), String> {
+        self.validate_definitions()?;
+        let invalid = |reason| format!("{SOURCE}: {reason}");
         let mut sites = BTreeSet::new();
-        for entry in &self.initial {
+        for entry in initial {
             if !sites.insert(entry.site)
                 || !scenario
                     .sites

@@ -12,6 +12,7 @@ mod movement;
 mod saves;
 mod selection;
 mod settlement;
+mod setup;
 mod siege;
 mod threat;
 mod typography;
@@ -52,6 +53,7 @@ pub use settlement::{
     BuildChoice, BuilderChoice, FocusChoice, LocalAction, LocalDestination, SettlementMode,
     SettlementView, SETTLEMENT_PAGE_SIZE,
 };
+pub use setup::SetupView;
 pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
 pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
 pub use typography::prepare_dynamic_text;
@@ -191,6 +193,13 @@ pub enum UiAction {
     CloseSelection,
     NewGame,
     ConfirmNew,
+    OpenSetupName,
+    EditSetupName(macroquad_toolkit::ui::text_entry::TextEntryAction),
+    SetupNameDone,
+    SelectSetupEmblem(kestrum::data::rules::Emblem),
+    ChangeSetupFactionCount(i32),
+    RandomizeSetupSeed,
+    StartProductionCampaign,
     Continue,
     Open(Overlay),
     Back,
@@ -339,6 +348,7 @@ pub struct Context<'a> {
     pub import_save_exists: bool,
     pub saves: &'a SaveView,
     pub save_error: &'a str,
+    pub setup: &'a SetupView,
     pub campaign_view: Option<&'a kestrum::engine::VisibleCampaign>,
 }
 
@@ -363,6 +373,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     };
     if ctx.state.overlay == Overlay::Kingdom {
         return kingdom::draw(ctx);
+    }
+    if ctx.state.overlay == Overlay::Setup {
+        return setup::draw(ctx);
     }
     if ctx.state.overlay == Overlay::CampaignEnd {
         return campaign_end::draw(ctx);

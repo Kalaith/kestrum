@@ -91,6 +91,13 @@ impl Game {
             UiAction::HelpPage(_)
             | UiAction::NewGame
             | UiAction::ConfirmNew
+            | UiAction::OpenSetupName
+            | UiAction::EditSetupName(_)
+            | UiAction::SetupNameDone
+            | UiAction::SelectSetupEmblem(_)
+            | UiAction::ChangeSetupFactionCount(_)
+            | UiAction::RandomizeSetupSeed
+            | UiAction::StartProductionCampaign
             | UiAction::Continue
             | UiAction::Open(_)
             | UiAction::Back
@@ -355,10 +362,28 @@ impl Game {
                 if self.save_exists || self.state.campaign.is_some() {
                     self.state.overlay = Overlay::ConfirmNew;
                 } else {
-                    self.start_game();
+                    self.state.overlay = Overlay::Setup;
                 }
             }
-            UiAction::ConfirmNew => self.start_game(),
+            UiAction::ConfirmNew => self.state.overlay = Overlay::Setup,
+            UiAction::OpenSetupName => {
+                self.setup.editing_name = true;
+                self.setup.name_error = None;
+            }
+            UiAction::EditSetupName(action) => self.edit_setup_name(action),
+            UiAction::SetupNameDone => self.setup.editing_name = false,
+            UiAction::SelectSetupEmblem(emblem) => self.setup.emblem = emblem,
+            UiAction::ChangeSetupFactionCount(delta) => {
+                self.setup.factions = self
+                    .setup
+                    .factions
+                    .saturating_add_signed(delta as isize)
+                    .clamp(self.data.rules.min_factions, self.data.rules.max_factions);
+            }
+            UiAction::RandomizeSetupSeed => {
+                self.setup.seed = u64::from(macroquad::rand::gen_range(1u32, u32::MAX));
+            }
+            UiAction::StartProductionCampaign => self.start_game(),
             UiAction::Continue => {
                 if self.state.campaign.is_some() {
                     self.state.screen = Screen::Campaign;

@@ -80,7 +80,6 @@ pub(super) fn validate(
             }
             validate_person_site(
                 campaign,
-                data,
                 owner,
                 *person,
                 *site,
@@ -108,15 +107,7 @@ pub(super) fn validate(
                     "Riding practice needs a fit, unretired adult with no active course.".into(),
                 ));
             }
-            validate_person_site(
-                campaign,
-                data,
-                owner,
-                *person,
-                *site,
-                Facility::Stable,
-                true,
-            )?;
+            validate_person_site(campaign, owner, *person, *site, Facility::Stable, true)?;
         }
         Command::CancelPersonCourse { person } => {
             let entry = campaign
@@ -167,13 +158,7 @@ pub(super) fn validate(
                     formation: *formation,
                 })?;
             if army.site != *site
-                || !specialization::course_site(
-                    campaign,
-                    data,
-                    owner,
-                    *site,
-                    Facility::TrainingGround,
-                )
+                || !specialization::course_site(campaign, owner, *site, Facility::TrainingGround)
             {
                 return Err(RuleError::Progression("Specialization needs this formation at its supplied, unbesieged Training Ground.".into()));
             }
@@ -316,14 +301,13 @@ pub(super) fn execute(
 
 fn validate_person_site(
     campaign: &StrategicCampaign,
-    data: &GameData,
     owner: crate::data::world::FactionId,
     person: PersonId,
     site: SiteId,
     facility: Facility,
     horses: bool,
 ) -> Result<(), RuleError> {
-    if !specialization::course_site(campaign, data, owner, site, facility) {
+    if !specialization::course_site(campaign, owner, site, facility) {
         return Err(RuleError::Progression(format!(
             "Course requires a supplied, unbesieged site with a functional {}.",
             facility_name(facility)

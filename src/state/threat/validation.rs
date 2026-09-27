@@ -9,6 +9,16 @@ impl StrategicCampaign {
         if self.next_ids.threat.0 == 0 || !consistent_receipts(self) {
             return Err(invalid());
         }
+        if self.scenario_kind == crate::data::world::ScenarioKind::Production
+            && self.initial_threats.len() != self.factions.len() * 2
+        {
+            return Err(invalid());
+        }
+        if self.initial_threats.iter().any(|(site, kind)| {
+            self.world.site(*site).is_none() || !data.threats.definitions.contains_key(kind)
+        }) {
+            return Err(invalid());
+        }
         let mut active = BTreeSet::new();
         let mut origins = BTreeSet::new();
         let mut spawned_sites = BTreeSet::new();
@@ -44,11 +54,13 @@ impl StrategicCampaign {
                 {
                     return Err(invalid());
                 }
-            } else if !data
-                .threats
-                .initial
-                .iter()
-                .any(|initial| initial.site == threat.site && initial.kind == threat.kind)
+            } else if (self.initial_threats.get(&threat.site) != Some(&threat.kind)
+                && !(self.scenario_kind == crate::data::world::ScenarioKind::RosemarchPrototype
+                    && data
+                        .threats
+                        .initial
+                        .iter()
+                        .any(|initial| initial.site == threat.site && initial.kind == threat.kind)))
                 || (development.ruination == 1 && development.ruined && !development.threat_created)
             {
                 return Err(invalid());

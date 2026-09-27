@@ -32,6 +32,12 @@ impl Scenario {
             self.difficulty == rules.difficulty,
             "unsupported difficulty",
         )?;
+        require(
+            SOURCE,
+            "kind",
+            self.kind == ScenarioKind::RosemarchPrototype,
+            "production worlds are generated separately; the fixture must remain Rosemarch",
+        )?;
         // This named fixture is distinct from K17's 80-marker production layout.
         require(
             SOURCE,
@@ -45,16 +51,48 @@ impl Scenario {
             self.sites.len() == 14,
             "Rosemarch requires fourteen physical sites",
         )?;
+        self.validate_geography(economy)?;
+        self.validate_setup(rules, economy)
+    }
+
+    pub fn validate_generated(
+        &self,
+        rules: &CampaignRules,
+        economy: &Economy,
+    ) -> Result<(), String> {
+        require(
+            LAYOUT_SOURCE,
+            "kind",
+            self.kind == ScenarioKind::Production,
+            "generated setup must be a production campaign",
+        )?;
+        require(
+            LAYOUT_SOURCE,
+            "content_version",
+            self.content_version == rules.content_version,
+            "incompatible campaign rules",
+        )?;
+        require(
+            LAYOUT_SOURCE,
+            "difficulty",
+            self.difficulty == rules.difficulty,
+            "unsupported difficulty",
+        )?;
+        self.validate_geography(economy)?;
+        self.validate_setup(rules, economy)
+    }
+
+    pub(super) fn validate_geography(&self, economy: &Economy) -> Result<(), String> {
         self.validate_identities()?;
         self.validate_sites(economy)?;
         self.validate_routes()?;
         for marker in &self.markers {
             self.validate_marker(marker)?;
         }
-        self.validate_setup(rules, economy)
+        Ok(())
     }
 
-    fn validate_identities(&self) -> Result<(), String> {
+    pub(super) fn validate_identities(&self) -> Result<(), String> {
         unique(SOURCE, "sites.id", self.sites.iter().map(|site| site.id))?;
         unique(
             SOURCE,
@@ -94,7 +132,7 @@ impl Scenario {
         Ok(())
     }
 
-    fn validate_sites(&self, economy: &Economy) -> Result<(), String> {
+    pub(super) fn validate_sites(&self, economy: &Economy) -> Result<(), String> {
         for site in &self.sites {
             let field = format!("sites[{}]", site.id.0);
             validate_label_position(&field, &site.key, &site.name, site.position)?;
@@ -130,7 +168,7 @@ impl Scenario {
         Ok(())
     }
 
-    fn validate_routes(&self) -> Result<(), String> {
+    pub(super) fn validate_routes(&self) -> Result<(), String> {
         let mut edges = BTreeSet::new();
         for route in &self.routes {
             let field = format!("routes[{}]", route.id.0);
@@ -181,7 +219,7 @@ impl Scenario {
         Ok(())
     }
 
-    fn validate_marker(&self, marker: &MajorMarker) -> Result<(), String> {
+    pub(super) fn validate_marker(&self, marker: &MajorMarker) -> Result<(), String> {
         let field = format!("markers[{}]", marker.id.0);
         validate_label_position(&field, &marker.key, &marker.name, marker.position)?;
         match &marker.location {

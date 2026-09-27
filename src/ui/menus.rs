@@ -130,7 +130,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Help => "help_title",
         Overlay::Credits => "credits",
         Overlay::ConfirmNew => "new_title",
-        Overlay::None
+        Overlay::Setup
+        | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery
         | Overlay::Armies
@@ -155,7 +156,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
             None
         }
         Overlay::ConfirmNew => confirm(ctx),
-        Overlay::None
+        Overlay::Setup
+        | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery
         | Overlay::Armies

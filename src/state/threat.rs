@@ -5,8 +5,9 @@ mod validation;
 use super::StrategicCampaign;
 use crate::data::{
     economy::Resources,
+    threats::InitialThreat,
     threats::ThreatKind,
-    world::{FactionId, SiteId},
+    world::{FactionId, Scenario, SiteId},
     GameData,
 };
 use serde::{Deserialize, Serialize};
@@ -48,10 +49,13 @@ impl StrategicCampaign {
     }
 }
 
-pub fn initialize_threats(data: &GameData) -> Result<BTreeMap<ThreatId, Threat>, String> {
-    data.threats.validate(&data.scenario)?;
-    data.threats
-        .initial
+pub fn initialize_threats(
+    data: &GameData,
+    scenario: &Scenario,
+    initial: &[InitialThreat],
+) -> Result<BTreeMap<ThreatId, Threat>, String> {
+    data.threats.validate_initials(scenario, initial)?;
+    initial
         .iter()
         .enumerate()
         .map(|(index, initial)| {

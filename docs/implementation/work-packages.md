@@ -3,7 +3,7 @@
 [Plan and handoff prompt](../implementation-plan.md) · [Contracts](contracts.md) ·
 [Verification and coverage](acceptance.md)
 
-K01–K11 are **Done**; K12 is the next eligible task. See the completion record in
+K01–K17 are **Done**; K18 is the next eligible task. See the completion record in
 [acceptance](acceptance.md#completion-record). Numbered rule links
 refer to the provisional packets; D/O identifiers refer to chapter 13. A package
 is a reviewable feature, not permission for one oversized Rust file or commit.
@@ -428,6 +428,9 @@ age/count boundaries preserve live relationships/earned capabilities;
 eras/reminders use real facts and do not repeat or reveal hidden enemy history.
 
 ## K17 — The 80-node production campaign and content pass
+
+**Status:** complete. See [K17 verification](../verification/k17-production.md)
+for generation coverage, normal/minimum map review and release validation.
 
 **Depends on:** K16. **Read:** chapters 01/02/09/10; O01/O08/O24/O25;
 [P01](strategic-rules.md#p01--setup-and-the-fixed-world).

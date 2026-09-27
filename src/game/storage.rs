@@ -169,6 +169,10 @@ impl Game {
     }
 
     pub(super) fn go_back(&mut self) {
+        if self.state.overlay == Overlay::Setup && self.setup.editing_name {
+            self.setup.editing_name = false;
+            return;
+        }
         if self.movement.stage != ui::MoveStage::Inactive
             && matches!(
                 self.state.overlay,

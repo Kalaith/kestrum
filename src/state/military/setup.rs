@@ -2,7 +2,7 @@
 
 use super::{Army, ArmyId, Formation, FormationId};
 use crate::{
-    data::GameData,
+    data::{world::Scenario, GameData},
     state::{
         people::{
             Disposition, Person, PersonAssignment, PersonCareer, PersonId, PersonStatus, Tendency,
@@ -12,8 +12,12 @@ use crate::{
 };
 
 impl StrategicCampaign {
-    pub(crate) fn instantiate_starting_military(&mut self, data: &GameData) -> Result<(), String> {
-        let mut setups: Vec<_> = data.scenario.factions.iter().collect();
+    pub(crate) fn instantiate_starting_military(
+        &mut self,
+        data: &GameData,
+        scenario: &Scenario,
+    ) -> Result<(), String> {
+        let mut setups: Vec<_> = scenario.factions.iter().collect();
         setups.sort_by_key(|setup| setup.id);
         for setup in setups {
             let army_id = self.next_ids.army;

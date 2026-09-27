@@ -40,7 +40,7 @@ pub(super) fn begin_stable_and_road(campaign: &mut StrategicCampaign, data: &Gam
 pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 

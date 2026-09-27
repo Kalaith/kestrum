@@ -36,6 +36,9 @@ impl Game {
                 self.movement = ui::MoveView::default();
                 self.battle = ui::BattleView::default();
                 self.reset_history();
+                self.kingdom = ui::KingdomView::default();
+                self.diplomacy_seen.clear();
+                self.ending_saved = false;
                 self.invalidate_projection();
                 self.error = None;
                 self.npc_delay = 0.0;
@@ -54,10 +57,20 @@ impl Game {
         self.npc_delay = 0.0;
     }
 
-    fn handle_campaign_result(&mut self, result: Result<engine::ActionOutcome, engine::RuleError>) {
+    pub(super) fn handle_campaign_result(
+        &mut self,
+        result: Result<engine::ActionOutcome, engine::RuleError>,
+    ) {
         match result {
             Ok(outcome) => {
-                if outcome.round_completed {
+                if outcome.round_completed
+                    && self
+                        .state
+                        .campaign
+                        .as_ref()
+                        .and_then(Campaign::strategic)
+                        .is_some_and(|campaign| campaign.diplomacy.ending.is_none())
+                {
                     self.save_checkpoint();
                 }
                 if outcome
@@ -87,10 +100,11 @@ impl Game {
             .as_ref()
             .and_then(Campaign::strategic)
             .is_some_and(|campaign| {
-                matches!(
-                    campaign.phase,
-                    kestrum::state::campaign::CampaignPhase::NpcTurn { paused: false, .. }
-                )
+                !campaign.diplomacy.is_blocked()
+                    && matches!(
+                        campaign.phase,
+                        kestrum::state::campaign::CampaignPhase::NpcTurn { paused: false, .. }
+                    )
             });
         if !ready {
             self.npc_delay = 0.0;
@@ -98,7 +112,7 @@ impl Game {
         }
         self.npc_delay += dt;
         // Presentation pacing only; each engine command remains an atomic, deterministic step.
-        if self.npc_delay >= 1.2 {
+        if self.npc_delay >= self.data.presentation.npc_action_delay_seconds {
             self.npc_delay = 0.0;
             let result = self.state.advance_npc(&self.data);
             self.handle_campaign_result(result);

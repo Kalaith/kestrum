@@ -2,9 +2,25 @@
 
 [Documentation index](README.md) · [Decisions](13-decisions-and-open-questions.md) · [Verification record](verification/documentation.md)
 
-## Current milestone: title screen and empty atlas
+## Current milestone: playable kingdom campaign through K12
 
-The initial title/campaign shell is implemented. New Game opens empty geography as explicitly requested; nodes, factions, armies, and local regions remain later work. [Verification](verification/initial-map.md) records checks and limitations. This completes onboarding and presentation only, not every proposed M1 simulation feature below.
+The small Rosemarch campaign now has persistent armies, battles, construction,
+sieges, changing settlements, threats, legal rival AI and War/Peace diplomacy.
+Conquest can end in annexation or submission; victory and defeat preserve a
+read-only campaign with records and saves. This is the kingdom milestone.
+Generational careers, succession and the production world remain K13–K18 work.
+The user requested a stop after K12 and its commit.
+
+| Stage | Implemented status and remaining work |
+| --- | --- |
+| M1 — Strategic foundation | K01–K06 implement typed content, seasonal faction rounds, nested geography, control and movement. The 80-node world and 4–8-faction production setup belong to K17; integrated platform and physical-touch acceptance belong to K18. |
+| M2 — Military loop | K05–K12 implement recruitment, composition, movement, combat, retreat, persistent losses, supply, recovery, veterancy and legal rival orders. The small scenario exercises this loop; production balance remains K18. |
+| M3 — People from campaigns | Founding Officers, wounds, actual participation, service and known rivals are implemented. Emergence, traits, ordinary careers, mentorship and succession remain K13–K15. |
+| M4 — Kingdom expansion | K09–K12 implement construction, siege, development, local threats, relocation, War/Peace/truce, defeat choices and reachable endings in the small campaign. Production world/content remains K17. |
+
+See the package [acceptance record](implementation/acceptance.md#completion-record)
+for tests, publishing, captures and platform limitations. The
+[initial title/atlas review](verification/initial-map.md) is historical evidence.
 
 ## Previous milestone: documentation and initial repository
 
@@ -51,7 +67,11 @@ Exit evidence: a player can explain a junior's development using actual particip
 
 Expand Gold/Wood/Stone systems, development focuses, physical military prerequisites, outposts, roads, anchor control, basic growth/decline, occupation consequences, ordinary local threats, fog of war, and a persistent light siege with relief. Use the JSON economy placeholders as the balance starting point.
 
-Build toward player-selected 4–8 total factions, minimal War/Peace diplomacy, faction elimination, and a reachable victory. Define exact conquest rules and reconcile D04/O07: conquest or vassalisation is the objective, while vassalisation as a defeat outcome remains a proposal for the initial version.
+Build toward player-selected 4–8 total factions, minimal War/Peace diplomacy,
+faction elimination, and a reachable victory. K12 implements the P08 conquest
+rules: defeat requires losing every functioning Outpost-or-larger base and army;
+the player may annex a defeated rival or accept its inactive submission. Other
+vassal diplomacy and revival remain outside the initial scope.
 
 Exit evidence: an outpost can become useful; road access benefits both sides; an isolated force cannot replenish normally; a siege persists through turns and saves; a captured region can still contain hostile pockets; all rival kingdoms use valid capabilities.
 

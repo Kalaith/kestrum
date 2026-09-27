@@ -24,7 +24,7 @@ pub(super) fn recruit(kind: TroopKind, army: Option<ArmyId>) -> Command {
 pub(super) fn finish_round(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 
@@ -334,8 +334,8 @@ pub(super) fn assert_income_eligibility_and_overflow(data: &GameData) {
         .resources
         .gold = i64::MAX;
     apply(&mut campaign, data, Actor::Player, Command::EndTurn).unwrap();
-    advance_npc(&mut campaign, data).unwrap();
-    advance_npc(&mut campaign, data).unwrap();
+    pass_npc(&mut campaign, data).unwrap();
+    pass_npc(&mut campaign, data).unwrap();
     rejected(
         &mut campaign,
         data,
@@ -479,4 +479,60 @@ pub(super) fn assert_deficit_statement_contract(data: &GameData, campaign: &Stra
     let restored: Campaign = serde_json::from_value(legacy_deficit).unwrap();
     restored.validate(data).unwrap();
     assert!(restored.strategic().unwrap().factions[&campaign.player].deficit);
+}
+
+pub(super) fn assert_invalid_recruit_sites(data: &GameData, initial: &StrategicCampaign) {
+    let command = recruit(TroopKind::Warriors, Some(ArmyId(1)));
+    for site in [SiteId(2), SiteId(999)] {
+        rejected(
+            &mut initial.clone(),
+            data,
+            Actor::Player,
+            Command::Recruit {
+                site,
+                army: None,
+                kind: TroopKind::Warriors,
+            },
+            if site.0 == 2 {
+                "controls"
+            } else {
+                "unavailable"
+            },
+        );
+    }
+    let mut campaign = initial.clone();
+    campaign
+        .set_site_control(data, SiteId(6), Some(campaign.player), false)
+        .unwrap();
+    rejected(
+        &mut campaign,
+        data,
+        Actor::Player,
+        Command::Recruit {
+            site: SiteId(6),
+            army: None,
+            kind: TroopKind::Warriors,
+        },
+        "supply path",
+    );
+    let mut campaign = initial.clone();
+    campaign.world.sites[0].habitation = Habitation::Camp;
+    rejected(
+        &mut campaign,
+        data,
+        Actor::Player,
+        command.clone(),
+        "Outpost",
+    );
+    let mut campaign = initial.clone();
+    campaign
+        .set_site_control(data, SiteId(1), Some(campaign.player), true)
+        .unwrap();
+    rejected(
+        &mut campaign,
+        data,
+        Actor::Player,
+        command.clone(),
+        "contested",
+    );
 }

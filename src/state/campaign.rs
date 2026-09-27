@@ -121,6 +121,9 @@ pub struct NextIds {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum DomainFactKind {
+    DiplomacyChanged {
+        receipt: super::diplomacy::DiplomacyReceipt,
+    },
     DevelopmentChanged {
         receipt: super::development::DevelopmentReceipt,
     },
@@ -193,6 +196,8 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub diplomacy: super::diplomacy::CampaignDiplomacy,
+    pub ai: super::ai::AiState,
     pub threats: BTreeMap<super::threat::ThreatId, super::threat::Threat>,
     pub sieges: BTreeMap<SiteId, super::siege::Siege>,
     pub construction:
@@ -249,6 +254,8 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            diplomacy: Default::default(),
+            ai: Default::default(),
             threats: super::threat::initialize_threats(data)?,
             sieges: BTreeMap::new(),
             construction: BTreeMap::new(),
@@ -294,6 +301,7 @@ impl StrategicCampaign {
             relation.factions.sort();
         }
         campaign.relations.sort_by_key(|relation| relation.factions);
+        campaign.initialize_diplomacy();
         campaign.round_order = campaign.independent_order();
         campaign.instantiate_starting_military(data)?;
         campaign.initialize_population(&data.construction);
@@ -316,6 +324,11 @@ impl StrategicCampaign {
         self.factions
             .get(&faction)
             .is_some_and(|state| state.status == FactionStatus::Independent)
+            && !self
+                .diplomacy
+                .pending_defeats
+                .iter()
+                .any(|pending| pending.faction == faction)
     }
 
     pub fn independent_order(&self) -> Vec<FactionId> {

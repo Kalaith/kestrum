@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "max_commands_per_phase": 64,
+  "objective_rounds": 4,
+  "retreat_capacity_percent": 40,
+  "attack_advantage_percent": 125,
+  "reserve_upkeep_rounds": 2,
+  "target_armies": 2,
+  "minimum_formations": 3,
+  "war_peace_rounds": 4,
+  "neutral_search_edges": 2,
+  "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"]
+}

@@ -139,6 +139,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::Battle
         | Overlay::History
         | Overlay::Threat
+        | Overlay::Kingdom
+        | Overlay::CampaignEnd
         | Overlay::Siege
         | Overlay::Settlement => return None,
     };
@@ -162,6 +164,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::Battle
         | Overlay::History
         | Overlay::Threat
+        | Overlay::Kingdom
+        | Overlay::CampaignEnd
         | Overlay::Siege
         | Overlay::Settlement => None,
     };
@@ -186,6 +190,15 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
 }
 
 fn pause(ctx: &Context<'_>) -> Option<UiAction> {
+    if button(
+        ctx,
+        Rect::new(414.0, 209.0, 452.0, 48.0),
+        &ctx.text("kingdom"),
+        ctx.campaign_view.is_some(),
+        true,
+    ) {
+        return Some(UiAction::OpenKingdom(None));
+    }
     for (index, (key, action)) in [
         ("save", UiAction::Save),
         ("load", UiAction::Load),
@@ -199,24 +212,37 @@ fn pause(ctx: &Context<'_>) -> Option<UiAction> {
     {
         let enabled = match key {
             "load" => true,
-            "save" => ctx.campaign_view.is_some_and(|view| view.player_turn),
+            "save" => {
+                ctx.campaign_view.is_some_and(|view| view.player_turn)
+                    || ctx.kingdom.is_save_boundary()
+            }
             _ => true,
         };
-        let label = if key == "save" && !enabled {
-            ctx.text(if ctx.campaign_view.is_some() {
-                "save_player_only"
-            } else {
-                "legacy_phase"
-            })
-        } else {
-            ctx.text(key)
-        };
+        let label = ctx.text(key);
+        if key == "save" && !enabled {
+            body(
+                ctx,
+                &ctx.text(if ctx.campaign_view.is_some() {
+                    "save_player_only"
+                } else {
+                    "legacy_phase"
+                }),
+                vec2(414.0, 511.0),
+                16.0,
+                MUTED,
+            );
+        }
         if button(
             ctx,
-            Rect::new(482.0, 209.0 + index as f32 * 52.0, 316.0, 48.0),
+            Rect::new(
+                414.0 + (index % 2) as f32 * 238.0,
+                296.0 + (index / 2) as f32 * 68.0,
+                214.0,
+                48.0,
+            ),
             &label,
             enabled,
-            index == 0,
+            false,
         ) {
             return Some(action);
         }
@@ -283,6 +309,12 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
         &["help_transfer", "help_recovery", "help_transfer_phase"]
     } else if ctx.help_page == 4 {
         &["help_battle", "help_battle_reports", "help_wounds"]
+    } else if ctx.help_page == 9 {
+        &[
+            "help_diplomacy",
+            "help_kingdom_decisions",
+            "help_kingdom_ending",
+        ]
     } else if ctx.help_page == 8 {
         &["help_development", "help_local_actions", "help_threats"]
     } else if ctx.help_page == 7 {
@@ -339,7 +371,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             ctx,
             Rect::new(766.0, 548.0, 124.0, 48.0),
             &ctx.text("next"),
-            ctx.help_page < 8,
+            ctx.help_page < 9,
             false,
         ) {
             return Some(UiAction::HelpPage(1));

@@ -13,6 +13,7 @@ const ZOOM_IN: Rect = Rect::new(78.0, 646.0, 48.0, 48.0);
 const RECENTER: Rect = Rect::new(138.0, 646.0, 144.0, 48.0);
 const END_TURN: Rect = Rect::new(1072.0, 646.0, 184.0, 48.0);
 const STEP_NPC: Rect = Rect::new(954.0, 646.0, 108.0, 48.0);
+const KINGDOM_DECISION: Rect = Rect::new(928.0, 646.0, 328.0, 48.0);
 
 pub fn map_controls_contain(
     point: Vec2,
@@ -20,9 +21,17 @@ pub fn map_controls_contain(
     campaign_world: Option<&CampaignWorld>,
     view: &MapView,
 ) -> bool {
-    [MENU, ZOOM_OUT, ZOOM_IN, RECENTER, END_TURN, STEP_NPC]
-        .iter()
-        .any(|rect| rect.contains(point))
+    [
+        MENU,
+        ZOOM_OUT,
+        ZOOM_IN,
+        RECENTER,
+        END_TURN,
+        STEP_NPC,
+        KINGDOM_DECISION,
+    ]
+    .iter()
+    .any(|rect| rect.contains(point))
         || (matches!(navigation.scope(), MapScope::Region(_)) && world::WORLD_MAP.contains(point))
         || campaign_world
             .and_then(|world| selection::bounds(navigation, world, view))
@@ -169,6 +178,29 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
 
 fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
     let view = ctx.campaign_view?;
+    if ctx
+        .kingdom
+        .data
+        .as_ref()
+        .is_some_and(|view| view.ending.is_some())
+    {
+        return None;
+    }
+    if ctx
+        .kingdom
+        .data
+        .as_ref()
+        .is_some_and(|view| !view.incoming_offers.is_empty() || !view.pending_defeats.is_empty())
+    {
+        return button(
+            ctx,
+            KINGDOM_DECISION,
+            &ctx.text("kingdom_decision"),
+            active,
+            true,
+        )
+        .then_some(UiAction::OpenKingdom(None));
+    }
     let (key, action) = if view.player_turn {
         ("end_turn", UiAction::EndTurn)
     } else if view.npc_paused {

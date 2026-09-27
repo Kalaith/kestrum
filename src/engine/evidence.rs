@@ -304,9 +304,11 @@ fn finish_seasons(
             service.tier = tier;
         }
     }
-    let oldest = campaign
-        .completed_rounds
-        .saturating_sub(data.history.recent_service_rounds);
+    let oldest = campaign.completed_rounds.saturating_sub(
+        data.history
+            .recent_service_rounds
+            .saturating_sub(u32::from(campaign.diplomacy.ending.is_some())),
+    );
     for formation in campaign.formations.values_mut() {
         formation
             .service

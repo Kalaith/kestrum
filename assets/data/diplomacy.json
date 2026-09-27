@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "truce_rounds": 4,
+  "recent_loss_rounds": 4,
+  "peace_strength_numerator": 1,
+  "peace_strength_denominator": 2
+}

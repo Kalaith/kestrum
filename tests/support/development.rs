@@ -36,7 +36,7 @@ pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
         apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     }
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 
@@ -287,6 +287,7 @@ pub(super) fn assert_remote_forecast_privacy() {
         .find(|relation| relation.factions == [FactionId(1), FactionId(2)])
         .unwrap()
         .state = DiplomaticState::War;
+    sync_relations(&mut campaign);
     let original = development_view(&campaign, &data, FactionId(1), SiteId(10)).unwrap();
     assert_eq!(original.safe, None);
     assert_eq!(original.contribution, None);

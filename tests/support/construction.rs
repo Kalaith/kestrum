@@ -50,7 +50,7 @@ pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
         apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     }
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 pub(super) fn owner_turn(campaign: &mut StrategicCampaign, data: &GameData, owner: u32) {
@@ -121,7 +121,7 @@ pub(super) fn assert_combat(capture: bool) {
         1,
     );
     apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
-    advance_npc(&mut campaign, &data).unwrap();
+    pass_npc(&mut campaign, &data).unwrap();
     let balance = campaign.factions[&FactionId(1)].resources;
     apply(
         &mut campaign,
@@ -167,9 +167,7 @@ pub(super) fn assert_missing_builder() {
         ConstructionKind::Outpost,
         1,
     );
-    campaign
-        .set_site_control(&data, SiteId(1), None, false)
-        .unwrap();
+    // The kingdom retains its HQ; this case isolates a lost builder from defeat.
     for formation in [1, 2, 3] {
         apply(
             &mut campaign,

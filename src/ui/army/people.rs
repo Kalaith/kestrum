@@ -7,6 +7,12 @@ pub fn local_people<'a>(view: &ArmyView, campaign: &'a VisibleCampaign) -> Vec<&
     campaign
         .people
         .iter()
+        .filter(|person| {
+            !matches!(
+                person.status,
+                PersonStatus::Dead { .. } | PersonStatus::Displaced { .. }
+            )
+        })
         .filter(|person| match person.assignment {
             PersonAssignment::Site { site } => Some(site) == view.site,
             PersonAssignment::Formation { formation } => campaign
@@ -146,7 +152,7 @@ fn person_rows(
                 ctx.text("person_wounded"),
                 ctx.text("wound_steps_remaining")
             ),
-            PersonStatus::Dead { .. } => continue,
+            PersonStatus::Dead { .. } | PersonStatus::Displaced { .. } => continue,
         };
         body(ctx, &status, vec2(112.0, y + 46.0), 16.0, MUTED);
         draw_line(

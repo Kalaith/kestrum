@@ -1,11 +1,15 @@
 //! Cross-system persistence, privacy and earned service for living places and threats.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         world::{FactionId, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
+    engine::{apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
     state::{
         battle::{BattleDefender, BattleOutcome},
         development::DevelopmentReceipt,

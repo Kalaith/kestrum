@@ -66,26 +66,7 @@ fn controls(
             .iter()
             .find(|threat| threat.site == site.id)
     }) {
-        for (x, key, action) in [
-            (16.0, "clear_threat", UiAction::OpenThreat(threat.id)),
-            (220.0, "close", UiAction::CloseSelection),
-        ] {
-            if button(
-                ctx,
-                Rect::new(
-                    rect.x + x,
-                    rect.y + rect.h - 62.0,
-                    if x < 100.0 { 192.0 } else { 122.0 },
-                    48.0,
-                ),
-                &ctx.text(key),
-                active,
-                x < 100.0,
-            ) {
-                return Some(action);
-            }
-        }
-        return None;
+        return threat_controls(ctx, rect, threat.id);
     }
     let siege = site.is_some_and(|site| {
         ctx.campaign_view
@@ -94,34 +75,18 @@ fn controls(
     if let Some(site) = site.filter(|site| {
         siege || Some(site.controller) == ctx.campaign_view.map(|view| Some(view.observer))
     }) {
-        let primary = if siege {
-            ("siege", UiAction::OpenSiege(site.id))
-        } else {
-            ("settlement_manage", UiAction::OpenSettlement(site.id))
-        };
-        for (index, (key, action)) in [
-            primary,
-            ("armies", UiAction::OpenArmies(site.id)),
-            (
-                "history",
-                UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site.id)),
-            ),
-            ("close", UiAction::CloseSelection),
-        ]
-        .into_iter()
-        .enumerate()
-        {
-            let button_rect = Rect::new(
-                rect.x + 16.0 + (index % 2) as f32 * 170.0,
-                rect.y + rect.h - 118.0 + (index / 2) as f32 * 56.0,
-                154.0,
-                48.0,
-            );
-            if button(ctx, button_rect, &ctx.text(key), active, index == 0) {
-                return Some(action);
-            }
+        return owned_controls(ctx, rect, site.id, siege);
+    }
+    if let Some(owner) = site.and_then(|site| site.controller) {
+        if button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.y + rect.h - 118.0, 326.0, 48.0),
+            &ctx.text("kingdom"),
+            active,
+            true,
+        ) {
+            return Some(UiAction::OpenKingdom(Some(owner)));
         }
-        return None;
     }
     let (key, action) = if let Some(site) = site {
         (
@@ -148,6 +113,70 @@ fn controls(
         false,
     ) {
         return Some(UiAction::CloseSelection);
+    }
+    None
+}
+
+fn threat_controls(
+    ctx: &Context<'_>,
+    rect: Rect,
+    threat: kestrum::state::threat::ThreatId,
+) -> Option<UiAction> {
+    for (x, key, action) in [
+        (16.0, "clear_threat", UiAction::OpenThreat(threat)),
+        (220.0, "close", UiAction::CloseSelection),
+    ] {
+        if button(
+            ctx,
+            Rect::new(
+                rect.x + x,
+                rect.y + rect.h - 62.0,
+                if x < 100.0 { 192.0 } else { 122.0 },
+                48.0,
+            ),
+            &ctx.text(key),
+            ctx.state.overlay == Overlay::None,
+            x < 100.0,
+        ) {
+            return Some(action);
+        }
+    }
+    None
+}
+
+fn owned_controls(ctx: &Context<'_>, rect: Rect, site: SiteId, siege: bool) -> Option<UiAction> {
+    let primary = if siege {
+        ("siege", UiAction::OpenSiege(site))
+    } else {
+        ("settlement_manage", UiAction::OpenSettlement(site))
+    };
+    for (index, (key, action)) in [
+        primary,
+        ("armies", UiAction::OpenArmies(site)),
+        (
+            "history",
+            UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site)),
+        ),
+        ("close", UiAction::CloseSelection),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let bounds = Rect::new(
+            rect.x + 16.0 + (index % 2) as f32 * 170.0,
+            rect.y + rect.h - 118.0 + (index / 2) as f32 * 56.0,
+            154.0,
+            48.0,
+        );
+        if button(
+            ctx,
+            bounds,
+            &ctx.text(key),
+            ctx.state.overlay == Overlay::None,
+            index == 0,
+        ) {
+            return Some(action);
+        }
     }
     None
 }

@@ -1,5 +1,9 @@
 //! Five persistent construction contracts through normal candidate commands.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         economy::{Habitation, OrderKind, Resources, TroopKind},
@@ -7,8 +11,8 @@ use kestrum::{
         GameData,
     },
     engine::{
-        advance_npc, apply, construction_options, construction_refund, preview, route_cost, Actor,
-        Command, MoveOrder,
+        apply, construction_options, construction_refund, preview, route_cost, Actor, Command,
+        MoveOrder,
     },
     state::{
         construction::{

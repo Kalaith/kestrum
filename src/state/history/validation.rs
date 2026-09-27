@@ -55,6 +55,9 @@ impl StrategicCampaign {
             "invalid participants for narrative kind",
         )?;
         match record.kind {
+            HistoryKind::Diplomacy { ref receipt } => {
+                self.validate_diplomacy_record(record, receipt)?
+            }
             HistoryKind::Development { ref receipt } => {
                 self.validate_development_record(record, receipt)?
             }
@@ -138,7 +141,7 @@ impl StrategicCampaign {
 
     fn validate_history_labels(&self, record: &HistoryRecord) -> Result<(), String> {
         ensure(
-            !record.sites.is_empty()
+            (!record.sites.is_empty() || matches!(record.kind, HistoryKind::Diplomacy { .. }))
                 && ordered(record.sites.iter().map(|entry| entry.id))
                 && record
                     .sites
@@ -188,6 +191,7 @@ impl StrategicCampaign {
 
     fn validate_history_kind(&self, kind: &HistoryKind, date: u32) -> Result<(), String> {
         match kind {
+            HistoryKind::Diplomacy { receipt } => self.validate_diplomacy_receipt(receipt, date),
             HistoryKind::Development { receipt } => self.validate_development_receipt(receipt),
             HistoryKind::Siege {
                 siege,
@@ -274,6 +278,7 @@ impl StrategicCampaign {
 
 fn valid_record_shape(record: &HistoryRecord) -> bool {
     match record.kind {
+        HistoryKind::Diplomacy { .. } => record.people.is_empty() && record.formations.is_empty(),
         HistoryKind::Development { .. } => {
             record.armies.is_empty() && record.people.is_empty() && record.formations.is_empty()
         }
@@ -321,6 +326,12 @@ fn valid_record_shape(record: &HistoryRecord) -> bool {
 
 fn source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
     match fact {
+        DomainFactKind::DiplomacyChanged { receipt } => {
+            record.kind
+                == HistoryKind::Diplomacy {
+                    receipt: receipt.clone(),
+                }
+        }
         DomainFactKind::DevelopmentChanged { receipt } => {
             record.kind
                 == HistoryKind::Development {

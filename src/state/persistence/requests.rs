@@ -16,7 +16,10 @@ impl SaveLibrary {
         let strategic = campaign
             .strategic()
             .ok_or("Empty-atlas campaigns are read-only.")?;
-        if strategic.phase != CampaignPhase::PlayerTurn {
+        if strategic.phase != CampaignPhase::PlayerTurn
+            && strategic.diplomacy.ending.is_none()
+            && !strategic.diplomacy.has_pending_decision()
+        {
             return Err("Manual saves are available during your faction's turn.".into());
         }
         self.prepare(store, data, campaign, SaveKind::Manual, name, overwrite)
@@ -127,6 +130,9 @@ pub(super) fn normalize_name(name: &str) -> Result<String, String> {
 }
 
 pub(super) fn require_checkpoint(campaign: &StrategicCampaign) -> Result<(), String> {
+    if campaign.diplomacy.ending.is_some() && campaign.pending_facts.is_empty() {
+        return Ok(());
+    }
     if campaign.completed_rounds == 0
         || campaign.phase != CampaignPhase::PlayerTurn
         || !campaign.acted.is_empty()

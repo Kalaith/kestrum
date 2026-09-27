@@ -165,6 +165,7 @@ pub(super) fn assert_real_commander_battle() {
         .find(|relation| relation.factions == [FactionId(1), FactionId(2)])
         .unwrap()
         .state = DiplomaticState::War;
+    sync_relations(&mut campaign);
     campaign.armies.get_mut(&ArmyId(2)).unwrap().site = SiteId(5);
     campaign
         .set_site_control(&data, SiteId(5), Some(FactionId(2)), false)
@@ -218,7 +219,7 @@ pub(super) fn wound_first_commander(data: &GameData, campaign: &mut StrategicCam
 fn finish_round(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 

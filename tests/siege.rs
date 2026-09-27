@@ -1,14 +1,20 @@
 //! Five persistent siege contracts through actual movement, combat and boundaries.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
+#[path = "support/relations.rs"]
+mod relations;
+use relations::sync_relations;
+
 use kestrum::{
     data::{
         economy::TroopKind,
         world::{DiplomaticState, FactionId, MilitaryLayer, SiteId},
         GameData,
     },
-    engine::{
-        advance_npc, apply, preview, reconcile_sieges, recovery_preview, Actor, Command, MoveOrder,
-    },
+    engine::{apply, preview, reconcile_sieges, recovery_preview, Actor, Command, MoveOrder},
     state::{
         battle::{BattleContext, BattleOutcome, BattleReport},
         military::{ArmyId, FormationId},

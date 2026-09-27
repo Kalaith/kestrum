@@ -39,7 +39,7 @@ pub(super) fn budget_fixture(gold: i64) -> (GameData, StrategicCampaign) {
 pub(super) fn finish_round(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 
@@ -191,6 +191,7 @@ pub(super) fn assert_recovery_save_validation(data: &GameData, campaign: &Strate
 }
 
 pub(super) fn assert_inactive_factions_cannot_recover() {
+    use kestrum::state::people::{PersonAssignment, PersonStatus};
     for status in [
         FactionStatus::Eliminated,
         FactionStatus::Vassal {
@@ -206,13 +207,34 @@ pub(super) fn assert_inactive_factions_cannot_recover() {
             .unwrap()
             .headcount = 21;
         campaign.round_order = campaign.independent_order();
+        assert!(
+            campaign.validate(&data).is_err(),
+            "inactive forces are invalid saved state"
+        );
+        assert!(recovery_preview(&campaign, &data, inactive).is_err());
+        campaign.armies.retain(|_, army| army.faction != inactive);
+        campaign
+            .formations
+            .retain(|_, formation| formation.faction != inactive);
+        for person in campaign
+            .people
+            .values_mut()
+            .filter(|person| person.faction == inactive)
+        {
+            let site = campaign.factions[&inactive].headquarters;
+            person.assignment = PersonAssignment::Site { site };
+            person.status = PersonStatus::Displaced {
+                completed_rounds: campaign.completed_rounds,
+                site,
+            };
+            person.movement_spent = 0;
+        }
         let original_gold = campaign.factions[&inactive].resources.gold;
-        let previews = recovery_preview(&campaign, &data, inactive).unwrap();
-        assert!(previews.iter().all(
-            |entry| entry.restored == 0 && entry.blocked.as_ref().unwrap().contains("Inactive")
-        ));
+        assert!(recovery_preview(&campaign, &data, inactive)
+            .unwrap()
+            .is_empty());
         finish_round(&mut campaign, &data);
-        assert_eq!(campaign.formations[&FormationId(4)].headcount, 21);
+        assert!(!campaign.formations.contains_key(&FormationId(4)));
         assert_eq!(campaign.factions[&inactive].resources.gold, original_gold);
         let statement = campaign.factions[&inactive].last_recovery.as_ref().unwrap();
         assert_eq!(statement.completed_rounds, campaign.completed_rounds);

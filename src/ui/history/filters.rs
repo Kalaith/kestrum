@@ -24,6 +24,7 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         Some(HistoryKindFilter::Focus),
         Some(HistoryKindFilter::Siege),
         Some(HistoryKindFilter::Development),
+        Some(HistoryKindFilter::Diplomacy),
     ];
     for (index, kind) in kinds.into_iter().enumerate() {
         let rect = Rect::new(
@@ -100,6 +101,7 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
 fn kind_key(kind: Option<HistoryKindFilter>) -> &'static str {
     match kind {
         Some(HistoryKindFilter::Development) => "history_development",
+        Some(HistoryKindFilter::Diplomacy) => "history_diplomacy",
         None => "history_all_events",
         Some(HistoryKindFilter::Battle) => "history_battles",
         Some(HistoryKindFilter::Recruitment) => "recruit",

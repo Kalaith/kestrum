@@ -16,6 +16,19 @@ impl StrategicCampaign {
         let earlier_construction = construction::initialize(&mut value);
         siege::initialize(&mut value)?;
         development::initialize(&mut value)?;
+        let earlier_diplomacy = value.get("diplomacy").is_none() && value.get("ai").is_none();
+        if earlier_diplomacy {
+            if let Some(fields) = value.as_object_mut() {
+                fields.insert(
+                    "diplomacy".into(),
+                    serde_json::to_value(super::super::diplomacy::CampaignDiplomacy::default())?,
+                );
+                fields.insert(
+                    "ai".into(),
+                    serde_json::to_value(super::super::ai::AiState::default())?,
+                );
+            }
+        }
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.
@@ -31,6 +44,9 @@ impl StrategicCampaign {
                 true
             });
         let mut campaign: Self = serde_json::from_value(value)?;
+        if earlier_diplomacy {
+            campaign.initialize_diplomacy();
+        }
         if legacy {
             campaign.reconcile_region_control();
         }

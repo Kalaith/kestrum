@@ -87,7 +87,9 @@ impl StrategicCampaign {
         owner: FactionId,
         data: &GameData,
     ) -> Result<(), String> {
-        let valid = season.completed_rounds < self.completed_rounds
+        let valid = (season.completed_rounds < self.completed_rounds
+            || (self.diplomacy.ending.is_some()
+                && season.completed_rounds == self.completed_rounds))
             && season.completed_rounds
                 >= self
                     .completed_rounds

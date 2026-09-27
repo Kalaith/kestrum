@@ -4,6 +4,9 @@ use super::{Context, SaveMode};
 use kestrum::state::Overlay;
 
 pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
+    if ctx.state.overlay == Overlay::Kingdom {
+        super::kingdom::prepare_text(ctx);
+    }
     if ctx.state.overlay == Overlay::Threat {
         super::threat::prepare_text(ctx);
     }

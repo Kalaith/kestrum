@@ -1,9 +1,11 @@
 //! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
+pub mod ai;
 pub mod battle;
 pub mod campaign;
 pub mod construction;
 pub mod development;
+pub mod diplomacy;
 pub mod evidence;
 pub mod history;
 pub mod knowledge;
@@ -53,6 +55,8 @@ pub enum Overlay {
     Settlement,
     Siege,
     Threat,
+    Kingdom,
+    CampaignEnd,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -225,6 +229,15 @@ impl GameState {
                         | Command::Resettle { .. }
                         | Command::MoveCapital { .. }
                         | Command::RelocateHeadquarters { .. }
+                ));
+        let military_order = military_order
+            || (self.overlay == Overlay::Kingdom
+                && matches!(
+                    &command,
+                    Command::DeclareWar { .. }
+                        | Command::OfferPeace { .. }
+                        | Command::RespondPeace { .. }
+                        | Command::ResolveDefeat { .. }
                 ));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);

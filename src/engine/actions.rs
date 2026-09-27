@@ -1,337 +1,17 @@
 //! Validated transactional commands shared by player and NPC phase processing.
 
-use super::{
-    movement, recruitment, round, transfer, MoveOrder, MovementBlock, MovementOutcome,
-    RecruitmentResult,
-};
+mod types;
+mod validation;
+use super::{movement, recruitment, round, transfer, MoveOrder};
 use crate::{
-    data::{
-        economy::{Resources, TroopKind},
-        world::{Facility, FactionId, SiteId},
-        GameData,
-    },
+    data::{world::FactionId, GameData},
     state::{
-        battle::BattleId,
         campaign::{DomainFact, DomainFactKind, FactId},
-        construction::{ConstructionKind, ConstructionTarget, Focus, OrderId},
-        military::{ArmyId, FormationId},
-        people::PersonId,
         CampaignPhase, StrategicCampaign,
     },
 };
-use std::fmt;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Actor {
-    Player,
-    Npc(FactionId),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Command {
-    ClearThreat {
-        armies: Vec<ArmyId>,
-        threat: crate::state::threat::ThreatId,
-    },
-    Resettle {
-        from: SiteId,
-        to: SiteId,
-    },
-    RenameSite {
-        site: SiteId,
-        name: String,
-    },
-    MoveCapital {
-        site: SiteId,
-    },
-    RelocateHeadquarters {
-        site: SiteId,
-    },
-    Siege(crate::state::siege::SiegeOrder),
-    StartConstruction {
-        target: ConstructionTarget,
-        kind: ConstructionKind,
-        builder: ArmyId,
-    },
-    CancelConstruction {
-        order: OrderId,
-    },
-    ReassignBuilder {
-        order: OrderId,
-        builder: ArmyId,
-    },
-    SetFocus {
-        site: SiteId,
-        focus: Focus,
-    },
-    EndTurn,
-    SetNpcPaused(bool),
-    StepNpc,
-    Recruit {
-        site: SiteId,
-        army: Option<ArmyId>,
-        kind: TroopKind,
-    },
-    Disband {
-        formation: FormationId,
-    },
-    Move(MoveOrder),
-    TransferFormation {
-        formation: FormationId,
-        to_army: ArmyId,
-        to_slot: usize,
-    },
-    TransferPerson {
-        person: PersonId,
-        to_formation: FormationId,
-    },
-    SplitArmy {
-        formation: FormationId,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RuleError {
-    Development(String),
-    Threat(String),
-    Siege(String),
-    Construction {
-        reason: super::ConstructionBlock,
-    },
-    NoCampaign,
-    LegacyReadOnly,
-    PlayObstructed,
-    UnknownActor,
-    WrongActor,
-    NotYourTurn {
-        active: FactionId,
-    },
-    NotNpcPhase,
-    NpcPaused,
-    PauseRequired,
-    PauseUnchanged,
-    UnknownSite {
-        site: SiteId,
-    },
-    SiteNotOwned {
-        site: SiteId,
-    },
-    SiteContested {
-        site: SiteId,
-    },
-    SiteUnsupplied {
-        site: SiteId,
-    },
-    RecruitingSiteRequired {
-        site: SiteId,
-    },
-    Deficit {
-        faction: FactionId,
-    },
-    MissingFacility {
-        site: SiteId,
-        facility: Facility,
-    },
-    FacilityDamaged {
-        site: SiteId,
-    },
-    MissingHorses {
-        site: SiteId,
-    },
-    FortRequired {
-        site: SiteId,
-    },
-    UnknownArmy {
-        army: ArmyId,
-    },
-    ArmyNotOwned {
-        army: ArmyId,
-    },
-    ArmyElsewhere {
-        army: ArmyId,
-        site: SiteId,
-    },
-    ArmyFull {
-        army: ArmyId,
-    },
-    UnknownFormation {
-        formation: FormationId,
-    },
-    FormationNotOwned {
-        formation: FormationId,
-    },
-    InsufficientResources {
-        required: Resources,
-        available: Resources,
-    },
-    Overflow {
-        field: &'static str,
-    },
-    InvalidState(String),
-    InvalidArmyGroup,
-    InvalidRoute,
-    NotColocated,
-    InvalidSlot,
-    SlotOccupied,
-    TransferUnchanged,
-    TransferPauseRequired,
-    UnknownPerson {
-        person: PersonId,
-    },
-    PersonNotOwned {
-        person: PersonId,
-    },
-    MovementBlocked {
-        site: SiteId,
-        reason: MovementBlock,
-    },
-}
-
-impl fmt::Display for RuleError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Development(reason) | Self::Threat(reason) => formatter.write_str(reason),
-            Self::Siege(reason) => formatter.write_str(reason),
-            Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
-            Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),
-            Self::InvalidRoute => formatter.write_str(
-                "Choose a connected physical route beginning at the armies' current site.",
-            ),
-            Self::NotColocated => formatter.write_str(
-                "Every participating army and person must share the same physical site.",
-            ),
-            Self::InvalidSlot => formatter.write_str("Choose one of the six formation slots."),
-            Self::SlotOccupied => formatter.write_str("The receiving slot is occupied."),
-            Self::TransferUnchanged => {
-                formatter.write_str("That person already serves in this formation.")
-            }
-            Self::TransferPauseRequired => {
-                formatter.write_str("Pause NPC phases before transferring troops or people.")
-            }
-            Self::UnknownPerson { .. } => formatter.write_str("That person is unavailable."),
-            Self::PersonNotOwned { .. } => {
-                formatter.write_str("You can transfer only your own people.")
-            }
-            Self::MovementBlocked { reason, .. } => fmt::Display::fmt(reason, formatter),
-            Self::NoCampaign => formatter.write_str("Start or load a campaign first."),
-            Self::LegacyReadOnly => formatter.write_str(
-                "This empty-atlas save is read-only. Start a strategic campaign to play.",
-            ),
-            Self::PlayObstructed => {
-                formatter.write_str("Close the open panel and return to the campaign first.")
-            }
-            Self::UnknownActor => formatter.write_str("That faction is unavailable."),
-            Self::WrongActor => formatter.write_str("That faction cannot issue this command."),
-            Self::NotYourTurn { .. } => formatter.write_str("Wait for your faction's turn."),
-            Self::NotNpcPhase => formatter.write_str("NPC phases have already finished."),
-            Self::NpcPaused => formatter.write_str("NPC phases are paused. Tap STEP or RESUME."),
-            Self::PauseRequired => {
-                formatter.write_str("Pause NPC phases before taking a single step.")
-            }
-            Self::PauseUnchanged => {
-                formatter.write_str("NPC progression is already in that state.")
-            }
-            Self::UnknownSite { .. } => formatter.write_str("That physical site is unavailable."),
-            Self::SiteNotOwned { .. } => {
-                formatter.write_str("Recruit at a site your faction controls.")
-            }
-            Self::SiteContested { .. } => {
-                formatter.write_str("Recruitment is blocked at a contested site.")
-            }
-            Self::SiteUnsupplied { .. } => formatter
-                .write_str("Recruitment needs a friendly supply path to your headquarters."),
-            Self::RecruitingSiteRequired { .. } => {
-                formatter.write_str("Recruitment requires an Outpost or larger settlement.")
-            }
-            Self::Deficit { .. } => formatter.write_str(
-                "An upkeep shortfall blocks recruitment until a later season fully pays upkeep.",
-            ),
-            Self::MissingFacility { facility, .. } => write!(
-                formatter,
-                "Recruitment requires a functional local {}.",
-                facility_name(*facility)
-            ),
-            Self::FacilityDamaged { .. } => {
-                formatter.write_str("Structural damage has disabled this site's facilities.")
-            }
-            Self::MissingHorses { .. } => formatter.write_str("Riders require local horse access."),
-            Self::FortRequired { .. } => {
-                formatter.write_str("Siege Engines require a local Fort and Workshop.")
-            }
-            Self::UnknownArmy { .. } => formatter.write_str("That army is unavailable."),
-            Self::ArmyNotOwned { .. } => formatter.write_str("Choose one of your own armies."),
-            Self::ArmyElsewhere { .. } => {
-                formatter.write_str("The receiving army must be at the recruiting site.")
-            }
-            Self::ArmyFull { .. } => formatter
-                .write_str("This army has all six formation slots filled. Choose a new army."),
-            Self::UnknownFormation { .. } => formatter.write_str("That formation is unavailable."),
-            Self::FormationNotOwned { .. } => {
-                formatter.write_str("You can disband only your own formations.")
-            }
-            Self::InsufficientResources {
-                required,
-                available,
-            } => resource_shortage(formatter, *required, *available),
-            Self::Overflow { field } => write!(
-                formatter,
-                "The campaign cannot advance: {field} is exhausted."
-            ),
-            Self::InvalidState(reason) => {
-                write!(formatter, "The campaign could not be validated: {reason}")
-            }
-        }
-    }
-}
-
-fn facility_name(facility: Facility) -> &'static str {
-    match facility {
-        Facility::TrainingGround => "training ground",
-        Facility::Stable => "stable",
-        Facility::Infirmary => "infirmary",
-        Facility::Workshop => "workshop",
-        Facility::Temple => "temple",
-    }
-}
-
-fn resource_shortage(
-    formatter: &mut fmt::Formatter<'_>,
-    required: Resources,
-    available: Resources,
-) -> fmt::Result {
-    write!(
-        formatter,
-        "This order needs {} Gold, {} Wood and {} Stone; available: {}, {} and {}.",
-        required.gold,
-        required.wood,
-        required.stone,
-        available.gold,
-        available.wood,
-        available.stone
-    )
-}
-
-impl std::error::Error for RuleError {}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ActionOutcome {
-    pub battle: Option<BattleId>,
-    pub accepted_sequence: u64,
-    pub active_faction: FactionId,
-    pub round_completed: bool,
-    pub facts: Vec<DomainFact>,
-    pub consumed_facts: Vec<DomainFact>,
-    pub recruited: Option<RecruitmentResult>,
-    pub disbanded: Option<FormationId>,
-    pub movement: Option<MovementOutcome>,
-    pub split_army: Option<ArmyId>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ActionPreview {
-    pub active_faction_after: FactionId,
-    pub round_completed: bool,
-}
+pub use types::{ActionOutcome, ActionPreview, Actor, Command, RuleError};
+pub(super) use validation::validate_command;
 
 pub fn preview(
     campaign: &StrategicCampaign,
@@ -339,6 +19,14 @@ pub fn preview(
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    if command == Command::StepNpc {
+        let mut candidate = campaign.clone();
+        let outcome = step_npc(&mut candidate, data, actor)?;
+        return Ok(ActionPreview {
+            active_faction_after: outcome.active_faction,
+            round_completed: outcome.round_completed,
+        });
+    }
     if let Command::ClearThreat { armies, threat } = &command {
         campaign.validate(data).map_err(RuleError::InvalidState)?;
         validate_command(campaign, actor, &command)?;
@@ -397,6 +85,9 @@ pub fn apply(
     actor: Actor,
     command: Command,
 ) -> Result<ActionOutcome, RuleError> {
+    if command == Command::StepNpc {
+        return step_npc(campaign, data, actor);
+    }
     let (candidate, outcome) = prepare(campaign, data, actor, command)?;
     *campaign = candidate;
     Ok(outcome)
@@ -410,8 +101,33 @@ pub fn advance_npc(
     let CampaignPhase::NpcTurn { faction, .. } = campaign.phase else {
         return Err(RuleError::NotNpcPhase);
     };
-    apply(campaign, data, Actor::Npc(faction), Command::EndTurn)
+    if matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. }) {
+        return Err(RuleError::NpcPaused);
+    }
+    let decision = super::ai::propose(campaign, data, faction)?;
+    let mut candidate = campaign.clone();
+    let outcome = match apply(
+        &mut candidate,
+        data,
+        Actor::Npc(faction),
+        decision.command.clone(),
+    ) {
+        Ok(outcome) => {
+            super::ai::accepted(&mut candidate, campaign, data, faction, &decision)?;
+            outcome
+        }
+        Err(_) => {
+            super::ai::rejected(&mut candidate, campaign, data, faction, &decision)?;
+            apply(&mut candidate, data, Actor::Npc(faction), Command::EndTurn)?
+        }
+    };
+    candidate.validate(data).map_err(RuleError::InvalidState)?;
+    *campaign = candidate;
+    Ok(outcome)
 }
+
+mod npc;
+use npc::step_npc;
 
 fn prepare(
     campaign: &StrategicCampaign,
@@ -419,6 +135,8 @@ fn prepare(
     actor: Actor,
     command: Command,
 ) -> Result<(StrategicCampaign, ActionOutcome), RuleError> {
+    data.ai.validate().map_err(RuleError::InvalidState)?;
+    data.diplomacy.validate().map_err(RuleError::InvalidState)?;
     data.development
         .validate()
         .map_err(RuleError::InvalidState)?;
@@ -464,18 +182,41 @@ fn prepare(
         Actor::Npc(id) => id,
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
+    finish(&mut candidate, campaign, data, &mut outcome)?;
+    Ok((candidate, outcome))
+}
+
+fn finish(
+    candidate: &mut StrategicCampaign,
+    before: &StrategicCampaign,
+    data: &GameData,
+    outcome: &mut ActionOutcome,
+) -> Result<(), RuleError> {
     if !outcome.round_completed {
-        super::siege::reconcile(&mut candidate, data, &mut outcome)?;
-        super::construction::reconcile(&mut candidate, data, &mut outcome)?;
+        super::siege::reconcile(candidate, data, outcome)?;
+        super::construction::reconcile(candidate, data, outcome)?;
+    }
+    super::diplomacy::reconcile(before, candidate, data, outcome)?;
+    let already_completed = outcome.round_completed;
+    let before_phase = candidate.clone();
+    round::reconcile_phase(candidate, data, outcome)?;
+    if outcome.round_completed && !already_completed {
+        super::diplomacy::reconcile(&before_phase, candidate, data, outcome)?;
+    }
+    if outcome.round_completed || candidate.diplomacy.ending.is_some() {
+        outcome.consumed_facts = std::mem::take(&mut candidate.pending_facts);
+        super::evidence::consume(candidate, data, &outcome.consumed_facts)?;
+        candidate.consumed_sequence = candidate.accepted_sequence;
+        candidate.acted.clear();
     }
     candidate.reconcile_region_control();
-    super::history::record_facts(&mut candidate, campaign, &outcome.facts)?;
+    super::history::record_facts(candidate, before, &outcome.facts)?;
     if outcome.round_completed {
-        super::history::prune(&mut candidate, data);
+        super::history::prune(candidate, data);
     }
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
-    Ok((candidate, outcome))
+    Ok(())
 }
 
 fn execute(
@@ -487,6 +228,12 @@ fn execute(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     match command {
+        command @ (Command::DeclareWar { .. }
+        | Command::OfferPeace { .. }
+        | Command::RespondPeace { .. }
+        | Command::ResolveDefeat { .. }) => {
+            super::diplomacy::execute(candidate, data, owner, command, outcome)?;
+        }
         Command::ClearThreat { armies, threat } => {
             super::threats::execute(candidate, data, owner, &armies, threat, outcome)?;
         }
@@ -636,75 +383,4 @@ pub(super) fn record_fact(
     campaign.pending_facts.push(fact.clone());
     outcome.facts.push(fact);
     Ok(())
-}
-
-pub(super) fn validate_command(
-    campaign: &StrategicCampaign,
-    actor: Actor,
-    command: &Command,
-) -> Result<(), RuleError> {
-    let faction = match actor {
-        Actor::Player => campaign.player,
-        Actor::Npc(faction) if faction != campaign.player => faction,
-        Actor::Npc(_) => return Err(RuleError::WrongActor),
-    };
-    if !campaign.is_independent(faction) {
-        return Err(RuleError::UnknownActor);
-    }
-    match command {
-        Command::EndTurn
-        | Command::ClearThreat { .. }
-        | Command::Resettle { .. }
-        | Command::RenameSite { .. }
-        | Command::MoveCapital { .. }
-        | Command::RelocateHeadquarters { .. }
-        | Command::Siege(_)
-        | Command::Recruit { .. }
-        | Command::Disband { .. }
-        | Command::Move(_)
-        | Command::StartConstruction { .. }
-        | Command::CancelConstruction { .. }
-        | Command::ReassignBuilder { .. }
-        | Command::SetFocus { .. } => {
-            if faction != campaign.active_faction() {
-                return Err(RuleError::NotYourTurn {
-                    active: campaign.active_faction(),
-                });
-            }
-            if matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. }) {
-                return Err(RuleError::NpcPaused);
-            }
-        }
-        Command::TransferFormation { .. }
-        | Command::TransferPerson { .. }
-        | Command::SplitArmy { .. } => {
-            if faction != campaign.active_faction()
-                && !matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. })
-            {
-                return Err(RuleError::TransferPauseRequired);
-            }
-        }
-        Command::SetNpcPaused(requested) => {
-            let paused = player_npc_control(campaign, actor)?;
-            if *requested == paused {
-                return Err(RuleError::PauseUnchanged);
-            }
-        }
-        Command::StepNpc => {
-            if !player_npc_control(campaign, actor)? {
-                return Err(RuleError::PauseRequired);
-            }
-        }
-    }
-    Ok(())
-}
-
-fn player_npc_control(campaign: &StrategicCampaign, actor: Actor) -> Result<bool, RuleError> {
-    if actor != Actor::Player {
-        return Err(RuleError::WrongActor);
-    }
-    match campaign.phase {
-        CampaignPhase::NpcTurn { paused, .. } => Ok(paused),
-        CampaignPhase::PlayerTurn => Err(RuleError::NotNpcPhase),
-    }
 }

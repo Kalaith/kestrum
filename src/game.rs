@@ -10,6 +10,8 @@ mod composition;
 mod development_capture;
 mod history;
 mod history_capture;
+mod kingdom;
+mod kingdom_capture;
 mod military;
 mod military_capture;
 mod movement;
@@ -63,6 +65,9 @@ pub struct Game {
     settlement: ui::SettlementView,
     siege: ui::SiegePanel,
     threat: ui::ThreatPanel,
+    kingdom: ui::KingdomView,
+    diplomacy_seen: std::collections::BTreeSet<(u32, kestrum::data::world::FactionId, bool)>,
+    ending_saved: bool,
     projection: Option<engine::VisibleCampaign>,
     projection_revision: Option<(kestrum::state::CampaignId, u64)>,
     history_return: Overlay,
@@ -103,6 +108,9 @@ impl Game {
             settlement: ui::SettlementView::default(),
             siege: ui::SiegePanel::default(),
             threat: ui::ThreatPanel::default(),
+            kingdom: ui::KingdomView::default(),
+            diplomacy_seen: Default::default(),
+            ending_saved: false,
             projection: None,
             projection_revision: None,
             history_return: Overlay::None,
@@ -144,6 +152,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_kingdom_scene(scene) {
+            return;
+        }
         if self.capture_development_scene(scene) {
             return;
         }
@@ -254,6 +265,9 @@ impl Game {
         self.settlement = ui::SettlementView::default();
         self.siege = ui::SiegePanel::default();
         self.threat = ui::ThreatPanel::default();
+        self.kingdom = ui::KingdomView::default();
+        self.diplomacy_seen.clear();
+        self.ending_saved = false;
         self.movement = ui::MoveView::default();
         self.battle = ui::BattleView::default();
         self.reset_history();
@@ -286,10 +300,13 @@ impl Game {
             self.refresh_settlement();
             self.refresh_siege();
             self.refresh_threat();
+            self.refresh_kingdom();
             self.army_refresh_pending = false;
         }
         self.clamp_pages();
+        self.kingdom_events();
         let ctx = ui::Context {
+            kingdom: &self.kingdom,
             settlement: &self.settlement,
             siege: &self.siege,
             threat: &self.threat,

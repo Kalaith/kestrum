@@ -1,8 +1,10 @@
 //! Toolkit-loaded content assembled and validated without a graphics context.
 
+pub mod ai;
 pub mod combat;
 pub mod construction;
 pub mod development;
+pub mod diplomacy;
 pub mod economy;
 pub mod progression;
 pub mod rules;
@@ -25,6 +27,8 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub ai: ai::AiRules,
+    pub diplomacy: diplomacy::DiplomacyRules,
     pub development: development::DevelopmentRules,
     pub threats: threats::ThreatRules,
     pub siege: siege::SiegeRules,
@@ -42,6 +46,8 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            ai: macroquad_toolkit::include_json!("../assets/data/ai.json")?,
+            diplomacy: macroquad_toolkit::include_json!("../assets/data/diplomacy.json")?,
             development: macroquad_toolkit::include_json!("../assets/data/development.json")?,
             threats: macroquad_toolkit::include_json!("../assets/data/threats.json")?,
             siege: macroquad_toolkit::include_json!("../assets/data/siege_rules.json")?,
@@ -62,6 +68,8 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.ai.validate()?;
+        self.diplomacy.validate()?;
         self.development.validate()?;
         self.threats.validate(&self.scenario)?;
         self.siege.validate()?;
@@ -87,12 +95,56 @@ pub struct PresentationData {
     pub font_path: String,
     pub body_font_path: String,
     pub start_year: u32,
+    pub npc_action_delay_seconds: f32,
     pub seasons: Vec<String>,
     pub geography: Vec<GeographyLabel>,
     pub text: BTreeMap<String, String>,
 }
 
 const REQUIRED_TEXT: &[&str] = &[
+    "kingdom",
+    "kingdom_scope",
+    "kingdom_defeated_choice",
+    "kingdom_peace_offered",
+    "kingdom_truce_until",
+    "kingdom_eliminated",
+    "kingdom_subordinate",
+    "kingdom_displaced",
+    "kingdom_defeat_help",
+    "kingdom_incoming_help",
+    "kingdom_inactive_help",
+    "declare_war",
+    "offer_peace",
+    "accept_peace",
+    "decline_peace",
+    "annex",
+    "accept_submission",
+    "declare_war_help",
+    "offer_peace_help",
+    "accept_peace_help",
+    "decline_peace_help",
+    "annex_help",
+    "submission_help",
+    "peace_agreed",
+    "peace_rejected",
+    "diplomacy_success",
+    "kingdom_milestone",
+    "kingdom_victory",
+    "kingdom_defeat",
+    "kingdom_victory_help",
+    "kingdom_defeat_end_help",
+    "kingdom_ending_readonly",
+    "kingdom_decision",
+    "history_diplomacy",
+    "history_war_declared",
+    "history_peace_offered",
+    "history_peace_declined",
+    "history_withdrawal",
+    "history_annexed",
+    "history_submission",
+    "help_diplomacy",
+    "help_kingdom_decisions",
+    "help_kingdom_ending",
     "site_income_unknown",
     "site_income_stopped",
     "evidence_bandits",
@@ -631,6 +683,11 @@ const REQUIRED_TEXT: &[&str] = &[
 
 impl PresentationData {
     pub fn validate(&self) -> Result<(), String> {
+        if !self.npc_action_delay_seconds.is_finite()
+            || !(0.0..=1.0).contains(&self.npc_action_delay_seconds)
+        {
+            return Err("NPC presentation delay must be between zero and one second.".into());
+        }
         if self.game_id != "kestrum" || self.start_year == 0 || self.seasons.len() != 4 {
             return Err(
                 "Kestrum requires its own save identity, a positive year, and four seasons".into(),

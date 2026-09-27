@@ -33,6 +33,8 @@ impl StrategicCampaign {
             "zero stream state",
         )?;
         self.validate_factions(data)?;
+        self.validate_diplomacy(data)?;
+        self.validate_ai(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
         self.validate_construction(data)?;
@@ -55,7 +57,12 @@ impl StrategicCampaign {
             "unsupported faction count",
         )?;
         require(
-            self.is_independent(self.player),
+            self.is_independent(self.player)
+                || self
+                    .diplomacy
+                    .ending
+                    .as_ref()
+                    .is_some_and(|ending| ending.kind == super::diplomacy::EndingKind::Defeat),
             "player",
             "player must be an independent faction",
         )?;
@@ -230,7 +237,7 @@ impl StrategicCampaign {
             .copied()
             .find(|id| self.is_independent(*id) && !self.acted.contains(id));
         require(
-            next == Some(self.active_faction()),
+            self.diplomacy.is_blocked() || next == Some(self.active_faction()),
             "phase",
             "active faction is not next in the round",
         )?;
@@ -288,6 +295,9 @@ impl StrategicCampaign {
 
     fn validate_fact_subject(&self, fact: &super::campaign::DomainFact) -> Result<(), String> {
         match &fact.kind {
+            DomainFactKind::DiplomacyChanged { receipt } => {
+                self.validate_diplomacy_receipt(receipt, fact.completed_rounds)?;
+            }
             DomainFactKind::DevelopmentChanged { receipt } => {
                 self.validate_development_receipt(receipt)?;
             }

@@ -56,21 +56,24 @@ pub(crate) fn encounter_people(
     side.armies
         .iter()
         .flat_map(|army| {
-            army.people.iter().map(|person| EncounteredPerson {
-                id: person.id,
-                name: person.name.clone(),
-                class: person.class,
-                completed_rounds: report.completed_rounds,
-                site: report.site,
-                site_name: report.site_name.clone(),
-                army: army.id,
-                army_name: army.name.clone(),
-                condition: match person.status {
-                    PersonStatus::Fit => ObservedCondition::Fit,
-                    PersonStatus::Wounded { .. } => ObservedCondition::Wounded,
-                    PersonStatus::Dead { .. } => ObservedCondition::Dead,
-                },
-                battle: report.id,
+            army.people.iter().filter_map(|person| {
+                Some(EncounteredPerson {
+                    id: person.id,
+                    name: person.name.clone(),
+                    class: person.class,
+                    completed_rounds: report.completed_rounds,
+                    site: report.site,
+                    site_name: report.site_name.clone(),
+                    army: army.id,
+                    army_name: army.name.clone(),
+                    condition: match person.status {
+                        PersonStatus::Fit => ObservedCondition::Fit,
+                        PersonStatus::Wounded { .. } => ObservedCondition::Wounded,
+                        PersonStatus::Dead { .. } => ObservedCondition::Dead,
+                        PersonStatus::Displaced { .. } => return None,
+                    },
+                    battle: report.id,
+                })
             })
         })
         .collect()

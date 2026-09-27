@@ -68,6 +68,7 @@ pub enum ConstructionPause {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CancellationReason {
+    FactionDefeated,
     Player,
     ControlLost,
 }
@@ -223,6 +224,7 @@ impl fmt::Display for CancellationReason {
         f.write_str(match self {
             Self::Player => "Cancelled by owner",
             Self::ControlLost => "Control was lost",
+            Self::FactionDefeated => "The faction was defeated",
         })
     }
 }

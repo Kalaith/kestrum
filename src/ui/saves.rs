@@ -142,6 +142,11 @@ fn browse(ctx: &Context<'_>) -> Option<UiAction> {
             return Some(UiAction::SelectSave(row.id));
         }
     }
+    browse_controls(ctx)
+}
+
+fn browse_controls(ctx: &Context<'_>) -> Option<UiAction> {
+    let view = ctx.saves;
     if button(
         ctx,
         Rect::new(144.0, 505.0, 132.0, 48.0),

@@ -1,5 +1,11 @@
 # 10 — Interface and accessibility
 
+## K12 kingdom decisions
+
+The current decision is whether to declare war, propose or answer peace, or resolve a defeated rival. Menu > Kingdom opens a dismissible sheet; a foreign place also links to its controller. A paged list of public relations supports one selected kingdom and one confirmation. Enemy strength and negotiation calculations stay hidden. Pending decisions interrupt orders and remain reachable through Kingdom Decision after dismissal.
+
+The saved kingdom ending replaces ordinary play with its result and date. Records, Save, Menu and New Game remain available; no post-ending turns run. This is presented as the kingdom milestone. Existing map space and camera remain unchanged. Both sheets use 48-pixel controls and bounded text at 1280×720 and 1920×1080; at most four representative real-command states per size cover relations, a pending decision and terminal save restoration.
+
 ## K11 local decisions
 
 Manage keeps construction and adds Local Actions for renaming, resettlement and moving the capital or headquarters. The selected place and the intervention's cost, conditions and single confirmation are the focus; the world remains the default play view. The overview explains population, pressure, causes, occupation, damage and blocked growth. Rename uses the existing touch keyboard. Resettle pages known eligible destinations.

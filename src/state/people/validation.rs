@@ -58,12 +58,24 @@ impl StrategicCampaign {
 
     fn validate_person_status(&self, person: &Person, data: &GameData) -> Result<(), String> {
         let valid = match person.status {
-            PersonStatus::Fit => true,
+            PersonStatus::Fit => self.is_independent(person.faction),
+            PersonStatus::Displaced {
+                completed_rounds,
+                site,
+            } => {
+                completed_rounds >= person.service_start_round
+                    && completed_rounds <= self.completed_rounds
+                    && self.world.site(site).is_some()
+                    && person.assignment == (PersonAssignment::Site { site })
+                    && person.movement_spent == 0
+                    && !self.is_independent(person.faction)
+            }
             PersonStatus::Wounded {
                 since_round,
                 remaining_steps,
             } => {
-                since_round >= person.service_start_round
+                self.is_independent(person.faction)
+                    && since_round >= person.service_start_round
                     && since_round <= self.completed_rounds
                     && remaining_steps > 0
                     && remaining_steps <= data.combat.wound_recovery_steps

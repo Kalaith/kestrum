@@ -1,11 +1,15 @@
 //! Construction receipts remain factual through shared boundaries and forgetting.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         world::{Facility, FactionId, RouteId, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
+    engine::{apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
     state::{
         construction::{ConstructionKind, ConstructionStatus, ConstructionTarget},
         history::{HistoryKind, HistoryKindFilter, HistorySubject},

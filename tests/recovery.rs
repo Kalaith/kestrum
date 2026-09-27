@@ -1,12 +1,16 @@
 //! The five K06 recovery contracts use real seasonal resolution and saved state.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         economy::{Resources, TroopKind},
         world::{FactionId, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, project, recovery_preview, Actor, Command},
+    engine::{apply, project, recovery_preview, Actor, Command},
     state::{
         military::{ArmyId, FormationId},
         persistence::load_legacy,
@@ -300,14 +304,14 @@ fn recovery_preserves_formation_identity_metadata_and_replays_through_saves() {
     expected.movement_spent = 0; // The seasonal boundary independently resets movement.
     let before = campaign.clone();
     apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
-    advance_npc(&mut campaign, &data).unwrap();
+    pass_npc(&mut campaign, &data).unwrap();
     let saved = Campaign::Strategic(Box::new(campaign.clone()));
     let restored: Campaign = serde_json::from_str(&serde_json::to_string(&saved).unwrap()).unwrap();
     let mut resumed = restored.strategic().unwrap().clone();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
         assert_eq!(
-            advance_npc(&mut campaign, &data).unwrap(),
-            advance_npc(&mut resumed, &data).unwrap()
+            pass_npc(&mut campaign, &data).unwrap(),
+            pass_npc(&mut resumed, &data).unwrap()
         );
     }
     assert_eq!(campaign, resumed);

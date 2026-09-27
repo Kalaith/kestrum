@@ -176,7 +176,10 @@ K10 is **Done**: persistent sieges and multi-army relief pass
 [K10 evidence](verification/k10-sieges.md).
 K11 is **Done**: living settlements, refugees, administration and ordinary threats
 pass [K11 evidence](verification/k11-living-places.md).
-K12–K18 remain **planned, not implemented**.
+K12 is **Done**: legal AI, diplomacy and reachable kingdom endings pass
+[K12 evidence](verification/k12-kingdoms.md). The user requested a stop after this
+package and its commit; further implementation requires a later continuation.
+K13–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain open for K18.

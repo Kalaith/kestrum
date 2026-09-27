@@ -1,10 +1,14 @@
 //! Five K03 contracts exercised against the real catalogue with injected storage failures.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use kestrum::{
     data::GameData,
-    engine::{advance_npc, apply, Actor, Command},
+    engine::{apply, Actor, Command},
     state::{
         persistence::{
             load_legacy, ContinueSelection, SaveKind, SaveLibrary, MAX_SAVE_NAME_CHARS,
@@ -94,7 +98,7 @@ fn round(campaign: &mut Campaign, data: &GameData) {
     };
     apply(strategic, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(strategic.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(strategic, data).unwrap();
+        pass_npc(strategic, data).unwrap();
     }
 }
 
@@ -556,8 +560,11 @@ fn resumed_phases_and_branched_rounds_preserve_rng_without_reapplying_boundaries
         Command::SetNpcPaused(true),
     )
     .unwrap();
-    for _ in 0..3 {
+    let mut commands = 0;
+    while matches!(branch_state.phase, CampaignPhase::NpcTurn { .. }) {
         apply(branch_state, &data, Actor::Player, Command::StepNpc).unwrap();
+        commands += 1;
+        assert!(commands <= 195);
     }
     let second = library
         .prepare_checkpoint(&mut store, &data, &branch)
@@ -572,4 +579,84 @@ fn resumed_phases_and_branched_rounds_preserve_rng_without_reapplying_boundaries
     assert_eq!(library.load(&mut store, &data, second_id).unwrap(), branch);
     assert_eq!(campaign.strategic().unwrap().completed_rounds, 1);
     assert_eq!(branch.strategic().unwrap().completed_rounds, 1);
+}
+
+#[test]
+fn terminal_midround_checkpoint_and_manual_save_restore_readonly_outcome() {
+    use kestrum::{
+        data::world::FactionId,
+        state::{diplomacy::EndingKind, military::FormationId},
+    };
+    let (data, mut store, mut library, mut campaign) = fixture();
+    let Campaign::Strategic(ref mut strategic) = campaign else {
+        unreachable!()
+    };
+    for site in &mut strategic.world.sites {
+        if site.controller == Some(FactionId(1)) {
+            site.controller = None;
+        }
+    }
+    strategic.reconcile_region_control();
+    let formations: Vec<FormationId> = strategic
+        .formations
+        .values()
+        .filter(|formation| formation.faction == FactionId(1))
+        .map(|formation| formation.id)
+        .collect();
+    for formation in formations {
+        apply(
+            strategic,
+            &data,
+            Actor::Player,
+            Command::Disband { formation },
+        )
+        .unwrap();
+    }
+    assert_eq!(
+        strategic.diplomacy.ending.as_ref().unwrap().kind,
+        EndingKind::Defeat
+    );
+    assert_eq!(strategic.completed_rounds, 0);
+    assert!(strategic.pending_facts.is_empty());
+    let request = library
+        .prepare_checkpoint(&mut store, &data, &campaign)
+        .unwrap();
+    let id = library.write(&mut store, &data, &request).unwrap().id;
+    manual(&mut library, &mut store, &data, &campaign);
+    let saved = library.load(&mut store, &data, id).unwrap();
+    assert_eq!(saved, campaign);
+    let Campaign::Strategic(mut restored) = saved else {
+        unreachable!()
+    };
+    let before = restored.clone();
+    assert!(apply(&mut restored, &data, Actor::Player, Command::EndTurn).is_err());
+    assert_eq!(restored, before);
+}
+
+#[test]
+fn pending_player_response_is_a_stable_manual_save_boundary() {
+    use kestrum::data::world::FactionId;
+    let (data, mut store, mut library, mut campaign) = fixture();
+    let Campaign::Strategic(ref mut strategic) = campaign else {
+        unreachable!()
+    };
+    apply(strategic, &data, Actor::Player, Command::EndTurn).unwrap();
+    assert!(library
+        .prepare_manual(&mut store, &data, &campaign, "Off turn", None)
+        .is_err());
+    let Campaign::Strategic(ref mut strategic) = campaign else {
+        unreachable!()
+    };
+    apply(strategic, &data, Actor::Npc(FactionId(2)), Command::EndTurn).unwrap();
+    apply(
+        strategic,
+        &data,
+        Actor::Npc(FactionId(3)),
+        Command::OfferPeace {
+            faction: FactionId(1),
+        },
+    )
+    .unwrap();
+    let id = manual(&mut library, &mut store, &data, &campaign);
+    assert_eq!(library.load(&mut store, &data, id).unwrap(), campaign);
 }

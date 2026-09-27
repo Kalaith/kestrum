@@ -1,12 +1,20 @@
 //! Five P19 contracts cover real seasonal development and administration.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
+#[path = "support/relations.rs"]
+mod relations;
+use relations::sync_relations;
+
 use kestrum::{
     data::{
         economy::{Habitation, Resources},
         world::{DiplomaticState, Facility, FactionId, Geography, MilitaryLayer, SiteId, SiteTag},
         GameData,
     },
-    engine::{advance_npc, apply, development_view, preview, Actor, Command},
+    engine::{apply, development_view, preview, Actor, Command},
     state::{
         construction::{ConstructionKind, ConstructionStatus, ConstructionTarget, Focus},
         military::ArmyId,
@@ -85,6 +93,7 @@ fn decline_ruin_and_reclamation_preserve_population_identity_and_fort_layer() {
         .find(|relation| relation.factions == [FactionId(1), FactionId(2)])
         .unwrap()
         .state = DiplomaticState::War;
+    sync_relations(&mut campaign);
     campaign.armies.get_mut(&ArmyId(2)).unwrap().site = SiteId(6);
     for expected in 1..=4 {
         finish(&mut campaign, &data);
@@ -104,6 +113,7 @@ fn decline_ruin_and_reclamation_preserve_population_identity_and_fort_layer() {
         .find(|relation| relation.factions == [FactionId(1), FactionId(2)])
         .unwrap()
         .state = DiplomaticState::Peace;
+    sync_relations(&mut campaign);
     campaign.armies.get_mut(&ArmyId(1)).unwrap().site = SiteId(5);
     let id = campaign.next_ids.order;
     apply(

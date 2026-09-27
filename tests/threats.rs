@@ -1,5 +1,9 @@
 //! P15 local combat uses real forces, fixed geography and single-use rewards.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 #[path = "support/threats.rs"]
 mod support;
 use kestrum::{
@@ -9,7 +13,7 @@ use kestrum::{
         world::{FactionId, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, project, threat_preview, Actor, Command, MoveOrder},
+    engine::{apply, project, threat_preview, Actor, Command, MoveOrder},
     state::{
         battle::{BattleDefender, BattleOutcome},
         construction::{ConstructionKind, ConstructionTarget},

@@ -3,8 +3,10 @@
 mod army;
 mod atlas;
 mod battle;
+mod campaign_end;
 mod components;
 mod history;
+mod kingdom;
 mod menus;
 mod movement;
 mod saves;
@@ -37,6 +39,7 @@ pub use army::{
 pub use atlas::map_controls_contain;
 pub use battle::{BattleTab, BattleView};
 pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
+pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
 pub use movement::{
     draw_map_overlay as draw_move_map_overlay,
     map_controls_contain as movement_map_controls_contain,
@@ -53,6 +56,12 @@ pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenKingdom(Option<kestrum::data::world::FactionId>),
+    SelectKingdom(kestrum::data::world::FactionId),
+    KingdomPage(i32),
+    ReviewDiplomacy(KingdomIntent),
+    ConfirmDiplomacy,
+    KingdomBack,
     OpenThreat(kestrum::state::threat::ThreatId),
     ArmyThreats(ArmyId),
     ToggleThreatArmy(ArmyId),
@@ -180,6 +189,17 @@ pub enum UiAction {
 }
 
 impl UiAction {
+    pub fn is_kingdom(self) -> bool {
+        matches!(
+            self,
+            Self::OpenKingdom(_)
+                | Self::SelectKingdom(_)
+                | Self::KingdomPage(_)
+                | Self::ReviewDiplomacy(_)
+                | Self::ConfirmDiplomacy
+                | Self::KingdomBack
+        )
+    }
     pub fn is_threat(self) -> bool {
         matches!(
             self,
@@ -253,6 +273,7 @@ impl UiAction {
 }
 
 pub struct Context<'a> {
+    pub kingdom: &'a KingdomView,
     pub threat: &'a ThreatPanel,
     pub siege: &'a SiegePanel,
     pub settlement: &'a SettlementView,
@@ -298,6 +319,12 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
+    if ctx.state.overlay == Overlay::Kingdom {
+        return kingdom::draw(ctx);
+    }
+    if ctx.state.overlay == Overlay::CampaignEnd {
+        return campaign_end::draw(ctx);
+    }
     if ctx.state.overlay == Overlay::Threat {
         return threat::draw(ctx);
     }

@@ -154,6 +154,13 @@ fn own_person(ctx: &Context<'_>, person: &Person) -> Vec<HistoryRow> {
     let round = ctx.campaign_view.map_or(0, |view| view.completed_rounds);
     let status = match person.status {
         PersonStatus::Fit => ctx.text("person_fit"),
+        PersonStatus::Displaced {
+            completed_rounds, ..
+        } => format!(
+            "{} · {}",
+            ctx.text("kingdom_displaced"),
+            date(ctx, completed_rounds)
+        ),
         PersonStatus::Wounded {
             remaining_steps, ..
         } => format!(

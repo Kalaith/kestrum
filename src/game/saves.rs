@@ -54,6 +54,7 @@ impl Game {
             .and_then(Campaign::strategic)
             .is_some_and(|campaign| {
                 matches!(campaign.phase, kestrum::state::CampaignPhase::PlayerTurn)
+                    || self.kingdom.is_save_boundary()
             });
         let Some(library) = &mut self.library else {
             return;
@@ -241,6 +242,10 @@ impl Game {
                 self.movement = ui::MoveView::default();
                 self.battle = ui::BattleView::default();
                 self.reset_history();
+                self.kingdom = ui::KingdomView::default();
+                self.diplomacy_seen.clear();
+                self.refresh_kingdom();
+                self.ending_saved = self.kingdom_ended();
                 self.invalidate_projection();
                 self.npc_delay = 0.0;
                 self.error = None;

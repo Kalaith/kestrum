@@ -1,13 +1,21 @@
 //! K08 visibility is enforced by the same services used by reports, maps and links.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
+#[path = "support/relations.rs"]
+mod relations;
+use relations::sync_relations;
+
 use kestrum::{
     data::{
         world::{DiplomaticState, FactionId, SiteId},
         GameData,
     },
     engine::{
-        advance_npc, apply, battle_reports, hostile_presence, known_people, movement_preview,
-        person_knowledge, project, Actor, Command, MoveOrder, PersonKnowledge,
+        apply, battle_reports, hostile_presence, known_people, movement_preview, person_knowledge,
+        project, Actor, Command, MoveOrder, PersonKnowledge,
     },
     state::{
         battle::BattleId,
@@ -83,6 +91,7 @@ fn precontact_exposes_only_local_hostile_presence_and_public_route_information()
         .find(|relation| relation.factions == [FactionId(1), FactionId(3)])
         .unwrap()
         .state = DiplomaticState::Peace;
+    sync_relations(&mut campaign);
     assert!(hostile_presence(&campaign, FactionId(1)).is_empty());
     assert!(hostile_presence(&campaign, FactionId(99)).is_empty());
 }

@@ -82,7 +82,11 @@ impl Game {
             name,
             target: None,
             prepared: None,
-            return_overlay: Overlay::None,
+            return_overlay: if self.kingdom_ended() {
+                Overlay::CampaignEnd
+            } else {
+                self.state.overlay
+            },
             load_after: false,
         });
         self.write_pending();
@@ -180,6 +184,8 @@ impl Game {
             return;
         }
         match self.state.overlay {
+            Overlay::Kingdom => self.kingdom_back(),
+            Overlay::CampaignEnd => {}
             Overlay::Settlement => self.settlement_back(),
             Overlay::Siege => self.siege_back(),
             Overlay::Threat => self.threat_back(),

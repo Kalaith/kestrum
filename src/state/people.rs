@@ -31,6 +31,10 @@ pub enum PersonAssignment {
 pub enum PersonStatus {
     #[default]
     Fit,
+    Displaced {
+        completed_rounds: u32,
+        site: SiteId,
+    },
     Wounded {
         since_round: u32,
         remaining_steps: u32,

@@ -22,7 +22,9 @@ pub(crate) fn record_facts(
             continue;
         }
         let id = allocate(campaign)?;
-        let record = if let DomainFactKind::DevelopmentChanged { ref receipt } = fact.kind {
+        let record = if let DomainFactKind::DiplomacyChanged { ref receipt } = fact.kind {
+            HistoryRecord::diplomacy(id, fact.completed_rounds, fact.id, receipt, campaign)
+        } else if let DomainFactKind::DevelopmentChanged { ref receipt } = fact.kind {
             HistoryRecord::development(id, fact.completed_rounds, fact.id, receipt, campaign)
         } else if let DomainFactKind::BattleResolved { battle, .. } = fact.kind {
             HistoryRecord::battle(id, &campaign.battles[&battle], Some(fact.id))

@@ -210,8 +210,8 @@ fn validate_person_snapshot(
     person: &BattlePersonReport,
 ) -> Result<(), String> {
     match person.starting_status {
-        Some(PersonStatus::Dead { .. }) => {
-            return Err("battle: a dead person cannot enter combat".into())
+        Some(PersonStatus::Dead { .. } | PersonStatus::Displaced { .. }) => {
+            return Err("battle: a dead or displaced person cannot enter combat".into())
         }
         Some(PersonStatus::Wounded {
             since_round,
@@ -242,6 +242,9 @@ fn validate_person_snapshot(
         )?,
     }
     match person.status {
+        PersonStatus::Displaced { .. } => {
+            return Err("battle: displacement is recorded after the encounter".into())
+        }
         PersonStatus::Wounded {
             since_round,
             remaining_steps,

@@ -1,9 +1,11 @@
 //! Pure strategic commands, stable phase boundaries, and observer-safe projection.
 
 mod actions;
+pub mod ai;
 mod combat;
 pub(crate) mod construction;
 pub(crate) mod development;
+pub mod diplomacy;
 mod economy;
 mod evidence;
 pub(crate) mod history;
@@ -26,6 +28,7 @@ pub use combat::battle_reports;
 pub use construction::{
     construction_options, construction_refund, ConstructionBlock, ConstructionOption,
 };
+pub use diplomacy::{diplomacy_view, DiplomacyFactionView, DiplomacyView};
 pub use history::{history_page, HistoryFilter, HistoryPage};
 pub use knowledge::{
     hostile_presence, known_people, person_knowledge, KnownPeoplePage, PersonKnowledge,

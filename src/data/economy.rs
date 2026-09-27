@@ -150,7 +150,7 @@ pub struct Economy {
 
 // These keyed content definitions carry IDs too. Serde's ordinary map would
 // silently replace a duplicate key before semantic validation could inspect it.
-pub(super) fn unique_table<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
+pub(crate) fn unique_table<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
 where
     D: serde::Deserializer<'de>,
     K: Deserialize<'de> + Ord + fmt::Debug,

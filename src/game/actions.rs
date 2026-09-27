@@ -5,6 +5,10 @@ use super::*;
 impl Game {
     pub(super) fn apply(&mut self, action: UiAction) {
         self.army_refresh_pending = true;
+        if action.is_kingdom() {
+            self.apply_kingdom_action(action);
+            return;
+        }
         if action.is_threat() {
             self.apply_threat_action(action);
             return;
@@ -205,7 +209,7 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(8);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(9);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

@@ -58,7 +58,7 @@ pub(super) fn fight(campaign: &mut StrategicCampaign, data: &GameData) -> Battle
 pub(super) fn finish_round(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 
@@ -470,7 +470,7 @@ pub(super) fn assert_history_visibility(data: &GameData, campaign: &StrategicCam
     );
     let mut hidden = campaign.clone();
     apply(&mut hidden, data, Actor::Player, Command::EndTurn).unwrap();
-    advance_npc(&mut hidden, data).unwrap();
+    pass_npc(&mut hidden, data).unwrap();
     assert_eq!(hidden.active_faction(), FactionId(3));
     apply(
         &mut hidden,

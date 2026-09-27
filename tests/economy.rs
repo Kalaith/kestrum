@@ -1,12 +1,16 @@
 //! K05's five contracts: grants, recruitment, rejection, seasonal accounts, removal.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         economy::{Habitation, Resources, TroopKind},
         world::{Facility, FactionId, MilitaryLayer, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, preview, project, recruit_options, Actor, Command, RuleError},
+    engine::{apply, preview, project, recruit_options, Actor, Command, RuleError},
     state::{
         campaign::DomainFactKind,
         military::{ArmyId, FormationId},
@@ -176,58 +180,7 @@ fn invalid_cost_site_facility_and_slot_orders_preserve_the_entire_campaign() {
     let (data, initial) = fixture();
     assert_unaffordable(&data, &initial);
     let command = recruit(TroopKind::Warriors, Some(ArmyId(1)));
-    for site in [SiteId(2), SiteId(999)] {
-        rejected(
-            &mut initial.clone(),
-            &data,
-            Actor::Player,
-            Command::Recruit {
-                site,
-                army: None,
-                kind: TroopKind::Warriors,
-            },
-            if site.0 == 2 {
-                "controls"
-            } else {
-                "unavailable"
-            },
-        );
-    }
-    let mut campaign = initial.clone();
-    campaign
-        .set_site_control(&data, SiteId(6), Some(campaign.player), false)
-        .unwrap();
-    rejected(
-        &mut campaign,
-        &data,
-        Actor::Player,
-        Command::Recruit {
-            site: SiteId(6),
-            army: None,
-            kind: TroopKind::Warriors,
-        },
-        "supply path",
-    );
-    let mut campaign = initial.clone();
-    campaign.world.sites[0].habitation = Habitation::Camp;
-    rejected(
-        &mut campaign,
-        &data,
-        Actor::Player,
-        command.clone(),
-        "Outpost",
-    );
-    let mut campaign = initial.clone();
-    campaign
-        .set_site_control(&data, SiteId(1), Some(campaign.player), true)
-        .unwrap();
-    rejected(
-        &mut campaign,
-        &data,
-        Actor::Player,
-        command.clone(),
-        "contested",
-    );
+    assert_invalid_recruit_sites(&data, &initial);
     let mut campaign = initial.clone();
     campaign.factions.get_mut(&campaign.player).unwrap().deficit = true;
     rejected(

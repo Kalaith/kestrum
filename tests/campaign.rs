@@ -74,8 +74,14 @@ fn seasons_advance_only_from_unobstructed_campaign_play() {
         let campaign = state.campaign.as_ref().unwrap();
         assert_eq!((campaign.season_index(), campaign.year(1)), (season, year));
         state.end_turn(&data).unwrap();
-        for _ in 0..3 {
+        let mut commands = 0;
+        while matches!(
+            state.campaign.as_ref().unwrap().strategic().unwrap().phase,
+            kestrum::state::CampaignPhase::NpcTurn { .. }
+        ) {
             state.advance_npc(&data).unwrap();
+            commands += 1;
+            assert!(commands <= 195);
         }
     }
 }

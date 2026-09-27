@@ -12,7 +12,8 @@ Select your headquarters and open Armies to inspect or recruit your forces.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
-visible. End Turn passes to the next faction; each rival currently passes. Pause,
+visible. End Turn passes to the next faction; rivals recruit, build, expand and
+fight using the same campaign rules. Pause,
 Step and Resume control rival progression between atomic actions. A full round
 advances one season and saves the campaign. The menu contains manual save/load,
 settings, help, and the route back to the title. Continue restores the current
@@ -56,7 +57,8 @@ sequence. Accepted commands commit atomically; rejection preserves state. Player
 observation exposes public places and the player's own faction resources.
 
 The season stays fixed while the player and each eligible rival take their turns.
-Four rounds make one year. Rivals currently pass; all active factions receive
+Four rounds make one year. At K02, rivals passed; K12 adds their decision policy.
+All active factions receive
 income and pay upkeep at the common boundary. Menu overlays and errors hold automatic progression.
 Manual saving is available during the player's phase. Old atlas campaigns are
 read-only, with no invented strategic history.
@@ -202,7 +204,8 @@ settlers from a supplied friendly donor with available population. Roads improve
 movement after two boundaries; road repair takes one. Forts and local facilities
 become persistent site layers. Leaving, combat or lost supply pauses work; losing
 control cancels it. Unstarted work refunds its prepaid cost, while progressed
-work gives no refund. Focus stores a replaceable choice with no bonus until K11.
+work gives no refund. Focus stores a replaceable choice; its development and
+income effects were added in K11.
 Saves and owner-visible histories retain actual orders and outcomes.
 
 [K09 verification](docs/verification/k09-construction.md) records 81 passing tests,
@@ -281,6 +284,32 @@ Approximately 80% of the minimum canvas sits between the shallow edge controls;
 the terrain continues beneath them. No framed central map widget or persistent
 sidebar exists. A selected place adds one inspector opposite its map position.
 
+### K12 — Rival kingdoms, diplomacy and endings
+
+Rivals now recruit legal forces, conserve upkeep reserves, build useful works,
+clear known threats, capture territory and respond to danger. Planning uses their
+own observation and dated enemy encounters. Unknown forces do not reveal private
+numbers to the planner. Pause and Step expose one actual order at a time.
+
+Open Kingdom from Menu or a rival place. Declare War explicitly, or Offer Peace.
+A negotiated peace lasts for at least four rounds and withdraws armies from
+foreign territory through legal adjacent exits. An impossible withdrawal rejects
+the whole agreement. Incoming offers and defeated rivals pause play for your
+choice; these pending decisions can be saved and resumed.
+
+A kingdom falls only when it has no functioning Outpost or higher and no army.
+Choose Annex or Submission for a rival you defeat. Submitted kingdoms remain
+inactive. Losing a capital alone does not end the campaign. Once every rival is
+eliminated or your vassal, the kingdom milestone ends in victory. Losing your own
+last base and army ends in defeat. The saved result preserves the final battle's
+service and allows Records, Save, Menu and New Game. Simulation stops there.
+
+K13–K18 remain required for the full generational release.
+
+[K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
+Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
+check. Minimum WebGL campaign scaling and physical-touch acceptance remain open.
+
 ## Development
 
 Kestrum is a registered member of the real shared Cargo workspace. The toolkit
@@ -325,9 +354,9 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. The current assignment
-continues automatically through all remaining packages, with validation and a
-commit at each completed package.
+reusable prompt for implementing one package at a time. The user requested that
+this assignment stop after K12 is validated and all work is committed. K13–K18
+remain planned and require a later continuation.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

@@ -91,7 +91,7 @@ pub(super) fn fixture(defending: bool) -> (GameData, StrategicCampaign) {
 pub(super) fn establish(campaign: &mut StrategicCampaign, data: &GameData, defending: bool) {
     if defending {
         apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
     let (actor, army) = if defending {
         (Actor::Npc(FactionId(3)), ArmyId(3))
@@ -135,7 +135,7 @@ pub(super) fn order(
 pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 

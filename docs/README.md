@@ -11,14 +11,18 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. K01–K11 are complete; K12–K18 remain required work.
+confirmed design decisions. K01–K12 are complete; K13–K18 remain required work.
+The user requested a stop after K12 and its commit.
 
 Persistent construction, local facilities, roads and conserved Outpost settlers are
 playable; see [K09 verification](verification/k09-construction.md) for validation and
 the remaining platform limitations. Persistent sieges, escape and joint relief are
 also playable; see [K10 verification](verification/k10-sieges.md). Living places,
 conserved refugees, role relocation and ordinary threats are playable; see
-[K11 verification](verification/k11-living-places.md).
+[K11 verification](verification/k11-living-places.md). Legal rival orders,
+War/Peace/truce, annexation/submission and saved kingdom endings are playable;
+see [K12 verification](verification/k12-kingdoms.md). The production world and
+generational features remain later packages.
 
 | Document | Contents |
 | --- | --- |

@@ -1,12 +1,16 @@
 //! Five seasonal evidence contracts; all awards consume actual accepted receipts.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         economy::TroopKind,
         world::{FactionId, FounderClass, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
+    engine::{apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
     state::{
         evidence::{EvidenceKind, Veterancy},
         history::{HistoryKind, HistorySubject},

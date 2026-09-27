@@ -1,5 +1,9 @@
 //! The five K02 contracts: phase order, calendar, skipping, atomicity, and replay.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         world::{DiplomaticState, FactionId, Relation},
@@ -34,6 +38,45 @@ fn fixture(count: u32) -> (GameData, StrategicCampaign) {
             });
         }
     }
+    for number in 5..=count {
+        let site = campaign
+            .world
+            .sites
+            .iter_mut()
+            .find(|site| {
+                site.controller.is_none()
+                    && !campaign
+                        .threats
+                        .values()
+                        .any(|threat| threat.site == site.id)
+            })
+            .unwrap();
+        site.controller = Some(FactionId(number));
+        site.habitation = kestrum::data::economy::Habitation::Outpost;
+        campaign
+            .factions
+            .get_mut(&FactionId(number))
+            .unwrap()
+            .headquarters = site.id;
+        campaign
+            .factions
+            .get_mut(&FactionId(number))
+            .unwrap()
+            .capital = site.id;
+    }
+    campaign.relations.sort_by_key(|relation| relation.factions);
+    campaign.diplomacy.pairs = campaign
+        .relations
+        .iter()
+        .map(|relation| kestrum::state::diplomacy::PairDiplomacy {
+            factions: relation.factions,
+            peace_since: (relation.state == DiplomaticState::Peace).then_some(0),
+            truce_until: None,
+            last_offer_round: None,
+        })
+        .collect();
+    campaign.diplomacy.pairs.sort_by_key(|pair| pair.factions);
+    campaign.reconcile_region_control();
     campaign.next_ids.faction = FactionId(count + 1);
     campaign.round_order = campaign.independent_order();
     campaign.validate(&data).unwrap();
@@ -43,7 +86,7 @@ fn fixture(count: u32) -> (GameData, StrategicCampaign) {
 fn finish_round(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 
@@ -129,15 +172,40 @@ fn four_completed_rounds_make_one_year_without_faction_dependent_dates() {
 fn inactive_mid_round_factions_are_skipped_without_replaying_other_phases() {
     let (data, mut campaign) = fixture(8);
     apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
-    advance_npc(&mut campaign, &data).unwrap();
+    pass_npc(&mut campaign, &data).unwrap();
     campaign.factions.get_mut(&FactionId(4)).unwrap().status = FactionStatus::Eliminated;
     campaign.factions.get_mut(&FactionId(6)).unwrap().status = FactionStatus::Vassal {
         sovereign: campaign.player,
     };
+    for faction in [FactionId(4), FactionId(6)] {
+        campaign.armies.retain(|_, army| army.faction != faction);
+        campaign
+            .formations
+            .retain(|_, formation| formation.faction != faction);
+        for site in &mut campaign.world.sites {
+            if site.controller == Some(faction) {
+                site.controller = None;
+            }
+        }
+        for person in campaign
+            .people
+            .values_mut()
+            .filter(|person| person.faction == faction)
+        {
+            let site = campaign.factions[&faction].headquarters;
+            person.status = kestrum::state::people::PersonStatus::Displaced {
+                completed_rounds: 0,
+                site,
+            };
+            person.assignment = kestrum::state::people::PersonAssignment::Site { site };
+            person.movement_spent = 0;
+        }
+    }
+    campaign.reconcile_region_control();
     let mut remaining = Vec::new();
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
         remaining.push(campaign.active_faction());
-        let result = advance_npc(&mut campaign, &data).unwrap();
+        let result = pass_npc(&mut campaign, &data).unwrap();
         if result.round_completed {
             let passed: Vec<_> = result
                 .consumed_facts
@@ -213,8 +281,8 @@ fn rejected_commands_and_read_only_views_preserve_every_authoritative_field() {
             _ => {
                 exhausted.completed_rounds = u32::MAX;
                 apply(&mut exhausted, &data, Actor::Player, Command::EndTurn).unwrap();
-                advance_npc(&mut exhausted, &data).unwrap();
-                advance_npc(&mut exhausted, &data).unwrap();
+                pass_npc(&mut exhausted, &data).unwrap();
+                pass_npc(&mut exhausted, &data).unwrap();
             }
         }
         let before = exhausted.clone();
@@ -268,8 +336,18 @@ fn serialized_paused_phase_and_full_rng_streams_resume_identically() {
     let expected = advance_npc(&mut campaign, &data).unwrap();
     let resumed = advance_npc(&mut restored, &data).unwrap();
     assert_eq!(expected, resumed);
-    assert!(expected.round_completed);
-    assert_eq!(expected.consumed_facts.len(), 4);
+    assert_eq!(expected.round_completed, resumed.round_completed);
+    let mut commands = 0;
+    while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
+        assert_eq!(
+            advance_npc(&mut campaign, &data).unwrap(),
+            advance_npc(&mut restored, &data).unwrap()
+        );
+        commands += 1;
+        assert!(commands <= 195);
+    }
+    assert_eq!(campaign.completed_rounds, 1);
+    assert!(campaign.pending_facts.is_empty());
     let boundary = Campaign::Strategic(Box::new(campaign.clone()));
     let boundary_json = serde_json::to_string(&boundary).unwrap();
     let boundary_restored: Campaign = serde_json::from_str(&boundary_json).unwrap();

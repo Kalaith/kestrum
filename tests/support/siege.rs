@@ -58,7 +58,7 @@ pub(super) fn order(action: SiegeAction, armies: &[u32], destination: Option<u32
 pub(super) fn establish(campaign: &mut StrategicCampaign, data: &GameData, defending: bool) {
     if defending {
         apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
         apply(campaign, data, Actor::Npc(FactionId(3)), enter(&[3], 8, 9)).unwrap();
     } else {
         establish_group(campaign, data, &[1]);
@@ -72,7 +72,7 @@ pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
         apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
     }
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(campaign, data).unwrap();
+        pass_npc(campaign, data).unwrap();
     }
 }
 pub(super) fn fight(
@@ -341,6 +341,7 @@ pub(super) fn assert_third_faction() {
     for relation in &mut campaign.relations {
         relation.state = DiplomaticState::War;
     }
+    sync_relations(&mut campaign);
     add(
         &mut campaign,
         &data,
@@ -392,6 +393,7 @@ pub(super) fn assert_peace(trapped: bool) {
             relation.state = DiplomaticState::Peace;
         }
     }
+    sync_relations(&mut campaign);
     let before = campaign.clone();
     let result = reconcile_sieges(&mut campaign, &data);
     if trapped {
@@ -449,6 +451,7 @@ pub(super) fn assert_admission() {
     for relation in &mut neutral.relations {
         relation.state = DiplomaticState::Peace;
     }
+    sync_relations(&mut neutral);
     let result = apply(&mut neutral, &data, Actor::Player, enter(&[1], 8, 9)).unwrap();
     assert!(result.battle.is_none());
     assert!(neutral.sieges.is_empty());

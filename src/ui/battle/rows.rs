@@ -177,6 +177,7 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                         ctx.text("wound_steps_remaining")
                     ),
                     PersonStatus::Dead { .. } => ctx.text("person_dead"),
+                    PersonStatus::Displaced { .. } => ctx.text("kingdom_displaced"),
                 };
                 rows.push(row(
                     format!("{role} · {}", person.name),

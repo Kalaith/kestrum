@@ -1,5 +1,13 @@
 //! K07 person consequences and the two supplied recovery steps are real state.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
+#[path = "support/relations.rs"]
+mod relations;
+use relations::sync_relations;
+
 use kestrum::{
     data::{
         economy::{Habitation, Resources},
@@ -7,8 +15,8 @@ use kestrum::{
         GameData,
     },
     engine::{
-        advance_npc, apply, person_site, resolve_person_combat, Actor, Command,
-        PersonCombatContext, PersonCombatSide,
+        apply, person_site, resolve_person_combat, Actor, Command, PersonCombatContext,
+        PersonCombatSide,
     },
     state::{
         military::{ArmyId, FormationId},

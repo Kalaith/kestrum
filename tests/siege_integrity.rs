@@ -1,12 +1,16 @@
 //! Siege data, observer boundaries and persisted exceptions through real commands.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         siege::{SiegeRules, SOURCE},
         world::{FactionId, MilitaryLayer, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, project, siege_view, Actor, Command, MoveOrder},
+    engine::{apply, project, siege_view, Actor, Command, MoveOrder},
     state::{
         battle::{BattleContext, BattleRoadDamage},
         military::ArmyId,
@@ -101,7 +105,10 @@ fn live_siege_partitions_and_progress_reject_corrupt_save_references() {
         corrupt_partition(&mut invalid, corruption);
         let error = invalid.validate(&data).unwrap_err();
         if corruption == "inactive" {
-            assert!(error.contains("military cleanup"), "{error}");
+            assert!(
+                error.contains("inactive faction retains independent forces or work"),
+                "{error}"
+            );
         }
     }
     let (_, mut absent) = siege_fixture(false);

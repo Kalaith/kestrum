@@ -1,6 +1,7 @@
 //! Bounded, observer-labeled narratives; these records never authorize rewards.
 
 mod development;
+mod diplomacy;
 mod validation;
 
 use super::{
@@ -49,6 +50,9 @@ pub struct FormationLabel {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HistoryKind {
+    Diplomacy {
+        receipt: super::diplomacy::DiplomacyReceipt,
+    },
     Development {
         receipt: super::development::DevelopmentReceipt,
     },
@@ -87,6 +91,7 @@ pub enum HistoryKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HistoryKindFilter {
+    Diplomacy,
     Development,
     Siege,
     Battle,
@@ -102,6 +107,7 @@ pub enum HistoryKindFilter {
 impl HistoryKind {
     pub fn category(&self) -> HistoryKindFilter {
         match self {
+            Self::Diplomacy { .. } => HistoryKindFilter::Diplomacy,
             Self::Development { .. } => HistoryKindFilter::Development,
             Self::Siege { .. } => HistoryKindFilter::Siege,
             Self::Battle { .. } => HistoryKindFilter::Battle,

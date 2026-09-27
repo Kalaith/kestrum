@@ -515,3 +515,55 @@ are unknown; actual saved pressure remains visible. Resettlement suggestions use
 observed destinations. The engine still applies the real physical conditions to
 an actual submitted order and to seasonal simulation. Forecasts do not expose
 unseen enemy movement by changing a remote site's safety label.
+
+
+### I11 — Bounded sovereign decisions and lasting outcomes
+
+K12 uses one accepted ordinary command per automatic or paused NPC step. The
+presentation delay does not enter simulation. A pure planner proposes an intent;
+the engine applies it and its objective metadata in one candidate. Rejected
+intents are bounded and the phase passes instead of repeating a failed command.
+A phase accepts at most 64 strategic commands, then passes. Objectives last four
+rounds unless invalid or an emergency overrides them. Each movement order takes
+one physical edge so the next decision uses newly observed surroundings.
+
+AI strength comparisons use its own current army and surviving enemy formations
+from retained, actually witnessed battle reports. A presence marker supplies no
+invented headcount. Observed empty enemy places remain legal capture targets.
+Private resources and rosters do not enter travel or targeting. P08's explicit
+peace evaluation alone uses aggregate enemy strength: the sum of headcount divided
+by each formation's capacity, measured in full-formation equivalents. This avoids
+treating one full formation as equal to six. Data validation bounds the exact
+common denominator so the comparison cannot overflow. Losing any inhabited,
+non-ruined place can motivate peace; surviving military independence requires a
+functioning Outpost or higher, or a nonempty army. A ruined former town does not
+provide that base.
+
+Pending player peace and defeat decisions freeze further orders and calendar
+advancement and form a stable manual-save boundary, even during an NPC phase. Once resolved, the same unfinished faction phase resumes, skipping
+newly inactive kingdoms. Peace preplans every required adjacent withdrawal and
+fails atomically if any force lacks a lawful exit. It does not teleport forces,
+transfer civilian control or erase survivors. Public agreements and outcomes
+produce public records; offers and rejections belong to the two parties, and
+withdrawal rosters remain private to their owner.
+
+Military defeat immediately displaces living survivors and cancels unfinished
+orders. The later Annex/Submission decision cannot restore their military or
+create free recruits. Vassals of a fallen sovereign follow its surviving victor;
+without one, they become inactive. Residual minor claims do not revive a kingdom
+or generate independent income. Simultaneous destruction resolves player defeat
+before checking victory.
+
+Ending a campaign consumes actual pending participation receipts once, including
+the final battle, without adding a fictional full round, income or healing step.
+The terminal partial-season service record can carry the current round. The
+persisted result blocks simulation while records, named saves, menu and a new
+campaign remain available. A terminal checkpoint is allowed even before the
+first seasonal boundary. Earlier payloads missing the whole diplomacy/AI group
+receive relation timers from their saved current state and empty policy history;
+partial modern groups remain invalid.
+
+These are delegated implementation decisions under the release assignment.
+K12's controls use one dismissible kingdom decision view and a result view;
+the map remains the ordinary play area. No permanent diplomacy dashboard is added.
+Validation and publication results belong in the K12 verification record.

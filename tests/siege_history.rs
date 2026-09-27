@@ -1,11 +1,15 @@
 //! Siege facts retain real context without revealing unencountered enemy rosters.
 
+#[path = "support/phases.rs"]
+mod phases;
+use phases::pass_npc;
+
 use kestrum::{
     data::{
         world::{FactionId, SiteId},
         GameData,
     },
-    engine::{advance_npc, apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
+    engine::{apply, history_page, Actor, Command, HistoryFilter, MoveOrder},
     state::{
         battle::BattleContext,
         evidence::EvidenceKind,
@@ -122,7 +126,7 @@ fn relief_records_joint_combat_but_only_incoming_route_service() {
     add_relief(&mut campaign);
     establish(&mut campaign, &data, true);
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
-        advance_npc(&mut campaign, &data).unwrap();
+        pass_npc(&mut campaign, &data).unwrap();
     }
     let result = apply(
         &mut campaign,

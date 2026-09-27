@@ -38,6 +38,7 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
+        HistoryKind::Diplomacy { receipt } => diplomacy_label(ctx, receipt),
         HistoryKind::Development { receipt } => development_label(ctx, receipt),
         HistoryKind::Siege {
             change,
@@ -90,6 +91,9 @@ pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
 }
 
 fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
+    if let HistoryKind::Diplomacy { receipt } = &event.kind {
+        return diplomacy_parties(ctx, receipt);
+    }
     if matches!(event.kind, HistoryKind::Development { .. }) {
         return event
             .sites
@@ -122,6 +126,65 @@ fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
         ));
     }
     labels.join(" · ")
+}
+
+fn diplomacy_label(
+    ctx: &Context<'_>,
+    receipt: &kestrum::state::diplomacy::DiplomacyReceipt,
+) -> String {
+    use kestrum::state::diplomacy::{DefeatResolution, DiplomacyReceipt};
+    ctx.text(match receipt {
+        DiplomacyReceipt::WarDeclared { .. } => "history_war_declared",
+        DiplomacyReceipt::PeaceOffered { .. } => "history_peace_offered",
+        DiplomacyReceipt::PeaceRejected { .. } => "history_peace_declined",
+        DiplomacyReceipt::PeaceAgreed { .. } => "peace_agreed",
+        DiplomacyReceipt::ArmyWithdrawn { .. } => "history_withdrawal",
+        DiplomacyReceipt::DefeatPending { .. } => "kingdom_defeated_choice",
+        DiplomacyReceipt::FactionResolved {
+            resolution: DefeatResolution::Annex,
+            ..
+        } => "history_annexed",
+        DiplomacyReceipt::FactionResolved {
+            resolution: DefeatResolution::Submission,
+            ..
+        } => "history_submission",
+        DiplomacyReceipt::CampaignEnded { .. } => "kingdom_milestone",
+    })
+}
+
+fn diplomacy_parties(
+    ctx: &Context<'_>,
+    receipt: &kestrum::state::diplomacy::DiplomacyReceipt,
+) -> String {
+    use kestrum::state::diplomacy::DiplomacyReceipt;
+    let ids: Vec<_> = match receipt {
+        DiplomacyReceipt::WarDeclared { factions }
+        | DiplomacyReceipt::PeaceAgreed { factions, .. } => factions.to_vec(),
+        DiplomacyReceipt::PeaceOffered {
+            proposer,
+            recipient,
+        }
+        | DiplomacyReceipt::PeaceRejected {
+            proposer,
+            recipient,
+        } => vec![*proposer, *recipient],
+        DiplomacyReceipt::ArmyWithdrawn { faction, .. } => vec![*faction],
+        DiplomacyReceipt::DefeatPending { faction, victor } => vec![*faction, *victor],
+        DiplomacyReceipt::FactionResolved {
+            faction, victor, ..
+        } => std::iter::once(*faction).chain(*victor).collect(),
+        DiplomacyReceipt::CampaignEnded { .. } => Vec::new(),
+    };
+    ids.into_iter()
+        .filter_map(|id| {
+            ctx.campaign_view?
+                .factions
+                .iter()
+                .find(|f| f.id == id)
+                .map(|f| f.name.clone())
+        })
+        .collect::<Vec<_>>()
+        .join(" · ")
 }
 
 pub(super) fn tier_text(ctx: &Context<'_>, tier: kestrum::state::evidence::Veterancy) -> String {

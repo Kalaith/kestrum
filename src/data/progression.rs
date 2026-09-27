@@ -137,6 +137,7 @@ pub struct SpecializedCounter {
 pub enum TrainingDiscipline {
     Infantry,
     Archery,
+    Scouting,
     Riding,
     Medicine,
     Command,

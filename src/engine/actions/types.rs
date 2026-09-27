@@ -114,6 +114,26 @@ pub enum Command {
     CancelPersonCourse {
         person: PersonId,
     },
+    RecoverPersonAtSite {
+        person: PersonId,
+        site: SiteId,
+    },
+    RetirePerson {
+        person: PersonId,
+        site: SiteId,
+    },
+    AppointGovernor {
+        person: PersonId,
+        site: SiteId,
+    },
+    StartMentorship {
+        mentor: PersonId,
+        learner: PersonId,
+        discipline: crate::data::progression::TrainingDiscipline,
+    },
+    EndMentorship {
+        learner: PersonId,
+    },
     SpecializeFormation {
         formation: FormationId,
         specialization: FormationSpecialization,
@@ -354,6 +374,7 @@ impl std::error::Error for RuleError {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActionOutcome {
+    pub automatic_retirements: Vec<crate::state::people::PersonId>,
     pub battle: Option<BattleId>,
     pub accepted_sequence: u64,
     pub active_faction: FactionId,

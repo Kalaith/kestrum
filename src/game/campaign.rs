@@ -63,6 +63,30 @@ impl Game {
     ) {
         match result {
             Ok(outcome) => {
+                if !outcome.automatic_retirements.is_empty() {
+                    let names = self
+                        .state
+                        .campaign
+                        .as_ref()
+                        .and_then(Campaign::strategic)
+                        .map(|campaign| {
+                            outcome
+                                .automatic_retirements
+                                .iter()
+                                .filter_map(|id| {
+                                    campaign.people.get(id).map(|person| person.name.as_str())
+                                })
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        })
+                        .unwrap_or_default();
+                    let message = self
+                        .data
+                        .presentation
+                        .text("automatic_retirement_notice")
+                        .replace("{names}", &names);
+                    self.notice = Some((message, 5.0));
+                }
                 if outcome.round_completed
                     && self
                         .state

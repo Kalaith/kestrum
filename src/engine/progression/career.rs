@@ -15,6 +15,8 @@ pub struct CareerRequirement {
     pub label: &'static str,
     pub current: usize,
     pub required: usize,
+    /// Rows with the same path are all required; any complete path qualifies.
+    pub path: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -69,29 +71,69 @@ pub(super) fn requirements(
             .unwrap_or(0) as usize
     };
     let count = |kind| person.evidence.counts.get(&kind).copied().unwrap_or(0) as usize;
+    let mentorship = |discipline| {
+        person
+            .career
+            .mentorship_seasons
+            .get(&discipline)
+            .copied()
+            .unwrap_or(0) as usize
+    };
     match class {
-        PersonClass::Infantry => vec![alternative(
-            "Warrior or Spearman battles",
-            battles(TroopKind::Warriors) + battles(TroopKind::Spearmen),
-            rules.infantry_battles as usize,
-        )],
-        PersonClass::Archer => vec![alternative(
-            "Archer battles",
-            battles(TroopKind::Archers),
-            rules.archer_battles as usize,
-        )],
+        PersonClass::Infantry => vec![
+            requirement(
+                0,
+                "Warrior or Spearman battles",
+                battles(TroopKind::Warriors) + battles(TroopKind::Spearmen),
+                rules.infantry_battles as usize,
+            ),
+            requirement(
+                1,
+                "Infantry mentorship seasons",
+                mentorship(crate::data::progression::TrainingDiscipline::Infantry),
+                rules.mentorship_seasons as usize,
+            ),
+        ],
+        PersonClass::Archer => vec![
+            requirement(
+                0,
+                "Archer battles",
+                battles(TroopKind::Archers),
+                rules.archer_battles as usize,
+            ),
+            requirement(
+                1,
+                "Archery mentorship seasons",
+                mentorship(crate::data::progression::TrainingDiscipline::Archery),
+                rules.mentorship_seasons as usize,
+            ),
+        ],
         PersonClass::Scout => vec![alternative(
             "Distinct physical routes",
             person.evidence.traversed_routes.len(),
             rules.scout_routes as usize,
         )],
         PersonClass::Cavalry => vec![
-            alternative(
+            requirement(
+                0,
                 "Riding practice seasons",
                 person.career.riding_practice_seasons as usize,
                 rules.riding_seasons as usize,
             ),
-            alternative(
+            requirement(
+                0,
+                "Rider battles",
+                battles(TroopKind::Riders),
+                rules.rider_battles as usize,
+            ),
+            requirement(
+                1,
+                "Riding mentorship seasons",
+                mentorship(crate::data::progression::TrainingDiscipline::Riding),
+                rules.mentorship_seasons as usize,
+            ),
+            requirement(
+                1,
                 "Rider battles",
                 battles(TroopKind::Riders),
                 rules.rider_battles as usize,
@@ -117,6 +159,13 @@ pub(super) fn requirements(
                     command,
                     rules.officer_command_facts as usize,
                 ),
+                requirement(1, "Meaningful encounters", encounters, 1),
+                requirement(
+                    1,
+                    "Command mentorship seasons",
+                    mentorship(crate::data::progression::TrainingDiscipline::Command),
+                    rules.mentorship_seasons as usize,
+                ),
             ]
         }
         PersonClass::Recruit => Vec::new(),
@@ -138,10 +187,7 @@ pub(super) fn option(
         && !matches!(person.assignment, PersonAssignment::Dead);
     CareerOption {
         class,
-        eligible: base_valid
-            && requirements
-                .iter()
-                .all(|item| item.current >= item.required),
+        eligible: base_valid && path_satisfied(&requirements),
         requirements,
         course: view(course),
     }
@@ -156,9 +202,28 @@ fn view(course: &CareerCourseRule) -> CareerCourseRuleView {
 }
 
 fn alternative(label: &'static str, current: usize, required: usize) -> CareerRequirement {
+    requirement(0, label, current, required)
+}
+
+fn requirement(
+    path: u8,
+    label: &'static str,
+    current: usize,
+    required: usize,
+) -> CareerRequirement {
     CareerRequirement {
         label,
         current,
         required,
+        path,
     }
+}
+
+fn path_satisfied(requirements: &[CareerRequirement]) -> bool {
+    requirements.iter().any(|candidate| {
+        requirements
+            .iter()
+            .filter(|requirement| requirement.path == candidate.path)
+            .all(|requirement| requirement.current >= requirement.required)
+    })
 }

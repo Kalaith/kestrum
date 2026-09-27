@@ -9,6 +9,7 @@ pub mod diplomacy;
 pub mod evidence;
 pub mod history;
 pub mod knowledge;
+pub mod mentorship;
 pub mod military;
 pub mod people;
 pub mod persistence;

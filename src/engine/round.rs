@@ -60,7 +60,7 @@ fn complete_round(
     super::construction::resolve(campaign, data, &supply, outcome)?;
     super::siege::progress(campaign, data, outcome)?;
     recovery::resolve(campaign, data, &supply)?;
-    person_combat::heal_wounds(campaign, &supply);
+    let treated_people = person_combat::heal_wounds(campaign, &supply);
     super::development::resolve(campaign, data, &development, outcome)?;
     campaign.completed_rounds =
         campaign
@@ -69,7 +69,9 @@ fn complete_round(
             .ok_or(RuleError::Overflow {
                 field: "completed rounds",
             })?;
+    outcome.automatic_retirements = super::lifecycle::resolve_boundary(campaign, data)?;
     super::construction::reconcile(campaign, data, outcome)?;
+    super::evidence::record_person_treatment(campaign, &medics, &treated_people)?;
     super::evidence::record_recovery(campaign, &medics)?;
     super::knowledge::prune_knowledge(campaign, data);
     campaign.acted.clear();

@@ -151,6 +151,7 @@ fn prepare(
     data.progression
         .validate()
         .map_err(RuleError::InvalidState)?;
+    data.lifecycle.validate().map_err(RuleError::InvalidState)?;
     data.history.validate().map_err(RuleError::InvalidState)?;
     data.construction
         .validate()
@@ -162,6 +163,8 @@ fn prepare(
         Actor::Npc(id) => id,
     };
     super::progression::validate_command(campaign, data, owner, &command)?;
+    super::lifecycle::validate(campaign, data, owner, &command)?;
+    super::mentorship::validate(campaign, data, owner, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -171,6 +174,7 @@ fn prepare(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        automatic_retirements: Vec::new(),
         battle: None,
         accepted_sequence: candidate.accepted_sequence,
         active_faction: candidate.active_faction(),
@@ -204,6 +208,12 @@ fn finish(
     if outcome.round_completed && !already_completed {
         super::diplomacy::reconcile(&before_phase, candidate, data, outcome)?;
     }
+    candidate.reconcile_region_control();
+    super::mentorship::reconcile(candidate, data);
+    super::lifecycle::reconcile_roles(candidate);
+    if outcome.round_completed {
+        super::mentorship::resolve_season(candidate, data);
+    }
     if outcome.round_completed || candidate.diplomacy.ending.is_some() {
         outcome.consumed_facts = std::mem::take(&mut candidate.pending_facts);
         super::evidence::consume(candidate, data, &outcome.consumed_facts)?;
@@ -216,7 +226,6 @@ fn finish(
         candidate.consumed_sequence = candidate.accepted_sequence;
         candidate.acted.clear();
     }
-    candidate.reconcile_region_control();
     super::history::record_facts(candidate, before, &outcome.facts)?;
     if outcome.round_completed {
         super::history::prune(candidate, data);
@@ -298,7 +307,7 @@ fn execute(
             person,
             to_formation,
         } => {
-            let fact = transfer::person(candidate, owner, person, to_formation)?;
+            let fact = transfer::person(candidate, data, owner, person, to_formation)?;
             record_fact(candidate, outcome, fact)?;
         }
         Command::SplitArmy { formation } => {
@@ -313,6 +322,14 @@ fn execute(
         | Command::SpecializeFormation { .. }
         | Command::CancelFormationCourse { .. }) => {
             super::progression::execute(candidate, data, owner, &command)?
+        }
+        command @ (Command::RecoverPersonAtSite { .. }
+        | Command::RetirePerson { .. }
+        | Command::AppointGovernor { .. }) => {
+            super::lifecycle::execute(candidate, data, owner, &command)?;
+        }
+        command @ (Command::StartMentorship { .. } | Command::EndMentorship { .. }) => {
+            super::mentorship::execute(candidate, data, owner, &command)?;
         }
     }
     Ok(())

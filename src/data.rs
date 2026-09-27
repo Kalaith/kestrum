@@ -6,6 +6,7 @@ pub mod construction;
 pub mod development;
 pub mod diplomacy;
 pub mod economy;
+pub mod lifecycle;
 pub mod progression;
 pub mod rules;
 mod setup_validation;
@@ -23,6 +24,7 @@ pub struct GameData {
     pub ai: ai::AiRules,
     pub diplomacy: diplomacy::DiplomacyRules,
     pub development: development::DevelopmentRules,
+    pub lifecycle: lifecycle::LifecycleRules,
     pub threats: threats::ThreatRules,
     pub siege: siege::SiegeRules,
     pub construction: construction::ConstructionRules,
@@ -43,6 +45,7 @@ impl GameData {
             ai: macroquad_toolkit::include_json!("../assets/data/ai.json")?,
             diplomacy: macroquad_toolkit::include_json!("../assets/data/diplomacy.json")?,
             development: macroquad_toolkit::include_json!("../assets/data/development.json")?,
+            lifecycle: macroquad_toolkit::include_json!("../assets/data/lifecycle.json")?,
             threats: macroquad_toolkit::include_json!("../assets/data/threats.json")?,
             siege: macroquad_toolkit::include_json!("../assets/data/siege_rules.json")?,
             construction: macroquad_toolkit::include_json!(
@@ -66,6 +69,7 @@ impl GameData {
         self.ai.validate()?;
         self.diplomacy.validate()?;
         self.development.validate()?;
+        self.lifecycle.validate()?;
         self.threats.validate(&self.scenario)?;
         self.siege.validate()?;
         self.construction.validate()?;

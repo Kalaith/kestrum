@@ -1,6 +1,9 @@
 //! Living assignments and dated battle injuries/deaths remain valid after removal.
 
-use super::{Person, PersonAssignment, PersonCourse, PersonStatus, PersonTrait, StrategicCampaign};
+use super::{
+    Person, PersonAssignment, PersonCourse, PersonSiteRole, PersonStatus, PersonTrait,
+    StrategicCampaign,
+};
 use crate::data::{progression::EpithetFact, world::PersonClass, GameData};
 
 impl StrategicCampaign {
@@ -29,7 +32,7 @@ impl StrategicCampaign {
                 "invalid birth or service date",
             )?;
             require(
-                person.movement_spent <= data.rules.leadership.officer_movement_allowance,
+                person.movement_spent <= self.person_movement_allowance(person, data),
                 "movement_spent",
                 "exceeds seasonal allowance",
             )?;
@@ -37,6 +40,10 @@ impl StrategicCampaign {
             let valid_assignment = match person.assignment {
                 PersonAssignment::Formation { formation } => {
                     person.is_alive()
+                        && person.age_years(self.completed_rounds) >= 17
+                        && person.age_years(self.completed_rounds)
+                            < data.lifecycle.automatic_retirement_age_years
+                        && !person.career.retired
                         && self
                             .formations
                             .get(&formation)
@@ -50,10 +57,11 @@ impl StrategicCampaign {
             require(
                 valid_assignment,
                 "assignment",
-                "unknown, foreign or incompatible assignment",
+                "unknown, foreign or incompatible assignment or field age",
             )?;
             self.validate_career(person, data)?;
         }
+        self.validate_mentorships(data)?;
         Ok(())
     }
 
@@ -77,11 +85,62 @@ impl StrategicCampaign {
         require(
             career.mentorship_seasons.iter().all(|(discipline, count)| {
                 let _ = discipline;
-                *count > 0 && *count <= self.completed_rounds
+                *count > 0 && *count <= data.lifecycle.apprenticeship_seasons
             }),
             "career.mentorship_seasons",
             "invalid mentorship total",
         )?;
+        require(
+            career
+                .discipline_service_seasons
+                .values()
+                .all(|count| *count > 0 && *count <= self.completed_rounds),
+            "career.discipline_service_seasons",
+            "invalid service total",
+        )?;
+        require(
+            career
+                .automatic_retirement_round
+                .is_none_or(|round| career.retired && round <= self.completed_rounds),
+            "career.automatic_retirement_round",
+            "automatic retirement must be dated and retired",
+        )?;
+        require(
+            career.completed_mentors.iter().all(|record| {
+                self.people.get(&record.mentor).is_some_and(|mentor| {
+                    mentor.id != person.id
+                        && mentor.faction == person.faction
+                        && record.started_round < record.completed_round
+                        && record.completed_round <= self.completed_rounds
+                        && record.completed_round - record.started_round
+                            >= data.lifecycle.apprenticeship_seasons
+                        && career
+                            .mentorship_seasons
+                            .get(&record.discipline)
+                            .copied()
+                            .unwrap_or(0)
+                            >= data.lifecycle.apprenticeship_seasons
+                })
+            }),
+            "career.completed_mentors",
+            "apprenticeship must reference its mentor and supported completed dates",
+        )?;
+        if career.site_role == Some(PersonSiteRole::Governor) {
+            let valid = matches!(person.assignment, PersonAssignment::Site { site }
+            if self.world.site(site).is_some_and(|site| {
+                site.controller == Some(person.faction)
+                    && site.habitation != crate::data::economy::Habitation::Unsettled
+                    && !self.sieges.contains_key(&site.id)
+            })) && person.is_alive()
+                && person.status == PersonStatus::Fit
+                && person.age_years(self.completed_rounds)
+                    >= data.rules.leadership.field_min_age_years;
+            require(
+                valid,
+                "career.site_role",
+                "governor must be a fit adult at an owned, inhabited, unbesieged settlement",
+            )?;
+        }
         let occasions = |tendency: super::Tendency| {
             (data.progression.traits.base_occasions as i32 - tendency.adjustment()).clamp(
                 data.progression.traits.minimum_occasions as i32,
@@ -203,6 +262,61 @@ impl StrategicCampaign {
         Ok(())
     }
 
+    fn validate_mentorships(&self, data: &GameData) -> Result<(), String> {
+        let mut mentors = std::collections::BTreeSet::new();
+        for (learner_id, mentorship) in &self.mentorships {
+            let Some(learner) = self.people.get(learner_id) else {
+                return Err("campaign.mentorships: unknown learner".into());
+            };
+            let Some(mentor) = self.people.get(&mentorship.mentor) else {
+                return Err("campaign.mentorships: unknown mentor".into());
+            };
+            let valid = *learner_id != mentorship.mentor
+                && learner.is_alive()
+                && mentor.is_alive()
+                && learner.faction == mentor.faction
+                && !learner.career.retired
+                && learner.career.course.is_none()
+                && learner.age_years(self.completed_rounds)
+                    >= data.lifecycle.learner_minimum_age_years
+                && mentor.age_years(self.completed_rounds)
+                    >= data.lifecycle.mentor_minimum_age_years
+                && mentor
+                    .career
+                    .discipline_service_seasons
+                    .get(&mentorship.discipline)
+                    .copied()
+                    .unwrap_or(0)
+                    >= data.lifecycle.mentor_service_seasons
+                && (learner.assignment != PersonAssignment::Dead)
+                && (mentor.assignment != PersonAssignment::Dead)
+                && mentorship.started_round <= self.completed_rounds
+                && mentorship.seasons_completed < data.lifecycle.apprenticeship_seasons
+                && mentors.insert(mentorship.mentor);
+            require(
+                valid,
+                "mentorships",
+                "invalid identity, qualification, chronology or one-learner capacity",
+            )?;
+        }
+        let mut governors = std::collections::BTreeSet::new();
+        for person in self
+            .people
+            .values()
+            .filter(|person| person.career.site_role == Some(PersonSiteRole::Governor))
+        {
+            let PersonAssignment::Site { site } = person.assignment else {
+                return Err("campaign.people.career.site_role: governor has no settlement".into());
+            };
+            require(
+                governors.insert(site),
+                "people.career.site_role",
+                "a settlement has more than one governor",
+            )?;
+        }
+        Ok(())
+    }
+
     fn validate_person_status(&self, person: &Person, data: &GameData) -> Result<(), String> {
         let valid = match person.status {
             PersonStatus::Fit => self.is_independent(person.faction),
@@ -215,7 +329,9 @@ impl StrategicCampaign {
                     && self.world.site(site).is_some()
                     && person.assignment == (PersonAssignment::Site { site })
                     && person.movement_spent == 0
-                    && !self.is_independent(person.faction)
+                    && (!self.is_independent(person.faction)
+                        || person.career.retired
+                            && person.career.automatic_retirement_round == Some(completed_rounds))
             }
             PersonStatus::Wounded {
                 since_round,

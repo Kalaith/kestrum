@@ -10,6 +10,8 @@ mod economy;
 mod evidence;
 pub(crate) mod history;
 pub(crate) mod knowledge;
+mod lifecycle;
+mod mentorship;
 mod movement;
 mod person_combat;
 pub(crate) mod progression;
@@ -35,6 +37,7 @@ pub use knowledge::{
     hostile_presence, known_people, person_knowledge, KnownPeoplePage, PersonKnowledge,
     KNOWLEDGE_PAGE_SIZE,
 };
+pub use mentorship::{mentorship_options, mentorship_status_text, MentorshipOption};
 pub use movement::{
     army_remaining, formation_remaining, movement_preview, person_remaining, route_cost, MoveOrder,
     MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,

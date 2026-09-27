@@ -317,7 +317,31 @@ fn recovery_preserves_formation_identity_metadata_and_replays_through_saves() {
     assert_eq!(campaign, resumed);
     assert_eq!(campaign.formations[&FormationId(1)], expected);
     assert_eq!(campaign.armies, before.armies);
-    assert_eq!(campaign.people, before.people);
+    let mut boundary_people = campaign.people.clone();
+    let mut before_people = before.people.clone();
+    for person in boundary_people.values_mut() {
+        person.career.discipline_service_seasons.clear();
+    }
+    for person in before_people.values_mut() {
+        person.career.discipline_service_seasons.clear();
+    }
+    assert_eq!(boundary_people, before_people);
+    for person in campaign.people.values() {
+        assert_eq!(
+            person
+                .career
+                .discipline_service_seasons
+                .get(&kestrum::data::progression::TrainingDiscipline::Infantry),
+            Some(&1)
+        );
+        assert_eq!(
+            person
+                .career
+                .discipline_service_seasons
+                .get(&kestrum::data::progression::TrainingDiscipline::Command),
+            Some(&1)
+        );
+    }
     assert_eq!(campaign.rng, before.rng);
     assert_eq!(campaign.next_ids.army, before.next_ids.army);
     assert_eq!(campaign.next_ids.formation, before.next_ids.formation);

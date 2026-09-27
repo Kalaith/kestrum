@@ -9,14 +9,15 @@ use crate::{
     },
     state::{
         battle::BattleReport,
+        mentorship::Mentorship,
         military::{Army, ArmyId, EconomyStatement, Formation, RecoveryStatement},
-        people::Person,
+        people::{Person, PersonId},
         siege::SiegeId,
         world::CampaignWorld,
         CampaignId, CampaignPhase, FactionStatus, StrategicCampaign,
     },
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VisibleFaction {
@@ -57,6 +58,8 @@ pub struct VisibleCampaign {
     pub armies: Vec<Army>,
     pub formations: Vec<Formation>,
     pub people: Vec<Person>,
+    /// Mentorship assignments are visible to their own learner and mentor.
+    pub mentorships: BTreeMap<PersonId, Mentorship>,
 }
 
 pub fn project(
@@ -129,6 +132,21 @@ pub fn project(
             .values()
             .filter(|person| person.faction == observer)
             .cloned()
+            .collect(),
+        mentorships: campaign
+            .mentorships
+            .iter()
+            .filter(|(learner, mentorship)| {
+                campaign
+                    .people
+                    .get(learner)
+                    .is_some_and(|person| person.faction == observer)
+                    && campaign
+                        .people
+                        .get(&mentorship.mentor)
+                        .is_some_and(|person| person.faction == observer)
+            })
+            .map(|(learner, mentorship)| (*learner, mentorship.clone()))
             .collect(),
     })
 }

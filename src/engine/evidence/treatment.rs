@@ -6,6 +6,34 @@ use crate::{
     state::people::{PersonAssignment, PersonStatus},
 };
 
+pub(crate) fn record_person_treatment(
+    campaign: &mut StrategicCampaign,
+    medics: &[(PersonId, FactionId, SiteId)],
+    treated: &[(FactionId, SiteId)],
+) -> Result<(), RuleError> {
+    for (id, faction, site) in medics {
+        let treatments = treated
+            .iter()
+            .filter(|(treated_faction, treated_site)| {
+                *treated_faction == *faction && *treated_site == *site
+            })
+            .count();
+        for _ in 0..treatments {
+            let medic = campaign
+                .people
+                .get_mut(id)
+                .expect("pre-boundary recovery medic");
+            increment(&mut medic.evidence.counts, EvidenceKind::TreatedWounded)?;
+            medic
+                .career
+                .notable_sites
+                .entry(crate::data::progression::EpithetFact::TreatedWounded)
+                .or_insert(*site);
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn recovery_medics(campaign: &StrategicCampaign) -> Vec<(PersonId, FactionId, SiteId)> {
     campaign
         .people
@@ -42,15 +70,13 @@ pub(crate) fn record_recovery(
                         .any(|entry| entry.site == *site && entry.restored > 0)
             });
         if treated {
-            increment(
-                &mut campaign
-                    .people
-                    .get_mut(id)
-                    .expect("present recovery medic")
-                    .evidence
-                    .counts,
-                EvidenceKind::TreatedWounded,
-            )?;
+            let medic = campaign.people.get_mut(id).expect("present recovery medic");
+            increment(&mut medic.evidence.counts, EvidenceKind::TreatedWounded)?;
+            medic
+                .career
+                .notable_sites
+                .entry(crate::data::progression::EpithetFact::TreatedWounded)
+                .or_insert(*site);
         }
     }
     Ok(())

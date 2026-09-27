@@ -50,14 +50,15 @@ pub fn resolve_person_combat(
     validate_context(campaign, context)?;
     let mut candidate = campaign.clone();
     let mut events = Vec::new();
-    let participants = participants(&candidate, context);
+    let participants = participants(&candidate, data, context);
     // Global person-ID order, irrespective of which faction is the attacker.
     for (id, side, formation) in participants {
+        let movement_allowance = candidate.person_movement_allowance(&candidate.people[&id], data);
         candidate
             .people
             .get_mut(&id)
             .expect("participant")
-            .movement_spent = data.rules.leadership.officer_movement_allowance;
+            .movement_spent = movement_allowance;
         if candidate.formations[&formation].headcount == 0 {
             resolve_wipe(&mut candidate, data, context, side, id, &mut events);
         }
@@ -132,6 +133,7 @@ fn validate_context(
 
 fn participants(
     campaign: &StrategicCampaign,
+    data: &GameData,
     context: &PersonCombatContext,
 ) -> Vec<(PersonId, usize, FormationId)> {
     campaign
@@ -141,7 +143,7 @@ fn participants(
             let PersonAssignment::Formation { formation } = person.assignment else {
                 return None;
             };
-            if !person.is_alive() {
+            if !person.is_alive() || person.status != PersonStatus::Fit {
                 return None;
             }
             context
@@ -150,6 +152,14 @@ fn participants(
                 .position(|side| {
                     side.faction == person.faction
                         && side.starting_headcounts.contains_key(&formation)
+                        && (person.age_years(campaign.completed_rounds)
+                            < data.lifecycle.elder_age_years
+                            || side.armies.iter().any(|army| {
+                                campaign
+                                    .armies
+                                    .get(army)
+                                    .is_some_and(|army| army.commander == Some(person.id))
+                            }))
                 })
                 .map(|side| (person.id, side, formation))
         })
@@ -249,6 +259,7 @@ fn resolve_commander(
     let army = &campaign.armies[&army_id];
     let successor = campaign.people.values().find(|person|
         person.faction == side.faction
+        && !person.career.retired
         && person.is_fit_for_field(campaign.completed_rounds, data.rules.leadership.field_min_age_years)
         && matches!(person.assignment, PersonAssignment::Formation { formation }
             if army.formation_ids().any(|id| id == formation) && campaign.formations[&formation].headcount > 0)
@@ -329,13 +340,7 @@ fn kill(
     reason: PersonDeathReason,
     events: &mut Vec<PersonCombatEvent>,
 ) {
-    let person = campaign.people.get_mut(&id).expect("dead participant");
-    person.status = PersonStatus::Dead {
-        completed_rounds: campaign.completed_rounds,
-        site,
-    };
-    person.assignment = PersonAssignment::Dead;
-    person.movement_spent = 0;
+    super::lifecycle::mark_dead(campaign, id, site);
     push_event(campaign, id, PersonCombatOutcome::Died { reason }, events);
 }
 
@@ -358,6 +363,7 @@ fn clear_unfit_commands(campaign: &mut StrategicCampaign, data: &GameData) {
     for army in campaign.armies.values_mut() {
         let valid = army.commander.and_then(|id| campaign.people.get(&id)).is_some_and(|person|
             person.faction == army.faction
+                && !person.career.retired
                 && person.is_fit_for_field(campaign.completed_rounds, data.rules.leadership.field_min_age_years)
                 && matches!(person.assignment, PersonAssignment::Formation { formation }
                     if army.formation_ids().any(|id| id == formation) && campaign.formations[&formation].headcount > 0));

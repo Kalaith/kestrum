@@ -33,7 +33,14 @@ impl Game {
             UiAction::ArmyOrders
             | UiAction::ArmyPeople
             | UiAction::ArmyPeoplePage(_)
+            | UiAction::MentorshipPage(_)
             | UiAction::OpenPersonProgression(_)
+            | UiAction::OpenMentorship(_)
+            | UiAction::StartMentorship(_, _, _)
+            | UiAction::EndMentorship(_)
+            | UiAction::RecoverPersonAtSite(_, _)
+            | UiAction::RetirePerson(_, _)
+            | UiAction::AppointGovernor(_, _)
             | UiAction::OpenFormationProgression(_)
             | UiAction::TrainPerson(_, _, _)
             | UiAction::PracticeRiding(_, _)
@@ -121,8 +128,37 @@ impl Game {
             UiAction::ArmyPeoplePage(delta) => {
                 self.army.people_page = self.army.people_page.saturating_add_signed(delta as isize)
             }
+            UiAction::MentorshipPage(delta) => {
+                self.army.mentorship_page = self
+                    .army
+                    .mentorship_page
+                    .saturating_add_signed(delta as isize)
+            }
             UiAction::OpenPersonProgression(person) => {
                 self.army.mode = ui::ArmyMode::ProgressionPerson(person)
+            }
+            UiAction::OpenMentorship(person) => {
+                self.army.mentorship_page = 0;
+                self.army.mode = ui::ArmyMode::Mentorship(person);
+            }
+            UiAction::StartMentorship(mentor, learner, discipline) => {
+                self.apply_campaign_command(Command::StartMentorship {
+                    mentor,
+                    learner,
+                    discipline,
+                })
+            }
+            UiAction::EndMentorship(learner) => {
+                self.apply_campaign_command(Command::EndMentorship { learner })
+            }
+            UiAction::RecoverPersonAtSite(person, site) => {
+                self.apply_campaign_command(Command::RecoverPersonAtSite { person, site })
+            }
+            UiAction::RetirePerson(person, site) => {
+                self.apply_campaign_command(Command::RetirePerson { person, site })
+            }
+            UiAction::AppointGovernor(person, site) => {
+                self.apply_campaign_command(Command::AppointGovernor { person, site })
             }
             UiAction::OpenFormationProgression(formation) => {
                 self.army.mode = ui::ArmyMode::ProgressionFormation(formation)
@@ -248,7 +284,7 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(9);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(11);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

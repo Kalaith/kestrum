@@ -37,7 +37,6 @@ use support::*;
 fn wipes_draw_once_per_person_in_global_id_order_and_preserve_surviving_identity() {
     let (data, mut campaign) = fixture();
     add_person(&mut campaign, 5, 1, 1, 30);
-    campaign.people.get_mut(&PersonId(5)).unwrap().status = wounded(1);
     let context = context(&campaign);
     campaign
         .formations
@@ -101,6 +100,31 @@ fn wipes_draw_once_per_person_in_global_id_order_and_preserve_surviving_identity
     assert!(!campaign.formations.contains_key(&FormationId(4)));
     assert_eq!(person_site(&campaign, PersonId(2)), None);
     assert_wipe_probability_boundary();
+}
+
+#[test]
+fn wounded_people_do_not_participate_or_risk_a_formation_wipe() {
+    let (data, mut campaign) = fixture();
+    campaign.people.get_mut(&PersonId(1)).unwrap().status = wounded(2);
+    let context = context(&campaign);
+    campaign
+        .formations
+        .get_mut(&FormationId(1))
+        .unwrap()
+        .headcount = 0;
+    campaign.rng.combat = SeededRng::new(7); // A fit participant would die on this roll.
+    let before = campaign.clone();
+
+    let events = resolve_person_combat(&mut campaign, &data, &context).unwrap();
+
+    assert!(!events.iter().any(|event| event.person == PersonId(1)));
+    assert_eq!(campaign.people[&PersonId(1)].status, wounded(2));
+    assert_eq!(campaign.people[&PersonId(1)].movement_spent, 0);
+    assert_eq!(
+        campaign.people[&PersonId(1)].assignment,
+        before.people[&PersonId(1)].assignment
+    );
+    assert_only_combat_draws(&before, &campaign, 0);
 }
 
 #[test]
@@ -180,6 +204,8 @@ fn commander_wound_uses_one_qualifying_roll_and_lowest_fit_adult_successor() {
         for (id, age) in [(5, 30), (6, 16), (7, 30), (8, 17), (9, 40)] {
             add_person(&mut campaign, id, 1, 2, age);
         }
+        campaign.people.get_mut(&PersonId(6)).unwrap().assignment =
+            PersonAssignment::Site { site: SiteId(1) };
         campaign.people.get_mut(&PersonId(7)).unwrap().status = wounded(1);
         split_formation(&mut campaign, FormationId(2), ArmyId(5), Some(PersonId(5)));
         let mut context = context(&campaign);

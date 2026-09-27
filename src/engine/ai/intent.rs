@@ -81,6 +81,18 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
             (AiIntentKind::Progression, vec![2, person.0, site.0])
         }
         Command::CancelPersonCourse { person } => (AiIntentKind::Progression, vec![4, person.0]),
+        Command::StartMentorship {
+            mentor,
+            learner,
+            discipline,
+        } => (
+            AiIntentKind::Progression,
+            vec![6, mentor.0, learner.0, *discipline as u32],
+        ),
+        Command::EndMentorship { learner } => (AiIntentKind::Progression, vec![7, learner.0]),
+        Command::AppointGovernor { person, site } => {
+            (AiIntentKind::Progression, vec![8, person.0, site.0])
+        }
         Command::SpecializeFormation {
             formation,
             specialization,

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "elder_age_years": 56,
+  "reduced_movement_start_years": 41,
+  "reduced_movement_end_years": 55,
+  "light_cavalry_movement": 8,
+  "automatic_retirement_age_years": 70,
+  "governor_pressure": 1,
+  "death_chances": [
+    {"minimum_age_years": 60, "chance_permille": 20},
+    {"minimum_age_years": 70, "chance_permille": 50},
+    {"minimum_age_years": 80, "chance_permille": 150},
+    {"minimum_age_years": 90, "chance_permille": 350}
+  ],
+  "mentor_minimum_age_years": 26,
+  "mentor_service_seasons": 4,
+  "apprenticeship_seasons": 4,
+  "mentor_capacity": 1,
+  "learner_minimum_age_years": 13
+}

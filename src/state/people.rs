@@ -4,8 +4,8 @@ mod career;
 mod combat;
 mod validation;
 pub use career::{
-    Disposition, EmergenceRecord, PersonCareer, PersonCourse, PersonRelationship, PersonTrait,
-    Recognition, Tendency,
+    CompletedApprenticeship, Disposition, EmergenceRecord, PersonCareer, PersonCourse,
+    PersonRelationship, PersonSiteRole, PersonTrait, Recognition, Tendency,
 };
 pub use combat::{PersonCombatEvent, PersonCombatOutcome, PersonDeathReason, WoundCause};
 
@@ -92,9 +92,48 @@ impl Person {
             .saturating_div(4)
             .clamp(0, i64::from(u32::MAX)) as u32
     }
+
+    pub fn movement_allowance(
+        &self,
+        completed_rounds: u32,
+        data: &GameData,
+        light_cavalry: bool,
+    ) -> u32 {
+        if self.class != crate::data::world::PersonClass::Cavalry {
+            return data.rules.leadership.officer_movement_allowance;
+        }
+        let age = self.age_years(completed_rounds);
+        if light_cavalry && age < data.lifecycle.reduced_movement_start_years {
+            data.progression
+                .specializations
+                .get(&crate::data::progression::FormationSpecialization::LightCavalry)
+                .and_then(|rule| rule.movement_allowance)
+                .unwrap_or(8)
+        } else if light_cavalry
+            && (data.lifecycle.reduced_movement_start_years
+                ..=data.lifecycle.reduced_movement_end_years)
+                .contains(&age)
+        {
+            data.lifecycle.light_cavalry_movement
+        } else {
+            8
+        }
+    }
 }
 
 impl StrategicCampaign {
+    pub fn person_movement_allowance(&self, person: &Person, data: &GameData) -> u32 {
+        let light_cavalry = matches!(
+            person.assignment,
+            PersonAssignment::Formation { formation }
+                if self.formations.get(&formation).is_some_and(|entry| {
+                    entry.service.specialization
+                        == Some(crate::data::progression::FormationSpecialization::LightCavalry)
+                })
+        );
+        person.movement_allowance(self.completed_rounds, data, light_cavalry)
+    }
+
     /// Only living, fit adults attached to a surviving formation contribute.
     pub fn army_leadership_permille(&self, army: ArmyId, data: &GameData) -> Option<u32> {
         let army = self.armies.get(&army)?;
@@ -103,6 +142,8 @@ impl StrategicCampaign {
             person.faction == army.faction
                 && !person.career.retired
                 && person.is_fit_for_field(self.completed_rounds, rules.field_min_age_years)
+                && (person.age_years(self.completed_rounds) < data.lifecycle.elder_age_years
+                    || army.commander == Some(person.id))
                 && matches!(person.assignment, PersonAssignment::Formation { formation }
                     if army.formation_ids().any(|id| id == formation)
                     && self.formations.get(&formation).is_some_and(|entry| entry.headcount > 0))

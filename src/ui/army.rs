@@ -1,6 +1,8 @@
 //! On-demand army composition, recruitment choices, and explicit disbanding.
 
+mod career_requirements;
 mod disband;
+mod mentorship;
 mod orders;
 mod people;
 mod progression;
@@ -51,6 +53,7 @@ pub enum ArmyMode {
     Orders,
     People,
     ProgressionPerson(PersonId),
+    Mentorship(PersonId),
     ProgressionFormation(FormationId),
     Transfer,
     Recruit {
@@ -71,6 +74,7 @@ pub struct ArmyView {
     pub status: String,
     pub transfer: TransferView,
     pub people_page: usize,
+    pub mentorship_page: usize,
     pub remaining: u32,
     pub supplied: bool,
     pub member_remaining: BTreeMap<FormationId, u32>,
@@ -90,6 +94,7 @@ impl Default for ArmyView {
             status: String::new(),
             transfer: TransferView::default(),
             people_page: 0,
+            mentorship_page: 0,
             remaining: 0,
             supplied: false,
             member_remaining: BTreeMap::new(),
@@ -134,6 +139,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Orders => "army_orders",
         ArmyMode::People => "army_people",
         ArmyMode::ProgressionPerson(_) => "person_progression",
+        ArmyMode::Mentorship(_) => "mentorship",
         ArmyMode::ProgressionFormation(_) => "formation_progression",
         ArmyMode::Transfer => "composition",
         ArmyMode::Recruit { .. } => "recruit",
@@ -167,6 +173,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Orders => orders::draw(ctx, campaign),
         ArmyMode::People => people::draw(ctx, campaign),
         ArmyMode::ProgressionPerson(person) => progression::person(ctx, campaign, person),
+        ArmyMode::Mentorship(person) => {
+            mentorship::draw(ctx, campaign, person, ctx.army.mentorship_page)
+        }
         ArmyMode::ProgressionFormation(formation) => {
             progression::formation(ctx, campaign, formation)
         }

@@ -133,9 +133,7 @@ impl super::StrategicCampaign {
                 if army.formation_ids().any(|id| id == formation))
             {
                 remaining = remaining.min(
-                    data.rules
-                        .leadership
-                        .officer_movement_allowance
+                    self.person_movement_allowance(person, data)
                         .saturating_sub(person.movement_spent),
                 );
             }

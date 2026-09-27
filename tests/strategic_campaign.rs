@@ -279,6 +279,11 @@ fn rejected_commands_and_read_only_views_preserve_every_authoritative_field() {
             0 => exhausted.accepted_sequence = u64::MAX,
             1 => exhausted.next_ids.fact.0 = u64::MAX,
             _ => {
+                for person in exhausted.people.values_mut() {
+                    let age = i64::from(person.age_years(exhausted.completed_rounds));
+                    person.birth_round = i64::from(u32::MAX) - 4 * age;
+                    person.service_start_round = person.birth_round as u32;
+                }
                 exhausted.completed_rounds = u32::MAX;
                 apply(&mut exhausted, &data, Actor::Player, Command::EndTurn).unwrap();
                 pass_npc(&mut exhausted, &data).unwrap();

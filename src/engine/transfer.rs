@@ -2,7 +2,10 @@
 
 use super::RuleError;
 use crate::{
-    data::world::{FactionId, SiteId},
+    data::{
+        world::{FactionId, SiteId},
+        GameData,
+    },
     state::{
         campaign::DomainFactKind,
         military::{Army, ArmyId, FormationId},
@@ -84,6 +87,7 @@ pub(super) fn split(
 
 pub(super) fn person(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     owner: FactionId,
     person: PersonId,
     to_formation: FormationId,
@@ -98,6 +102,23 @@ pub(super) fn person(
     }
     if !selected.is_alive() {
         return Err(RuleError::UnknownPerson { person });
+    }
+    if selected.career.retired {
+        return Err(RuleError::Progression(
+            "Retired people cannot rejoin a field formation.".into(),
+        ));
+    }
+    if selected.age_years(campaign.completed_rounds)
+        >= data.lifecycle.automatic_retirement_age_years
+    {
+        return Err(RuleError::Progression(
+            "People automatically retired at seventy cannot rejoin a field formation.".into(),
+        ));
+    }
+    if selected.age_years(campaign.completed_rounds) < 17 {
+        return Err(RuleError::Progression(
+            "Site trainees cannot join a field formation before age seventeen.".into(),
+        ));
     }
     if selected.assignment
         == (PersonAssignment::Formation {
@@ -124,13 +145,14 @@ pub(super) fn person(
         return Err(RuleError::NotColocated);
     }
     let carried_commander = source.filter(|id| campaign.armies[id].commander == Some(person));
-    campaign
+    let selected = campaign
         .people
         .get_mut(&person)
-        .ok_or(RuleError::UnknownPerson { person })?
-        .assignment = PersonAssignment::Formation {
+        .ok_or(RuleError::UnknownPerson { person })?;
+    selected.assignment = PersonAssignment::Formation {
         formation: to_formation,
     };
+    selected.career.site_role = None;
     if let Some(source) = carried_commander {
         carry_commander(campaign, source, target, person);
     }

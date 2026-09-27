@@ -183,7 +183,15 @@ courses, appointments and formation specialization. Nine progression cases and
 136 tests pass, with strict Clippy, formatting, the source-size gate, native
 screen review and Windows/WebGL Preview publishing. See
 [K13 evidence](verification/k13-careers.md). Browser interaction, physical touch
-and minimum-WebGL campaign scaling remain open for K18; K14–K18 remain planned.
+and minimum-WebGL campaign scaling remain open for K18.
+K14 is **Done**: aging, birthday mortality, wounded-person recovery, retirement,
+governors and qualified local mentorship integrate with player and rival actions.
+Fifteen lifecycle/mentorship regressions plus the existing suite pass (151 total);
+formatting, strict Clippy, source-size gate, twelve normal/minimum native captures and
+Windows/WebGL Preview publishing pass. See
+[K14 evidence](verification/k14-lifecycle.md). Browser interaction, physical
+touch and minimum-WebGL campaign scaling remain open for K18; K15–K18 remain
+planned.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain open for K18.

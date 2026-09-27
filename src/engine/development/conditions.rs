@@ -17,6 +17,7 @@ pub(super) struct LocalConditions {
     pub functional_fort: bool,
     pub lawless: bool,
     pub battle: bool,
+    pub governor: bool,
     pub damage: u32,
     pub occupation: u32,
     pub fort_damage: u32,
@@ -94,6 +95,13 @@ pub(super) fn at(campaign: &StrategicCampaign, data: &GameData, site: &Site) -> 
                 .any(|army| army.site == site.id && !army.is_empty())
             && campaign.active_threat(site.id).is_none(),
         battle,
+        governor: campaign.people.values().any(|person| {
+            owner == Some(person.faction)
+                && person.career.site_role == Some(crate::state::people::PersonSiteRole::Governor)
+                && person.status == crate::state::people::PersonStatus::Fit
+                && person.assignment
+                    == (crate::state::people::PersonAssignment::Site { site: site.id })
+        }),
         damage,
         fort_damage,
         occupation: campaign
@@ -138,6 +146,11 @@ pub(super) fn causes(data: &GameData, conditions: &LocalConditions) -> Vec<Devel
             p.growth_focus,
         ),
         (conditions.battle, "Battle", p.battle),
+        (
+            conditions.governor,
+            "Governor",
+            data.lifecycle.governor_pressure,
+        ),
         (!conditions.supplied, "Cut off", p.cut_off),
         (
             conditions.damage >= data.development.conditions.pressure_damage,

@@ -8,15 +8,16 @@ impl Game {
         use kestrum::{
             data::{
                 economy::TroopKind,
-                progression::{EpithetFact, FormationSpecialization},
+                progression::{EpithetFact, FormationSpecialization, TrainingDiscipline},
                 world::{Facility, PersonClass, SiteId},
             },
             state::{
                 evidence::{EvidenceKind, FormationCourse, Veterancy},
+                mentorship::{Mentorship, MentorshipPauseReason, MentorshipStatus},
                 military::FormationId,
                 people::{
                     Disposition, EmergenceRecord, PersonAssignment, PersonCourse, PersonId,
-                    PersonRelationship, PersonTrait, Recognition, Tendency,
+                    PersonRelationship, PersonStatus, PersonTrait, Recognition, Tendency,
                 },
             },
         };
@@ -133,6 +134,52 @@ impl Game {
                     },
                 );
 
+            let capture_kind = scene.trim_end_matches("_minimum");
+            if matches!(
+                capture_kind,
+                "lifecycle" | "lifecycle_wounded" | "mentorship" | "mentorship_paused"
+            ) {
+                campaign.completed_rounds = 4;
+                let mentor = campaign.people.get_mut(&PersonId(1)).expect("founder");
+                mentor.class = PersonClass::Officer;
+                mentor.career.course = None;
+                mentor.career.emergence = None;
+                mentor.birth_round = if capture_kind == "lifecycle" {
+                    -220
+                } else {
+                    -120
+                };
+                mentor
+                    .career
+                    .discipline_service_seasons
+                    .insert(TrainingDiscipline::Command, 4);
+                if capture_kind == "mentorship_paused" {
+                    mentor.status = PersonStatus::Wounded {
+                        since_round: 4,
+                        remaining_steps: 2,
+                    };
+                    campaign.mentorships.insert(
+                        PersonId(4),
+                        Mentorship {
+                            mentor: PersonId(1),
+                            discipline: TrainingDiscipline::Command,
+                            started_round: 3,
+                            seasons_completed: 0,
+                            status: MentorshipStatus::Paused {
+                                reason: MentorshipPauseReason::Wounded,
+                            },
+                        },
+                    );
+                }
+                if capture_kind == "lifecycle_wounded" {
+                    mentor.assignment = PersonAssignment::Site { site: SiteId(1) };
+                    mentor.status = PersonStatus::Wounded {
+                        since_round: 4,
+                        remaining_steps: 2,
+                    };
+                }
+            }
+
             let formation = campaign
                 .formations
                 .get_mut(&FormationId(1))
@@ -172,10 +219,12 @@ impl Game {
                 .expect("valid progression capture");
         }
         self.open_armies(SiteId(1));
-        self.army.mode = if scene.starts_with("career") {
-            ui::ArmyMode::ProgressionPerson(PersonId(1))
-        } else {
-            ui::ArmyMode::ProgressionFormation(FormationId(1))
+        self.army.mode = match scene.trim_end_matches("_minimum") {
+            "mentorship" | "mentorship_paused" => ui::ArmyMode::Mentorship(PersonId(4)),
+            "lifecycle" | "lifecycle_wounded" | "career" | "career_training" => {
+                ui::ArmyMode::ProgressionPerson(PersonId(1))
+            }
+            _ => ui::ArmyMode::ProgressionFormation(FormationId(1)),
         };
         self.army.selected = Some(FormationId(1));
     }

@@ -220,6 +220,8 @@ pub struct StrategicCampaign {
     pub armies: BTreeMap<ArmyId, Army>,
     pub formations: BTreeMap<FormationId, Formation>,
     pub people: BTreeMap<PersonId, Person>,
+    #[serde(default)]
+    pub mentorships: BTreeMap<PersonId, super::mentorship::Mentorship>,
     pub world: CampaignWorld,
     pub relations: Vec<Relation>,
     pub accepted_sequence: u64,
@@ -291,6 +293,7 @@ impl StrategicCampaign {
             armies: BTreeMap::new(),
             formations: BTreeMap::new(),
             people: BTreeMap::new(),
+            mentorships: BTreeMap::new(),
             world: CampaignWorld::from_scenario(scenario),
             relations: scenario.relations.clone(),
             accepted_sequence: 0,

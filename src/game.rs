@@ -196,7 +196,8 @@ impl Game {
             "army" | "army_full" | "army_empty" | "army_long_name" | "army_dense"
             | "army_economy" | "army_deficit" | "recruit" | "recruit_blocked" | "recruit_full"
             | "disband" | "disband_last" => self.capture_army(scene),
-            "career" | "career_training" | "specialization" => self.capture_progression(scene),
+            "career" | "career_training" | "specialization" | "lifecycle" | "lifecycle_wounded"
+            | "mentorship" | "mentorship_paused" => self.capture_progression(scene),
             "menu" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
@@ -222,6 +223,16 @@ impl Game {
             "help_service" => {
                 self.state.overlay = Overlay::Help;
                 self.help_page = 5;
+            }
+            "help_lifecycle" => {
+                self.capture_campaign();
+                self.state.overlay = Overlay::Help;
+                self.help_page = 10;
+            }
+            "help_mentorship" => {
+                self.capture_campaign();
+                self.state.overlay = Overlay::Help;
+                self.help_page = 11;
             }
             "history_records" | "history_person" | "history_known" | "history_events"
             | "history_filters" | "history_search" | "history_empty" | "history_pruned"

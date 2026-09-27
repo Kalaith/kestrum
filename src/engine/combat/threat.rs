@@ -39,7 +39,7 @@ pub(crate) fn resolve_threat(
     people.sides[0].refuges =
         retreat::refuges(campaign, report.attacker.faction, report.site, None);
     report.person_events = resolve_person_combat(campaign, data, &people)?;
-    cleanup(campaign);
+    cleanup(campaign, data);
     finish_side(campaign, &mut report.attacker);
     apply_site_result(campaign, data, &mut report);
     let id = report.id;

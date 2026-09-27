@@ -53,6 +53,11 @@ pub(in crate::engine) fn validate_command(
         | Command::SetCommander { .. }
         | Command::TrainPerson { .. }
         | Command::PracticeRiding { .. }
+        | Command::RecoverPersonAtSite { .. }
+        | Command::RetirePerson { .. }
+        | Command::AppointGovernor { .. }
+        | Command::StartMentorship { .. }
+        | Command::EndMentorship { .. }
         | Command::SpecializeFormation { .. }
         | Command::CancelPersonCourse { .. }
         | Command::CancelFormationCourse { .. } => {

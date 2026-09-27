@@ -222,7 +222,7 @@ acceptance criterion without explicit scope acceptance.
 | K11 | Done | `1d9ddcd`: living places and threats; [evidence](../verification/k11-living-places.md). 111 tests, formatting, strict Clippy, source gate, eight native captures, published browser development/save/reload and Windows/WebGL Preview publishing pass. Minimum WebGL/physical-touch limits remain. |
 | K12 | Done | Commit subject: `Kestrum's rivals wage war and accept their fate (K12 kingdom campaign)`; [evidence](../verification/k12-kingdoms.md). 127 tests, formatting, strict Clippy, source gate, eight native captures, published browser war/AI/save/reload and Windows/WebGL Preview publishing pass. Inherited minimum WebGL scaling and physical-touch acceptance remain K18 checks. User requested a stop after this commit. |
 | K13 | Done | `10ab4c6`: grounded emergence, traits, ordinary careers and specialization; nine progression cases and 136 tests, formatting, strict Clippy, source-size gate, native 1920×1080/1280×720 review, Windows/WebGL Preview publishing; [evidence](../verification/k13-careers.md). Browser interaction, physical-touch acceptance and minimum-WebGL campaign scaling remain K18 checks. |
-| K14 | Planned | Lifecycle/mentorship |
+| K14 | Done | Kestrum's elders keep serving in new ways (K14 aging, recovery and mentorship). Fifteen lifecycle/mentorship regressions and 151 tests pass; format, strict Clippy, source-size gate, twelve normal/minimum captures and Windows/WebGL Preview publish pass. [Evidence](../verification/k14-lifecycle.md). Browser interaction, physical touch and minimum-WebGL campaign scaling remain K18 checks. |
 | K15 | Planned | Households/succession |
 | K16 | Planned | Items/history/eras |
 | K17 | Planned | Production world/content |

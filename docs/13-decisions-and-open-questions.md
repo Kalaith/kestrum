@@ -607,3 +607,36 @@ qualified mentorship system assigned to K14; K14 must integrate those alternativ
 into the same career-option rules and test them rather than marking them out of
 scope. K13 verification records nine progression cases, the complete test suite,
 native captures and publication.
+
+### I13 — Aging, local recovery and mentorship
+
+K14 implements the P20–P21 thresholds and keeps their effects in the real round,
+combat, supply, development, transfer and progression paths. Ages advance on
+four-season birthdays. Between 41 and 55, Light Cavalry personal movement is
+capped at eight. At 56, an elder contributes to field leadership only when named
+as commander; an existing command stays assigned until the player or rival
+reassigns it. Manual retirement is available to a living adult. At 70, an
+unretired field person moves to the nearest owned, unbesieged inhabited site by
+graph distance; absent such a refuge, the person becomes retired and displaced
+at their current site. Mortality is 2% at 60–69, 5% at 70–79, 15% at 80–89
+and 35% at 90+, checked on birthdays in stable PersonId order. Aging produces
+no combat experience.
+
+Wounds heal through two eligible supplied, nonbesieged boundaries. A Medic earns
+treatment evidence only when present at the real site of recovery. Mentors must
+be age 26 or older, class/trait-qualified and have four service seasons in the
+discipline. Learners may begin at 13 but remain site-assigned until age 17. Each
+person teaches or studies one discipline link at a time. Lessons require shared
+physical contact at an owned, supplied, safe, developed site with its required
+facility; Riding also requires Horse Access. Wounds, separation, capture or loss
+of qualification/access pause the link. Ending a paused link releases its slot.
+Two completed seasons open a P18 class alternative; four complete a dated
+mentorship record. Neither mentorship nor aging adds combat or encounter facts.
+
+AI uses the same opportunity checks, commands and capacity limit when appointing
+governors or planning lessons. New K14 person fields default safely when older
+K13 campaign payloads omit them; they do not create relatives, items or historic
+events. These implementation choices follow the documented provisional rules
+and are delegated decisions, not newly confirmed author decisions. K14's
+regressions and validation are recorded in
+[the lifecycle verification](verification/k14-lifecycle.md).

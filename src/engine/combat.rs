@@ -105,7 +105,7 @@ pub(super) fn resolve_encounter(
         Some(report.origin),
     );
     report.person_events = resolve_person_combat(campaign, data, &people)?;
-    cleanup(campaign);
+    cleanup(campaign, data);
     finish_side(campaign, &mut report.attacker);
     finish_side(
         campaign,
@@ -227,7 +227,9 @@ fn snapshot(
                 combat_losses:0,encirclement_losses:0,veterancy_permille:formation.service.tier.permille(&data.progression)}
         })).collect();
         let people = campaign.people.values().filter(|person| person.is_alive() && matches!(person.assignment,
-            PersonAssignment::Formation {formation} if formations.iter().any(|entry| entry.id == formation)))
+            PersonAssignment::Formation {formation} if formations.iter().any(|entry| entry.id == formation))
+            && (person.age_years(campaign.completed_rounds) < data.lifecycle.elder_age_years
+                || army.commander == Some(person.id)))
             .map(|person| BattlePersonReport {id:person.id,starting_formation:match person.assignment {PersonAssignment::Formation {formation} => formation,_ => unreachable!("attached participant")},name:person.name.clone(),class:person.class,
                 starting_status:Some(person.status),status:person.status,assignment:person.assignment}).collect();
         BattleArmyReport {id,name:army.name.clone(),leadership_permille:campaign.army_leadership_permille(id,data).expect("army"),
@@ -266,7 +268,7 @@ fn person_side(
                 campaign.people[&commander.id].is_fit_for_field(
                     campaign.completed_rounds,
                     data.rules.leadership.field_min_age_years,
-                )
+                ) && !campaign.people[&commander.id].career.retired
             })
             .map(|commander| commander.id)
             .collect(),
@@ -298,13 +300,43 @@ fn withdraw(
     }
 }
 
-fn cleanup(campaign: &mut StrategicCampaign) {
+fn cleanup(campaign: &mut StrategicCampaign, data: &GameData) {
     let destroyed: BTreeSet<_> = campaign
         .formations
         .values()
         .filter(|formation| formation.headcount == 0)
         .map(|formation| formation.id)
         .collect();
+    let site_relocated_passengers = campaign
+        .people
+        .values()
+        .filter_map(|person| {
+            let PersonAssignment::Formation { formation } = person.assignment else {
+                return None;
+            };
+            (destroyed.contains(&formation)
+                && person.age_years(campaign.completed_rounds) >= data.lifecycle.elder_age_years
+                && !campaign
+                    .armies
+                    .values()
+                    .any(|army| army.commander == Some(person.id)))
+            .then(|| {
+                campaign
+                    .armies
+                    .values()
+                    .find(|army| army.formation_ids().any(|member| member == formation))
+                    .map(|army| (person.id, army.site))
+            })
+            .flatten()
+        })
+        .collect::<Vec<_>>();
+    for (person, site) in site_relocated_passengers {
+        campaign
+            .people
+            .get_mut(&person)
+            .expect("older passenger")
+            .assignment = PersonAssignment::Site { site };
+    }
     campaign.formations.retain(|id, _| !destroyed.contains(id));
     for army in campaign.armies.values_mut() {
         for slot in &mut army.slots {

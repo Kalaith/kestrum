@@ -147,10 +147,8 @@ pub fn person_remaining(
     if !person.is_alive() {
         return Err(RuleError::UnknownPerson { person: id });
     }
-    Ok(data
-        .rules
-        .leadership
-        .officer_movement_allowance
+    Ok(campaign
+        .person_movement_allowance(person, data)
         .saturating_sub(person.movement_spent))
 }
 

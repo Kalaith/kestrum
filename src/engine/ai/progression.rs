@@ -2,8 +2,11 @@
 
 use super::*;
 use crate::{
-    data::world::{Facility, PersonClass, SiteTag},
-    engine::career_options,
+    data::{
+        progression::TrainingDiscipline,
+        world::{Facility, PersonClass, SiteTag},
+    },
+    engine::{career_options, mentorship_options},
     state::{
         military::FormationId,
         people::{PersonAssignment, PersonStatus},
@@ -19,6 +22,9 @@ impl Planner<'_> {
             .filter(|person| person.faction == self.owner)
             .collect::<Vec<_>>();
         people.sort_by_key(|person| person.id);
+        if let Some(decision) = self.governor(&people) {
+            return Some(decision);
+        }
         for person in &people {
             if person.career.course.is_some()
                 || !matches!(person.assignment, PersonAssignment::Formation { .. })
@@ -70,6 +76,9 @@ impl Planner<'_> {
                 }
             }
         }
+        if let Some(decision) = self.mentorship(&people) {
+            return Some(decision);
+        }
         let mut formations = self
             .campaign
             .formations
@@ -109,6 +118,94 @@ impl Planner<'_> {
         {
             if let Some(person) = people.iter().find(|person| !person.career.retired && person.is_fit_for_field(self.campaign.completed_rounds, self.data.rules.leadership.field_min_age_years) && matches!(person.assignment, PersonAssignment::Formation { formation } if army.formation_ids().any(|id| id == formation))) {
                 if let Some(decision) = self.choose(Command::SetCommander { army: army.id, person: Some(person.id) }, None) { return Some(decision); }
+            }
+        }
+        None
+    }
+
+    fn governor(&self, people: &[&crate::state::people::Person]) -> Option<AiDecision> {
+        for site in self.campaign.world.sites.iter().filter(|site| {
+            site.controller == Some(self.owner)
+                && site.habitation != crate::data::economy::Habitation::Unsettled
+                && !self.campaign.sieges.contains_key(&site.id)
+        }) {
+            let occupied = people.iter().any(|person| {
+                person.career.site_role == Some(crate::state::people::PersonSiteRole::Governor)
+                    && person.assignment == (PersonAssignment::Site { site: site.id })
+            });
+            if occupied {
+                continue;
+            }
+            for person in people.iter().filter(|person| {
+                person.is_alive()
+                    && person.status == PersonStatus::Fit
+                    && person.career.site_role.is_none()
+                    && (person.career.retired
+                        || person.age_years(self.campaign.completed_rounds)
+                            >= self.data.lifecycle.elder_age_years)
+                    && person_site(self.campaign, person.id) == Some(site.id)
+            }) {
+                if let Some(decision) = self.choose(
+                    Command::AppointGovernor {
+                        person: person.id,
+                        site: site.id,
+                    },
+                    None,
+                ) {
+                    return Some(decision);
+                }
+            }
+        }
+        None
+    }
+
+    fn mentorship(&self, people: &[&crate::state::people::Person]) -> Option<AiDecision> {
+        let priority = |discipline: TrainingDiscipline| match discipline {
+            TrainingDiscipline::Command => 0,
+            TrainingDiscipline::Medicine => 1,
+            TrainingDiscipline::Infantry => 2,
+            TrainingDiscipline::Archery => 3,
+            TrainingDiscipline::Riding => 4,
+            TrainingDiscipline::Scouting => 5,
+        };
+        for learner in people.iter().filter(|person| {
+            person.status == PersonStatus::Fit
+                && person.is_alive()
+                && !person.career.retired
+                && person.career.course.is_none()
+                && person.age_years(self.campaign.completed_rounds)
+                    >= self.data.lifecycle.learner_minimum_age_years
+                && (!matches!(person.assignment, PersonAssignment::Formation { .. })
+                    || person.age_years(self.campaign.completed_rounds)
+                        >= self.data.rules.leadership.field_min_age_years)
+        }) {
+            let existing = self.campaign.mentorships.get(&learner.id);
+            if existing.is_some_and(|mentorship| {
+                mentorship.status == crate::state::mentorship::MentorshipStatus::Active
+            }) {
+                continue;
+            }
+            let Ok(mut options) = mentorship_options(self.campaign, self.data, learner.id) else {
+                continue;
+            };
+            options.retain(|option| option.eligible);
+            if let Some(existing) = existing {
+                options.retain(|option| {
+                    option.mentor == existing.mentor && option.discipline == existing.discipline
+                });
+            }
+            options.sort_by_key(|option| (priority(option.discipline), option.mentor));
+            for option in options {
+                if let Some(decision) = self.choose(
+                    Command::StartMentorship {
+                        mentor: option.mentor,
+                        learner: learner.id,
+                        discipline: option.discipline,
+                    },
+                    None,
+                ) {
+                    return Some(decision);
+                }
             }
         }
         None

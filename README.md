@@ -266,7 +266,7 @@ unpoliced rounds. Older saves acquire no invented occupants or development histo
 All 111 tests, formatting, strict Clippy, source gate, representative native review
 and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
 records browser seasonal growth and reload, decisions and platform limitations.
-K13–K18 remain required.
+K15–K18 remain required.
 
 ## Screen brief
 
@@ -304,7 +304,7 @@ eliminated or your vassal, the kingdom milestone ends in victory. Losing your ow
 last base and army ends in defeat. The saved result preserves the final battle's
 service and allows Records, Save, Menu and New Game. Simulation stops there.
 
-K14–K18 remain required for the full generational release.
+K15–K18 remain required for the full generational release.
 
 [K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
 Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
@@ -327,8 +327,28 @@ Rivals use the same evidence options and validated course/appointment commands.
 
 [K13 verification](docs/verification/k13-careers.md) records nine progression cases,
 136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum
-screen review and Windows/WebGL Preview publishing. K14–K18 remain required;
+screen review and Windows/WebGL Preview publishing. K15–K18 remain required;
 minimum WebGL campaign scaling and physical-touch acceptance remain open.
+
+### K14 — Elders keep serving in new ways
+
+Birthdays now drive age thresholds, service chronology, fixed mortality checks,
+two-step wound recovery and age-70 field retirement. Light Cavalry people lose
+their extra movement at 41; from 56, elders contribute to an army only as its
+appointed commander and can move into mentorship or local governance. A governor
+adds one development pressure at their owned settlement.
+
+Mentorship uses qualified living adults, four real service seasons, one learner
+per teacher and shared local contact at a supplied safe site. Injury, separation,
+site or facility loss pauses lessons with a reason; players may resume or end a
+paused link. Two seasons open a K13 class alternative, while four complete the
+dated apprenticeship without battle or encounter evidence. Rivals use the same
+validated options and aging rules.
+
+[K14 verification](docs/verification/k14-lifecycle.md) records 151 passing tests,
+strict Clippy, formatting, the source-size gate, twelve reviewed 1920×1080 and
+1280×720 captures, and Windows/WebGL Preview publishing. Browser interaction, physical
+touch and minimum-WebGL campaign scaling remain K18 checks.
 
 ## Development
 
@@ -374,8 +394,8 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. Continue with K14 after the
-K13 commit; K14–K18 remain planned.
+reusable prompt for implementing one package at a time. Continue with K15 after the
+K14 commit; K15–K18 remain planned.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

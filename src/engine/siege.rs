@@ -52,11 +52,20 @@ pub(super) fn exhaust(campaign: &mut StrategicCampaign, data: &GameData, armies:
             formation.movement_spent = allowance;
         }
     }
-    for person in campaign.people.values_mut() {
-        if matches!(person.assignment, PersonAssignment::Formation{formation} if formations.contains(&formation))
-        {
-            person.movement_spent = data.rules.leadership.officer_movement_allowance;
-        }
+    let exhausted_people = campaign
+        .people
+        .values()
+        .filter(|person| {
+            matches!(person.assignment, PersonAssignment::Formation{formation} if formations.contains(&formation))
+        })
+        .map(|person| (person.id, campaign.person_movement_allowance(person, data)))
+        .collect::<Vec<_>>();
+    for (person, allowance) in exhausted_people {
+        campaign
+            .people
+            .get_mut(&person)
+            .expect("attached person")
+            .movement_spent = allowance;
     }
 }
 
@@ -224,6 +233,7 @@ pub fn reconcile_sieges(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        automatic_retirements: Vec::new(),
         battle: None,
         accepted_sequence: candidate.accepted_sequence,
         active_faction: candidate.active_faction(),

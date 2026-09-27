@@ -20,6 +20,23 @@ native review confirms readable layouts and tap-sized controls; it does not veri
 physical-device touch or the inherited minimum-WebGL scaling issue, which remain
 K18 checks.
 
+## K14 aging, recovery and mentorship decisions
+
+Career keeps the named person, age, service chronology, wound state, earned traits
+and recognition together. An age-56 elder sees the available command, mentorship,
+governance and retirement choices while any existing command remains in force
+until reassignment. A local wounded person can move to a supplied, unbesieged site
+and recover there. Mentor opens a separate focused sheet for qualified teachers,
+their discipline and service, or the current link's active/paused reason. Resume
+and End stay visible for paused lessons; teacher lists page through touch controls.
+
+The map remains the normal play area. Career and mentorship actions use visible
+targets of at least 48 logical pixels; the normal and 1280 × 720 native captures
+review lifecycle, available lessons, a wounded pause and both Help pages. Screens
+show age and recovery status at both sizes. These captures verify native layout
+and pointer-ready targets; physical-touch use and the inherited minimum-WebGL
+scaling issue remain K18 checks.
+
 ## K12 kingdom decisions
 
 The current decision is whether to declare war, propose or answer peace, or resolve a defeated rival. Menu > Kingdom opens a dismissible sheet; a foreign place also links to its controller. A paged list of public relations supports one selected kingdom and one confirmation. Enemy strength and negotiation calculations stay hidden. Pending decisions interrupt orders and remain reachable through Kingdom Decision after dismissal.

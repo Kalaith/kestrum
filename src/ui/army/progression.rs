@@ -3,7 +3,6 @@
 use super::*;
 use kestrum::{
     data::{
-        economy::TroopKind,
         progression::{EpithetFact, FormationSpecialization, SpecializationRequirement},
         world::{Facility, PersonClass, PersonClass::*, SiteId, SiteTag},
     },
@@ -14,9 +13,6 @@ use kestrum::{
         people::{Person, PersonAssignment, PersonCourse, PersonId, PersonStatus, PersonTrait},
     },
 };
-
-type CareerFact = (&'static str, usize, usize);
-type CareerPath = (PersonClass, Vec<CareerFact>);
 
 pub(super) fn person(
     ctx: &Context<'_>,
@@ -55,18 +51,38 @@ pub(super) fn person(
         );
     }
     let age = person.age_years(campaign.completed_rounds);
-    body(
-        ctx,
-        &format!(
-            "{} {age} · {} {}",
-            ctx.text("person_age_label"),
-            ctx.text("history_service_start"),
-            person.service_start_round
-        ),
-        vec2(112.0, 252.0),
-        18.0,
-        MUTED,
+    let mut age_line = format!(
+        "{} {age} · {} {}",
+        ctx.text("person_age_label"),
+        ctx.text("history_service_start"),
+        person.service_start_round
     );
+    if person.career.retired {
+        age_line.push_str(&format!(" · {}", ctx.text("person_retired")));
+    }
+    if person.career.site_role == Some(kestrum::state::people::PersonSiteRole::Governor) {
+        age_line.push_str(&format!(" · {}", ctx.text("person_governor")));
+    }
+    if let PersonStatus::Wounded {
+        remaining_steps, ..
+    } = person.status
+    {
+        age_line.push_str(&format!(
+            " · {} {remaining_steps} {}",
+            ctx.text("person_wounded"),
+            ctx.text("wound_steps_remaining")
+        ));
+    }
+    body(ctx, &age_line, vec2(112.0, 252.0), 18.0, MUTED);
+    if age >= 56 {
+        body(
+            ctx,
+            &ctx.text("elder_choice_help"),
+            vec2(600.0, 252.0),
+            14.0,
+            BRASS,
+        );
+    }
     draw_traits(ctx, person, campaign);
 
     if let Some(course) = &person.career.course {
@@ -132,12 +148,14 @@ pub(super) fn person(
         18.0,
         MUTED,
     );
-    let requirements = career_requirements(person, ctx.progression);
+    let requirements = super::career_requirements::career_requirements(person, ctx.progression);
     for (index, (class, facts)) in requirements.into_iter().enumerate() {
         let x = if index % 2 == 0 { 112.0 } else { 648.0 };
         let y = 390.0 + (index / 2) as f32 * 49.0;
         let rule = &ctx.progression.careers.courses[&class];
-        let met = facts.iter().all(|(_, current, needed)| current >= needed);
+        let met = facts
+            .iter()
+            .any(|path| path.iter().all(|(_, current, needed)| current >= needed));
         let target = site
             .filter(|site| course_site(campaign, *site, rule.facility, rule.requires_horse_access));
         let enough_gold = campaign
@@ -157,9 +175,14 @@ pub(super) fn person(
             && enough_gold;
         let fact_line = facts
             .iter()
-            .map(|(key, current, needed)| format!("{} {current}/{needed}", ctx.text(key)))
+            .map(|path| {
+                path.iter()
+                    .map(|(key, current, needed)| format!("{} {current}/{needed}", ctx.text(key)))
+                    .collect::<Vec<_>>()
+                    .join(" · ")
+            })
             .collect::<Vec<_>>()
-            .join(" · ");
+            .join(&format!(" {} ", ctx.text("requirement_or")));
         let description = format!(
             "{} · {} · {}{} · {}",
             class_name(ctx, class),
@@ -210,14 +233,19 @@ pub(super) fn person(
         let needed = ctx.progression.careers.riding_seasons;
         body(
             ctx,
-            &format!(
-                "{} {} / {needed} · {}",
-                ctx.text("riding_practice"),
-                person.career.riding_practice_seasons,
-                ctx.text("course_season_free")
+            &truncate_text_to_width_ex(
+                &format!(
+                    "{} {} / {needed} · {}",
+                    ctx.text("riding_practice"),
+                    person.career.riding_practice_seasons,
+                    ctx.text("course_season_free")
+                ),
+                394.0,
+                ctx.body_font(),
+                14.0,
             ),
-            vec2(500.0, 578.0),
-            15.0,
+            vec2(770.0, 605.0),
+            14.0,
             MUTED,
         );
         if button(
@@ -241,7 +269,7 @@ pub(super) fn person(
         };
         if button(
             ctx,
-            Rect::new(112.0, 552.0, 370.0, 48.0),
+            Rect::new(112.0, 552.0, 340.0, 48.0),
             &ctx.text(label),
             eligible,
             false,
@@ -251,10 +279,63 @@ pub(super) fn person(
         body(
             ctx,
             &ctx.text("commander_any_adult"),
-            vec2(500.0, 605.0),
-            16.0,
+            vec2(112.0, 605.0),
+            15.0,
             MUTED,
         );
+    }
+    if button(
+        ctx,
+        Rect::new(470.0, 552.0, 250.0, 48.0),
+        &ctx.text("open_mentorship"),
+        age >= 13 && !matches!(person.assignment, PersonAssignment::Dead),
+        false,
+    ) {
+        return Some(UiAction::OpenMentorship(id));
+    }
+    if let Some(site) = site.filter(|site| owned_settlement(campaign, *site)) {
+        let can_retire = age >= 17 && !person.career.retired && person.is_alive();
+        if button(
+            ctx,
+            Rect::new(310.0, 626.0, 240.0, 48.0),
+            &ctx.text("retire_person"),
+            can_retire,
+            false,
+        ) {
+            return Some(UiAction::RetirePerson(id, site));
+        }
+        let governor_exists = campaign.people.iter().any(|other| {
+            other.id != id
+                && other.career.site_role == Some(kestrum::state::people::PersonSiteRole::Governor)
+                && other.assignment == (PersonAssignment::Site { site })
+        });
+        let can_govern = person.status == PersonStatus::Fit
+            && age >= 17
+            && person.career.site_role.is_none()
+            && !governor_exists;
+        if button(
+            ctx,
+            Rect::new(570.0, 626.0, 240.0, 48.0),
+            &ctx.text("appoint_governor"),
+            can_govern,
+            false,
+        ) {
+            return Some(UiAction::AppointGovernor(id, site));
+        }
+        let can_recover = matches!(person.status, PersonStatus::Wounded { .. })
+            && campaign.supplied_sites.contains(&site)
+            && !campaign.sieges.iter().any(|siege| siege.site == site);
+        if can_recover
+            && button(
+                ctx,
+                Rect::new(830.0, 626.0, 240.0, 48.0),
+                &ctx.text("recover_at_site"),
+                true,
+                false,
+            )
+        {
+            return Some(UiAction::RecoverPersonAtSite(id, site));
+        }
     }
     button(
         ctx,
@@ -453,83 +534,12 @@ pub(super) fn formation(
     .then_some(UiAction::CancelArmyAction)
 }
 
-fn career_requirements(
-    person: &Person,
-    rules: &kestrum::data::progression::ProgressionRules,
-) -> Vec<CareerPath> {
-    let count = |kind| person.evidence.counts.get(&kind).copied().unwrap_or(0) as usize;
-    let service = |kind| {
-        person
-            .evidence
-            .service_by_troop
-            .get(&kind)
-            .copied()
-            .unwrap_or(0) as usize
-    };
-    vec![
-        (
-            Infantry,
-            vec![(
-                "requirement_infantry",
-                service(TroopKind::Warriors) + service(TroopKind::Spearmen),
-                rules.careers.infantry_battles as usize,
-            )],
-        ),
-        (
-            Archer,
-            vec![(
-                "requirement_archer",
-                service(TroopKind::Archers),
-                rules.careers.archer_battles as usize,
-            )],
-        ),
-        (
-            Scout,
-            vec![(
-                "requirement_routes",
-                person.evidence.traversed_routes.len(),
-                rules.careers.scout_routes as usize,
-            )],
-        ),
-        (
-            Cavalry,
-            vec![
-                (
-                    "requirement_riding",
-                    person.career.riding_practice_seasons as usize,
-                    rules.careers.riding_seasons as usize,
-                ),
-                (
-                    "requirement_rider_battles",
-                    service(TroopKind::Riders),
-                    rules.careers.rider_battles as usize,
-                ),
-            ],
-        ),
-        (
-            Medic,
-            vec![(
-                "requirement_treatment",
-                count(EvidenceKind::TreatedWounded),
-                rules.careers.treatment_occasions as usize,
-            )],
-        ),
-        (
-            Officer,
-            vec![
-                (
-                    "requirement_encounters",
-                    count(EvidenceKind::MeaningfulEncounter),
-                    rules.careers.officer_encounters as usize,
-                ),
-                (
-                    "requirement_command",
-                    count(EvidenceKind::AssumedCommand) + count(EvidenceKind::CommandedVictory),
-                    rules.careers.officer_command_facts as usize,
-                ),
-            ],
-        ),
-    ]
+fn owned_settlement(campaign: &VisibleCampaign, site: SiteId) -> bool {
+    campaign.world.site(site).is_some_and(|site| {
+        site.controller == Some(campaign.observer)
+            && site.habitation != kestrum::data::economy::Habitation::Unsettled
+            && !campaign.sieges.iter().any(|siege| siege.site == site.id)
+    })
 }
 
 fn course_site(campaign: &VisibleCampaign, site: SiteId, facility: Facility, horse: bool) -> bool {

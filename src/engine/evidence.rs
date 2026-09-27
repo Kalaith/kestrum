@@ -2,7 +2,7 @@
 
 mod participation;
 mod treatment;
-pub(crate) use treatment::{record_recovery, recovery_medics};
+pub(crate) use treatment::{record_person_treatment, record_recovery, recovery_medics};
 
 use super::{history, RuleError};
 use crate::{

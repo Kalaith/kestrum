@@ -17,6 +17,9 @@ pub struct CampaignDiplomacy {
     pub pending_offers: Vec<PeaceOffer>,
     pub pending_defeats: Vec<PendingDefeat>,
     pub ending: Option<CampaignEnding>,
+    /// False only for older saves whose retained records cannot establish a full era timeline.
+    #[serde(default)]
+    pub era_history_complete: bool,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -25,6 +28,10 @@ pub struct PairDiplomacy {
     pub peace_since: Option<u32>,
     pub truce_until: Option<u32>,
     pub last_offer_round: Option<u32>,
+    #[serde(default)]
+    pub war_started_round: Option<u32>,
+    #[serde(default)]
+    pub war_ended_round: Option<u32>,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -136,8 +143,12 @@ impl StrategicCampaign {
                         .then_some(self.completed_rounds),
                     truce_until: None,
                     last_offer_round: None,
+                    war_started_round: (relation.state == DiplomaticState::War)
+                        .then_some(self.completed_rounds),
+                    war_ended_round: None,
                 })
                 .collect(),
+            era_history_complete: true,
             ..Default::default()
         };
     }

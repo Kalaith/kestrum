@@ -8,6 +8,7 @@ use crate::{
     },
     engine::{career_options, mentorship_options},
     state::{
+        legacy::LegacyItemCustody,
         military::FormationId,
         people::{PersonAssignment, PersonStatus},
     },
@@ -212,6 +213,80 @@ impl Planner<'_> {
                 None,
             ) {
                 return Some(decision);
+            }
+        }
+
+        for item in self
+            .campaign
+            .legacy_items
+            .values()
+            .filter(|item| item.faction == self.owner)
+        {
+            let LegacyItemCustody::Person(predecessor) = item.custody else {
+                continue;
+            };
+            if self
+                .campaign
+                .successors
+                .get(&predecessor)
+                .is_some_and(|entries| entries.contains_key(&LegacyCategory::Item))
+            {
+                continue;
+            }
+            let Some(site) = person_site(self.campaign, predecessor) else {
+                continue;
+            };
+            for successor in people.iter().filter(|person| {
+                person.id != predecessor
+                    && person.is_alive()
+                    && person_site(self.campaign, person.id) == Some(site)
+            }) {
+                let Some(link) = item_link(self.campaign, predecessor, successor.id, site) else {
+                    continue;
+                };
+                if let Some(decision) = self.choose(
+                    Command::DesignateSuccessor {
+                        predecessor,
+                        successor: successor.id,
+                        category: LegacyCategory::Item,
+                        link,
+                    },
+                    None,
+                ) {
+                    return Some(decision);
+                }
+            }
+        }
+
+        for item in self
+            .campaign
+            .legacy_items
+            .values()
+            .filter(|item| item.faction == self.owner)
+        {
+            let LegacyItemCustody::SiteEstate(site) = item.custody else {
+                continue;
+            };
+            if self
+                .campaign
+                .world
+                .site(site)
+                .is_none_or(|place| place.controller != Some(self.owner))
+            {
+                continue;
+            }
+            if let Some(person) = people.iter().find(|person| {
+                person.is_alive() && person_site(self.campaign, person.id) == Some(site)
+            }) {
+                if let Some(decision) = self.choose(
+                    Command::TransferLegacyItem {
+                        item: item.id,
+                        to: person.id,
+                    },
+                    None,
+                ) {
+                    return Some(decision);
+                }
             }
         }
 
@@ -436,6 +511,56 @@ impl Planner<'_> {
             && !self.campaign.sieges.contains_key(&site)
             && (!horse || location.tags.contains(&SiteTag::HorseAccess))
     }
+}
+
+fn item_link(
+    campaign: &StrategicCampaign,
+    predecessor: crate::state::people::PersonId,
+    successor: crate::state::people::PersonId,
+    site: crate::data::world::SiteId,
+) -> Option<crate::state::relationships::SuccessorLink> {
+    use crate::state::relationships::SuccessorLink;
+    let links = [
+        (
+            SuccessorLink::Martial,
+            campaign.is_pupil(predecessor, successor),
+        ),
+        (
+            SuccessorLink::Religious,
+            campaign.is_pupil(predecessor, successor)
+                && campaign.world.site(site).is_some_and(|place| {
+                    place.controller == Some(campaign.people[&predecessor].faction)
+                        && place.facilities.contains(&Facility::Temple)
+                }),
+        ),
+        (
+            SuccessorLink::Political,
+            person_site(campaign, successor) == Some(site)
+                && campaign
+                    .people
+                    .get(&predecessor)
+                    .zip(campaign.people.get(&successor))
+                    .is_some_and(|(first, second)| {
+                        (first.career.site_role.is_some() || second.career.site_role.is_some())
+                            && first
+                                .career
+                                .relationships
+                                .get(&successor)
+                                .is_some_and(|link| link.shared_service_seasons >= 4)
+                    }),
+        ),
+        (
+            SuccessorLink::Adopted,
+            campaign.adopted_relation(predecessor, successor),
+        ),
+        (
+            SuccessorLink::Blood,
+            campaign.known_blood_relation(predecessor, successor),
+        ),
+    ];
+    links
+        .into_iter()
+        .find_map(|(link, valid)| valid.then_some(link))
 }
 
 fn person_site(

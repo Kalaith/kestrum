@@ -49,6 +49,7 @@ pub(super) fn fixture(defending: bool) -> (GameData, StrategicCampaign) {
     campaign
         .people
         .retain(|id, _| [PersonId(1), PersonId(3)].contains(id));
+    campaign.legacy_items.clear();
     for (army_id, formation_id) in [(1, 1), (3, 7)] {
         let army = campaign.armies.get_mut(&ArmyId(army_id)).unwrap();
         army.slots = [

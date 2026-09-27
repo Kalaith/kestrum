@@ -43,6 +43,9 @@ pub struct CampaignWorld {
     pub site_damage: BTreeMap<SiteId, u32>,
     /// Sparse lasting occupation pressure; absent entries are zero.
     pub occupation: BTreeMap<SiteId, u32>,
+    /// First settled season, retained after a settlement is later lost.
+    #[serde(default)]
+    pub founded_rounds: BTreeMap<SiteId, u32>,
 }
 
 impl CampaignWorld {
@@ -63,6 +66,12 @@ impl CampaignWorld {
             contested_sites: BTreeSet::new(),
             site_damage: BTreeMap::new(),
             occupation: BTreeMap::new(),
+            founded_rounds: scenario
+                .sites
+                .iter()
+                .filter(|site| site.habitation >= crate::data::economy::Habitation::Camp)
+                .map(|site| (site.id, 0))
+                .collect(),
         };
         world.markers.sort_by_key(|marker| marker.id);
         world.sites.sort_by_key(|site| site.id);

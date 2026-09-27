@@ -9,6 +9,7 @@ use crate::{
     },
     state::{
         battle::BattleReport,
+        legacy::LegacyItem,
         mentorship::Mentorship,
         military::{Army, ArmyId, EconomyStatement, Formation, RecoveryStatement},
         people::{Person, PersonId},
@@ -66,6 +67,9 @@ pub struct VisibleCampaign {
     pub apprentice_last_invited_year: Option<u32>,
     /// Mentorship assignments are visible to their own learner and mentor.
     pub mentorships: BTreeMap<PersonId, Mentorship>,
+    /// Items and custody details belong only to their faction.
+    pub legacy_items: Vec<LegacyItem>,
+    pub era_label: String,
 }
 
 pub fn project(
@@ -186,6 +190,13 @@ pub fn project(
             })
             .map(|(learner, mentorship)| (*learner, mentorship.clone()))
             .collect(),
+        legacy_items: campaign
+            .legacy_items
+            .values()
+            .filter(|item| item.faction == observer)
+            .cloned()
+            .collect(),
+        era_label: super::history::current_era(campaign),
     })
 }
 

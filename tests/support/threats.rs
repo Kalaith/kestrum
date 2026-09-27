@@ -17,7 +17,13 @@ pub(super) fn fixture(person: bool) -> (GameData, StrategicCampaign) {
     campaign.formations.remove(&FormationId(2));
     campaign.formations.remove(&FormationId(3));
     if !person {
+        let site = kestrum::engine::person_site(&campaign, PersonId(1)).unwrap();
         campaign.people.remove(&PersonId(1));
+        for item in campaign.legacy_items.values_mut().filter(|item| {
+            item.custody == kestrum::state::legacy::LegacyItemCustody::Person(PersonId(1))
+        }) {
+            item.custody = kestrum::state::legacy::LegacyItemCustody::SiteEstate(site);
+        }
         campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = None;
     }
     campaign

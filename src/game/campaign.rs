@@ -148,6 +148,57 @@ impl Game {
                         }
                     }
                 }
+                if let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
+                    if !outcome.legacy_items_changed.is_empty() {
+                        let names = outcome
+                            .legacy_items_changed
+                            .iter()
+                            .filter_map(|id| campaign.legacy_items.get(id))
+                            .map(|item| item.name.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ");
+                        if !names.is_empty() {
+                            messages.push(
+                                self.data
+                                    .presentation
+                                    .text("legacy_item_transfer_notice")
+                                    .replace("{names}", &names),
+                            );
+                        }
+                    }
+                    for subject in &outcome.anniversary_reminders {
+                        let (name, years, kind) = match subject {
+                            kestrum::state::history::AnniversarySubject::Person(id) => {
+                                let Some(person) = campaign.people.get(id) else {
+                                    continue;
+                                };
+                                (
+                                    person.name.clone(),
+                                    campaign.history.person_last_reminded[id],
+                                    "history_service_anniversary",
+                                )
+                            }
+                            kestrum::state::history::AnniversarySubject::Site(id) => {
+                                let Some(site) = campaign.world.site(*id) else {
+                                    continue;
+                                };
+                                (
+                                    site.name.clone(),
+                                    campaign.history.site_last_reminded[id],
+                                    "history_foundation_anniversary",
+                                )
+                            }
+                        };
+                        messages.push(
+                            self.data
+                                .presentation
+                                .text("history_anniversary_notice")
+                                .replace("{kind}", self.data.presentation.text(kind))
+                                .replace("{name}", &name)
+                                .replace("{years}", &years.to_string()),
+                        );
+                    }
+                }
                 if !messages.is_empty() {
                     self.notice = Some((messages.join(" "), 5.0));
                 }

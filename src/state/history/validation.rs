@@ -48,6 +48,20 @@ impl StrategicCampaign {
                 .is_none_or(|id| id.0 > 0 && id < self.next_ids.fact),
             "invalid source fact identity",
         )?;
+        ensure(
+            ordered(record.items.iter().map(|entry| entry.id))
+                && record.items.iter().all(|entry| {
+                    entry.id.0 > 0
+                        && entry.id < self.next_ids.legacy_item
+                        && valid_label(&entry.name)
+                })
+                && ordered(record.related_events.iter().copied())
+                && record
+                    .related_events
+                    .iter()
+                    .all(|id| *id < record.id && self.history.events.contains_key(id)),
+            "invalid related event or dated item label",
+        )?;
         self.validate_history_labels(record)?;
         self.validate_history_kind(&record.kind, record.completed_rounds)?;
         ensure(
@@ -84,6 +98,47 @@ impl StrategicCampaign {
             }
             HistoryKind::Construction { ref order } => {
                 self.validate_construction_record(record, order)?;
+            }
+            HistoryKind::ItemCustodyChanged { item, from, to } => {
+                let entry = self
+                    .legacy_items
+                    .get(&item)
+                    .ok_or("history: unknown heirloom identity")?;
+                let involved = |custody| match custody {
+                    super::super::legacy::LegacyItemCustody::Person(id) => {
+                        record.people.iter().any(|person| person.id == id)
+                    }
+                    super::super::legacy::LegacyItemCustody::SiteEstate(site) => {
+                        record.sites.iter().any(|place| place.id == site)
+                    }
+                };
+                ensure(
+                    record.source_fact.is_none()
+                        && record.visible_to == BTreeSet::from([entry.faction])
+                        && record.items.len() == 1
+                        && record.items[0].id == item
+                        && record.items[0].name == entry.name
+                        && from != to
+                        && involved(from)
+                        && involved(to),
+                    "invalid or foreign heirloom deed",
+                )?;
+            }
+            HistoryKind::Anniversary { subject, years } => {
+                ensure(
+                    record.source_fact.is_none()
+                        && years > 0
+                        && years % 10 == 0
+                        && match subject {
+                            AnniversarySubject::Person(id) => {
+                                record.people.len() == 1 && record.people[0].id == id
+                            }
+                            AnniversarySubject::Site(id) => {
+                                record.sites.len() == 1 && record.sites[0].id == id
+                            }
+                        },
+                    "invalid anniversary reminder",
+                )?;
             }
             HistoryKind::Siege {
                 defender, besieger, ..
@@ -321,6 +376,29 @@ fn valid_record_shape(record: &HistoryRecord) -> bool {
                 && record.people.is_empty()
                 && record.formations.is_empty()
         }
+        HistoryKind::ItemCustodyChanged { .. } => {
+            record.sites.len() == 1
+                && record.armies.is_empty()
+                && !record.people.is_empty()
+                && record.people.len() <= 2
+                && record.formations.is_empty()
+                && record.items.len() == 1
+        }
+        HistoryKind::Anniversary { subject, .. } => match subject {
+            AnniversarySubject::Person(_) => {
+                record.armies.is_empty()
+                    && record.people.len() == 1
+                    && record.formations.is_empty()
+                    && record.items.is_empty()
+            }
+            AnniversarySubject::Site(_) => {
+                record.sites.len() == 1
+                    && record.armies.is_empty()
+                    && record.people.is_empty()
+                    && record.formations.is_empty()
+                    && record.items.is_empty()
+            }
+        },
     }
 }
 

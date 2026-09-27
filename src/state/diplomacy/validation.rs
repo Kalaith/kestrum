@@ -24,7 +24,18 @@ impl StrategicCampaign {
                         .is_none_or(|round| round <= self.completed_rounds)
                     && pair
                         .last_offer_round
-                        .is_none_or(|round| round <= self.completed_rounds),
+                        .is_none_or(|round| round <= self.completed_rounds)
+                    && pair
+                        .war_started_round
+                        .is_none_or(|round| round <= self.completed_rounds)
+                    && pair
+                        .war_ended_round
+                        .is_none_or(|round| round <= self.completed_rounds)
+                    && pair.war_ended_round.is_none_or(|end| {
+                        pair.war_started_round.is_none_or(|start| {
+                            start <= end || relation.state == DiplomaticState::War
+                        })
+                    }),
                 "invalid peace/offer dates",
             )?;
             require(

@@ -16,6 +16,7 @@ use super::{
     battle::{BattleId, BattleReport},
     history::{CampaignHistory, HistoryId},
     knowledge::CampaignKnowledge,
+    legacy::{LegacyItem, LegacyItemId},
     military::{Army, ArmyId, EconomyStatement, Formation, FormationId, RecoveryStatement},
     people::{Person, PersonId},
     relationships::{Household, HouseholdId, PersonFamily, SuccessorRegister},
@@ -123,6 +124,12 @@ pub struct NextIds {
     pub person: PersonId,
     #[serde(default = "first_household_id")]
     pub household: HouseholdId,
+    #[serde(default = "first_legacy_item_id")]
+    pub legacy_item: LegacyItemId,
+}
+
+fn first_legacy_item_id() -> LegacyItemId {
+    LegacyItemId(1)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -237,6 +244,8 @@ pub struct StrategicCampaign {
     pub apprentice_last_invited_year: BTreeMap<FactionId, u32>,
     #[serde(default)]
     pub mentorships: BTreeMap<PersonId, super::mentorship::Mentorship>,
+    #[serde(default)]
+    pub legacy_items: BTreeMap<LegacyItemId, LegacyItem>,
     pub world: CampaignWorld,
     pub relations: Vec<Relation>,
     pub accepted_sequence: u64,
@@ -299,6 +308,7 @@ impl StrategicCampaign {
                 formation: FormationId(1),
                 person: PersonId(1),
                 household: HouseholdId(1),
+                legacy_item: LegacyItemId(1),
             },
             completed_rounds: 0,
             player: scenario.player,
@@ -314,6 +324,7 @@ impl StrategicCampaign {
             successors: BTreeMap::new(),
             apprentice_last_invited_year: BTreeMap::new(),
             mentorships: BTreeMap::new(),
+            legacy_items: BTreeMap::new(),
             world: CampaignWorld::from_scenario(scenario),
             relations: scenario.relations.clone(),
             accepted_sequence: 0,
@@ -329,6 +340,7 @@ impl StrategicCampaign {
         campaign.instantiate_starting_military(data)?;
         campaign.initialize_population(&data.construction);
         campaign.initialize_development(data)?;
+        campaign.initialize_legacy_items()?;
         campaign.next_ids.threat =
             super::threat::ThreatId(next(campaign.threats.keys().map(|id| id.0))?);
         campaign.reconcile_region_control();

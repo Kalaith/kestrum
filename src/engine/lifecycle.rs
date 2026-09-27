@@ -200,6 +200,7 @@ pub(crate) fn mark_dead(
     person.movement_spent = 0;
     person.career.course = None;
     person.career.site_role = None;
+    campaign.settle_departed_heirloom(id);
     campaign
         .mentorships
         .retain(|learner, mentorship| *learner != id && mentorship.mentor != id);

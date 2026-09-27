@@ -266,9 +266,29 @@ unpoliced rounds. Older saves acquire no invented occupants or development histo
 All 111 tests, formatting, strict Clippy, source gate, representative native review
 and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
 records browser seasonal growth and reload, decisions and platform limitations.
-K16–K18 remain required.
+K17–K18 remain required.
 
 ## Screen brief
+
+### History item inspector
+
+| Question | Current answer |
+| --- | --- |
+| Current decision | Inspect an owned heirloom and transfer it to a living local person, or collect it from a local estate. |
+| Dominant focus | The selected item, its current holder and place, and the eligible local recipient. |
+| Primary action | A visible Transfer button names its recipient; the same control collects an estate item. The action has no resource cost and requires same-faction local custody. |
+| Supporting information | The item is a named Muster Sword with no combat bonus. Its creation season and current holder/place stay on the overview. |
+| Deferred information | Custody deeds, war timeline and reminders appear in Events or filtered chronicles; detailed deeds expire after 40 seasons. |
+| Layout and camera | The existing history overlay sits above the atlas. At the 1280 × 720 minimum, the item details and one local transfer fit together; additional recipients use overview paging. |
+| Input and feedback | Tap the recipient's 48-logical-pixel Transfer button. The resulting deed can be opened from the item's, person's or site's Events view; an estate item is collected by choosing a local person. |
+
+The normal and minimum item screens are captured in
+[item overview](docs/verification/ui_history_item.png) and
+[minimum overview](docs/verification/ui_history_item_minimum.png). The linked deed
+is shown in [the chronicle](docs/verification/ui_history_item_deed.png) and its
+[minimum view](docs/verification/ui_history_item_deed_minimum.png).
+
+### Strategic map
 
 | Question | Current answer |
 | --- | --- |
@@ -304,7 +324,7 @@ eliminated or your vassal, the kingdom milestone ends in victory. Losing your ow
 last base and army ends in defeat. The saved result preserves the final battle's
 service and allows Records, Save, Menu and New Game. Simulation stops there.
 
-K16–K18 remain required for the full generational release.
+K17–K18 remain required for the full generational release.
 
 [K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
 Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
@@ -327,7 +347,7 @@ Rivals use the same evidence options and validated course/appointment commands.
 
 [K13 verification](docs/verification/k13-careers.md) records nine progression cases,
 136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum
-screen review and Windows/WebGL Preview publishing. K16–K18 remain required;
+screen review and Windows/WebGL Preview publishing. K17–K18 remain required;
 minimum WebGL campaign scaling and physical-touch acceptance remain open.
 
 ### K14 — Elders keep serving in new ways
@@ -371,6 +391,29 @@ validated continuity commands.
 [K15 verification](docs/verification/k15-succession.md) records nine focused
 succession cases, 160 passing tests, full validation and native captures.
 Browser interaction and physical-touch checks remain part of K18.
+
+### K16 — Heirlooms, chronicles and eras
+
+Every founding Officer carries a named Muster Sword with no combat bonus. A living
+person of the same faction may transfer the same item only at the holder's site;
+after death, a qualified local Item successor inherits that item, otherwise it
+remains at the death site for local collection. Retirement leaves custody intact.
+The same dated deed appears in item, participant and place histories, visible only
+to its faction. Help and the item overview distinguish the known creation season
+from later custody changes.
+
+The history overlay adds item and memory filters, item inspection, factual war and
+peace era labels, known site foundation dates, and one non-repeating anniversary
+reminder per faction at each completed boundary. Retained detail is bounded by age
+and count; pruning a dead person's full record also clears stale succession and
+mentor references while preserving earned service counters. Old saves receive
+current-round starting items without invented deeds or dates; active wars whose
+start is unknown say so.
+
+[K16 verification](docs/verification/k16-heirlooms.md) records the focused and
+full-suite results, both-size native review, publisher outcome and any remaining
+browser/touch limitations. K17's production campaign and K18's integrated platform
+acceptance remain.
 
 ## Development
 
@@ -416,8 +459,8 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. K16 is the next required
-package; K16–K18 remain planned.
+reusable prompt for implementing one package at a time. K17 is the next required
+package; K17–K18 remain planned.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

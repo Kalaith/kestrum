@@ -78,6 +78,7 @@ fn declare(
         .expect("pair");
     pair.peace_since = None;
     pair.truce_until = None;
+    pair.war_started_round = Some(campaign.completed_rounds);
     record(
         campaign,
         outcome,
@@ -221,6 +222,7 @@ fn agree(
         .expect("pair");
     pair.peace_since = Some(campaign.completed_rounds);
     pair.truce_until = Some(until);
+    pair.war_ended_round = Some(campaign.completed_rounds);
     record(
         campaign,
         outcome,

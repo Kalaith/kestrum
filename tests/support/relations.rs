@@ -11,6 +11,8 @@ pub fn sync_relations(campaign: &mut StrategicCampaign) {
                 .then_some(campaign.completed_rounds),
             truce_until: None,
             last_offer_round: None,
+            war_started_round: None,
+            war_ended_round: None,
         })
         .collect();
 }

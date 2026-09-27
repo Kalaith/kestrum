@@ -38,6 +38,7 @@ impl StrategicCampaign {
         self.validate_world(data)?;
         self.validate_military(data)?;
         self.validate_relationships(data)?;
+        self.validate_legacy_items()?;
         self.validate_construction(data)?;
         self.validate_development(data)?;
         self.validate_threats(data)?;

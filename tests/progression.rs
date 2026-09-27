@@ -36,6 +36,7 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
         let (data, mut campaign) = fixture();
         let template = campaign.people[&PersonId(1)].clone();
         campaign.people.clear();
+        campaign.legacy_items.clear();
         for id in 1..=20 {
             let mut person = template.clone();
             person.id = PersonId(id);

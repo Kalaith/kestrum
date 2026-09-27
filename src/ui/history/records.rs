@@ -14,13 +14,14 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         (RecordCategory::People, "army_people"),
         (RecordCategory::Places, "history_places"),
         (RecordCategory::Armies, "own_armies"),
+        (RecordCategory::Items, "legacy_item"),
     ]
     .into_iter()
     .enumerate()
     {
         if button(
             ctx,
-            Rect::new(112.0 + index as f32 * 268.0, 151.0, 252.0, 48.0),
+            Rect::new(112.0 + index as f32 * 216.0, 151.0, 200.0, 48.0),
             &ctx.text(key),
             true,
             ctx.history.category == category,
@@ -30,7 +31,7 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     }
     if button(
         ctx,
-        Rect::new(916.0, 151.0, 252.0, 48.0),
+        Rect::new(964.0, 151.0, 204.0, 48.0),
         &ctx.text("battle_reports"),
         true,
         false,
@@ -130,6 +131,29 @@ pub(super) fn rows(ctx: &Context<'_>) -> Vec<HistoryRow> {
                     .unwrap_or_default();
                 HistoryRow::new(army.name.clone(), site.to_owned()).link(
                     UiAction::OpenHistory(HistorySubject::Army(army.id)),
+                    "history_open",
+                )
+            })
+            .collect(),
+        RecordCategory::Items => campaign
+            .legacy_items
+            .iter()
+            .map(|item| {
+                let custody = match item.custody {
+                    kestrum::state::legacy::LegacyItemCustody::Person(id) => campaign
+                        .people
+                        .iter()
+                        .find(|person| person.id == id)
+                        .map(|person| person.name.clone())
+                        .unwrap_or_else(|| ctx.text("history_unknown_custodian")),
+                    kestrum::state::legacy::LegacyItemCustody::SiteEstate(site) => campaign
+                        .world
+                        .site(site)
+                        .map(|place| format!("{} · {}", ctx.text("legacy_estate"), place.name))
+                        .unwrap_or_else(|| ctx.text("legacy_estate")),
+                };
+                HistoryRow::new(item.name.clone(), custody).link(
+                    UiAction::OpenHistory(HistorySubject::Item(item.id)),
                     "history_open",
                 )
             })

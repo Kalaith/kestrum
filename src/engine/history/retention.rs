@@ -38,6 +38,7 @@ pub(crate) fn prune_with_rules(
     {
         campaign.history.events.remove(&id);
     }
+    campaign.history.refresh_war_links();
     let retained: BTreeSet<_> = campaign
         .history
         .events
@@ -49,6 +50,14 @@ pub(crate) fn prune_with_rules(
         .collect();
     campaign.battles.retain(|id, _| retained.contains(id));
     super::departed::prune(campaign, rules);
+    campaign
+        .history
+        .person_last_reminded
+        .retain(|id, _| campaign.people.contains_key(id));
+    campaign
+        .history
+        .site_last_reminded
+        .retain(|id, _| campaign.world.site(*id).is_some());
     campaign
         .history
         .site_notables

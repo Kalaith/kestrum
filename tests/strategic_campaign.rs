@@ -73,6 +73,8 @@ fn fixture(count: u32) -> (GameData, StrategicCampaign) {
             peace_since: (relation.state == DiplomaticState::Peace).then_some(0),
             truce_until: None,
             last_offer_round: None,
+            war_started_round: None,
+            war_ended_round: None,
         })
         .collect();
     campaign.diplomacy.pairs.sort_by_key(|pair| pair.factions);

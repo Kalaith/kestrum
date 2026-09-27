@@ -241,6 +241,7 @@ impl Game {
             | "history_dense" | "history_presence" | "history_seasoned" | "history_veteran" => {
                 self.capture_history(scene)
             }
+            "history_item" | "history_item_deed" | "history_items" => self.capture_history(scene),
             "battle_empty" | "battle_outcome" | "battle_forces" | "battle_factors"
             | "battle_people" | "battle_dense" | "battle_defeat" | "battle_destroyed"
             | "battle_victory" | "battle_wounded" | "battle_succession" => {

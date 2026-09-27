@@ -77,6 +77,8 @@ pub(crate) fn record_veterancy(
             id: formation,
             kind: member.kind,
         }],
+        items: Vec::new(),
+        related_events: Vec::new(),
         visible_to: [member.faction].into_iter().collect(),
     };
     insert(campaign, record);
@@ -129,6 +131,8 @@ fn action_record(
             .map(|id| person_label(campaign, before, id))
             .collect::<Result<_, _>>()?,
         formations,
+        items: Vec::new(),
+        related_events: Vec::new(),
         visible_to: [faction].into_iter().collect(),
     })
 }
@@ -351,7 +355,7 @@ fn person_label(
         name: person.name.clone(),
     })
 }
-fn allocate(campaign: &mut StrategicCampaign) -> Result<HistoryId, RuleError> {
+pub(super) fn allocate(campaign: &mut StrategicCampaign) -> Result<HistoryId, RuleError> {
     let id = campaign.next_ids.history;
     campaign.next_ids.history = HistoryId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "history identifiers",
@@ -359,7 +363,7 @@ fn allocate(campaign: &mut StrategicCampaign) -> Result<HistoryId, RuleError> {
     Ok(id)
 }
 
-fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
+pub(super) fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
     let notable_siege = matches!(
         &record.kind,
         HistoryKind::Siege {
@@ -379,7 +383,10 @@ fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
             if !matches!(receipt, crate::state::development::DevelopmentReceipt::PopulationMoved { .. }))
         || matches!(
             record.kind,
-            HistoryKind::Battle { .. } | HistoryKind::VeterancyEarned { .. }
+            HistoryKind::Battle { .. }
+                | HistoryKind::VeterancyEarned { .. }
+                | HistoryKind::ItemCustodyChanged { .. }
+                | HistoryKind::Anniversary { .. }
         )
     {
         let summary = record.notable();

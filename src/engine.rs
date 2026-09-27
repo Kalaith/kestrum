@@ -10,6 +10,7 @@ mod economy;
 mod evidence;
 pub(crate) mod history;
 pub(crate) mod knowledge;
+mod legacy;
 mod lifecycle;
 mod mentorship;
 mod movement;

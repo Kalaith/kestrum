@@ -246,6 +246,8 @@ pub fn reconcile_sieges(
         split_army: None,
         succession: Vec::new(),
         new_people: Vec::new(),
+        legacy_items_changed: Vec::new(),
+        anniversary_reminders: Vec::new(),
     };
     reconcile(&mut candidate, data, &mut outcome)?;
     super::construction::reconcile(&mut candidate, data, &mut outcome)?;

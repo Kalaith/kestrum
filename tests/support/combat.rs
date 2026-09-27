@@ -24,6 +24,7 @@ pub(super) fn fixture(first: u32, second: u32) -> (GameData, StrategicCampaign) 
         .formations
         .retain(|id, _| [FormationId(1), FormationId(7)].contains(id));
     campaign.people.clear();
+    campaign.legacy_items.clear();
     for (army, formation, site, count) in [(1, 1, 8, first), (3, 7, 10, second)] {
         let army = campaign.armies.get_mut(&ArmyId(army)).unwrap();
         army.site = SiteId(site);

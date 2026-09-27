@@ -27,6 +27,12 @@ use support::*;
 #[test]
 fn first_meaningful_encounter_wins_dedup_and_consumption_survives_save_reload() {
     let (data, mut campaign) = fixture();
+    let estate_site = kestrum::engine::person_site(&campaign, PersonId(3)).unwrap();
+    for item in campaign.legacy_items.values_mut().filter(|item| {
+        item.custody == kestrum::state::legacy::LegacyItemCustody::Person(PersonId(3))
+    }) {
+        item.custody = kestrum::state::legacy::LegacyItemCustody::SiteEstate(estate_site);
+    }
     campaign.people.remove(&PersonId(3));
     let trivial = encounter(&mut campaign, &data, 5, 6, 1);
     assert!(trivial.attacker.armies[0].formations[0].combat_losses < 10);
@@ -53,6 +59,7 @@ fn first_meaningful_encounter_wins_dedup_and_consumption_survives_save_reload() 
 fn round_cap_tiers_and_combat_factors_follow_surviving_stable_formations() {
     let (data, mut campaign) = fixture();
     campaign.people.clear();
+    campaign.legacy_items.clear();
     for round in 0..5 {
         encounter(&mut campaign, &data, 5, 6, 100);
         encounter(&mut campaign, &data, 8, 10, 100);
@@ -171,6 +178,7 @@ fn movement_and_starting_host_evidence_survive_transfer_and_destroyed_service_st
         .any(|entry| entry.kind == HistoryKind::Moved));
     let (data, mut campaign) = fixture();
     campaign.people.clear();
+    campaign.legacy_items.clear();
     encounter(&mut campaign, &data, 5, 6, 100);
     apply(
         &mut campaign,
@@ -266,7 +274,10 @@ fn pruning_bounds_recent_service_and_narrative_without_erasing_gameplay_evidence
     for _ in 0..40 {
         finish(&mut campaign, &data);
     }
-    assert!(campaign.history.person_notables[&PersonId(1)].is_empty());
+    assert!(campaign.history.person_notables[&PersonId(1)]
+        .iter()
+        .any(|entry| matches!(entry.kind, HistoryKind::Anniversary { years: 20, .. })));
+    assert!(campaign.history.person_notables[&PersonId(1)].len() <= 12);
     assert_eq!(
         campaign.formations[&FormationId(1)].service.ledger,
         earned.ledger

@@ -168,6 +168,10 @@ pub enum Command {
         category: LegacyCategory,
         link: SuccessorLink,
     },
+    TransferLegacyItem {
+        item: crate::state::legacy::LegacyItemId,
+        to: PersonId,
+    },
     SpecializeFormation {
         formation: FormationId,
         specialization: FormationSpecialization,
@@ -183,6 +187,7 @@ pub enum RuleError {
     Diplomacy(String),
     Development(String),
     Progression(String),
+    Legacy(String),
     Threat(String),
     Siege(String),
     Construction {
@@ -283,6 +288,7 @@ impl fmt::Display for RuleError {
             Self::Diplomacy(reason)
             | Self::Development(reason)
             | Self::Progression(reason)
+            | Self::Legacy(reason)
             | Self::Threat(reason) => formatter.write_str(reason),
             Self::Siege(reason) => formatter.write_str(reason),
             Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
@@ -421,6 +427,8 @@ pub struct ActionOutcome {
     pub split_army: Option<ArmyId>,
     pub succession: Vec<crate::state::relationships::SuccessionNotice>,
     pub new_people: Vec<PersonId>,
+    pub legacy_items_changed: Vec<crate::state::legacy::LegacyItemId>,
+    pub anniversary_reminders: Vec<crate::state::history::AnniversarySubject>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

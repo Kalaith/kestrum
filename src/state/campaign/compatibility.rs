@@ -1,10 +1,12 @@
 //! Additive v2 upgrades, shared by interim slots and catalogue payloads.
 
 use super::StrategicCampaign;
+use serde::de::Error as _;
 mod construction;
 mod development;
 mod evidence;
 mod households;
+mod legacy;
 mod progression;
 mod siege;
 
@@ -20,6 +22,7 @@ impl StrategicCampaign {
         development::initialize(&mut value)?;
         progression::initialize(&mut value)?;
         households::initialize(&mut value)?;
+        let legacy_migration = legacy::initialize(&mut value)?;
         let earlier_diplomacy = value.get("diplomacy").is_none() && value.get("ai").is_none();
         if earlier_diplomacy {
             if let Some(fields) = value.as_object_mut() {
@@ -48,8 +51,29 @@ impl StrategicCampaign {
                 true
             });
         let mut campaign: Self = serde_json::from_value(value)?;
+        if legacy_migration.era_dates_missing {
+            legacy::restore_era_dates(&mut campaign);
+        }
         if earlier_diplomacy {
             campaign.initialize_diplomacy();
+            if campaign.completed_rounds > 0 {
+                for pair in &mut campaign.diplomacy.pairs {
+                    if campaign
+                        .relations
+                        .iter()
+                        .find(|relation| relation.factions == pair.factions)
+                        .is_some_and(|relation| {
+                            relation.state == crate::data::world::DiplomaticState::War
+                        })
+                    {
+                        pair.war_started_round = None;
+                    }
+                }
+            }
+            campaign.diplomacy.era_history_complete = campaign.completed_rounds == 0;
+        }
+        if legacy_migration.history_links_missing {
+            campaign.history.refresh_war_links();
         }
         if legacy {
             campaign.reconcile_region_control();
@@ -59,6 +83,11 @@ impl StrategicCampaign {
         }
         if earlier_construction {
             construction::restore(&mut campaign)?;
+        }
+        if legacy_migration.seed_founders {
+            campaign
+                .initialize_legacy_items()
+                .map_err(serde_json::Error::custom)?;
         }
         Ok(campaign)
     }

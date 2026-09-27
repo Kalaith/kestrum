@@ -43,10 +43,10 @@ pub(super) fn specialists(campaign: &mut StrategicCampaign) {
 pub(super) fn assert_legacy_military_migration(data: &GameData, mut campaign: StrategicCampaign) {
     campaign.completed_rounds = 7;
     let mut old = serde_json::to_value(Campaign::Strategic(Box::new(campaign.clone()))).unwrap();
-    for key in ["armies", "formations", "people"] {
+    for key in ["armies", "formations", "people", "legacy_items"] {
         old.as_object_mut().unwrap().remove(key);
     }
-    for key in ["army", "formation", "person"] {
+    for key in ["army", "formation", "person", "legacy_item"] {
         old["next_ids"].as_object_mut().unwrap().remove(key);
     }
     old["world"].as_object_mut().unwrap().remove("site_damage");

@@ -4,8 +4,10 @@ use super::*;
 use kestrum::state::{
     evidence::{EvidenceKind, EvidenceLedger, FormationService, Veterancy},
     knowledge::ObservedCondition,
-    people::{Person, PersonStatus},
+    legacy::{LegacyItem, LegacyItemCustody},
+    people::{Person, PersonAssignment, PersonStatus},
 };
+use kestrum::{data::world::SiteId, engine::VisibleCampaign};
 
 pub(super) fn title(ctx: &Context<'_>) -> String {
     let Some(view) = ctx.campaign_view else {
@@ -28,6 +30,11 @@ pub(super) fn title(ctx: &Context<'_>) -> String {
                 )
             })
         }
+        Some(HistorySubject::Item(id)) => view
+            .legacy_items
+            .iter()
+            .find(|item| item.id == id)
+            .map(|item| item.name.clone()),
         None => None,
     }
     .unwrap_or_else(|| ctx.text("history"))
@@ -54,7 +61,16 @@ pub(super) fn build(ctx: &Context<'_>) -> Vec<HistoryRow> {
                     .and_then(|id| view.factions.iter().find(|f| f.id == id))
                     .map(|f| f.name.clone())
                     .unwrap_or_else(|| ctx.text("uncontrolled"));
-                vec![HistoryRow::new(ctx.text("local_control"), owner)]
+                let mut rows = vec![HistoryRow::new(ctx.text("local_control"), owner)];
+                rows.push(HistoryRow::new(
+                    ctx.text("history_site_founded"),
+                    view.world
+                        .founded_rounds
+                        .get(&id)
+                        .map(|round| date(ctx, *round))
+                        .unwrap_or_else(|| ctx.text("history_foundation_unknown")),
+                ));
+                rows
             })
             .unwrap_or_default(),
         Some(HistorySubject::Army(id)) => view
@@ -70,8 +86,18 @@ pub(super) fn build(ctx: &Context<'_>) -> Vec<HistoryRow> {
                 vec![HistoryRow::new(ctx.text("history_current_site"), site)]
             })
             .unwrap_or_default(),
+        Some(HistorySubject::Item(id)) => view
+            .legacy_items
+            .iter()
+            .find(|item| item.id == id)
+            .map(|item| legacy_item(ctx, view, item))
+            .unwrap_or_default(),
         None => Vec::new(),
     };
+    rows.push(HistoryRow::new(
+        ctx.text("history_current_era"),
+        view.era_label.clone(),
+    ));
     // Notables are already audience-filtered and retain their own historical labels.
     if !matches!(
         ctx.history.person,
@@ -95,6 +121,108 @@ pub(super) fn build(ctx: &Context<'_>) -> Vec<HistoryRow> {
         }
     }
     rows
+}
+
+fn legacy_item(ctx: &Context<'_>, view: &VisibleCampaign, item: &LegacyItem) -> Vec<HistoryRow> {
+    let holder = match item.custody {
+        LegacyItemCustody::Person(id) => view
+            .people
+            .iter()
+            .find(|person| person.id == id)
+            .map(|person| person.name.clone())
+            .unwrap_or_else(|| ctx.text("history_unknown_custodian")),
+        LegacyItemCustody::SiteEstate(site) => view
+            .world
+            .site(site)
+            .map(|place| format!("{} · {}", ctx.text("legacy_estate"), place.name))
+            .unwrap_or_else(|| ctx.text("legacy_estate")),
+    };
+    let location = match item.custody {
+        LegacyItemCustody::Person(id) => view
+            .people
+            .iter()
+            .find(|person| person.id == id)
+            .and_then(|person| person_site(view, person)),
+        LegacyItemCustody::SiteEstate(site) => Some(site),
+    };
+    let location_name = location
+        .and_then(|site| view.world.site(site))
+        .map(|site| site.name.clone())
+        .unwrap_or_else(|| ctx.text("history_unknown_site"));
+    let mut rows = vec![
+        HistoryRow::new(
+            ctx.text("history_item_kind"),
+            format!(
+                "{} · {}",
+                ctx.text("legacy_muster_sword"),
+                ctx.text("history_item_no_bonus")
+            ),
+        ),
+        HistoryRow::new(
+            ctx.text("history_item_created"),
+            date(ctx, item.created_round),
+        ),
+        HistoryRow::new(
+            ctx.text("history_item_holder"),
+            format!("{holder} · {location_name}"),
+        ),
+        HistoryRow::new(
+            ctx.text("history_item_deeds"),
+            ctx.text("history_item_deeds_help"),
+        ),
+    ];
+    let can_collect_estate = match item.custody {
+        LegacyItemCustody::SiteEstate(site) => view
+            .world
+            .site(site)
+            .is_some_and(|place| place.controller == Some(view.observer)),
+        LegacyItemCustody::Person(_) => true,
+    };
+    if let Some(site) = location.filter(|_| can_collect_estate) {
+        let current_holder = match item.custody {
+            LegacyItemCustody::Person(id) => Some(id),
+            LegacyItemCustody::SiteEstate(_) => None,
+        };
+        rows.extend(
+            view.people
+                .iter()
+                .filter(|person| {
+                    person.faction == view.observer
+                        && person.is_alive()
+                        && Some(person.id) != current_holder
+                        && person_site(view, person) == Some(site)
+                })
+                .map(|person| {
+                    HistoryRow::new(
+                        person.name.clone(),
+                        ctx.text(if current_holder.is_some() {
+                            "history_item_transfer_help"
+                        } else {
+                            "history_item_collect_help"
+                        }),
+                    )
+                    .link(
+                        UiAction::TransferLegacyItem(item.id, person.id),
+                        "history_item_transfer",
+                    )
+                }),
+        );
+    }
+    rows
+}
+
+fn person_site(view: &VisibleCampaign, person: &Person) -> Option<SiteId> {
+    match person.assignment {
+        PersonAssignment::Formation { formation } => view
+            .armies
+            .iter()
+            .find(|army| army.formation_ids().any(|id| id == formation))
+            .map(|army| army.site),
+        PersonAssignment::Site { site }
+        | PersonAssignment::Dependent { site }
+        | PersonAssignment::Trainee { site } => Some(site),
+        PersonAssignment::Dead => None,
+    }
 }
 
 fn person(ctx: &Context<'_>) -> Vec<HistoryRow> {

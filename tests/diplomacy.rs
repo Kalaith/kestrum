@@ -8,7 +8,7 @@ use kestrum::{
         world::{DiplomaticState, FactionId, MilitaryLayer, SiteId},
         GameData,
     },
-    engine::{apply, diplomacy_view, preview, Actor, Command, MoveOrder},
+    engine::{apply, diplomacy_view, preview, project, Actor, Command, MoveOrder},
     state::{
         diplomacy::{DefeatResolution, EndingKind},
         military::ArmyId,
@@ -279,6 +279,22 @@ fn real_conquest_reaches_victory_and_mutual_last_army_loss_is_player_defeat() {
         campaign.diplomacy.ending.as_ref().unwrap().kind,
         EndingKind::Victory
     );
+    for relation in campaign.relations.iter().filter(|relation| {
+        relation.state == DiplomaticState::War
+            && relation
+                .factions
+                .iter()
+                .any(|id| !campaign.is_independent(*id))
+    }) {
+        assert!(campaign
+            .diplomacy
+            .pair(relation.factions[0], relation.factions[1])
+            .is_some_and(|pair| pair.war_ended_round.is_some()));
+    }
+    assert!(!project(&campaign, campaign.player)
+        .unwrap()
+        .era_label
+        .starts_with("War ·"));
     let before = campaign.clone();
     reject(&mut campaign, &data, Actor::Player, Command::EndTurn);
     assert_eq!(reload(&campaign, &data), before);

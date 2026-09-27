@@ -163,6 +163,11 @@ fn last_encounter_stays_unchanged_through_hidden_changes_until_real_contact() {
     };
     remote.assignment = PersonAssignment::Dead;
     remote.movement_spent = 0;
+    for item in campaign.legacy_items.values_mut().filter(|item| {
+        item.custody == kestrum::state::legacy::LegacyItemCustody::Person(PersonId(3))
+    }) {
+        item.custody = kestrum::state::legacy::LegacyItemCustody::SiteEstate(SiteId(3));
+    }
     campaign.validate(&data).unwrap();
     assert_eq!(
         person_knowledge(&campaign, FactionId(1), PersonId(3)),
@@ -274,6 +279,7 @@ fn forgetting_reports_preserves_dated_labels_and_loadable_bounded_knowledge() {
     for person in campaign.people.values_mut() {
         person.career.relationships.remove(&PersonId(3));
     }
+    campaign.history.person_last_reminded.remove(&PersonId(3));
     campaign.people.remove(&PersonId(3));
     campaign.validate(&data).unwrap();
     assert_eq!(snapshot(&campaign, FactionId(1), PersonId(3)), expected);

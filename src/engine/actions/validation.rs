@@ -66,6 +66,7 @@ pub(in crate::engine) fn validate_command(
         | Command::EnterService { .. }
         | Command::InviteApprentice { .. }
         | Command::DesignateSuccessor { .. }
+        | Command::TransferLegacyItem { .. }
         | Command::SpecializeFormation { .. }
         | Command::CancelPersonCourse { .. }
         | Command::CancelFormationCourse { .. } => {

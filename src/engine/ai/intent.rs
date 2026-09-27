@@ -143,6 +143,9 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
                 *link as u32,
             ],
         ),
+        Command::TransferLegacyItem { item, to } => {
+            (AiIntentKind::Progression, vec![17, item.0, to.0])
+        }
         _ => return None,
     };
     Some(AiIntent { kind, targets })

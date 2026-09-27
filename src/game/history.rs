@@ -29,6 +29,20 @@ impl Game {
                 self.refresh_records();
             }
             UiAction::OpenHistory(subject) => self.open_history(subject),
+            UiAction::TransferLegacyItem(item, to) => {
+                self.apply_campaign_command(Command::TransferLegacyItem { item, to });
+                self.refresh_history();
+            }
+            UiAction::OpenRelatedHistoryEvent(id) => {
+                self.history.subject = None;
+                self.history.filter = HistoryFilter {
+                    event: Some(id),
+                    ..Default::default()
+                };
+                self.history.screen_page = 0;
+                self.history.mode = ui::HistoryMode::Events;
+                self.refresh_history();
+            }
             UiAction::SetHistoryMode(mode) => {
                 self.history.mode = mode;
                 self.history.status.clear();
@@ -127,6 +141,11 @@ impl Game {
                 .armies
                 .values()
                 .filter(|army| army.faction == campaign.player)
+                .count(),
+            ui::RecordCategory::Items => campaign
+                .legacy_items
+                .values()
+                .filter(|item| item.faction == campaign.player)
                 .count(),
         };
         let clamped = self

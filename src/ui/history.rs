@@ -31,6 +31,7 @@ pub enum RecordCategory {
     People,
     Places,
     Armies,
+    Items,
 }
 
 #[derive(Debug, Default)]

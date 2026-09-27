@@ -211,6 +211,17 @@ fn apply(
     outcome: &mut ActionOutcome,
     plan: SitePlan,
 ) -> Result<(), RuleError> {
+    let was_unsettled = campaign
+        .world
+        .site(plan.id)
+        .is_some_and(|site| site.habitation == crate::data::economy::Habitation::Unsettled);
+    if was_unsettled && plan.habitation >= crate::data::economy::Habitation::Camp {
+        campaign
+            .world
+            .founded_rounds
+            .entry(plan.id)
+            .or_insert(campaign.completed_rounds);
+    }
     campaign.world.development.insert(plan.id, plan.state);
     campaign.world.population.insert(plan.id, plan.population);
     campaign.world.site_damage.insert(plan.id, plan.damage);

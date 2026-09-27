@@ -674,3 +674,29 @@ without advancing any RNG stream.
 These are delegated implementation decisions, not newly confirmed author rules.
 K15 validation and screenshots are recorded in
 [the succession verification](verification/k15-succession.md).
+
+### I16 — Factual heirlooms, chronicles and eras
+
+K16 implements P23 without adding combat loot or inventing earlier history.
+Each fresh founding Officer receives a named, non-combat Muster Sword whose
+creation season is known. A custody transfer preserves its stable identity and
+requires the living recipient to belong to the same faction and be at the current
+holder's site. A living designated Item successor inherits that same item only
+when physically present at the death site; otherwise the item stays as an estate
+there for a local person to collect. Retirement does not transfer custody.
+
+One factual custody deed is shared by the item, participating people and place,
+and is private to the owning faction. Later custody deeds expire by bounded age
+and count; current item custody remains. The same pruning removes successor and
+completed-mentor references to a departed person while retaining the learner's
+earned discipline seasons. Anniversary reminders select at most one eligible
+service or site milestone per faction at each completed boundary and never repeat
+the same subject and milestone.
+
+Era labels use dated war declarations, peace agreements, active relations and
+known site foundations. An older active war with no usable start date reports it
+as unknown. Earlier saves get a current-round starting possession without a
+fabricated deed, site foundation or war start. Defeat closes an active pair's war
+date while retaining the historical diplomatic relation. These are delegated
+implementation decisions under P23, not newly confirmed author rules. See
+[the K16 verification](verification/k16-heirlooms.md).

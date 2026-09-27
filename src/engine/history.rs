@@ -1,8 +1,11 @@
 //! Immutable narrative insertion, observer-filtered paging, and seasonal retention.
 
 mod departed;
+mod legacy;
 mod records;
 mod retention;
+pub(crate) use legacy::current_era;
+pub(crate) use legacy::{record_anniversaries, record_legacy_custody_changes};
 pub(crate) use records::{record_facts, record_veterancy, restore_battle_history};
 pub(crate) use retention::{prune, prune_with_rules};
 
@@ -18,6 +21,7 @@ pub struct HistoryFilter {
     pub from_round: Option<u32>,
     pub to_round: Option<u32>,
     pub page: usize,
+    pub event: Option<HistoryId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,6 +43,10 @@ pub fn history_page(
             .formations
             .get(&id)
             .is_some_and(|formation| formation.faction == observer),
+        Some(HistorySubject::Item(id)) => campaign
+            .legacy_items
+            .get(&id)
+            .is_some_and(|item| item.faction == observer),
         _ => campaign.factions.contains_key(&observer),
     };
     let mut entries: Vec<_> = campaign
@@ -56,6 +64,7 @@ pub fn history_page(
                 && filter
                     .to_round
                     .is_none_or(|date| entry.completed_rounds <= date)
+                && filter.event.is_none_or(|id| entry.id == id)
         })
         .collect();
     entries.sort_by_key(|entry| std::cmp::Reverse((entry.completed_rounds, entry.id)));
@@ -101,6 +110,7 @@ fn notables(
         {
             campaign.history.person_notables.get(&id)
         }
+        Some(HistorySubject::Item(_)) => None,
         _ => None,
     };
     let mut result: Vec<_> = list

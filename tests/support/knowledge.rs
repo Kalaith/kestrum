@@ -37,6 +37,7 @@ pub(super) fn fixture() -> (GameData, StrategicCampaign) {
     remote.assignment = PersonAssignment::Site { site: SiteId(3) };
     campaign.people.insert(remote.id, remote);
     campaign.next_ids.person = PersonId(6);
+    campaign.legacy_items.clear();
     campaign.validate(&data).unwrap();
     (data, campaign)
 }
@@ -443,7 +444,16 @@ pub(super) fn assert_departed_budgets(data: &GameData) {
     assert_eq!(campaign.people.len(), 1);
     assert!(campaign.people[&PersonId(5)].is_alive());
     assert_eq!(campaign.next_ids.person, PersonId(2006));
-    assert!(campaign.history.person_notables.is_empty());
+    assert!(campaign
+        .history
+        .person_notables
+        .keys()
+        .all(|id| *id == PersonId(5)));
+    assert!(campaign
+        .history
+        .person_notables
+        .values()
+        .all(|entries| entries.len() <= 12));
     assert_catalogue(data, &campaign);
 }
 
@@ -458,6 +468,7 @@ pub(super) fn assert_history_visibility(data: &GameData, campaign: &StrategicCam
         from_round: Some(0),
         to_round: Some(0),
         page: 0,
+        event: None,
     };
     let known = history_page(campaign, FactionId(1), &filter);
     assert_eq!(known.total_entries, 1);

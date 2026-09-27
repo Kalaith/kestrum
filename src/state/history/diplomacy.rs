@@ -1,6 +1,43 @@
 //! Public political records retain no private enemy roster.
 use super::*;
 use crate::state::{diplomacy::DiplomacyReceipt, StrategicCampaign};
+
+impl CampaignHistory {
+    pub(crate) fn refresh_war_links(&mut self) {
+        let wars = self
+            .events
+            .values()
+            .filter_map(|record| match &record.kind {
+                HistoryKind::Diplomacy {
+                    receipt: DiplomacyReceipt::WarDeclared { factions },
+                } => Some((record.id, *factions)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let links = wars
+            .iter()
+            .map(|(id, factions)| {
+                let previous = wars
+                    .iter()
+                    .filter(|(candidate, pair)| candidate < id && pair == factions)
+                    .map(|(candidate, _)| *candidate)
+                    .max();
+                (*id, previous.into_iter().collect::<Vec<_>>())
+            })
+            .collect::<std::collections::BTreeMap<_, _>>();
+        for record in self.events.values_mut() {
+            if matches!(
+                record.kind,
+                HistoryKind::Diplomacy {
+                    receipt: DiplomacyReceipt::WarDeclared { .. }
+                }
+            ) {
+                record.related_events = links.get(&record.id).cloned().unwrap_or_default();
+            }
+        }
+    }
+}
+
 impl HistoryRecord {
     pub(crate) fn diplomacy(
         id: HistoryId,
@@ -48,6 +85,25 @@ impl HistoryRecord {
                 campaign.factions.keys().copied().collect(),
             ),
         };
+        let related_events = match receipt {
+            DiplomacyReceipt::WarDeclared { factions } => campaign
+                .history
+                .events
+                .values()
+                .filter(|record| {
+                    record.id < id
+                        && matches!(
+                            &record.kind,
+                            HistoryKind::Diplomacy {
+                                receipt: DiplomacyReceipt::WarDeclared { factions: previous }
+                            } if previous == factions
+                        )
+                })
+                .max_by_key(|record| (record.completed_rounds, record.id))
+                .map(|record| vec![record.id])
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        };
         Self {
             id,
             completed_rounds,
@@ -67,6 +123,8 @@ impl HistoryRecord {
             armies,
             people: Vec::new(),
             formations: Vec::new(),
+            items: Vec::new(),
+            related_events,
             visible_to,
         }
     }
@@ -88,6 +146,8 @@ impl StrategicCampaign {
         );
         let valid = record.people.is_empty()
             && record.formations.is_empty()
+            && record.items.is_empty()
+            && record.related_events == expected.related_events
             && record.visible_to == expected.visible_to
             && record
                 .sites

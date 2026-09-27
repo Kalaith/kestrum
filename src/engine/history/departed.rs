@@ -16,12 +16,17 @@ pub(super) fn prune(campaign: &mut StrategicCampaign, rules: &HistoryRules) {
     // remain strong; current valid death handling has already released them.
     let referenced = referenced_people(campaign);
     let now = campaign.completed_rounds;
+    let mut removed = BTreeSet::new();
     campaign.people.retain(|id, person| match person.status {
         PersonStatus::Dead {
             completed_rounds, ..
         } => {
-            referenced.contains(id)
-                || now.saturating_sub(completed_rounds) <= rules.departed_max_age_rounds
+            let keep = referenced.contains(id)
+                || now.saturating_sub(completed_rounds) <= rules.departed_max_age_rounds;
+            if !keep {
+                removed.insert(*id);
+            }
+            keep
         }
         _ => true,
     });
@@ -39,6 +44,28 @@ pub(super) fn prune(campaign: &mut StrategicCampaign, rules: &HistoryRules) {
     let excess = departed.len().saturating_sub(rules.departed_max_entries);
     for (_, id) in departed.into_iter().take(excess) {
         campaign.people.remove(&id);
+        removed.insert(id);
+    }
+    if !removed.is_empty() {
+        campaign
+            .successors
+            .retain(|predecessor, _| !removed.contains(predecessor));
+        for successors in campaign.successors.values_mut() {
+            successors.retain(|_, designation| !removed.contains(&designation.successor));
+        }
+        campaign
+            .successors
+            .retain(|_, successors| !successors.is_empty());
+        for person in campaign.people.values_mut() {
+            person
+                .career
+                .relationships
+                .retain(|person, _| !removed.contains(person));
+            person
+                .career
+                .completed_mentors
+                .retain(|record| !removed.contains(&record.mentor));
+        }
     }
 }
 

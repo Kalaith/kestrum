@@ -184,6 +184,7 @@ fn resolve(
     resolution: DefeatResolution,
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
+    close_wars(campaign, faction);
     campaign.factions.get_mut(&faction).expect("faction").status = match resolution {
         DefeatResolution::Annex => FactionStatus::Eliminated,
         DefeatResolution::Submission => FactionStatus::Vassal {
@@ -270,6 +271,7 @@ fn inherit(
         .map(|faction| faction.id)
         .collect();
     for faction in heirs {
+        close_wars(campaign, faction);
         campaign.factions.get_mut(&faction).expect("vassal").status = match victor {
             Some(sovereign) => FactionStatus::Vassal { sovereign },
             None => FactionStatus::Eliminated,
@@ -289,6 +291,19 @@ fn inherit(
         )?;
     }
     Ok(())
+}
+
+fn close_wars(campaign: &mut StrategicCampaign, defeated: FactionId) {
+    let ended = campaign.completed_rounds;
+    for pair in &mut campaign.diplomacy.pairs {
+        if pair.factions.contains(&defeated)
+            && campaign.relations.iter().any(|relation| {
+                relation.factions == pair.factions && relation.state == DiplomaticState::War
+            })
+        {
+            pair.war_ended_round = Some(ended);
+        }
+    }
 }
 fn check_victory(
     campaign: &mut StrategicCampaign,

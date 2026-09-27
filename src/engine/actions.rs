@@ -169,6 +169,7 @@ fn prepare(
     super::lifecycle::validate(campaign, data, owner, &command)?;
     super::mentorship::validate(campaign, data, owner, &command)?;
     super::succession::validate(campaign, data, owner, &command)?;
+    super::legacy::validate(campaign, owner, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -191,6 +192,8 @@ fn prepare(
         split_army: None,
         succession: Vec::new(),
         new_people: Vec::new(),
+        legacy_items_changed: Vec::new(),
+        anniversary_reminders: Vec::new(),
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
@@ -234,7 +237,30 @@ fn finish(
         candidate.acted.clear();
     }
     super::history::record_facts(candidate, before, &outcome.facts)?;
+    outcome.legacy_items_changed =
+        super::history::record_legacy_custody_changes(candidate, before)?
+            .into_iter()
+            .filter(|id| {
+                candidate
+                    .legacy_items
+                    .get(id)
+                    .is_some_and(|item| item.faction == candidate.player)
+            })
+            .collect();
     if outcome.round_completed {
+        outcome.anniversary_reminders = super::history::record_anniversaries(candidate)?
+            .into_iter()
+            .filter(|subject| match subject {
+                crate::state::history::AnniversarySubject::Person(id) => candidate
+                    .people
+                    .get(id)
+                    .is_some_and(|person| person.faction == candidate.player),
+                crate::state::history::AnniversarySubject::Site(id) => candidate
+                    .world
+                    .site(*id)
+                    .is_some_and(|site| site.controller == Some(candidate.player)),
+            })
+            .collect();
         super::history::prune(candidate, data);
     }
     outcome.succession = super::succession::notices(before, candidate);
@@ -282,6 +308,9 @@ fn execute(
                 faction: candidate.active_faction(),
                 paused,
             };
+        }
+        Command::TransferLegacyItem { item, to } => {
+            super::legacy::execute(candidate, owner, item, to)?;
         }
         Command::Recruit { site, army, kind } => {
             let recruited = recruitment::recruit(candidate, data, site, army, kind)?;

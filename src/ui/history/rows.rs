@@ -17,6 +17,22 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
                         kind(ctx, &event.kind)
                     );
                     let row = HistoryRow::new(heading, summary(ctx, event));
+                    if let HistoryKind::ItemCustodyChanged { item, .. } = event.kind {
+                        if ctx.campaign_view.is_some_and(|view| {
+                            view.legacy_items.iter().any(|entry| entry.id == item)
+                        }) {
+                            return row.link(
+                                UiAction::OpenHistory(HistorySubject::Item(item)),
+                                "history_open",
+                            );
+                        }
+                    }
+                    if let Some(related) = event.related_events.first() {
+                        return row.link(
+                            UiAction::OpenRelatedHistoryEvent(*related),
+                            "history_related_war",
+                        );
+                    }
                     if let HistoryKind::Battle { battle, .. } = event.kind {
                         if ctx.campaign_view.is_some_and(|view| {
                             view.battles.iter().any(|report| report.id == battle)
@@ -87,10 +103,55 @@ pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
             tier_text(ctx, *tier),
             ctx.text("service_xp")
         ),
+        HistoryKind::ItemCustodyChanged { .. } => ctx.text("history_item_custody_changed"),
+        HistoryKind::Anniversary { years, .. } => ctx
+            .text("history_anniversary")
+            .replace("{years}", &years.to_string()),
     }
 }
 
 fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
+    match &event.kind {
+        HistoryKind::ItemCustodyChanged { from, to, .. } => {
+            let item = event
+                .items
+                .first()
+                .map_or_else(String::new, |entry| entry.name.clone());
+            return format!(
+                "{item} · {} → {}",
+                custody(ctx, event, *from),
+                custody(ctx, event, *to)
+            );
+        }
+        HistoryKind::Anniversary { subject, years } => {
+            let name = match subject {
+                kestrum::state::history::AnniversarySubject::Person(id) => event
+                    .people
+                    .iter()
+                    .find(|person| person.id == *id)
+                    .map(|person| person.name.as_str()),
+                kestrum::state::history::AnniversarySubject::Site(id) => event
+                    .sites
+                    .iter()
+                    .find(|site| site.id == *id)
+                    .map(|site| site.name.as_str()),
+            }
+            .unwrap_or("?");
+            let topic = match subject {
+                kestrum::state::history::AnniversarySubject::Person(_) => {
+                    ctx.text("history_service_anniversary")
+                }
+                kestrum::state::history::AnniversarySubject::Site(_) => {
+                    ctx.text("history_foundation_anniversary")
+                }
+            };
+            return format!(
+                "{name} · {years} {} · {topic}",
+                ctx.text("history_anniversary_years")
+            );
+        }
+        _ => {}
+    }
     if let HistoryKind::Diplomacy { receipt } = &event.kind {
         return diplomacy_parties(ctx, receipt);
     }
@@ -126,6 +187,27 @@ fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
         ));
     }
     labels.join(" · ")
+}
+
+fn custody(
+    ctx: &Context<'_>,
+    event: &HistoryRecord,
+    custody: kestrum::state::legacy::LegacyItemCustody,
+) -> String {
+    match custody {
+        kestrum::state::legacy::LegacyItemCustody::Person(id) => event
+            .people
+            .iter()
+            .find(|person| person.id == id)
+            .map(|person| person.name.clone())
+            .unwrap_or_else(|| ctx.text("history_unknown_custodian")),
+        kestrum::state::legacy::LegacyItemCustody::SiteEstate(id) => event
+            .sites
+            .iter()
+            .find(|site| site.id == id)
+            .map(|site| format!("{} · {}", ctx.text("legacy_estate"), site.name))
+            .unwrap_or_else(|| ctx.text("legacy_estate")),
+    }
 }
 
 fn diplomacy_label(

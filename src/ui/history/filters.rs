@@ -25,6 +25,7 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         Some(HistoryKindFilter::Siege),
         Some(HistoryKindFilter::Development),
         Some(HistoryKindFilter::Diplomacy),
+        Some(HistoryKindFilter::Memory),
     ];
     for (index, kind) in kinds.into_iter().enumerate() {
         let rect = Rect::new(
@@ -50,7 +51,7 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     .into_iter()
     .enumerate()
     {
-        let y = 424.0 + index as f32 * 75.0;
+        let y = 470.0 + index as f32 * 67.0;
         let value = round
             .map(|round| date(ctx, round))
             .unwrap_or_else(|| ctx.text("history_any_season"));
@@ -102,6 +103,7 @@ fn kind_key(kind: Option<HistoryKindFilter>) -> &'static str {
     match kind {
         Some(HistoryKindFilter::Development) => "history_development",
         Some(HistoryKindFilter::Diplomacy) => "history_diplomacy",
+        Some(HistoryKindFilter::Memory) => "history_memory",
         None => "history_all_events",
         Some(HistoryKindFilter::Battle) => "history_battles",
         Some(HistoryKindFilter::Recruitment) => "recruit",

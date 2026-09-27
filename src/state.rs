@@ -9,6 +9,7 @@ pub mod diplomacy;
 pub mod evidence;
 pub mod history;
 pub mod knowledge;
+pub mod legacy;
 pub mod mentorship;
 pub mod military;
 pub mod people;
@@ -241,6 +242,9 @@ impl GameState {
                         | Command::RespondPeace { .. }
                         | Command::ResolveDefeat { .. }
                 ));
+        let military_order = military_order
+            || (self.overlay == Overlay::History
+                && matches!(&command, Command::TransferLegacyItem { .. }));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }

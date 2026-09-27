@@ -103,6 +103,8 @@ pub enum UiAction {
     SetRecordCategory(RecordCategory),
     RecordsPage(i32),
     OpenHistory(kestrum::state::history::HistorySubject),
+    TransferLegacyItem(kestrum::state::legacy::LegacyItemId, PersonId),
+    OpenRelatedHistoryEvent(kestrum::state::history::HistoryId),
     SetHistoryMode(HistoryMode),
     HistoryPage(i32),
     HistoryOverviewPage(i32),
@@ -292,6 +294,8 @@ impl UiAction {
                 | Self::SetRecordCategory(_)
                 | Self::RecordsPage(_)
                 | Self::OpenHistory(_)
+                | Self::TransferLegacyItem(_, _)
+                | Self::OpenRelatedHistoryEvent(_)
                 | Self::SetHistoryMode(_)
                 | Self::HistoryPage(_)
                 | Self::HistoryOverviewPage(_)

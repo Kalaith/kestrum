@@ -18,6 +18,10 @@ pub(super) fn fixture() -> (GameData, StrategicCampaign) {
     campaign
         .people
         .retain(|id, _| [PersonId(1), PersonId(3)].contains(id));
+    campaign.legacy_items.retain(|_, item| {
+        !matches!(item.custody, kestrum::state::legacy::LegacyItemCustody::Person(id)
+            if !campaign.people.contains_key(&id))
+    });
     for (id, formation) in [(1, 1), (3, 7)] {
         let army = campaign.armies.get_mut(&ArmyId(id)).unwrap();
         army.commander = None;

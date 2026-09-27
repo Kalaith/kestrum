@@ -404,6 +404,9 @@ cleanup produce no duplicate roles or resurrected kingdoms.
 
 ## K16 — Heirlooms, contextual history and eras
 
+**Status:** complete. See [K16 verification](../verification/k16-heirlooms.md) for
+coverage, native screen review and release validation.
+
 **Depends on:** K15. **Read:** chapters 08/09;
 [P23](people-and-places.md#p23--items-institutional-memory-eras-and-retention).
 **Files:** `src/state/legacy.rs`, history/succession services, biography/chronicle

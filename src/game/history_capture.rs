@@ -4,15 +4,16 @@ use super::*;
 use kestrum::{
     data::{
         economy::TroopKind,
-        world::{DiplomaticState, FactionId, SiteId},
+        world::{DiplomaticState, FactionId, PersonClass, SiteId},
     },
     engine::{Actor, MoveOrder},
     navigation::MapSelection,
     state::{
         evidence::Veterancy,
         history::HistorySubject,
+        legacy::LegacyItemCustody,
         military::{ArmyId, FormationId},
-        people::PersonAssignment,
+        people::{PersonAssignment, PersonId, PersonStatus},
         CampaignPhase, StrategicCampaign,
     },
 };
@@ -20,6 +21,17 @@ use kestrum::{
 impl Game {
     pub(super) fn capture_history(&mut self, scene: &str) {
         let scene = scene.trim_end_matches("_minimum");
+        if scene == "history_items" {
+            self.capture_campaign();
+            self.state.overlay = Overlay::Menu;
+            self.apply_history_action(UiAction::OpenRecords);
+            self.apply_history_action(UiAction::SetRecordCategory(ui::RecordCategory::Items));
+            return;
+        }
+        if matches!(scene, "history_item" | "history_item_deed") {
+            self.capture_heirloom_history(scene == "history_item_deed");
+            return;
+        }
         if scene == "history_presence" {
             self.capture_history_presence();
             return;
@@ -126,6 +138,63 @@ impl Game {
             .result
             .as_ref()
             .is_some_and(|page| page.page == 1));
+    }
+
+    fn capture_heirloom_history(&mut self, show_deed: bool) {
+        self.capture_campaign();
+        let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
+            return;
+        };
+        let founder = PersonId(1);
+        let Some(site) = engine::person_site(campaign, founder) else {
+            return;
+        };
+        let Some(mut recruit) = campaign.people.get(&founder).cloned() else {
+            return;
+        };
+        let recipient = campaign.next_ids.person;
+        campaign.next_ids.person = PersonId(recipient.0 + 1);
+        recruit.id = recipient;
+        recruit.faction = campaign.player;
+        recruit.name = "Mara Reed".into();
+        recruit.birth_round = i64::from(campaign.completed_rounds) - 24 * 4;
+        recruit.service_start_round = campaign.completed_rounds;
+        recruit.class = PersonClass::Recruit;
+        recruit.assignment = PersonAssignment::Site { site };
+        recruit.movement_spent = 0;
+        recruit.status = PersonStatus::Fit;
+        recruit.career = Default::default();
+        recruit.evidence = Default::default();
+        campaign.people.insert(recipient, recruit);
+        let item = campaign
+            .legacy_items
+            .values()
+            .find(|item| item.custody == LegacyItemCustody::Person(founder))
+            .map(|item| item.id)
+            .expect("founding officer's Muster Sword");
+        campaign
+            .validate(&self.data)
+            .expect("valid heirloom capture");
+        if show_deed {
+            engine::apply(
+                campaign,
+                &self.data,
+                Actor::Player,
+                Command::TransferLegacyItem {
+                    item,
+                    to: recipient,
+                },
+            )
+            .expect("real local custody transfer");
+            campaign.validate(&self.data).expect("valid deed capture");
+        }
+        self.state.overlay = Overlay::Menu;
+        if show_deed {
+            self.open_history(HistorySubject::Person(founder));
+            self.history.mode = ui::HistoryMode::Events;
+        } else {
+            self.open_history(HistorySubject::Item(item));
+        }
     }
 
     fn capture_history_presence(&mut self) {

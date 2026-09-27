@@ -9,6 +9,7 @@ use super::{
     campaign::FactId,
     construction::{ConstructionOrder, Focus},
     evidence::Veterancy,
+    legacy::{LegacyItemCustody, LegacyItemId},
     military::{ArmyId, FormationId},
     people::PersonId,
     siege::{Siege, SiegeChange, SiegeId},
@@ -24,13 +25,21 @@ use std::collections::{BTreeMap, BTreeSet};
 #[serde(transparent)]
 pub struct HistoryId(pub u64);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(tag = "kind", content = "id", rename_all = "snake_case")]
 pub enum HistorySubject {
     Site(SiteId),
     Army(ArmyId),
     Person(PersonId),
     Formation(FormationId),
+    Item(LegacyItemId),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "id", rename_all = "snake_case")]
+pub enum AnniversarySubject {
+    Person(PersonId),
+    Site(SiteId),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -87,6 +96,15 @@ pub enum HistoryKind {
     FocusChanged {
         focus: Focus,
     },
+    ItemCustodyChanged {
+        item: LegacyItemId,
+        from: LegacyItemCustody,
+        to: LegacyItemCustody,
+    },
+    Anniversary {
+        subject: AnniversarySubject,
+        years: u32,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -102,6 +120,7 @@ pub enum HistoryKindFilter {
     Veterancy,
     Construction,
     Focus,
+    Memory,
 }
 
 impl HistoryKind {
@@ -114,10 +133,13 @@ impl HistoryKind {
             Self::Recruited { .. } => HistoryKindFilter::Recruitment,
             Self::Disbanded { .. } => HistoryKindFilter::Disbanding,
             Self::Moved => HistoryKindFilter::Movement,
-            Self::FormationTransferred | Self::PersonTransferred => HistoryKindFilter::Transfer,
+            Self::FormationTransferred
+            | Self::PersonTransferred
+            | Self::ItemCustodyChanged { .. } => HistoryKindFilter::Transfer,
             Self::VeterancyEarned { .. } => HistoryKindFilter::Veterancy,
             Self::Construction { .. } => HistoryKindFilter::Construction,
             Self::FocusChanged { .. } => HistoryKindFilter::Focus,
+            Self::Anniversary { .. } => HistoryKindFilter::Memory,
         }
     }
 }
@@ -133,6 +155,10 @@ pub struct HistoryRecord {
     pub armies: Vec<EntityLabel<ArmyId>>,
     pub people: Vec<EntityLabel<PersonId>>,
     pub formations: Vec<FormationLabel>,
+    #[serde(default)]
+    pub items: Vec<EntityLabel<LegacyItemId>>,
+    #[serde(default)]
+    pub related_events: Vec<HistoryId>,
     pub visible_to: BTreeSet<FactionId>,
 }
 
@@ -153,6 +179,11 @@ pub struct CampaignHistory {
     pub site_notables: BTreeMap<SiteId, Vec<NotableSummary>>,
     pub army_notables: BTreeMap<ArmyId, Vec<NotableSummary>>,
     pub person_notables: BTreeMap<PersonId, Vec<NotableSummary>>,
+    /// Milestones already shown, independently bounded by living subject identity.
+    #[serde(default)]
+    pub person_last_reminded: BTreeMap<PersonId, u32>,
+    #[serde(default)]
+    pub site_last_reminded: BTreeMap<SiteId, u32>,
 }
 
 impl HistoryRecord {
@@ -184,6 +215,8 @@ impl HistoryRecord {
             armies: Vec::new(),
             people: Vec::new(),
             formations: Vec::new(),
+            items: Vec::new(),
+            related_events: Vec::new(),
             visible_to: [siege.defender, siege.besieger].into_iter().collect(),
         }
     }
@@ -240,6 +273,8 @@ impl HistoryRecord {
             armies,
             people,
             formations,
+            items: Vec::new(),
+            related_events: Vec::new(),
             visible_to: std::iter::once(report.attacker.faction)
                 .chain(report.defender.faction())
                 .collect(),
@@ -251,6 +286,7 @@ impl HistoryRecord {
             HistorySubject::Army(id) => self.armies.iter().any(|entry| entry.id == id),
             HistorySubject::Person(id) => self.people.iter().any(|entry| entry.id == id),
             HistorySubject::Formation(id) => self.formations.iter().any(|entry| entry.id == id),
+            HistorySubject::Item(id) => self.items.iter().any(|entry| entry.id == id),
         }
     }
     pub(crate) fn notable(&self) -> NotableSummary {

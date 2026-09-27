@@ -305,6 +305,7 @@ pub(super) fn assert_mutual_defeat() {
         campaign.remove_formation(id).unwrap();
     }
     campaign.people.clear();
+    campaign.legacy_items.clear();
     for id in [first, second] {
         let formation = campaign.formations.get_mut(&id).unwrap();
         formation.kind = TroopKind::Warriors;

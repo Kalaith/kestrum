@@ -52,6 +52,8 @@ impl HistoryRecord {
             armies: Vec::new(),
             people: Vec::new(),
             formations: Vec::new(),
+            items: Vec::new(),
+            related_events: Vec::new(),
             visible_to: audience(receipt, campaign),
         }
     }

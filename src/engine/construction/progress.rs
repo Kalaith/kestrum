@@ -208,6 +208,11 @@ fn complete(
                 .find(|site| site.id == id)
                 .expect("valid site")
                 .habitation = Habitation::Outpost;
+            campaign
+                .world
+                .founded_rounds
+                .entry(id)
+                .or_insert(campaign.completed_rounds);
         }
         (ConstructionTarget::Site(id), ConstructionKind::Fort) => {
             campaign

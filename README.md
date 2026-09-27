@@ -12,10 +12,10 @@ the authored 80-major / 152-physical-site campaign over the illustrated atlas.
 Rosemarch remains a separate small scenario for regression tests and captures.
 
 K13–K17 are complete. K18 integrates production campaigns, long-run continuity,
-retention, save reload and native screen review. A real production-world battle
-now survives validation and save reload after combat cleanup reassigns people
-from destroyed formations. K18 remains in progress: production-AI victory is not
-yet demonstrated, the current Preview browser route is unavailable,
+retention, save reload and native screen review. A public-observation player
+policy now wins a real 4-faction production campaign at round 60, including
+actual AI turns, player-vs-rival combat, and a terminal save/reload check. K18
+remains in progress: the current Preview browser route is unavailable,
 physical-touch review needs a device, and the 8-faction phase-timing tail is
 above its provisional target. See [K18 verification](docs/verification/k18-integrated.md)
 for results and remaining acceptance work.
@@ -479,10 +479,10 @@ army roster.
 
 The locked all-features suite, formatting, strict Clippy, all-target check, and
 no-argument Windows/WebGL Preview publish pass. K18 remains **In progress**:
-production-AI victory is still uncovered, the current local Preview server
-cannot be reached from this session, real touch hardware is unavailable, and
-isolated 8-faction NPC phase p95 is 278 ms against the provisional 250 ms review
-target. Browser scaling and touch-only navigation therefore remain unverified.
+the current local Preview server cannot be reached from this session, real touch
+hardware is unavailable, and isolated 8-faction NPC phase p95 is 278 ms against
+the provisional 250 ms review target. Browser scaling and touch-only navigation
+therefore remain unverified.
 [K18 verification](docs/verification/k18-integrated.md) records the evidence
 and open checks.
 

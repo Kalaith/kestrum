@@ -15,6 +15,17 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         }
 
         army_summary(ctx, campaign, army);
+        if let Some(formation) = ctx.army.selected {
+            if button(
+                ctx,
+                Rect::new(704.0, 403.0, 464.0, 44.0),
+                &ctx.text("formation_develop"),
+                true,
+                false,
+            ) {
+                return Some(UiAction::OpenFormationProgression(formation));
+            }
+        }
     } else {
         text(ctx, &ctx.text("no_armies"), vec2(112.0, 226.0), 24.0, CREAM);
 

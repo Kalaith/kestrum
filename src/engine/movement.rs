@@ -131,9 +131,8 @@ pub fn formation_remaining(
         .formations
         .get(&id)
         .ok_or(RuleError::UnknownFormation { formation: id })?;
-    Ok(data.economy.formations[&formation.kind]
-        .movement_allowance
-        .saturating_sub(formation.movement_spent))
+    let allowance = formation.movement_allowance(data);
+    Ok(allowance.saturating_sub(formation.movement_spent))
 }
 
 pub fn person_remaining(

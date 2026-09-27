@@ -164,6 +164,11 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
         for army in &side.armies {
             for person in &army.people {
                 let class = match person.class {
+                    FounderClass::Recruit => ctx.text("class_recruit"),
+                    FounderClass::Infantry => ctx.text("class_infantry"),
+                    FounderClass::Archer => ctx.text("class_archer"),
+                    FounderClass::Scout => ctx.text("class_scout"),
+                    FounderClass::Cavalry => ctx.text("class_cavalry"),
                     FounderClass::Officer => ctx.text("class_officer"),
                     FounderClass::Medic => ctx.text("class_medic"),
                 };

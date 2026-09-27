@@ -326,7 +326,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             "help_construction_refund",
         ]
     } else if ctx.help_page == 5 {
-        &["help_service", "help_history", "help_knowledge"]
+        &["help_service", "help_careers", "help_history_knowledge"]
     } else if ctx.help_page == 1 {
         &[
             "help_army",

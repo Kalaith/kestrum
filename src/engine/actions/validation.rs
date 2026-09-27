@@ -49,7 +49,13 @@ pub(in crate::engine) fn validate_command(
         | Command::StartConstruction { .. }
         | Command::CancelConstruction { .. }
         | Command::ReassignBuilder { .. }
-        | Command::SetFocus { .. } => {
+        | Command::SetFocus { .. }
+        | Command::SetCommander { .. }
+        | Command::TrainPerson { .. }
+        | Command::PracticeRiding { .. }
+        | Command::SpecializeFormation { .. }
+        | Command::CancelPersonCourse { .. }
+        | Command::CancelFormationCourse { .. } => {
             if faction != campaign.active_faction() {
                 return Err(RuleError::NotYourTurn {
                     active: campaign.active_faction(),

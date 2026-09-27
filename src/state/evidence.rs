@@ -5,6 +5,7 @@ mod validation;
 use super::{military::FormationId, people::PersonId};
 use crate::data::{
     economy::TroopKind,
+    progression::FormationSpecialization,
     progression::ProgressionRules,
     world::{FactionId, RouteId, SiteId},
 };
@@ -126,6 +127,10 @@ pub struct MovementService {
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FormationService {
+    #[serde(default)]
+    pub specialization: Option<FormationSpecialization>,
+    #[serde(default)]
+    pub course: Option<FormationCourse>,
     pub xp: u32,
     pub tier: Veterancy,
     pub ledger: EvidenceLedger,
@@ -134,10 +139,20 @@ pub struct FormationService {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct FormationCourse {
+    pub target: FormationSpecialization,
+    pub site: SiteId,
+    pub steps_completed: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SeasonService {
     pub completed_rounds: u32,
     pub xp: u32,
     pub encounters: Vec<EncounterService>,
+    #[serde(default)]
+    pub routes: BTreeSet<RouteId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

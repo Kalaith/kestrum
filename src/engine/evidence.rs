@@ -50,7 +50,7 @@ pub(crate) fn consume(
             ..
         } = &fact.kind
         {
-            record_movement(campaign, receipt);
+            record_movement(campaign, receipt, fact.completed_rounds, &mut credit);
         }
         if let DomainFactKind::BattleResolved { battle, .. } = fact.kind {
             let report = campaign
@@ -100,7 +100,12 @@ pub(crate) fn consume(
     finish_seasons(campaign, data, credit.seasons)
 }
 
-fn record_movement(campaign: &mut StrategicCampaign, receipt: &MovementService) {
+fn record_movement(
+    campaign: &mut StrategicCampaign,
+    receipt: &MovementService,
+    round: u32,
+    credit: &mut RoundCredit,
+) {
     for id in &receipt.formations {
         if let Some(formation) = campaign.formations.get_mut(id) {
             formation
@@ -108,6 +113,13 @@ fn record_movement(campaign: &mut StrategicCampaign, receipt: &MovementService) 
                 .ledger
                 .traversed_routes
                 .extend(&receipt.routes);
+            let season = credit.seasons.entry(*id).or_insert_with(|| SeasonService {
+                completed_rounds: round,
+                xp: 0,
+                encounters: Vec::new(),
+                routes: BTreeSet::new(),
+            });
+            season.routes.extend(&receipt.routes);
         }
     }
     for id in &receipt.people {
@@ -167,12 +179,19 @@ fn consume_side(
                 let first = !credit.people.contains_key(&key);
                 let meaningful =
                     personal.meaningful && !credit.people.get(&key).copied().unwrap_or(false);
-                let ledger = &mut campaign
-                    .people
-                    .get_mut(&person.id)
-                    .expect("present person")
-                    .evidence;
-                record(ledger, &personal, first, meaningful)?;
+                let tracked = campaign.people.get_mut(&person.id).expect("present person");
+                record(&mut tracked.evidence, &personal, first, meaningful)?;
+                if meaningful {
+                    for tag in &personal.tags {
+                        if let Some(fact) = epithet_fact(*tag) {
+                            tracked
+                                .career
+                                .notable_sites
+                                .entry(fact)
+                                .or_insert(report.site);
+                        }
+                    }
+                }
                 credit
                     .people
                     .entry(key)
@@ -182,6 +201,19 @@ fn consume_side(
         }
     }
     Ok(())
+}
+
+fn epithet_fact(kind: EvidenceKind) -> Option<crate::data::progression::EpithetFact> {
+    use crate::data::progression::EpithetFact;
+    Some(match kind {
+        EvidenceKind::SurvivedOutnumbered => EpithetFact::SurvivedOutnumbered,
+        EvidenceKind::DefendedAnchor => EpithetFact::DefendedAnchor,
+        EvidenceKind::CapturedAnchor => EpithetFact::CapturedAnchor,
+        EvidenceKind::TreatedWounded => EpithetFact::TreatedWounded,
+        EvidenceKind::AssumedCommand => EpithetFact::AssumedCommand,
+        EvidenceKind::CommandedVictory => EpithetFact::CommandedVictory,
+        _ => return None,
+    })
 }
 
 fn credit_formation(
@@ -207,6 +239,7 @@ fn credit_formation(
         completed_rounds: round,
         xp: 0,
         encounters: Vec::new(),
+        routes: BTreeSet::new(),
     });
     let xp = if meaningful {
         participation

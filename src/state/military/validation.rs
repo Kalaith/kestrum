@@ -45,6 +45,7 @@ impl StrategicCampaign {
                 require(
                     self.people.get(&commander).is_some_and(|person| {
                         person.faction == army.faction
+                            && !person.career.retired
                             && person.is_fit_for_field(
                                 self.completed_rounds,
                                 data.rules.leadership.field_min_age_years,
@@ -64,6 +65,7 @@ impl StrategicCampaign {
         )?;
         for (id, formation) in &self.formations {
             let definition = &data.economy.formations[&formation.kind];
+            let movement_allowance = formation.movement_allowance(data);
             require(
                 *id == formation.id && id.0 > 0,
                 "formations.id",
@@ -82,7 +84,7 @@ impl StrategicCampaign {
                 "invalid capacity or surviving headcount",
             )?;
             require(
-                formation.movement_spent <= definition.movement_allowance,
+                formation.movement_spent <= movement_allowance,
                 "formations.movement_spent",
                 "exceeds seasonal allowance",
             )?;

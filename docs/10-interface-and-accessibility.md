@@ -1,5 +1,25 @@
 # 10 — Interface and accessibility
 
+## K13 career decisions
+
+The current decision is whether a named person's documented service opens a new
+class or command role, and whether a formation's record justifies conversion. The
+Army People list remains the route back to a subject; Career shows its provenance,
+traits, recognition, relationships, course progress and six ordinary class gates.
+Each class row keeps the relevant evidence count, Gold price, local facility and
+enabled action or short disabled reason together. Riding practice and commander
+appointment remain separate actions. Formation Training shows the current type,
+specialization, evidence, price, duration and battlefield effect before conversion.
+
+Course progress and cancellation/refund state stay visible while a course is active.
+Help explains movement, wounds, facility loss and eligible seasons. Back returns to
+the roster; the map remains the default play area. All actions use visible targets
+at least 48 logical pixels at 1280 × 720 and 1920 × 1080. Review the available and
+in-progress person screens and the formation conversion screen at both sizes. The
+native review confirms readable layouts and tap-sized controls; it does not verify
+physical-device touch or the inherited minimum-WebGL scaling issue, which remain
+K18 checks.
+
 ## K12 kingdom decisions
 
 The current decision is whether to declare war, propose or answer peace, or resolve a defeated rival. Menu > Kingdom opens a dismissible sheet; a foreign place also links to its controller. A paged list of public relations supports one selected kingdom and one confirmation. Enemy strength and negotiation calculations stay hidden. Pending decisions interrupt orders and remain reachable through Kingdom Decision after dismissal.

@@ -20,7 +20,7 @@ stable_id!(MarkerId);
 stable_id!(RouteId);
 stable_id!(FactionId);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ScenarioKind {
     RosemarchPrototype,
@@ -189,12 +189,21 @@ impl ResourceGrant {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FounderClass {
-    Officer,
+pub enum PersonClass {
+    Recruit,
+    Infantry,
+    Archer,
+    Scout,
+    Cavalry,
     Medic,
+    Officer,
 }
+
+/// Founding grants retain their historical public name while all tracked people
+/// use the complete ordinary human career roster.
+pub type FounderClass = PersonClass;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

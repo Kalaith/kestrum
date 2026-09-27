@@ -1,0 +1,20 @@
+{
+  "given_names": [
+    "Aldren", "Bera", "Catrin", "Dain", "Edrin", "Elian", "Elara", "Fenn",
+    "Galen", "Hesta", "Iven", "Jora", "Kellan", "Lysa", "Maren", "Neris",
+    "Orren", "Perrin", "Quilla", "Rovan", "Serai", "Talia", "Ullen", "Vessa",
+    "Wystan", "Ysolde", "Tomas", "Mira", "Teresa", "Dratanus", "Ashen", "Bryn"
+  ],
+  "family_names": [
+    "Alder", "Ashford", "Bell", "Briar", "Cairn", "Dale", "Evers", "Frost",
+    "Grey", "Hale", "Hawthorn", "Ives", "Keel", "Lark", "Morrow", "North",
+    "Oak", "Pike", "Reed", "Rowan", "Stone", "Thorn", "Vale", "West",
+    "Wick", "Wren", "Frostmarch", "Rose", "Redplain", "Mere", "Dusk", "Fair"
+  ],
+  "epithets": {
+    "survived_outnumbered": "the Steadfast",
+    "defended_anchor": "Gateward",
+    "treated_wounded": "the Healer",
+    "assumed_command": "the Ready"
+  }
+}

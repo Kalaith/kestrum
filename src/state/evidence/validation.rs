@@ -10,6 +10,29 @@ impl StrategicCampaign {
     pub(crate) fn validate_evidence(&self, data: &GameData) -> Result<(), String> {
         for formation in self.formations.values() {
             let service = &formation.service;
+            if let Some(specialization) = service.specialization {
+                let rule = data.progression.specializations.get(&specialization);
+                if rule.is_none_or(|rule| !rule.sources.contains(&formation.kind))
+                    || service.course.is_some()
+                {
+                    return Err("formation.service: incompatible specialization".into());
+                }
+            }
+            if let Some(course) = &service.course {
+                let valid = data
+                    .progression
+                    .specializations
+                    .get(&course.target)
+                    .is_some_and(|rule| {
+                        rule.sources.contains(&formation.kind)
+                            && course.steps_completed < rule.course_steps
+                    })
+                    && service.specialization.is_none()
+                    && self.world.site(course.site).is_some();
+                if !valid {
+                    return Err("formation.service: invalid specialization course".into());
+                }
+            }
             if service.tier != Veterancy::from_xp(service.xp, &data.progression) {
                 return Err("formation.service: tier disagrees with earned XP".into());
             }
@@ -95,7 +118,7 @@ impl StrategicCampaign {
                     .completed_rounds
                     .saturating_sub(data.history.recent_service_rounds)
             && season.xp <= data.progression.round_xp_cap
-            && !season.encounters.is_empty()
+            && (!season.encounters.is_empty() || !season.routes.is_empty())
             && season
                 .encounters
                 .windows(2)
@@ -122,7 +145,11 @@ impl StrategicCampaign {
                     && entry.meaningful == entry.tags.contains(&EvidenceKind::MeaningfulEncounter)
                     && (entry.meaningful || entry.xp == 0)
                     && entry.xp <= data.progression.round_xp_cap
-            });
+            })
+            && season
+                .routes
+                .iter()
+                .all(|route| self.world.route(*route).is_some());
         if valid {
             Ok(())
         } else {

@@ -266,7 +266,7 @@ unpoliced rounds. Older saves acquire no invented occupants or development histo
 All 111 tests, formatting, strict Clippy, source gate, representative native review
 and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
 records browser seasonal growth and reload, decisions and platform limitations.
-K12–K18 remain required.
+K13–K18 remain required.
 
 ## Screen brief
 
@@ -304,11 +304,31 @@ eliminated or your vassal, the kingdom milestone ends in victory. Losing your ow
 last base and army ends in defeat. The saved result preserves the final battle's
 service and allows Records, Save, Menu and New Game. Simulation stops there.
 
-K13–K18 remain required for the full generational release.
+K14–K18 remain required for the full generational release.
 
 [K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
 Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
 check. Minimum WebGL campaign scaling and physical-touch acceptance remain open.
+
+### K13 — People earn their careers through service
+
+Combat, movement, recovery and seasonal evidence can now ground a named person
+who emerges from a surviving formation. The new person joins existing headcount,
+gets a recent service history and begins as a Recruit. Evidence, hidden dispositions,
+earned traits, one factual recognition and actual shared-service or rival records
+are durable; recognized deeds do not grant unlisted combat bonuses.
+
+The Career view shows ordinary class requirements, course prices and required local
+facilities. Infantry, Archer, Scout, Cavalry, Medic and Officer courses use two
+eligible seasons; riding practice supplies riding evidence only. A fit adult attached
+to an army can be appointed as commander. Shield Guard, Pikemen and Light Cavalry
+convert an existing formation while preserving its identity, experience and capacity.
+Rivals use the same evidence options and validated course/appointment commands.
+
+[K13 verification](docs/verification/k13-careers.md) records nine progression cases,
+136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum
+screen review and Windows/WebGL Preview publishing. K14–K18 remain required;
+minimum WebGL campaign scaling and physical-touch acceptance remain open.
 
 ## Development
 
@@ -354,9 +374,8 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. The user requested that
-this assignment stop after K12 is validated and all work is committed. K13–K18
-remain planned and require a later continuation.
+reusable prompt for implementing one package at a time. Continue with K14 after the
+K13 commit; K14–K18 remain planned.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

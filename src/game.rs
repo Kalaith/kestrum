@@ -196,6 +196,7 @@ impl Game {
             "army" | "army_full" | "army_empty" | "army_long_name" | "army_dense"
             | "army_economy" | "army_deficit" | "recruit" | "recruit_blocked" | "recruit_full"
             | "disband" | "disband_last" => self.capture_army(scene),
+            "career" | "career_training" | "specialization" => self.capture_progression(scene),
             "menu" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;

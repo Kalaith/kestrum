@@ -303,10 +303,13 @@ fn rejected_commands_and_read_only_views_preserve_every_authoritative_field() {
 fn serialized_paused_phase_and_full_rng_streams_resume_identically() {
     let (data, mut campaign) = fixture(4);
     let mut root = SeededRng::new(campaign.seed);
-    assert_eq!(
-        campaign.rng.states(),
-        std::array::from_fn(|_| SeededRng::new(root.next_u64()).state())
-    );
+    let expected_states: [u64; 4] =
+        std::array::from_fn(|_| SeededRng::new(root.next_u64()).state());
+    let states = campaign.rng.states();
+    assert_eq!(&states[..3], &expected_states[..3]);
+    assert_ne!(states[3], expected_states[3]);
+    let (_, replayed_start) = fixture(4);
+    assert_eq!(campaign, replayed_start);
     campaign.rng.generation.next_u64();
     campaign.rng.combat.next_u64();
     campaign.rng.development.next_u64();

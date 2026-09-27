@@ -4,7 +4,9 @@ use super::{Army, ArmyId, Formation, FormationId};
 use crate::{
     data::GameData,
     state::{
-        people::{Person, PersonAssignment, PersonId, PersonStatus},
+        people::{
+            Disposition, Person, PersonAssignment, PersonCareer, PersonId, PersonStatus, Tendency,
+        },
         StrategicCampaign,
     },
 };
@@ -49,9 +51,18 @@ impl StrategicCampaign {
             }
             let person_id = self.next_ids.person;
             self.next_ids.person = PersonId(increment(person_id.0)?);
+            let disposition = Disposition {
+                courage: tendency(&mut self.rng.people),
+                care: tendency(&mut self.rng.people),
+                curiosity: tendency(&mut self.rng.people),
+            };
             self.people.insert(
                 person_id,
                 Person {
+                    career: PersonCareer {
+                        disposition,
+                        ..PersonCareer::default()
+                    },
                     evidence: Default::default(),
                     id: person_id,
                     faction: setup.id,
@@ -71,6 +82,14 @@ impl StrategicCampaign {
             self.armies.insert(army_id, army);
         }
         Ok(())
+    }
+}
+
+fn tendency(rng: &mut macroquad_toolkit::rng::SeededRng) -> Tendency {
+    match rng.below(3) {
+        0 => Tendency::Negative,
+        1 => Tendency::Neutral,
+        _ => Tendency::Positive,
     }
 }
 

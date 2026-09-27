@@ -4,7 +4,8 @@ use super::super::{MoveOrder, MovementBlock, MovementOutcome, RecruitmentResult}
 use crate::{
     data::{
         economy::{Resources, TroopKind},
-        world::{Facility, FactionId, SiteId},
+        progression::FormationSpecialization,
+        world::{Facility, FactionId, PersonClass, SiteId},
     },
     state::{
         battle::BattleId,
@@ -97,12 +98,37 @@ pub enum Command {
     SplitArmy {
         formation: FormationId,
     },
+    SetCommander {
+        army: ArmyId,
+        person: Option<PersonId>,
+    },
+    TrainPerson {
+        person: PersonId,
+        class: PersonClass,
+        site: SiteId,
+    },
+    PracticeRiding {
+        person: PersonId,
+        site: SiteId,
+    },
+    CancelPersonCourse {
+        person: PersonId,
+    },
+    SpecializeFormation {
+        formation: FormationId,
+        specialization: FormationSpecialization,
+        site: SiteId,
+    },
+    CancelFormationCourse {
+        formation: FormationId,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuleError {
     Diplomacy(String),
     Development(String),
+    Progression(String),
     Threat(String),
     Siege(String),
     Construction {
@@ -200,9 +226,10 @@ pub enum RuleError {
 impl fmt::Display for RuleError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Diplomacy(reason) | Self::Development(reason) | Self::Threat(reason) => {
-                formatter.write_str(reason)
-            }
+            Self::Diplomacy(reason)
+            | Self::Development(reason)
+            | Self::Progression(reason)
+            | Self::Threat(reason) => formatter.write_str(reason),
             Self::Siege(reason) => formatter.write_str(reason),
             Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
             Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),

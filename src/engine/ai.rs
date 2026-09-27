@@ -4,6 +4,7 @@ mod economy;
 mod intent;
 mod military;
 mod politics;
+mod progression;
 mod travel;
 
 use super::{preview, project, Actor, Command, RuleError, VisibleCampaign};
@@ -73,6 +74,7 @@ pub fn propose(
         .defend()
         .or_else(|| planner.retreat())
         .or_else(|| planner.recruit(emergency))
+        .or_else(|| planner.progression())
         .or_else(|| planner.construct())
         .or_else(|| planner.peace())
         .or_else(|| {

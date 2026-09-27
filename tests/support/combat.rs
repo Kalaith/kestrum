@@ -43,6 +43,7 @@ pub(super) fn person(campaign: &mut StrategicCampaign, id: u32, faction: u32, fo
     campaign.people.insert(
         PersonId(id),
         Person {
+            career: Default::default(),
             evidence: Default::default(),
             id: PersonId(id),
             faction: FactionId(faction),

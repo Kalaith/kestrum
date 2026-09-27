@@ -96,7 +96,7 @@ fn person_rows(
 ) -> Option<UiAction> {
     for (index, person) in people.iter().enumerate() {
         let y = 219.0 + index as f32 * 81.0;
-        let name = truncate_text_to_width_ex(&person.name, 620.0, ctx.body_font(), 20.0);
+        let name = truncate_text_to_width_ex(&person.name, 400.0, ctx.body_font(), 20.0);
         body(ctx, &name, vec2(112.0, y), 20.0, CREAM);
         let remaining = ctx
             .army
@@ -114,10 +114,14 @@ fn person_rows(
         body(
             ctx,
             &format!(
-                "{assignment} · {}: {remaining} · {}: {}",
+                "{} · {assignment} · {} · {}: {}",
+                class_name(ctx, person.class),
+                ctx.text("person_age").replace(
+                    "{age}",
+                    &person.age_years(campaign.completed_rounds).to_string()
+                ),
                 ctx.text("movement_left"),
-                ctx.text("movement_spent"),
-                person.movement_spent
+                remaining
             ),
             vec2(112.0, y + 25.0),
             18.0,
@@ -143,6 +147,15 @@ fn person_rows(
                 kestrum::state::history::HistorySubject::Person(person.id),
             ));
         }
+        if button(
+            ctx,
+            Rect::new(526.0, y - 23.0, 210.0, 48.0),
+            &ctx.text("career_open"),
+            true,
+            false,
+        ) {
+            return Some(UiAction::OpenPersonProgression(person.id));
+        }
         let status = match person.status {
             PersonStatus::Fit => ctx.text("person_fit"),
             PersonStatus::Wounded {
@@ -154,7 +167,38 @@ fn person_rows(
             ),
             PersonStatus::Dead { .. } | PersonStatus::Displaced { .. } => continue,
         };
-        body(ctx, &status, vec2(112.0, y + 46.0), 16.0, MUTED);
+        let traits = person
+            .career
+            .traits
+            .iter()
+            .map(|trait_kind| {
+                ctx.text(match trait_kind {
+                    kestrum::state::people::PersonTrait::Bold => "trait_bold",
+                    kestrum::state::people::PersonTrait::Protective => "trait_protective",
+                    kestrum::state::people::PersonTrait::NaturalCommander => {
+                        "trait_natural_commander"
+                    }
+                })
+            })
+            .collect::<Vec<_>>()
+            .join(" · ");
+        let epithet = person
+            .career
+            .recognition
+            .as_ref()
+            .map(|record| format!(" · {}", record.epithet))
+            .unwrap_or_default();
+        let note = format!(
+            "{status}{}{}",
+            if traits.is_empty() {
+                String::new()
+            } else {
+                format!(" · {traits}")
+            },
+            epithet
+        );
+        let note = truncate_text_to_width_ex(&note, 1040.0, ctx.body_font(), 16.0);
+        body(ctx, &note, vec2(112.0, y + 46.0), 16.0, MUTED);
         draw_line(
             112.0,
             y + 64.0,
@@ -165,4 +209,16 @@ fn person_rows(
         );
     }
     None
+}
+
+fn class_name(ctx: &Context<'_>, class: kestrum::data::world::PersonClass) -> String {
+    ctx.text(match class {
+        kestrum::data::world::PersonClass::Recruit => "class_recruit",
+        kestrum::data::world::PersonClass::Infantry => "class_infantry",
+        kestrum::data::world::PersonClass::Archer => "class_archer",
+        kestrum::data::world::PersonClass::Scout => "class_scout",
+        kestrum::data::world::PersonClass::Cavalry => "class_cavalry",
+        kestrum::data::world::PersonClass::Medic => "class_medic",
+        kestrum::data::world::PersonClass::Officer => "class_officer",
+    })
 }

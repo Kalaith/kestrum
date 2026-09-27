@@ -17,6 +17,7 @@ struct Combatant {
     troop: Option<crate::data::economy::TroopKind>,
     leadership: u32,
     veterancy: u32,
+    specialization: Option<crate::data::progression::FormationSpecialization>,
 }
 
 pub(super) fn exchanges(
@@ -25,11 +26,17 @@ pub(super) fn exchanges(
     report: &mut BattleReport,
 ) -> Result<(), RuleError> {
     let starts = [
-        power(&formation_roster(campaign, data, &report.attacker))?,
+        power(&formation_roster(
+            campaign,
+            data,
+            &report.attacker,
+            report.site,
+            false,
+        ))?,
         power(&defender_roster(campaign, data, report))?,
     ];
     for number in 0..data.combat.max_exchanges {
-        let a = formation_roster(campaign, data, &report.attacker);
+        let a = formation_roster(campaign, data, &report.attacker, report.site, false);
         let d = defender_roster(campaign, data, report);
         let leadership = leadership_snapshot(campaign, data, report);
         let wall = effective_wall(data, report, &a);
@@ -85,7 +92,13 @@ pub(super) fn exchanges(
             leadership,
         });
         let remaining = [
-            power(&formation_roster(campaign, data, &report.attacker))?,
+            power(&formation_roster(
+                campaign,
+                data,
+                &report.attacker,
+                report.site,
+                false,
+            ))?,
             power(&defender_roster(campaign, data, report))?,
         ];
         if let Some((outcome, reason)) = result(
@@ -106,6 +119,8 @@ fn formation_roster(
     campaign: &StrategicCampaign,
     data: &GameData,
     side: &BattleSideReport,
+    site: crate::data::world::SiteId,
+    defending: bool,
 ) -> Vec<Combatant> {
     side.armies
         .iter()
@@ -119,10 +134,18 @@ fn formation_roster(
                     id: CombatantId::Formation(formation.id),
                     headcount: formation.headcount,
                     attack: data.troops.formations[&formation.kind].attack,
-                    resistance: data.troops.formations[&formation.kind].resistance,
+                    resistance: guarded_resistance(
+                        campaign,
+                        data,
+                        formation.id,
+                        formation.kind,
+                        site,
+                        defending,
+                    ),
                     troop: Some(formation.kind),
                     leadership,
                     veterancy: formation.service.tier.permille(&data.progression),
+                    specialization: formation.service.specialization,
                 })
             })
         })
@@ -135,7 +158,7 @@ fn defender_roster(
     report: &BattleReport,
 ) -> Vec<Combatant> {
     match &report.defender {
-        BattleDefender::Faction(side) => formation_roster(campaign, data, side),
+        BattleDefender::Faction(side) => formation_roster(campaign, data, side, report.site, true),
         BattleDefender::Threat(side) => {
             let threat = &campaign.threats[&side.id];
             if threat.headcount == 0 {
@@ -149,6 +172,7 @@ fn defender_roster(
                 troop: None,
                 leadership: data.threats.leadership_permille,
                 veterancy: 1000,
+                specialization: None,
             }]
         }
     }
@@ -244,16 +268,16 @@ fn calculate_losses(
     for (index, source) in sources.iter().enumerate() {
         let target = &targets[(index + exchange as usize) % targets.len()];
         let counter = match (source.troop, target.troop) {
-            (Some(source), Some(target)) => {
-                let permille = data.combat.counter(source, target);
+            (Some(source_kind), Some(target_kind)) => {
+                let permille = specialized_counter(data, source, target);
                 if permille != 1000
                     && !counters
                         .iter()
-                        .any(|entry| entry.source == source && entry.target == target)
+                        .any(|entry| entry.source == source_kind && entry.target == target_kind)
                 {
                     counters.push(CounterUse {
-                        source,
-                        target,
+                        source: source_kind,
+                        target: target_kind,
                         permille,
                     });
                 }
@@ -293,6 +317,77 @@ fn calculate_losses(
             Ok((id, amount))
         })
         .collect()
+}
+
+fn specialized_counter(data: &GameData, source: &Combatant, target: &Combatant) -> u32 {
+    let ordinary = match (source.troop, target.troop) {
+        (Some(source_kind), Some(target_kind)) => data.combat.counter(source_kind, target_kind),
+        _ => 1000,
+    };
+    let specialized = if source.specialization
+        == Some(crate::data::progression::FormationSpecialization::Pikemen)
+        && target.troop == Some(crate::data::economy::TroopKind::Riders)
+    {
+        data.progression.specializations
+            [&crate::data::progression::FormationSpecialization::Pikemen]
+            .counter
+            .as_ref()
+            .map_or(ordinary, |counter| counter.permille)
+    } else {
+        ordinary
+    };
+    ordinary.max(specialized)
+}
+
+fn guarded_resistance(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    id: FormationId,
+    kind: crate::data::economy::TroopKind,
+    site: crate::data::world::SiteId,
+    defending: bool,
+) -> u32 {
+    let resistance = data.troops.formations[&kind].resistance;
+    if defending
+        && is_anchor(campaign, site)
+        && campaign.formations[&id].service.specialization
+            == Some(crate::data::progression::FormationSpecialization::ShieldGuard)
+    {
+        let factor = data.progression.specializations
+            [&crate::data::progression::FormationSpecialization::ShieldGuard]
+            .defense_resistance_permille
+            .unwrap_or(1000);
+        resistance.saturating_mul(factor) / 1000
+    } else {
+        resistance
+    }
+}
+
+fn is_anchor(campaign: &StrategicCampaign, site: crate::data::world::SiteId) -> bool {
+    campaign
+        .world
+        .markers
+        .iter()
+        .any(|marker| match &marker.location {
+            crate::data::world::MarkerLocation::Region { anchors, .. } => {
+                anchor_contains(anchors, site)
+            }
+            crate::data::world::MarkerLocation::Site { .. } => false,
+        })
+}
+
+fn anchor_contains(
+    expression: &crate::data::world::AnchorExpression,
+    site: crate::data::world::SiteId,
+) -> bool {
+    use crate::data::world::AnchorExpression;
+    match expression {
+        AnchorExpression::ControlledSite { site: id }
+        | AnchorExpression::SuppliedEntrance { site: id } => *id == site,
+        AnchorExpression::All { conditions } | AnchorExpression::Any { conditions } => conditions
+            .iter()
+            .any(|condition| anchor_contains(condition, site)),
+    }
 }
 
 fn mul(left: u128, right: u128) -> Result<u128, RuleError> {

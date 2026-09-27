@@ -59,6 +59,20 @@ pub struct Formation {
     pub created_round: u32,
 }
 
+impl Formation {
+    pub fn movement_allowance(&self, data: &crate::data::GameData) -> u32 {
+        data.progression
+            .specializations
+            .get(&crate::data::progression::FormationSpecialization::LightCavalry)
+            .filter(|_| {
+                self.service.specialization
+                    == Some(crate::data::progression::FormationSpecialization::LightCavalry)
+            })
+            .and_then(|rule| rule.movement_allowance)
+            .unwrap_or(data.economy.formations[&self.kind].movement_allowance)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EconomyStatement {
@@ -109,11 +123,7 @@ impl super::StrategicCampaign {
         let mut remaining = None;
         for id in army.formation_ids() {
             let formation = self.formations.get(&id)?;
-            let allowance = data
-                .economy
-                .formations
-                .get(&formation.kind)?
-                .movement_allowance;
+            let allowance = formation.movement_allowance(data);
             let available = allowance.saturating_sub(formation.movement_spent);
             remaining = Some(remaining.map_or(available, |minimum: u32| minimum.min(available)));
         }

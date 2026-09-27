@@ -157,6 +157,11 @@ fn prepare(
         .map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
     validate_command(campaign, actor, &command)?;
+    let owner = match actor {
+        Actor::Player => campaign.player,
+        Actor::Npc(id) => id,
+    };
+    super::progression::validate_command(campaign, data, owner, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -176,10 +181,6 @@ fn prepare(
         disbanded: None,
         movement: None,
         split_army: None,
-    };
-    let owner = match actor {
-        Actor::Player => campaign.player,
-        Actor::Npc(id) => id,
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
@@ -206,6 +207,12 @@ fn finish(
     if outcome.round_completed || candidate.diplomacy.ending.is_some() {
         outcome.consumed_facts = std::mem::take(&mut candidate.pending_facts);
         super::evidence::consume(candidate, data, &outcome.consumed_facts)?;
+        super::progression::resolve(
+            candidate,
+            data,
+            &outcome.consumed_facts,
+            outcome.round_completed,
+        )?;
         candidate.consumed_sequence = candidate.accepted_sequence;
         candidate.acted.clear();
     }
@@ -298,6 +305,14 @@ fn execute(
             let (army, fact) = transfer::split(candidate, owner, formation)?;
             record_fact(candidate, outcome, fact)?;
             outcome.split_army = Some(army);
+        }
+        command @ (Command::SetCommander { .. }
+        | Command::TrainPerson { .. }
+        | Command::PracticeRiding { .. }
+        | Command::CancelPersonCourse { .. }
+        | Command::SpecializeFormation { .. }
+        | Command::CancelFormationCourse { .. }) => {
+            super::progression::execute(candidate, data, owner, &command)?
         }
     }
     Ok(())

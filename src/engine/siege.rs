@@ -38,9 +38,18 @@ pub(super) fn exhaust(campaign: &mut StrategicCampaign, data: &GameData, armies:
         .filter_map(|id| campaign.armies.get(id))
         .flat_map(|army| army.formation_ids())
         .collect();
-    for id in &formations {
-        if let Some(formation) = campaign.formations.get_mut(id) {
-            formation.movement_spent = data.economy.formations[&formation.kind].movement_allowance;
+    let spent = formations
+        .iter()
+        .filter_map(|id| {
+            campaign
+                .formations
+                .get(id)
+                .map(|formation| (*id, formation.movement_allowance(data)))
+        })
+        .collect::<Vec<_>>();
+    for (id, allowance) in spent {
+        if let Some(formation) = campaign.formations.get_mut(&id) {
+            formation.movement_spent = allowance;
         }
     }
     for person in campaign.people.values_mut() {

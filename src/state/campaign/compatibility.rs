@@ -4,6 +4,7 @@ use super::StrategicCampaign;
 mod construction;
 mod development;
 mod evidence;
+mod progression;
 mod siege;
 
 impl StrategicCampaign {
@@ -16,6 +17,7 @@ impl StrategicCampaign {
         let earlier_construction = construction::initialize(&mut value);
         siege::initialize(&mut value)?;
         development::initialize(&mut value)?;
+        progression::initialize(&mut value)?;
         let earlier_diplomacy = value.get("diplomacy").is_none() && value.get("ai").is_none();
         if earlier_diplomacy {
             if let Some(fields) = value.as_object_mut() {

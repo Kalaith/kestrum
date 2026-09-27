@@ -4,6 +4,182 @@ use super::*;
 use kestrum::{data::world::SiteId, state::military::ArmyId};
 
 impl Game {
+    pub(super) fn capture_progression(&mut self, scene: &str) {
+        use kestrum::{
+            data::{
+                economy::TroopKind,
+                progression::{EpithetFact, FormationSpecialization},
+                world::{Facility, PersonClass, SiteId},
+            },
+            state::{
+                evidence::{EvidenceKind, FormationCourse, Veterancy},
+                military::FormationId,
+                people::{
+                    Disposition, EmergenceRecord, PersonAssignment, PersonCourse, PersonId,
+                    PersonRelationship, PersonTrait, Recognition, Tendency,
+                },
+            },
+        };
+        use std::collections::{BTreeMap, BTreeSet};
+
+        self.capture_campaign();
+        if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+            let site = campaign
+                .world
+                .sites
+                .iter_mut()
+                .find(|site| site.id == SiteId(1))
+                .expect("founding site");
+            for facility in [
+                Facility::TrainingGround,
+                Facility::Stable,
+                Facility::Infirmary,
+            ] {
+                if !site.facilities.contains(&facility) {
+                    site.facilities.push(facility);
+                }
+            }
+
+            let person = campaign.people.get_mut(&PersonId(1)).expect("founder");
+            person.name = "Aveline Rose".into();
+            person.class = PersonClass::Recruit;
+            person.career.disposition = Disposition {
+                courage: Tendency::Positive,
+                care: Tendency::Positive,
+                curiosity: Tendency::Positive,
+            };
+            person.career.emergence = Some(EmergenceRecord {
+                completed_rounds: 0,
+                source_formation: FormationId(1),
+                source_troop: TroopKind::Warriors,
+                site: SiteId(1),
+                distinguishing_deed: Some(EpithetFact::SurvivedOutnumbered),
+            });
+            person.evidence.counts = BTreeMap::from([
+                (EvidenceKind::Battle, 5),
+                (EvidenceKind::MeaningfulEncounter, 5),
+                (EvidenceKind::SurvivedOutnumbered, 2),
+                (EvidenceKind::DefendedAnchor, 3),
+                (EvidenceKind::TreatedWounded, 2),
+                (EvidenceKind::AssumedCommand, 1),
+                (EvidenceKind::CommandedVictory, 1),
+            ]);
+            person.evidence.service_by_troop = BTreeMap::from([
+                (TroopKind::Warriors, 2),
+                (TroopKind::Archers, 2),
+                (TroopKind::Riders, 1),
+            ]);
+            person.evidence.traversed_routes = campaign
+                .world
+                .routes
+                .iter()
+                .take(6)
+                .map(|route| route.id)
+                .collect();
+            person.career.notable_sites = BTreeMap::from([
+                (EpithetFact::SurvivedOutnumbered, SiteId(6)),
+                (EpithetFact::DefendedAnchor, SiteId(6)),
+            ]);
+            person.career.traits = BTreeSet::from([
+                PersonTrait::Bold,
+                PersonTrait::Protective,
+                PersonTrait::NaturalCommander,
+            ]);
+            person.career.recognition = Some(Recognition {
+                completed_rounds: 0,
+                epithet: self.data.human_names.epithets[&EpithetFact::SurvivedOutnumbered].clone(),
+                cause: EpithetFact::SurvivedOutnumbered,
+                site: SiteId(6),
+            });
+            person.career.course = (scene.trim_end_matches("_minimum") == "career_training")
+                .then_some(PersonCourse::Class {
+                    target: PersonClass::Archer,
+                    site: SiteId(1),
+                    steps_completed: 1,
+                });
+            let mut companion = person.clone();
+            companion.id = PersonId(4);
+            companion.name = "Mira Reed".into();
+            companion.birth_round = -80;
+            companion.career = Default::default();
+            companion.career.relationships.insert(
+                PersonId(1),
+                PersonRelationship {
+                    shared_service_seasons: 1,
+                    last_shared_service_round: Some(0),
+                    mutual_combat_rounds: 0,
+                    last_mutual_combat_round: None,
+                },
+            );
+            companion.evidence = Default::default();
+            companion.assignment = PersonAssignment::Formation {
+                formation: FormationId(1),
+            };
+            campaign.people.insert(PersonId(4), companion);
+            campaign.next_ids.person = PersonId(5);
+            campaign
+                .people
+                .get_mut(&PersonId(1))
+                .expect("founder")
+                .career
+                .relationships
+                .insert(
+                    PersonId(4),
+                    PersonRelationship {
+                        shared_service_seasons: 1,
+                        last_shared_service_round: Some(0),
+                        mutual_combat_rounds: 0,
+                        last_mutual_combat_round: None,
+                    },
+                );
+
+            let formation = campaign
+                .formations
+                .get_mut(&FormationId(1))
+                .expect("founding formation");
+            formation.service.xp = 12;
+            formation.service.tier = Veterancy::Seasoned;
+            formation.service.ledger.counts = BTreeMap::from([
+                (EvidenceKind::Battle, 5),
+                (EvidenceKind::MeaningfulEncounter, 5),
+                (EvidenceKind::DefendedAnchor, 3),
+                (EvidenceKind::RetreatingEnemyVictory, 2),
+            ]);
+            formation.service.ledger.service_by_troop = BTreeMap::from([(TroopKind::Warriors, 5)]);
+            formation.service.ledger.meaningful_against = BTreeMap::from([(TroopKind::Riders, 3)]);
+            formation
+                .service
+                .ledger
+                .encountered_troops
+                .insert(TroopKind::Riders);
+            formation.service.ledger.traversed_routes = campaign
+                .world
+                .routes
+                .iter()
+                .take(6)
+                .map(|route| route.id)
+                .collect();
+            formation.service.course = Some(FormationCourse {
+                target: FormationSpecialization::ShieldGuard,
+                site: SiteId(1),
+                steps_completed: 1,
+            });
+            for army in campaign.armies.values_mut() {
+                army.commander = None;
+            }
+            campaign
+                .validate(&self.data)
+                .expect("valid progression capture");
+        }
+        self.open_armies(SiteId(1));
+        self.army.mode = if scene.starts_with("career") {
+            ui::ArmyMode::ProgressionPerson(PersonId(1))
+        } else {
+            ui::ArmyMode::ProgressionFormation(FormationId(1))
+        };
+        self.army.selected = Some(FormationId(1));
+    }
+
     pub(super) fn capture_logistics(&mut self, scene: &str) {
         use kestrum::{
             data::{economy::TroopKind, world::MarkerId},

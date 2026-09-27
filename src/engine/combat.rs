@@ -130,7 +130,7 @@ fn record_losses(campaign: &mut StrategicCampaign, data: &GameData, report: &mut
                     .get_mut(&formation.id)
                     .expect("participant");
                 formation.combat_losses = formation.start - actual.headcount;
-                actual.movement_spent = data.economy.formations[&actual.kind].movement_allowance;
+                actual.movement_spent = actual.movement_allowance(data);
             }
         }
     }

@@ -1,7 +1,12 @@
 //! Persistent people, field fitness, and released assignments after death.
 
+mod career;
 mod combat;
 mod validation;
+pub use career::{
+    Disposition, EmergenceRecord, PersonCareer, PersonCourse, PersonRelationship, PersonTrait,
+    Recognition, Tendency,
+};
 pub use combat::{PersonCombatEvent, PersonCombatOutcome, PersonDeathReason, WoundCause};
 
 use super::{
@@ -48,6 +53,8 @@ pub enum PersonStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Person {
+    #[serde(default)]
+    pub career: PersonCareer,
     pub evidence: super::evidence::EvidenceLedger,
     pub id: PersonId,
     pub faction: FactionId,
@@ -94,6 +101,7 @@ impl StrategicCampaign {
         let rules = &data.rules.leadership;
         let contributes = |person: &Person| {
             person.faction == army.faction
+                && !person.career.retired
                 && person.is_fit_for_field(self.completed_rounds, rules.field_min_age_years)
                 && matches!(person.assignment, PersonAssignment::Formation { formation }
                     if army.formation_ids().any(|id| id == formation)

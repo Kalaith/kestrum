@@ -567,3 +567,43 @@ These are delegated implementation decisions under the release assignment.
 K12's controls use one dismissible kingdom decision view and a result view;
 the map remains the ordinary play area. No permanent diplomacy dashboard is added.
 Validation and publication results belong in the K12 verification record.
+
+### I12 — Grounded careers and specialization
+
+K13 applies the P17 emergence formula, candidate ordering, thresholds and P18
+course requirements as written. A new person receives a stable ID, authored human
+name, Recruit class, source-formation link and service start bounded by the latest
+of formation creation, the eight-round history window and age seventeen. The
+person occupies existing formation headcount. Career evidence is personal and
+bounded; transferred people keep their own deeds but do not inherit formation
+history. Recognition is factual and applied once. Traits change eligibility and
+context only; they do not add undocumented combat strength.
+
+Disposition is sampled once per tracked person from the campaign's people RNG.
+Starting founders receive the same treatment. To migrate K12 payloads, missing
+career records receive one deterministic disposition in ascending PersonId order;
+the saved people RNG is advanced accordingly. A payload containing only some
+people's career records is rejected as a mixed schema rather than guessed at.
+Serialization and replay tests pin the current-schema boundary; migration tests
+pin deterministic repeated loads.
+
+Class eligibility and specialization options are shared between player UI and NPC
+planning. NPCs propose the same validated training, riding, specialization and
+commander commands; there is no officer-spawning shortcut. Course steps advance
+only at eligible completed seasons. Cancellation returns Gold only before any
+progress, consistent with construction. Light Cavalry uses its nine-point movement
+allowance consistently in travel, combat exhaustion and siege reset paths.
+
+Relationships record actual joint service and repeated mutual combat for living
+tracked people, symmetrically and with a bounded ledger. Two mutual combats justify
+the "Rival" label; the relationship adds no damage bonus or forced revenge. Service
+links and career history remain factual labels, not inferred kinship. Native Career
+and Formation Training screens show costs, facilities, prerequisites and action
+availability with 48-pixel controls at both supported native sizes.
+
+These are delegated implementation decisions, not newly confirmed author rules.
+P18's direct evidence routes ship in K13. Its mentorship alternatives require the
+qualified mentorship system assigned to K14; K14 must integrate those alternatives
+into the same career-option rules and test them rather than marking them out of
+scope. K13 verification records nine progression cases, the complete test suite,
+native captures and publication.

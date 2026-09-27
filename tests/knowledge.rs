@@ -271,6 +271,9 @@ fn forgetting_reports_preserves_dated_labels_and_loadable_bounded_knowledge() {
             ..
         })
     ));
+    for person in campaign.people.values_mut() {
+        person.career.relationships.remove(&PersonId(3));
+    }
     campaign.people.remove(&PersonId(3));
     campaign.validate(&data).unwrap();
     assert_eq!(snapshot(&campaign, FactionId(1), PersonId(3)), expected);

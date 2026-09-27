@@ -33,6 +33,14 @@ impl Game {
             UiAction::ArmyOrders
             | UiAction::ArmyPeople
             | UiAction::ArmyPeoplePage(_)
+            | UiAction::OpenPersonProgression(_)
+            | UiAction::OpenFormationProgression(_)
+            | UiAction::TrainPerson(_, _, _)
+            | UiAction::PracticeRiding(_, _)
+            | UiAction::CancelPersonCourse(_)
+            | UiAction::SpecializeFormation(_, _, _)
+            | UiAction::CancelFormationCourse(_)
+            | UiAction::SetCommander(_, _)
             | UiAction::BeginMove(_)
             | UiAction::ToggleMoveArmy(_)
             | UiAction::MoveGroupPage(_)
@@ -112,6 +120,37 @@ impl Game {
             }
             UiAction::ArmyPeoplePage(delta) => {
                 self.army.people_page = self.army.people_page.saturating_add_signed(delta as isize)
+            }
+            UiAction::OpenPersonProgression(person) => {
+                self.army.mode = ui::ArmyMode::ProgressionPerson(person)
+            }
+            UiAction::OpenFormationProgression(formation) => {
+                self.army.mode = ui::ArmyMode::ProgressionFormation(formation)
+            }
+            UiAction::TrainPerson(person, class, site) => {
+                self.apply_campaign_command(Command::TrainPerson {
+                    person,
+                    class,
+                    site,
+                })
+            }
+            UiAction::PracticeRiding(person, site) => {
+                self.apply_campaign_command(Command::PracticeRiding { person, site })
+            }
+            UiAction::CancelPersonCourse(person) => {
+                self.apply_campaign_command(Command::CancelPersonCourse { person })
+            }
+            UiAction::SpecializeFormation(formation, specialization, site) => self
+                .apply_campaign_command(Command::SpecializeFormation {
+                    formation,
+                    specialization,
+                    site,
+                }),
+            UiAction::CancelFormationCourse(formation) => {
+                self.apply_campaign_command(Command::CancelFormationCourse { formation })
+            }
+            UiAction::SetCommander(army, person) => {
+                self.apply_campaign_command(Command::SetCommander { army, person })
             }
             UiAction::BeginMove(army) => self.begin_move(army),
             UiAction::ToggleMoveArmy(army) => self.toggle_move_army(army),

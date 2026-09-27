@@ -3,6 +3,7 @@
 mod disband;
 mod orders;
 mod people;
+mod progression;
 mod recruit;
 mod roster;
 mod transfer;
@@ -49,6 +50,8 @@ pub enum ArmyMode {
     Roster,
     Orders,
     People,
+    ProgressionPerson(PersonId),
+    ProgressionFormation(FormationId),
     Transfer,
     Recruit {
         army: Option<ArmyId>,
@@ -130,6 +133,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Roster => "armies",
         ArmyMode::Orders => "army_orders",
         ArmyMode::People => "army_people",
+        ArmyMode::ProgressionPerson(_) => "person_progression",
+        ArmyMode::ProgressionFormation(_) => "formation_progression",
         ArmyMode::Transfer => "composition",
         ArmyMode::Recruit { .. } => "recruit",
         ArmyMode::Disband(_) => "disband",
@@ -161,6 +166,10 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Roster => roster::draw(ctx, campaign),
         ArmyMode::Orders => orders::draw(ctx, campaign),
         ArmyMode::People => people::draw(ctx, campaign),
+        ArmyMode::ProgressionPerson(person) => progression::person(ctx, campaign, person),
+        ArmyMode::ProgressionFormation(formation) => {
+            progression::formation(ctx, campaign, formation)
+        }
         ArmyMode::Transfer => transfer::draw(ctx, campaign),
         ArmyMode::Recruit { army, kind } => recruit::draw(ctx, campaign, army, kind),
         ArmyMode::Disband(formation) => disband::draw(ctx, campaign, formation),

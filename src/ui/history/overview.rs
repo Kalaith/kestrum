@@ -296,6 +296,11 @@ fn evidence(ctx: &Context<'_>, ledger: &EvidenceLedger) -> Vec<HistoryRow> {
 
 fn class_name(ctx: &Context<'_>, class: kestrum::data::world::FounderClass) -> String {
     ctx.text(match class {
+        kestrum::data::world::FounderClass::Recruit => "class_recruit",
+        kestrum::data::world::FounderClass::Infantry => "class_infantry",
+        kestrum::data::world::FounderClass::Archer => "class_archer",
+        kestrum::data::world::FounderClass::Scout => "class_scout",
+        kestrum::data::world::FounderClass::Cavalry => "class_cavalry",
         kestrum::data::world::FounderClass::Officer => "class_officer",
         kestrum::data::world::FounderClass::Medic => "class_medic",
     })

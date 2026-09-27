@@ -236,7 +236,16 @@ pub(super) fn assert_earlier_save(data: &GameData, campaign: &StrategicCampaign)
         panic!("strategic migration")
     };
     assert_eq!(migrated.knowledge, campaign.knowledge);
-    assert_eq!(migrated.rng, campaign.rng);
+    assert_eq!(
+        migrated.rng.generation.state(),
+        campaign.rng.generation.state()
+    );
+    assert_eq!(migrated.rng.combat.state(), campaign.rng.combat.state());
+    assert_eq!(
+        migrated.rng.development.state(),
+        campaign.rng.development.state()
+    );
+    assert_ne!(migrated.rng.people.state(), campaign.rng.people.state());
     assert_eq!(migrated.completed_rounds, campaign.completed_rounds);
     assert!(migrated
         .formations
@@ -299,6 +308,7 @@ fn strip_k08(value: &mut serde_json::Value) {
     }
     for person in value["people"].as_object_mut().unwrap().values_mut() {
         person.as_object_mut().unwrap().remove("evidence");
+        person.as_object_mut().unwrap().remove("career");
     }
     for report in value["battles"].as_object_mut().unwrap().values_mut() {
         for side in ["attacker", "defender"] {
@@ -341,7 +351,22 @@ pub(super) fn assert_expired_earlier_save(data: &GameData, campaign: &StrategicC
         .formations
         .values()
         .all(|formation| formation.service.xp == 0));
-    assert_eq!(migrated.rng, old.rng);
+    assert_eq!(migrated.rng.generation.state(), old.rng.generation.state());
+    assert_eq!(migrated.rng.combat.state(), old.rng.combat.state());
+    assert_eq!(
+        migrated.rng.development.state(),
+        old.rng.development.state()
+    );
+    assert_ne!(migrated.rng.people.state(), old.rng.people.state());
+    let replayed = load_legacy(
+        &encode_slot("kestrum_strategic_v2", &value, "2").unwrap(),
+        data,
+    )
+    .unwrap()
+    .strategic()
+    .unwrap()
+    .clone();
+    assert_eq!(&replayed, migrated.as_ref());
     assert_raw_catalogue(data, &old, &raw, &restored);
 }
 

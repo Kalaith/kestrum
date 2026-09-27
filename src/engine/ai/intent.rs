@@ -65,6 +65,33 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
         Command::DeclareWar { faction } => (AiIntentKind::War, vec![faction.0]),
         Command::RelocateHeadquarters { site } => (AiIntentKind::Headquarters, vec![site.0]),
         Command::Resettle { from, to } => (AiIntentKind::Resettle, vec![from.0, to.0]),
+        Command::SetCommander { army, person } => (
+            AiIntentKind::Progression,
+            vec![0, army.0, person.map_or(0, |id| id.0)],
+        ),
+        Command::TrainPerson {
+            person,
+            class,
+            site,
+        } => (
+            AiIntentKind::Progression,
+            vec![1, person.0, *class as u32, site.0],
+        ),
+        Command::PracticeRiding { person, site } => {
+            (AiIntentKind::Progression, vec![2, person.0, site.0])
+        }
+        Command::CancelPersonCourse { person } => (AiIntentKind::Progression, vec![4, person.0]),
+        Command::SpecializeFormation {
+            formation,
+            specialization,
+            site,
+        } => (
+            AiIntentKind::Progression,
+            vec![3, formation.0, *specialization as u32, site.0],
+        ),
+        Command::CancelFormationCourse { formation } => {
+            (AiIntentKind::Progression, vec![5, formation.0])
+        }
         _ => return None,
     };
     Some(AiIntent { kind, targets })

@@ -20,7 +20,7 @@ pub const KNOWLEDGE_PAGE_SIZE: usize = 50;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PersonKnowledge {
-    CurrentOwn(Person),
+    CurrentOwn(Box<Person>),
     LastEncountered {
         snapshot: EncounteredPerson,
         available_report: Option<BattleId>,
@@ -84,7 +84,7 @@ pub fn person_knowledge(
         .get(&id)
         .filter(|person| person.faction == observer)
     {
-        return Some(PersonKnowledge::CurrentOwn(person.clone()));
+        return Some(PersonKnowledge::CurrentOwn(Box::new(person.clone())));
     }
     let snapshot = campaign
         .knowledge

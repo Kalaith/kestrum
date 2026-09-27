@@ -2,20 +2,20 @@
 
 [Documentation index](README.md) · [Decisions](13-decisions-and-open-questions.md) · [Verification record](verification/documentation.md)
 
-## Current milestone: playable kingdom campaign through K12
+## Current milestone: playable kingdom campaign and grounded careers through K13
 
 The small Rosemarch campaign now has persistent armies, battles, construction,
 sieges, changing settlements, threats, legal rival AI and War/Peace diplomacy.
 Conquest can end in annexation or submission; victory and defeat preserve a
-read-only campaign with records and saves. This is the kingdom milestone.
-Generational careers, succession and the production world remain K13–K18 work.
-The user requested a stop after K12 and its commit.
+read-only campaign with records and saves. K13 adds evidence-grounded people,
+ordinary careers and formation specializations. Mentorship, aging, succession and
+the production world remain in K14–K18.
 
 | Stage | Implemented status and remaining work |
 | --- | --- |
 | M1 — Strategic foundation | K01–K06 implement typed content, seasonal faction rounds, nested geography, control and movement. The 80-node world and 4–8-faction production setup belong to K17; integrated platform and physical-touch acceptance belong to K18. |
 | M2 — Military loop | K05–K12 implement recruitment, composition, movement, combat, retreat, persistent losses, supply, recovery, veterancy and legal rival orders. The small scenario exercises this loop; production balance remains K18. |
-| M3 — People from campaigns | Founding Officers, wounds, actual participation, service and known rivals are implemented. Emergence, traits, ordinary careers, mentorship and succession remain K13–K15. |
+| M3 — People from campaigns | K13 implements grounded emergence, evidence-based traits and recognition, ordinary careers, specialization and service/rival records. Mentorship and aging belong to K14; households and succession belong to K15; legacy histories belong to K16. |
 | M4 — Kingdom expansion | K09–K12 implement construction, siege, development, local threats, relocation, War/Peace/truce, defeat choices and reachable endings in the small campaign. Production world/content remains K17. |
 
 See the package [acceptance record](implementation/acceptance.md#completion-record)

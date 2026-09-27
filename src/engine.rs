@@ -12,6 +12,7 @@ pub(crate) mod history;
 pub(crate) mod knowledge;
 mod movement;
 mod person_combat;
+pub(crate) mod progression;
 mod projection;
 mod recovery;
 mod recruitment;
@@ -39,6 +40,9 @@ pub use movement::{
     MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,
 };
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
+pub use progression::{
+    career_options, specialization_options, CareerOption, CareerRequirement, SpecializationOption,
+};
 pub use projection::{project, SiegeRole, VisibleCampaign, VisibleFaction, VisibleSiege};
 pub use recovery::{recovery_preview, RecoveryPreview};
 pub use recruitment::{recruit_options, RecruitOption, RecruitmentResult};

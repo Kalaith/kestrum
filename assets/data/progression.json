@@ -10,5 +10,82 @@
   "veteran_xp": 20,
   "ordinary_permille": 1000,
   "seasoned_permille": 1100,
-  "veteran_permille": 1200
+  "veteran_permille": 1200,
+  "emergence": {
+    "roster_base": 150,
+    "roster_factor": 64,
+    "roster_square_factor": 1,
+    "seasoned_multiplier_permille": 1250,
+    "veteran_multiplier_permille": 1500,
+    "exceptional_multiplier_permille": 2000,
+    "maximum_chance_permille": 500,
+    "retrospective_rounds": 8,
+    "minimum_age_years": 18,
+    "maximum_age_years": 30
+  },
+  "traits": {
+    "base_occasions": 3,
+    "minimum_occasions": 2,
+    "maximum_occasions": 4
+  },
+  "recognition": {
+    "meaningful_encounters": 3,
+    "required_facts": [
+      "survived_outnumbered",
+      "defended_anchor",
+      "treated_wounded",
+      "assumed_command"
+    ]
+  },
+  "careers": {
+    "course_steps": 2,
+    "courses": {
+      "infantry": {"gold_cost": 20, "facility": "training_ground", "requires_horse_access": false},
+      "archer": {"gold_cost": 20, "facility": "training_ground", "requires_horse_access": false},
+      "scout": {"gold_cost": 20, "facility": "training_ground", "requires_horse_access": false},
+      "cavalry": {"gold_cost": 40, "facility": "stable", "requires_horse_access": true},
+      "medic": {"gold_cost": 20, "facility": "infirmary", "requires_horse_access": false},
+      "officer": {"gold_cost": 50, "facility": "training_ground", "requires_horse_access": false}
+    },
+    "infantry_battles": 2,
+    "archer_battles": 2,
+    "scout_routes": 6,
+    "riding_seasons": 2,
+    "rider_battles": 1,
+    "treatment_occasions": 2,
+    "officer_encounters": 3,
+    "officer_command_facts": 1,
+    "mentorship_seasons": 2,
+    "specialization_steps": 2
+  },
+  "specializations": {
+    "shield_guard": {
+      "sources": ["warriors"],
+      "gold_cost": 30,
+      "course_steps": 2,
+      "requirement": {"kind": "defended_anchors", "occasions": 3},
+      "defense_resistance_permille": 1100,
+      "counter": null,
+      "movement_allowance": null
+    },
+    "pikemen": {
+      "sources": ["warriors", "spearmen"],
+      "gold_cost": 30,
+      "course_steps": 2,
+      "requirement": {"kind": "meaningful_against", "troop": "riders", "occasions": 3},
+      "defense_resistance_permille": null,
+      "counter": {"target": "riders", "permille": 1750},
+      "movement_allowance": null
+    },
+    "light_cavalry": {
+      "sources": ["riders"],
+      "gold_cost": 30,
+      "course_steps": 2,
+      "requirement": {"kind": "routes_and_retreating_victories", "routes": 6, "victories": 2},
+      "defense_resistance_permille": null,
+      "counter": null,
+      "movement_allowance": 9
+    }
+  },
+  "relationships_per_person": 32
 }

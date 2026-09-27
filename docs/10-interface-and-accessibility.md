@@ -1,5 +1,28 @@
 # 10 — Interface and accessibility
 
+## K09 construction screen brief
+
+The current decision is which local investment to fund and which army can place
+or sustain it. Manage opens a dismissible settlement sheet from an owned physical
+site. Overview keeps that site's condition, population, existing facilities and
+own orders together; Build, Roads and Focus defer their choices until requested.
+The map remains the normal play area outside this focused decision.
+
+Construction review shows the exact prepaid cost, eligible seasonal boundaries,
+current effect, builder and missing requirement beside Confirm Build. Builder
+selection pages through local owned armies, with unavailable choices explaining
+their constraint. Active and paused orders retain progress, reason and replacement
+controls. Cancel Order opens the exact refund before confirmation. Focus replaces
+one stored choice and explicitly grants no current bonus; no screen promises
+unsimulated growth. Foreign sites expose public facts through their inspector,
+without another faction's order costs, progress or builder.
+
+Controls use at least 48 logical pixels with visible Back and page actions. Review
+at 1920 × 1080 and 1280 × 720 covers inhabited and unsettled sites, missing supply,
+builder departure and replacement, roads, facilities, insufficient resources,
+started and unstarted refunds, long names and paged orders. Progress captures use
+real commands and completed seasonal boundaries.
+
 ## K08 service and knowledge screen brief
 
 The current decision is to understand a force's earned service or a person's

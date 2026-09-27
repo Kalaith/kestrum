@@ -148,9 +148,9 @@ pub struct Economy {
     pub recruitment_population: RecruitmentPopulation,
 }
 
-// These keyed economy definitions carry IDs too. Serde's ordinary map would
+// These keyed content definitions carry IDs too. Serde's ordinary map would
 // silently replace a duplicate key before semantic validation could inspect it.
-fn unique_table<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
+pub(super) fn unique_table<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
 where
     D: serde::Deserializer<'de>,
     K: Deserialize<'de> + Ord + fmt::Debug,
@@ -166,7 +166,7 @@ where
         type Value = BTreeMap<K, V>;
 
         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("an economy table with unique definition IDs")
+            formatter.write_str("a content table with unique definition IDs")
         }
 
         fn visit_map<A: serde::de::MapAccess<'de>>(
@@ -177,7 +177,7 @@ where
             while let Some((key, value)) = map.next_entry::<K, V>()? {
                 if entries.contains_key(&key) {
                     return Err(serde::de::Error::custom(format!(
-                        "duplicate economy ID {key:?}"
+                        "duplicate content ID {key:?}"
                     )));
                 }
                 entries.insert(key, value);

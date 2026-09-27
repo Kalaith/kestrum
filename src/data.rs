@@ -1,6 +1,7 @@
 //! Toolkit-loaded content assembled and validated without a graphics context.
 
 pub mod combat;
+pub mod construction;
 pub mod economy;
 pub mod progression;
 pub mod rules;
@@ -21,6 +22,7 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub construction: construction::ConstructionRules,
     pub progression: progression::ProgressionRules,
     pub history: progression::HistoryRules,
     pub troops: combat::Troops,
@@ -34,6 +36,9 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            construction: macroquad_toolkit::include_json!(
+                "../assets/data/construction_rules.json"
+            )?,
             progression: macroquad_toolkit::include_json!("../assets/data/progression.json")?,
             history: macroquad_toolkit::include_json!("../assets/data/history_rules.json")?,
             troops: macroquad_toolkit::include_json!("../assets/data/troops.json")?,
@@ -48,6 +53,7 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.construction.validate()?;
         self.progression.validate()?;
         self.history.validate()?;
         self.troops.validate()?;
@@ -75,6 +81,86 @@ pub struct PresentationData {
 }
 
 const REQUIRED_TEXT: &[&str] = &[
+    "settlement",
+    "settlement_manage",
+    "settlement_overview",
+    "settlement_build",
+    "settlement_roads",
+    "settlement_focus",
+    "settlement_population",
+    "settlement_damage",
+    "settlement_fortification",
+    "settlement_facilities",
+    "none",
+    "construction_outpost",
+    "construction_road",
+    "construction_road_repair",
+    "construction_fort",
+    "facility_training",
+    "facility_stable",
+    "facility_infirmary",
+    "facility_workshop",
+    "facility_temple",
+    "facility_damaged",
+    "habitation_unsettled",
+    "habitation_camp",
+    "habitation_outpost",
+    "habitation_hamlet",
+    "habitation_village",
+    "habitation_town",
+    "habitation_city",
+    "habitation_major_city",
+    "focus_growth",
+    "focus_fortification",
+    "focus_training",
+    "focus_gold",
+    "focus_wood",
+    "focus_stone",
+    "focus_confirm",
+    "focus_current_effect",
+    "focus_success",
+    "construction_active",
+    "construction_paused",
+    "construction_completed",
+    "construction_cancelled",
+    "construction_orders",
+    "construction_no_orders",
+    "construction_no_routes",
+    "construction_review",
+    "construction_steps",
+    "construction_timing",
+    "construction_prepaid",
+    "construction_progress",
+    "construction_details",
+    "construction_choose_builder",
+    "construction_builder",
+    "construction_no_builder",
+    "construction_builder_help",
+    "construction_no_builders",
+    "construction_builder_placement",
+    "construction_builder_remain",
+    "construction_assign",
+    "construction_confirm",
+    "construction_replace_builder",
+    "construction_cancel",
+    "construction_confirm_cancel",
+    "construction_cancel_help",
+    "construction_refund",
+    "construction_success",
+    "construction_cancel_success",
+    "construction_builder_success",
+    "construction_outpost_effect",
+    "construction_road_effect",
+    "construction_repair_effect",
+    "construction_fort_effect",
+    "facility_stable_effect",
+    "facility_infirmary_effect",
+    "facility_workshop_effect",
+    "facility_training_effect",
+    "facility_temple_effect",
+    "help_construction",
+    "help_builder",
+    "help_construction_refund",
     "move_observed_hostile",
     "evidence_retreating_enemy_victory",
     "battle_veterancy_factor",

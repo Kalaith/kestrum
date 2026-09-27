@@ -13,6 +13,7 @@ use crate::{
     state::{
         battle::BattleId,
         campaign::{DomainFact, DomainFactKind, FactId},
+        construction::{ConstructionKind, ConstructionTarget, Focus, OrderId},
         military::{ArmyId, FormationId},
         people::PersonId,
         CampaignPhase, StrategicCampaign,
@@ -28,6 +29,22 @@ pub enum Actor {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
+    StartConstruction {
+        target: ConstructionTarget,
+        kind: ConstructionKind,
+        builder: ArmyId,
+    },
+    CancelConstruction {
+        order: OrderId,
+    },
+    ReassignBuilder {
+        order: OrderId,
+        builder: ArmyId,
+    },
+    SetFocus {
+        site: SiteId,
+        focus: Focus,
+    },
     EndTurn,
     SetNpcPaused(bool),
     StepNpc,
@@ -56,6 +73,9 @@ pub enum Command {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RuleError {
+    Construction {
+        reason: super::ConstructionBlock,
+    },
     NoCampaign,
     LegacyReadOnly,
     PlayObstructed,
@@ -148,6 +168,7 @@ pub enum RuleError {
 impl fmt::Display for RuleError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Construction { reason } => fmt::Display::fmt(reason, formatter),
             Self::InvalidArmyGroup => formatter.write_str("Choose one or more distinct armies."),
             Self::InvalidRoute => formatter.write_str(
                 "Choose a connected physical route beginning at the armies' current site.",
@@ -204,12 +225,7 @@ impl fmt::Display for RuleError {
             Self::MissingFacility { facility, .. } => write!(
                 formatter,
                 "Recruitment requires a functional local {}.",
-                match facility {
-                    Facility::TrainingGround => "training ground",
-                    Facility::Stable => "stable",
-                    Facility::Infirmary => "infirmary",
-                    Facility::Workshop => "workshop",
-                }
+                facility_name(*facility)
             ),
             Self::FacilityDamaged { .. } => {
                 formatter.write_str("Structural damage has disabled this site's facilities.")
@@ -232,16 +248,7 @@ impl fmt::Display for RuleError {
             Self::InsufficientResources {
                 required,
                 available,
-            } => write!(
-                formatter,
-                "Recruitment needs {} Gold, {} Wood and {} Stone; available: {}, {} and {}.",
-                required.gold,
-                required.wood,
-                required.stone,
-                available.gold,
-                available.wood,
-                available.stone
-            ),
+            } => resource_shortage(formatter, *required, *available),
             Self::Overflow { field } => write!(
                 formatter,
                 "The campaign cannot advance: {field} is exhausted."
@@ -251,6 +258,33 @@ impl fmt::Display for RuleError {
             }
         }
     }
+}
+
+fn facility_name(facility: Facility) -> &'static str {
+    match facility {
+        Facility::TrainingGround => "training ground",
+        Facility::Stable => "stable",
+        Facility::Infirmary => "infirmary",
+        Facility::Workshop => "workshop",
+        Facility::Temple => "temple",
+    }
+}
+
+fn resource_shortage(
+    formatter: &mut fmt::Formatter<'_>,
+    required: Resources,
+    available: Resources,
+) -> fmt::Result {
+    write!(
+        formatter,
+        "This order needs {} Gold, {} Wood and {} Stone; available: {}, {} and {}.",
+        required.gold,
+        required.wood,
+        required.stone,
+        available.gold,
+        available.wood,
+        available.stone
+    )
 }
 
 impl std::error::Error for RuleError {}
@@ -343,6 +377,9 @@ fn prepare(
         .validate()
         .map_err(RuleError::InvalidState)?;
     data.history.validate().map_err(RuleError::InvalidState)?;
+    data.construction
+        .validate()
+        .map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
     validate_command(campaign, actor, &command)?;
     let mut candidate = campaign.clone();
@@ -370,7 +407,13 @@ fn prepare(
         Actor::Npc(id) => id,
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
+    if !outcome.round_completed {
+        super::construction::reconcile(&mut candidate, data, &mut outcome)?;
+    }
     super::history::record_facts(&mut candidate, campaign, &outcome.facts)?;
+    if outcome.round_completed {
+        super::history::prune(&mut candidate, data);
+    }
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
     Ok((candidate, outcome))
@@ -385,6 +428,12 @@ fn execute(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     match command {
+        command @ (Command::StartConstruction { .. }
+        | Command::CancelConstruction { .. }
+        | Command::ReassignBuilder { .. }
+        | Command::SetFocus { .. }) => {
+            execute_construction(candidate, data, owner, command, outcome)?;
+        }
         Command::EndTurn | Command::StepNpc => {
             round::pass_faction(candidate, data, outcome)?;
         }
@@ -456,6 +505,37 @@ fn execute(
     Ok(())
 }
 
+fn execute_construction(
+    candidate: &mut StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    command: Command,
+    outcome: &mut ActionOutcome,
+) -> Result<(), RuleError> {
+    let fact = match command {
+        Command::StartConstruction {
+            target,
+            kind,
+            builder,
+        } => super::construction::start(candidate, data, owner, target, kind, builder)?,
+        Command::CancelConstruction { order } => {
+            super::construction::cancel(candidate, data, owner, order)?
+        }
+        Command::ReassignBuilder { order, builder } => {
+            super::construction::reassign(candidate, owner, order, builder)?
+        }
+        Command::SetFocus { site, focus } => {
+            super::construction::set_focus(candidate, data, owner, site, focus)?
+        }
+        _ => {
+            return Err(RuleError::InvalidState(
+                "Unexpected construction dispatch.".into(),
+            ))
+        }
+    };
+    record_fact(candidate, outcome, fact)
+}
+
 pub(super) fn record_fact(
     campaign: &mut StrategicCampaign,
     outcome: &mut ActionOutcome,
@@ -491,7 +571,14 @@ pub(super) fn validate_command(
         return Err(RuleError::UnknownActor);
     }
     match command {
-        Command::EndTurn | Command::Recruit { .. } | Command::Disband { .. } | Command::Move(_) => {
+        Command::EndTurn
+        | Command::Recruit { .. }
+        | Command::Disband { .. }
+        | Command::Move(_)
+        | Command::StartConstruction { .. }
+        | Command::CancelConstruction { .. }
+        | Command::ReassignBuilder { .. }
+        | Command::SetFocus { .. } => {
             if faction != campaign.active_faction() {
                 return Err(RuleError::NotYourTurn {
                     active: campaign.active_faction(),

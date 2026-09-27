@@ -125,6 +125,54 @@ fn action_participants(
     before: &StrategicCampaign,
     fact: &DomainFactKind,
 ) -> Result<ActionParticipants, RuleError> {
+    match fact {
+        DomainFactKind::ConstructionChanged { order } => Ok(ActionParticipants {
+            kind: HistoryKind::Construction {
+                order: order.clone(),
+            },
+            faction: order.owner,
+            sites: construction_sites(campaign, order.target)?,
+            armies: order.builder.into_iter().collect(),
+            people: Vec::new(),
+            formations: Vec::new(),
+        }),
+        DomainFactKind::FocusChanged {
+            faction,
+            site,
+            focus,
+        } => Ok(ActionParticipants {
+            kind: HistoryKind::FocusChanged { focus: *focus },
+            faction: *faction,
+            sites: vec![*site],
+            armies: Vec::new(),
+            people: Vec::new(),
+            formations: Vec::new(),
+        }),
+        _ => military_participants(campaign, before, fact),
+    }
+}
+
+fn construction_sites(
+    campaign: &StrategicCampaign,
+    target: crate::state::construction::ConstructionTarget,
+) -> Result<Vec<crate::data::world::SiteId>, RuleError> {
+    use crate::state::construction::ConstructionTarget;
+    match target {
+        ConstructionTarget::Site(site) => Ok(vec![site]),
+        ConstructionTarget::Route(route) => {
+            let edge = campaign.world.route(route).ok_or_else(|| {
+                RuleError::InvalidState("Construction history has an unknown route.".into())
+            })?;
+            Ok(vec![edge.from, edge.to])
+        }
+    }
+}
+
+fn military_participants(
+    campaign: &StrategicCampaign,
+    before: &StrategicCampaign,
+    fact: &DomainFactKind,
+) -> Result<ActionParticipants, RuleError> {
     let (kind, faction, sites, armies, people, formations) = match fact {
         DomainFactKind::FormationRecruited {
             faction,
@@ -299,10 +347,17 @@ fn allocate(campaign: &mut StrategicCampaign) -> Result<HistoryId, RuleError> {
 }
 
 fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
-    if matches!(
-        record.kind,
-        HistoryKind::Battle { .. } | HistoryKind::VeterancyEarned { .. }
-    ) {
+    let completed_construction = matches!(
+        &record.kind,
+        HistoryKind::Construction { order }
+            if matches!(order.status, crate::state::construction::ConstructionStatus::Completed { .. })
+    );
+    if completed_construction
+        || matches!(
+            record.kind,
+            HistoryKind::Battle { .. } | HistoryKind::VeterancyEarned { .. }
+        )
+    {
         let summary = record.notable();
         for site in &record.sites {
             campaign

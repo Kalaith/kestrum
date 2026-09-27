@@ -7,13 +7,15 @@
   "controls_hint": "Choose New Game to unfold the atlas. Use Full Screen for the best view.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
-    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Hostile field encounters resolve automatically with persistent casualties, retreats and wounds. Meaningful service earns Seasoned and Veteran formations. Menu > Records opens battle reports, searchable known people and filtered histories. Enemy details remain dated to actual encounters. Rival kingdoms currently pass; fortified encounters wait for the siege milestone."
+    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Manage owned places to found Outposts with real settlers, improve roads, build Forts and add recruitment facilities. Work keeps its progress through interruptions, with visible costs, builders and cancellation refunds. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Hostile field encounters resolve automatically with persistent casualties, retreats and wounds. Meaningful service earns Seasoned and Veteran formations. Menu > Records opens battle reports, searchable known people and filtered histories. Enemy details remain dated to actual encounters. Rival kingdoms currently pass; fortified encounters wait for the siege milestone."
   ],
   "controls": [
     { "key": "Tap / Click", "desc": "Select marked places and inspect their control, supply and connections" },
     { "key": "Enter Region / World Map", "desc": "Inspect regional sites and return to the previous world camera" },
     { "key": "Close", "desc": "Dismiss the selected place's inspector" },
     { "key": "Armies", "desc": "Inspect your six-slot rosters, resources, leadership, supply and last round's economy" },
+    { "key": "Manage", "desc": "Open an owned place's work orders, population, facilities, Build, Roads and Focus" },
+    { "key": "Confirm Build", "desc": "Review the prepaid cost, duration and builder; inspect an order to Replace Builder or confirm cancellation" },
     { "key": "Recruit / New Army", "desc": "Choose a troop type, review its cost and requirements, then Confirm Recruit" },
     { "key": "Orders", "desc": "Move Army, transfer the selected formation, open People, inspect recovery or disband with confirmation" },
     { "key": "Move Army", "desc": "Select co-located armies, Choose Destination on the map, inspect Review Route and Confirm Move" },

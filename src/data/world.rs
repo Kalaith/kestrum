@@ -52,6 +52,7 @@ pub enum Facility {
     Stable,
     Infirmary,
     Workshop,
+    Temple,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

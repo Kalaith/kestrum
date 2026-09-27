@@ -20,6 +20,8 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         Some(HistoryKindFilter::Movement),
         Some(HistoryKindFilter::Transfer),
         Some(HistoryKindFilter::Veterancy),
+        Some(HistoryKindFilter::Construction),
+        Some(HistoryKindFilter::Focus),
     ];
     for (index, kind) in kinds.into_iter().enumerate() {
         let rect = Rect::new(
@@ -102,6 +104,8 @@ fn kind_key(kind: Option<HistoryKindFilter>) -> &'static str {
         Some(HistoryKindFilter::Movement) => "history_movement",
         Some(HistoryKindFilter::Transfer) => "transfer",
         Some(HistoryKindFilter::Veterancy) => "history_veterancy",
+        Some(HistoryKindFilter::Construction) => "settlement_build",
+        Some(HistoryKindFilter::Focus) => "settlement_focus",
     }
 }
 

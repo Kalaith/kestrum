@@ -180,6 +180,7 @@ impl Game {
             return;
         }
         match self.state.overlay {
+            Overlay::Settlement => self.settlement_back(),
             Overlay::History => self.history_back(),
             Overlay::Battle if self.battle_return.is_some() => {
                 self.state.overlay = self.battle_return.take().unwrap_or(Overlay::None);

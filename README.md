@@ -188,11 +188,33 @@ report links and reload were reviewed. Windows/WebGL Preview publication passed;
 Project Roost tracking was unavailable. [K08 evidence](docs/verification/k08-service.md)
 records the checks and remaining platform limitations. K09–K18 remain required.
 
+### K09 — Persistent construction
+
+Select an owned place and open Manage for population, facilities and work orders.
+Build and Roads list improvements with prepaid costs, prerequisites and duration.
+Review a choice, select a local builder and Confirm Build. Details shows
+progress and interruptions; field work offers Replace Builder, while Cancel
+shows the exact refund before confirmation. Facilities release their placing
+builder. Active and paused field orders keep their builder reservation.
+
+Outposts need three eligible seasonal boundaries and transfer up to fifty real
+settlers from a supplied friendly donor with available population. Roads improve
+movement after two boundaries; road repair takes one. Forts and local facilities
+become persistent site layers. Leaving, combat or lost supply pauses work; losing
+control cancels it. Unstarted work refunds its prepaid cost, while progressed
+work gives no refund. Focus stores a replaceable choice with no bonus until K11.
+Saves and owner-visible histories retain actual orders and outcomes.
+
+[K09 verification](docs/verification/k09-construction.md) records 81 passing tests,
+strict Clippy, native visual review and published browser construction/reload checks.
+Windows and WebGL Preview publishing passed. Minimum-browser sizing, cache
+invalidation and physical-touch checks remain open for K18. K10–K18 remain required.
+
 ## Screen brief
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Inspect a place, manage its armies, or select and confirm a costed route for a travelling group. |
+| Current decision | Inspect a place, manage armies or construction, or confirm a costed route for a travelling group. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
 | Primary action | Enter Region opens a regional marker; World Map returns to the previous world camera. End Turn remains separate from selection. |
 | Supporting information | A dismissible inspector shows local control, regional claim and anchor requirements. The top edge shows season, round and active faction. |

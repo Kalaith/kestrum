@@ -38,6 +38,18 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
+        HistoryKind::Construction { order } => format!(
+            "{} · {} / {} · {}",
+            super::super::settlement::kind_name(ctx, order.kind),
+            order.progress,
+            order.required_steps,
+            super::super::settlement::order_status(ctx, order)
+        ),
+        HistoryKind::FocusChanged { focus } => format!(
+            "{} · {}",
+            ctx.text("settlement_focus"),
+            ctx.text(super::super::settlement::focus_key(*focus))
+        ),
         HistoryKind::Battle { .. } => ctx.text("history_battle"),
         HistoryKind::Recruited { troop } => format!(
             "{} · {}",

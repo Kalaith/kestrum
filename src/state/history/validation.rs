@@ -49,7 +49,7 @@ impl StrategicCampaign {
             "invalid source fact identity",
         )?;
         self.validate_history_labels(record)?;
-        self.validate_history_kind(&record.kind)?;
+        self.validate_history_kind(&record.kind, record.completed_rounds)?;
         ensure(
             valid_record_shape(record),
             "invalid participants for narrative kind",
@@ -76,6 +76,9 @@ impl StrategicCampaign {
                     "invalid earned veterancy narrative",
                 )?;
             }
+            HistoryKind::Construction { ref order } => {
+                self.validate_construction_record(record, order)?;
+            }
             _ => ensure(
                 record.source_fact.is_some() && record.visible_to.len() == 1,
                 "private action needs one owner and one source",
@@ -92,6 +95,35 @@ impl StrategicCampaign {
             )?;
         }
         Ok(())
+    }
+
+    fn validate_construction_record(
+        &self,
+        record: &HistoryRecord,
+        order: &super::super::construction::ConstructionOrder,
+    ) -> Result<(), String> {
+        use super::super::construction::ConstructionTarget;
+        let expected = match order.target {
+            ConstructionTarget::Site(site) => BTreeSet::from([site]),
+            ConstructionTarget::Route(route) => {
+                let edge = self
+                    .world
+                    .route(route)
+                    .ok_or("history: unknown construction route")?;
+                BTreeSet::from([edge.from, edge.to])
+            }
+        };
+        ensure(
+            record.source_fact.is_some()
+                && record.visible_to == BTreeSet::from([order.owner])
+                && record
+                    .sites
+                    .iter()
+                    .map(|entry| entry.id)
+                    .collect::<BTreeSet<_>>()
+                    == expected,
+            "construction narrative contradicts its location or owner",
+        )
     }
 
     fn validate_history_labels(&self, record: &HistoryRecord) -> Result<(), String> {
@@ -144,7 +176,7 @@ impl StrategicCampaign {
         )
     }
 
-    fn validate_history_kind(&self, kind: &HistoryKind) -> Result<(), String> {
+    fn validate_history_kind(&self, kind: &HistoryKind, date: u32) -> Result<(), String> {
         match kind {
             HistoryKind::Battle { battle, .. } => ensure(
                 battle.0 > 0 && *battle < self.next_ids.battle,
@@ -161,6 +193,7 @@ impl StrategicCampaign {
                     && *xp > 0,
                 "invalid historical veterancy",
             ),
+            HistoryKind::Construction { order } => self.validate_construction_receipt(order, date),
             _ => Ok(()),
         }
     }
@@ -177,7 +210,13 @@ impl StrategicCampaign {
                 summary.completed_rounds,
                 &summary.visible_to,
             )?;
-            self.validate_history_kind(&summary.kind)?;
+            self.validate_history_kind(&summary.kind, summary.completed_rounds)?;
+            if let HistoryKind::Construction { order } = &summary.kind {
+                ensure(
+                    summary.visible_to == BTreeSet::from([order.owner]),
+                    "construction notable has the wrong observer",
+                )?;
+            }
             ensure(seen.insert(summary.id), "duplicate notable identity")?;
             ensure(
                 summary.site.as_ref().is_none_or(|entry| {
@@ -220,10 +259,44 @@ fn valid_record_shape(record: &HistoryRecord) -> bool {
                 && record.formations.len() == 1
         }
         HistoryKind::VeterancyEarned { .. } => record.people.is_empty(),
+        HistoryKind::Construction { ref order } => {
+            record.people.is_empty()
+                && record.formations.is_empty()
+                && record.armies.iter().map(|entry| entry.id).eq(order.builder)
+        }
+        HistoryKind::FocusChanged { .. } => {
+            record.sites.len() == 1
+                && record.armies.is_empty()
+                && record.people.is_empty()
+                && record.formations.is_empty()
+        }
     }
 }
 
 fn source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
+    match fact {
+        DomainFactKind::ConstructionChanged { order } => {
+            record.kind
+                == HistoryKind::Construction {
+                    order: order.clone(),
+                }
+                && record.visible_to == BTreeSet::from([order.owner])
+        }
+        DomainFactKind::FocusChanged {
+            faction,
+            site,
+            focus,
+        } => {
+            record.kind == HistoryKind::FocusChanged { focus: *focus }
+                && record.visible_to == BTreeSet::from([*faction])
+                && record.sites.len() == 1
+                && record.sites[0].id == *site
+        }
+        _ => military_source_matches(record, fact),
+    }
+}
+
+fn military_source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
     let has_owner = |owner| record.visible_to == BTreeSet::from([owner]);
     let sites = || {
         record
@@ -311,7 +384,7 @@ fn source_matches(record: &HistoryRecord, fact: &DomainFactKind) -> bool {
                 && record.formations.len() == 1
                 && record.formations[0].id == *to_formation
         }
-        DomainFactKind::FactionPassed { .. } => false,
+        _ => false,
     }
 }
 

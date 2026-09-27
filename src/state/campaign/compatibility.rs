@@ -1,6 +1,7 @@
 //! Additive v2 upgrades, shared by interim slots and catalogue payloads.
 
 use super::StrategicCampaign;
+mod construction;
 mod evidence;
 
 impl StrategicCampaign {
@@ -10,6 +11,7 @@ impl StrategicCampaign {
         initialize_earlier_military(&mut value);
         initialize_earlier_battles(&mut value);
         let earlier_evidence = evidence::initialize(&mut value)?;
+        let earlier_construction = construction::initialize(&mut value);
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.
@@ -30,6 +32,9 @@ impl StrategicCampaign {
         }
         if earlier_evidence {
             evidence::restore(&mut campaign)?;
+        }
+        if earlier_construction {
+            construction::restore(&mut campaign)?;
         }
         Ok(campaign)
     }

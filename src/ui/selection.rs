@@ -50,54 +50,67 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         region_details(ctx, marker.id, &mut sections);
     }
     panel(ctx, rect, name, sections);
+    controls(ctx, rect, marker.id, site)
+}
+
+fn controls(
+    ctx: &Context<'_>,
+    rect: Rect,
+    marker: MarkerId,
+    site: Option<&Site>,
+) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
-    let is_region = site.is_none() && matches!(marker.location, MarkerLocation::Region { .. });
-    let owned_site = site.filter(|site| site.controller == Some(campaign.observer));
-    if is_region
-        && button(
-            ctx,
-            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
-            &ctx.text("enter_region"),
-            active,
-            true,
-        )
+    if let Some(site) = site
+        .filter(|site| Some(site.controller) == ctx.campaign_view.map(|view| Some(view.observer)))
     {
-        return Some(UiAction::EnterRegion(marker.id));
-    }
-    if let Some(site) = owned_site {
-        if button(
-            ctx,
-            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 102.0, 48.0),
-            &ctx.text("armies"),
-            active,
-            true,
-        ) {
-            return Some(UiAction::OpenArmies(site.id));
+        for (index, (key, action)) in [
+            ("settlement_manage", UiAction::OpenSettlement(site.id)),
+            ("armies", UiAction::OpenArmies(site.id)),
+            (
+                "history",
+                UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site.id)),
+            ),
+            ("close", UiAction::CloseSelection),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let button_rect = Rect::new(
+                rect.x + 16.0 + (index % 2) as f32 * 170.0,
+                rect.y + rect.h - 118.0 + (index / 2) as f32 * 56.0,
+                154.0,
+                48.0,
+            );
+            if button(ctx, button_rect, &ctx.text(key), active, index == 0) {
+                return Some(action);
+            }
         }
+        return None;
     }
-    if let Some(site) = site {
-        let x = rect.x + if owned_site.is_some() { 126.0 } else { 16.0 };
-        let width = if owned_site.is_some() { 106.0 } else { 192.0 };
-        if button(
-            ctx,
-            Rect::new(x, rect.y + rect.h - 62.0, width, 48.0),
-            &ctx.text("history"),
-            active,
-            false,
-        ) {
-            return Some(UiAction::OpenHistory(
-                kestrum::state::history::HistorySubject::Site(site.id),
-            ));
-        }
-    }
-    let close_rect = if owned_site.is_some() {
-        Rect::new(rect.x + 240.0, rect.y + rect.h - 62.0, 102.0, 48.0)
-    } else if is_region || site.is_some() {
-        Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0)
+    let (key, action) = if let Some(site) = site {
+        (
+            "history",
+            UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site.id)),
+        )
     } else {
-        Rect::new(rect.x + 96.0, rect.y + rect.h - 62.0, 166.0, 48.0)
+        ("enter_region", UiAction::EnterRegion(marker))
     };
-    if button(ctx, close_rect, &ctx.text("close"), active, false) {
+    if button(
+        ctx,
+        Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
+        &ctx.text(key),
+        active,
+        site.is_none(),
+    ) {
+        return Some(action);
+    }
+    if button(
+        ctx,
+        Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0),
+        &ctx.text("close"),
+        active,
+        false,
+    ) {
         return Some(UiAction::CloseSelection);
     }
     None

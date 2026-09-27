@@ -379,3 +379,48 @@ Presence reveals only that a hostile force is at a friendly army's site or an
 adjacent site. Enemy links open the last actual encounter's allowed facts, with
 its date and location; they never inspect current remote rosters, resources,
 biographies or families. UI history queries use the same observer filtering.
+
+### I08 — Persistent work and conserved settlers
+
+K09 keeps one open construction order per physical site or route. Active and
+paused orders reserve their field builder; reassignment releases the old builder.
+Facilities need a local builder to place the order and then release that army,
+following P07's explicit exception for ongoing facility work. Terminal orders
+cannot restart. Only the newest terminal receipt per target is retained alongside
+its current open order; dated construction narratives use the existing history
+budget. Gameplay completion therefore never depends on keeping an old story.
+
+P19 says an Outpost draws **up to** fifty settlers. The implementation uses a
+positive available surplus from the nearest eligible supplied friendly inhabited
+site, ordered by legal route cost and then site ID. The donor keeps at least its
+current habitation minimum. Existing Camp population stays at the destination;
+arrivals add the same amount deducted from the donor. A smaller surplus can found
+a smaller Outpost. With no eligible surplus, the final step pauses and cannot
+manufacture people through repeated completion or reload. Initial headquarters
+have 250 population and other sites their authored habitation's initial amount.
+
+Focus selection records one priority and replaces the previous choice. K09 grants
+no focus bonus; K11 installs P19's development, income and repair effects together.
+The interface states the currently available effect. K09's paid repair is the
+one-step improved-road repair from P07. Structural and fort repair remain P19's
+K11 seasonal development behavior. This preserves package dependencies without
+inventing an additional structural-repair purchase or promising passive growth.
+
+Construction and focus changes create immutable, owner-visible history receipts.
+Road records concern both physical endpoints. Completed work contributes a bounded
+notable summary. Records preserve the builder and place labels available when the
+action happened, without revealing another faction's private work orders.
+Exact population and the selected focus are also private to the controlling
+faction. Public habitation, geography and built site layers keep their existing
+visibility; an unknown population is not displayed as zero.
+
+Settler eligibility, available donor surplus and route costs are frozen before
+construction progresses. Orders reserve that initial surplus in stable order-ID
+order. Arrivals and newly completed roads cannot make a second founding order
+eligible at the same boundary. This applies P02's snapshot timing and prevents
+new settlers being moved repeatedly through a chain of completing Outposts.
+
+These are delegated implementation decisions, not newly confirmed author rules.
+[K09 verification](verification/k09-construction.md) records 81 passing tests,
+native visual review, browser construction and reload, publication, and the
+remaining platform limitations.

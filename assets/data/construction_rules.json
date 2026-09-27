@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "outpost_steps": 3,
+  "road_steps": 2,
+  "fort_steps": 3,
+  "road_repair": {
+    "cost": { "gold": 20, "wood": 15, "stone": 0 },
+    "steps": 1
+  },
+  "facilities": {
+    "training_ground": {
+      "cost": { "gold": 60, "wood": 40, "stone": 20 },
+      "steps": 2,
+      "minimum_habitation": "outpost",
+      "required_tag": null
+    },
+    "stable": {
+      "cost": { "gold": 100, "wood": 60, "stone": 40 },
+      "steps": 2,
+      "minimum_habitation": "village",
+      "required_tag": "horse_access"
+    },
+    "infirmary": {
+      "cost": { "gold": 80, "wood": 40, "stone": 20 },
+      "steps": 2,
+      "minimum_habitation": "village",
+      "required_tag": null
+    },
+    "workshop": {
+      "cost": { "gold": 100, "wood": 80, "stone": 60 },
+      "steps": 3,
+      "minimum_habitation": "village",
+      "required_tag": null
+    },
+    "temple": {
+      "cost": { "gold": 80, "wood": 60, "stone": 40 },
+      "steps": 3,
+      "minimum_habitation": "village",
+      "required_tag": null
+    }
+  },
+  "population": {
+    "minimum": {
+      "unsettled": 0,
+      "camp": 20,
+      "outpost": 50,
+      "hamlet": 100,
+      "village": 200,
+      "town": 500,
+      "city": 1000,
+      "major_city": 1800
+    },
+    "headquarters": 250,
+    "settler_limit": 50
+  }
+}

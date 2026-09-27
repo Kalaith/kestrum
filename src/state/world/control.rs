@@ -38,6 +38,7 @@ impl StrategicCampaign {
             candidate.world.contested_sites.remove(&site);
         }
         candidate.reconcile_region_control();
+        candidate.cancel_lost_construction();
         candidate.validate(data)?;
         *self = candidate;
         Ok(())

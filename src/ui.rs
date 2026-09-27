@@ -9,6 +9,7 @@ mod menus;
 mod movement;
 mod saves;
 mod selection;
+mod settlement;
 mod typography;
 mod world;
 
@@ -40,10 +41,29 @@ pub use movement::{
 };
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
 pub use saves::{SaveMode, SaveRow, SaveView};
+pub use settlement::{
+    BuildChoice, BuilderChoice, FocusChoice, SettlementMode, SettlementView, SETTLEMENT_PAGE_SIZE,
+};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenSettlement(SiteId),
+    SettlementTab(SettlementMode),
+    SettlementPage(i32),
+    SelectConstruction(
+        kestrum::state::construction::ConstructionTarget,
+        kestrum::state::construction::ConstructionKind,
+    ),
+    ChooseBuilder,
+    SelectBuilder(ArmyId),
+    ConfirmConstruction,
+    OpenConstructionOrder(kestrum::state::construction::OrderId),
+    AskCancelConstruction,
+    ConfirmCancelConstruction,
+    SelectFocus(kestrum::state::construction::Focus),
+    ConfirmFocus,
+    SettlementBack,
     OpenRecords,
     SetRecordCategory(RecordCategory),
     RecordsPage(i32),
@@ -136,6 +156,25 @@ pub enum UiAction {
 }
 
 impl UiAction {
+    pub fn is_settlement(self) -> bool {
+        matches!(
+            self,
+            Self::OpenSettlement(_)
+                | Self::SettlementTab(_)
+                | Self::SettlementPage(_)
+                | Self::SelectConstruction(_, _)
+                | Self::ChooseBuilder
+                | Self::SelectBuilder(_)
+                | Self::ConfirmConstruction
+                | Self::OpenConstructionOrder(_)
+                | Self::AskCancelConstruction
+                | Self::ConfirmCancelConstruction
+                | Self::SelectFocus(_)
+                | Self::ConfirmFocus
+                | Self::SettlementBack
+        )
+    }
+
     pub fn is_history(self) -> bool {
         matches!(
             self,
@@ -160,6 +199,7 @@ impl UiAction {
 }
 
 pub struct Context<'a> {
+    pub settlement: &'a SettlementView,
     pub data: &'a PresentationData,
     pub economy: &'a Economy,
     pub progression: &'a kestrum::data::progression::ProgressionRules,
@@ -202,7 +242,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
-    if ctx.state.overlay == Overlay::Saves {
+    if ctx.state.overlay == Overlay::Settlement {
+        settlement::draw(ctx)
+    } else if ctx.state.overlay == Overlay::Saves {
         saves::draw(ctx)
     } else if ctx.state.overlay == Overlay::History {
         history::draw(ctx)

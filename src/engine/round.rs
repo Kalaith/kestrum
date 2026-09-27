@@ -40,6 +40,7 @@ fn complete_round(
     let supply = recovery::snapshot(campaign);
     let medics = super::evidence::recovery_medics(campaign);
     economy::resolve(campaign, data)?;
+    super::construction::resolve(campaign, data, &supply, outcome)?;
     recovery::resolve(campaign, data, &supply)?;
     person_combat::heal_wounds(campaign, &supply);
     campaign.completed_rounds =
@@ -49,11 +50,11 @@ fn complete_round(
             .ok_or(RuleError::Overflow {
                 field: "completed rounds",
             })?;
+    super::construction::reconcile(campaign, data, outcome)?;
     outcome.consumed_facts = std::mem::take(&mut campaign.pending_facts);
     super::evidence::consume(campaign, data, &outcome.consumed_facts)?;
     super::evidence::record_recovery(campaign, &medics)?;
     campaign.consumed_sequence = campaign.accepted_sequence;
-    super::history::prune(campaign, data);
     super::knowledge::prune_knowledge(campaign, data);
     campaign.acted.clear();
     campaign.round_order = campaign.independent_order();

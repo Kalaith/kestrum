@@ -15,6 +15,8 @@ mod movement;
 mod projection;
 mod resources;
 mod saves;
+mod settlement;
+mod settlement_capture;
 mod storage;
 mod world;
 use kestrum::{
@@ -54,6 +56,7 @@ pub struct Game {
     movement: ui::MoveView,
     battle: ui::BattleView,
     history: ui::HistoryView,
+    settlement: ui::SettlementView,
     projection: Option<engine::VisibleCampaign>,
     projection_revision: Option<(kestrum::state::CampaignId, u64)>,
     history_return: Overlay,
@@ -91,6 +94,7 @@ impl Game {
             movement: ui::MoveView::default(),
             battle: ui::BattleView::default(),
             history: ui::HistoryView::default(),
+            settlement: ui::SettlementView::default(),
             projection: None,
             projection_revision: None,
             history_return: Overlay::None,
@@ -132,6 +136,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_settlement_scene(scene) {
+            return;
+        }
         match scene.trim_end_matches("_minimum") {
             "title" => {}
             "gameplay" => self.capture_campaign(),
@@ -230,6 +237,7 @@ impl Game {
         self.legacy_save_exists = false;
         self.import_save_exists = false;
         self.saves = ui::SaveView::default();
+        self.settlement = ui::SettlementView::default();
         self.movement = ui::MoveView::default();
         self.battle = ui::BattleView::default();
         self.reset_history();
@@ -259,10 +267,12 @@ impl Game {
         let changed = self.refresh_projection();
         if changed || self.army_refresh_pending {
             self.refresh_army();
+            self.refresh_settlement();
             self.army_refresh_pending = false;
         }
         self.clamp_pages();
         let ctx = ui::Context {
+            settlement: &self.settlement,
             data: &self.data.presentation,
             economy: &self.data.economy,
             progression: &self.data.progression,

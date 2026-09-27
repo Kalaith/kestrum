@@ -35,6 +35,7 @@ impl StrategicCampaign {
         self.validate_factions(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
+        self.validate_construction(data)?;
         self.validate_battles(data)?;
         self.validate_evidence(data)?;
         self.validate_history()?;
@@ -238,12 +239,15 @@ impl StrategicCampaign {
         let mut ids = BTreeSet::new();
         let mut actors = BTreeSet::<FactionId>::new();
         let mut previous_sequence = self.consumed_sequence;
+        let mut previous_id = 0;
         for fact in &self.pending_facts {
             require(
                 fact.id.0 > 0
                     && fact.id < self.next_ids.fact
                     && ids.insert(fact.id)
-                    && fact.sequence > previous_sequence
+                    && fact.sequence >= previous_sequence
+                    && fact.sequence > self.consumed_sequence
+                    && fact.id.0 > previous_id
                     && fact.sequence <= self.accepted_sequence
                     && fact.completed_rounds == self.completed_rounds,
                 "pending_facts",
@@ -259,6 +263,7 @@ impl StrategicCampaign {
                 self.validate_fact_subject(fact)?;
             }
             previous_sequence = fact.sequence;
+            previous_id = fact.id.0;
         }
         require(
             actors == self.acted,
@@ -269,6 +274,14 @@ impl StrategicCampaign {
 
     fn validate_fact_subject(&self, fact: &super::campaign::DomainFact) -> Result<(), String> {
         match &fact.kind {
+            DomainFactKind::ConstructionChanged { order } => {
+                self.validate_construction_receipt(order, fact.completed_rounds)?
+            }
+            DomainFactKind::FocusChanged { faction, site, .. } => require(
+                self.factions.contains_key(faction) && self.world.site(*site).is_some(),
+                "pending_facts.focus",
+                "invalid owner or site",
+            )?,
             DomainFactKind::BattleResolved { battle, .. } => require(
                 self.battles.get(battle).is_some_and(|report| {
                     report.sequence == fact.sequence

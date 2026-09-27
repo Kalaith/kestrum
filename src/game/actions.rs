@@ -9,6 +9,10 @@ impl Game {
             self.apply_history_action(action);
             return;
         }
+        if action.is_settlement() {
+            self.apply_settlement_action(action);
+            return;
+        }
         match action {
             UiAction::OpenBattleReports
             | UiAction::BattleReport(_)
@@ -193,7 +197,7 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(5);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(6);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

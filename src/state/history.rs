@@ -5,6 +5,7 @@ mod validation;
 use super::{
     battle::{BattleId, BattleOutcome, BattleReport},
     campaign::FactId,
+    construction::{ConstructionOrder, Focus},
     evidence::Veterancy,
     military::{ArmyId, FormationId},
     people::PersonId,
@@ -64,6 +65,12 @@ pub enum HistoryKind {
         tier: Veterancy,
         xp: u32,
     },
+    Construction {
+        order: ConstructionOrder,
+    },
+    FocusChanged {
+        focus: Focus,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,6 +81,8 @@ pub enum HistoryKindFilter {
     Movement,
     Transfer,
     Veterancy,
+    Construction,
+    Focus,
 }
 
 impl HistoryKind {
@@ -85,6 +94,8 @@ impl HistoryKind {
             Self::Moved => HistoryKindFilter::Movement,
             Self::FormationTransferred | Self::PersonTransferred => HistoryKindFilter::Transfer,
             Self::VeterancyEarned { .. } => HistoryKindFilter::Veterancy,
+            Self::Construction { .. } => HistoryKindFilter::Construction,
+            Self::FocusChanged { .. } => HistoryKindFilter::Focus,
         }
     }
 }

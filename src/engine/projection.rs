@@ -33,6 +33,7 @@ pub struct VisibleFaction {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VisibleCampaign {
+    pub construction: Vec<crate::state::construction::ConstructionOrder>,
     /// Actual encounter snapshots, visible only to participants.
     pub battles: Vec<BattleReport>,
     pub campaign_id: CampaignId,
@@ -69,6 +70,12 @@ pub fn project(
         .get(&active_faction)
         .ok_or(RuleError::UnknownActor)?;
     Ok(VisibleCampaign {
+        construction: campaign
+            .construction
+            .values()
+            .filter(|order| order.owner == observer)
+            .cloned()
+            .collect(),
         battles: super::battle_reports(campaign, observer),
         campaign_id: campaign.campaign_id,
         completed_rounds: campaign.completed_rounds,
@@ -99,7 +106,7 @@ pub fn project(
                 }
             })
             .collect(),
-        world: campaign.world.clone(),
+        world: observed_world(campaign, observer),
         armies: campaign
             .armies
             .values()
@@ -119,4 +126,19 @@ pub fn project(
             .cloned()
             .collect(),
     })
+}
+
+fn observed_world(campaign: &StrategicCampaign, observer: FactionId) -> CampaignWorld {
+    let mut world = campaign.world.clone();
+    // Geography and visible structures remain public. Exact civilian pools and
+    // selected development orders belong only to the current site controller.
+    let owned = |id: &SiteId| {
+        campaign
+            .world
+            .site(*id)
+            .is_some_and(|site| site.controller == Some(observer))
+    };
+    world.population.retain(|id, _| owned(id));
+    world.focus.retain(|id, _| owned(id));
+    world
 }

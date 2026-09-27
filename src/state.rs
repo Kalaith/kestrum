@@ -13,6 +13,7 @@ pub mod mentorship;
 pub mod military;
 pub mod people;
 pub mod persistence;
+pub mod relationships;
 pub mod siege;
 pub mod threat;
 mod validation;

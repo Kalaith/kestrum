@@ -190,7 +190,7 @@ Fifteen lifecycle/mentorship regressions plus the existing suite pass (151 total
 formatting, strict Clippy, source-size gate, twelve normal/minimum native captures and
 Windows/WebGL Preview publishing pass. See
 [K14 evidence](verification/k14-lifecycle.md). Browser interaction, physical
-touch and minimum-WebGL campaign scaling remain open for K18; K15–K18 remain
+touch and minimum-WebGL campaign scaling remain open for K18; K16–K18 remain
 planned.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and

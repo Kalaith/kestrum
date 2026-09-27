@@ -154,6 +154,7 @@ fn accrue_discipline_service(campaign: &mut StrategicCampaign, data: &GameData) 
                     }
                 }
             }
+            PersonAssignment::Dependent { .. } | PersonAssignment::Trainee { .. } => continue,
             PersonAssignment::Dead => continue,
         }
         for discipline in disciplines {

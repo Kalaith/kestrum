@@ -12,6 +12,7 @@ use crate::{
         mentorship::Mentorship,
         military::{Army, ArmyId, EconomyStatement, Formation, RecoveryStatement},
         people::{Person, PersonId},
+        relationships::{Household, PersonFamily, SuccessorRegister},
         siege::SiegeId,
         world::CampaignWorld,
         CampaignId, CampaignPhase, FactionStatus, StrategicCampaign,
@@ -58,6 +59,11 @@ pub struct VisibleCampaign {
     pub armies: Vec<Army>,
     pub formations: Vec<Formation>,
     pub people: Vec<Person>,
+    /// Household and succession records belong to the observer's people.
+    pub households: Vec<Household>,
+    pub families: BTreeMap<PersonId, PersonFamily>,
+    pub successors: SuccessorRegister,
+    pub apprentice_last_invited_year: Option<u32>,
     /// Mentorship assignments are visible to their own learner and mentor.
     pub mentorships: BTreeMap<PersonId, Mentorship>,
 }
@@ -133,6 +139,38 @@ pub fn project(
             .filter(|person| person.faction == observer)
             .cloned()
             .collect(),
+        households: campaign
+            .households
+            .values()
+            .filter(|household| household.faction == observer)
+            .cloned()
+            .collect(),
+        families: campaign
+            .families
+            .iter()
+            .filter(|(id, _)| {
+                campaign
+                    .people
+                    .get(id)
+                    .is_some_and(|person| person.faction == observer)
+            })
+            .map(|(id, family)| (*id, family.clone()))
+            .collect(),
+        successors: campaign
+            .successors
+            .iter()
+            .filter(|(id, _)| {
+                campaign
+                    .people
+                    .get(id)
+                    .is_some_and(|person| person.faction == observer)
+            })
+            .map(|(id, entries)| (*id, entries.clone()))
+            .collect(),
+        apprentice_last_invited_year: campaign
+            .apprentice_last_invited_year
+            .get(&observer)
+            .copied(),
         mentorships: campaign
             .mentorships
             .iter()

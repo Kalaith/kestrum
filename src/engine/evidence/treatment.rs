@@ -47,6 +47,7 @@ pub(crate) fn recovery_medics(campaign: &StrategicCampaign) -> Vec<(PersonId, Fa
                     .values()
                     .find(|army| army.formation_ids().any(|id| id == formation))
                     .map(|army| army.site),
+                PersonAssignment::Dependent { .. } | PersonAssignment::Trainee { .. } => None,
                 PersonAssignment::Dead => None,
             }?;
             Some((person.id, person.faction, site))

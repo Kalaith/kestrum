@@ -11,7 +11,7 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. K01–K14 are complete; K15–K18 remain required work.
+confirmed design decisions. K01–K15 are complete; K16–K18 remain required work.
 
 Persistent construction, local facilities, roads and conserved Outpost settlers are
 playable; see [K09 verification](verification/k09-construction.md) for validation and
@@ -23,7 +23,8 @@ War/Peace/truce, annexation/submission and saved kingdom endings are playable;
 see [K12 verification](verification/k12-kingdoms.md). Grounded emergence and
 ordinary careers are playable; see [K13 verification](verification/k13-careers.md).
 Lifecycle and mentorship are playable; see
-[K14 verification](verification/k14-lifecycle.md). Households, heirloom history
+[K14 verification](verification/k14-lifecycle.md). Households and succession are
+playable; see [K15 verification](verification/k15-succession.md). Heirloom history
 and the production world belong to later packages.
 
 | Document | Contents |

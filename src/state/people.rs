@@ -28,6 +28,8 @@ pub struct PersonId(pub u32);
 pub enum PersonAssignment {
     Formation { formation: FormationId },
     Site { site: SiteId },
+    Dependent { site: SiteId },
+    Trainee { site: SiteId },
     Dead,
 }
 
@@ -71,6 +73,29 @@ pub struct Person {
 }
 
 impl Person {
+    pub(crate) fn new_recruit(
+        id: PersonId,
+        faction: crate::data::world::FactionId,
+        name: String,
+        birth_round: i64,
+        service_start_round: u32,
+        assignment: PersonAssignment,
+    ) -> Self {
+        Self {
+            career: Default::default(),
+            evidence: Default::default(),
+            id,
+            faction,
+            name,
+            birth_round,
+            service_start_round,
+            class: crate::data::world::PersonClass::Recruit,
+            assignment,
+            movement_spent: 0,
+            status: PersonStatus::Fit,
+        }
+    }
+
     pub fn is_alive(&self) -> bool {
         !matches!(self.status, PersonStatus::Dead { .. })
     }

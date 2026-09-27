@@ -63,6 +63,7 @@ impl Game {
     ) {
         match result {
             Ok(outcome) => {
+                let mut messages = Vec::new();
                 if !outcome.automatic_retirements.is_empty() {
                     let names = self
                         .state
@@ -85,7 +86,70 @@ impl Game {
                         .presentation
                         .text("automatic_retirement_notice")
                         .replace("{names}", &names);
-                    self.notice = Some((message, 5.0));
+                    messages.push(message);
+                }
+                if !outcome.new_people.is_empty() {
+                    let names = self
+                        .state
+                        .campaign
+                        .as_ref()
+                        .and_then(Campaign::strategic)
+                        .map(|campaign| {
+                            outcome
+                                .new_people
+                                .iter()
+                                .filter_map(|id| {
+                                    campaign.people.get(id).map(|person| person.name.as_str())
+                                })
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        })
+                        .unwrap_or_default();
+                    messages.push(
+                        self.data
+                            .presentation
+                            .text("new_people_notice")
+                            .replace("{names}", &names),
+                    );
+                }
+                if !outcome.succession.is_empty() {
+                    if let Some(campaign) =
+                        self.state.campaign.as_ref().and_then(Campaign::strategic)
+                    {
+                        for succession in &outcome.succession {
+                            let predecessor = campaign
+                                .people
+                                .get(&succession.predecessor)
+                                .map_or_else(|| "".to_owned(), |person| person.name.clone());
+                            let army = campaign
+                                .armies
+                                .get(&succession.army)
+                                .map_or_else(|| "".to_owned(), |entry| entry.name.clone());
+                            if let Some(successor) =
+                                succession.successor.and_then(|id| campaign.people.get(&id))
+                            {
+                                messages.push(
+                                    self.data
+                                        .presentation
+                                        .text("succession_notice")
+                                        .replace("{predecessor}", &predecessor)
+                                        .replace("{successor}", &successor.name)
+                                        .replace("{army}", &army),
+                                );
+                            } else {
+                                messages.push(
+                                    self.data
+                                        .presentation
+                                        .text("vacant_succession_notice")
+                                        .replace("{predecessor}", &predecessor)
+                                        .replace("{army}", &army),
+                                );
+                            }
+                        }
+                    }
+                }
+                if !messages.is_empty() {
+                    self.notice = Some((messages.join(" "), 5.0));
                 }
                 if outcome.round_completed
                     && self

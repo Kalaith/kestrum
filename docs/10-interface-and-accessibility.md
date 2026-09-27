@@ -314,6 +314,15 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 - **Layout and camera:** dedicated detail view or expanded inspector; history opens separately rather than crowding every action.
 - **Input and feedback:** visible role and relationship links with Close/Back controls; show reassignment or eligibility changes clearly.
 
+The K15 Households view keeps the current site and five local people in focus.
+Tap Select A and Select B to choose the adults, guardian/ward or predecessor/heir.
+The household view then offers the local partnership, ward, raising, trainee,
+service and apprentice actions; Succession opens a separate category/link choice.
+The map remains visible behind one focused sheet. Rival family records are never
+shown in the player's projection. All selection and action targets are at least
+48 logical pixels. Review empty, dense, selected-pair and disabled-action states
+at 1920 × 1080 and 1280 × 720, including touch-only use and Back.
+
 ### History and campaign end
 
 - **Current decision:** review what happened and follow an interesting person, place, army, or era.

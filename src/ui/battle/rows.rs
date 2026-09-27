@@ -430,6 +430,12 @@ fn assignment(ctx: &Context<'_>, report: &BattleReport, target: PersonAssignment
         PersonAssignment::Site { site } => {
             format!("{}: {}", ctx.text("assigned_site"), place(ctx, site))
         }
+        PersonAssignment::Dependent { site } => {
+            format!("{}: {}", ctx.text("dependent"), place(ctx, site))
+        }
+        PersonAssignment::Trainee { site } => {
+            format!("{}: {}", ctx.text("trainee"), place(ctx, site))
+        }
         PersonAssignment::Dead => String::new(),
     }
 }

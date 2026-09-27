@@ -64,7 +64,7 @@ pub(super) fn validate(
 
 pub(super) fn execute(
     campaign: &mut StrategicCampaign,
-    _data: &GameData,
+    data: &GameData,
     _owner: FactionId,
     command: &Command,
 ) -> Result<(), RuleError> {
@@ -77,7 +77,7 @@ pub(super) fn execute(
                 .assignment = PersonAssignment::Site { site: *site };
             clear_commander(campaign, *person);
         }
-        Command::RetirePerson { person, site } => retire(campaign, *person, *site, false),
+        Command::RetirePerson { person, site } => retire(campaign, data, *person, *site, false),
         Command::AppointGovernor { person, site } => {
             let entry = campaign.people.get_mut(person).expect("validated person");
             entry.assignment = PersonAssignment::Site { site: *site };
@@ -119,7 +119,7 @@ pub(super) fn resolve_boundary(
         let chance = data.lifecycle.death_chance_permille(age);
         if chance > 0 && campaign.rng.people.below(1000) < chance as usize {
             if let Some(site) = person_site(campaign, id) {
-                mark_dead(campaign, id, site);
+                mark_dead(campaign, data, id, site);
             }
         }
     }
@@ -143,7 +143,7 @@ pub(super) fn resolve_boundary(
         let owner = campaign.people[&id].faction;
         let refuge = nearest_refuge(campaign, owner, current);
         let destination = refuge.unwrap_or(current);
-        retire(campaign, id, destination, true);
+        retire(campaign, data, id, destination, true);
         if owner == campaign.player {
             player_retirements.push(id);
         }
@@ -187,6 +187,7 @@ pub(super) fn reconcile_roles(campaign: &mut StrategicCampaign) {
 
 pub(crate) fn mark_dead(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     id: PersonId,
     site: crate::data::world::SiteId,
 ) {
@@ -199,18 +200,16 @@ pub(crate) fn mark_dead(
     person.movement_spent = 0;
     person.career.course = None;
     person.career.site_role = None;
-    for army in campaign.armies.values_mut() {
-        if army.commander == Some(id) {
-            army.commander = None;
-        }
-    }
     campaign
         .mentorships
         .retain(|learner, mentorship| *learner != id && mentorship.mentor != id);
+    super::succession::release_household_after_death(campaign, id);
+    super::succession::resolve_person_departure(campaign, data, id);
 }
 
 fn retire(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     id: PersonId,
     site: crate::data::world::SiteId,
     automatic: bool,
@@ -224,11 +223,7 @@ fn retire(
         person.career.automatic_retirement_round = Some(campaign.completed_rounds);
     }
     campaign.mentorships.remove(&id);
-    for army in campaign.armies.values_mut() {
-        if army.commander == Some(id) {
-            army.commander = None;
-        }
-    }
+    super::succession::resolve_person_departure(campaign, data, id);
 }
 
 fn nearest_refuge(

@@ -131,7 +131,9 @@ pub(super) fn person(
         PersonAssignment::Formation { formation } => {
             Some(formation_army(campaign, owner, formation)?)
         }
-        PersonAssignment::Site { .. } => None,
+        PersonAssignment::Site { .. }
+        | PersonAssignment::Dependent { .. }
+        | PersonAssignment::Trainee { .. } => None,
         PersonAssignment::Dead => return Err(RuleError::UnknownPerson { person }),
     };
     let source_site = match selected.assignment {
@@ -139,6 +141,7 @@ pub(super) fn person(
             campaign.armies[&source.ok_or(RuleError::NotColocated)?].site
         }
         PersonAssignment::Site { site } => site,
+        PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => site,
         PersonAssignment::Dead => return Err(RuleError::UnknownPerson { person }),
     };
     if campaign.armies[&target].site != source_site {
@@ -152,6 +155,9 @@ pub(super) fn person(
     selected.assignment = PersonAssignment::Formation {
         formation: to_formation,
     };
+    if campaign.families.contains_key(&person) {
+        selected.service_start_round = campaign.completed_rounds;
+    }
     selected.career.site_role = None;
     if let Some(source) = carried_commander {
         carry_commander(campaign, source, target, person);
@@ -241,6 +247,7 @@ pub fn person_site(campaign: &StrategicCampaign, person: PersonId) -> Option<Sit
     match campaign.people.get(&person)?.assignment {
         PersonAssignment::Dead => None,
         PersonAssignment::Site { site } => Some(site),
+        PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => Some(site),
         PersonAssignment::Formation { formation } => campaign
             .armies
             .values()

@@ -15,6 +15,9 @@ pub fn local_people<'a>(view: &ArmyView, campaign: &'a VisibleCampaign) -> Vec<&
         })
         .filter(|person| match person.assignment {
             PersonAssignment::Site { site } => Some(site) == view.site,
+            PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => {
+                Some(site) == view.site
+            }
             PersonAssignment::Formation { formation } => campaign
                 .armies
                 .iter()
@@ -79,6 +82,15 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     }
     if button(
         ctx,
+        Rect::new(840.0, 626.0, 200.0, 48.0),
+        &ctx.text("households_open"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::ArmyHouseholds);
+    }
+    if button(
+        ctx,
         Rect::new(112.0, 626.0, 166.0, 48.0),
         &ctx.text("back"),
         true,
@@ -106,6 +118,8 @@ fn person_rows(
             .unwrap_or(0);
         let assignment = match person.assignment {
             PersonAssignment::Site { .. } => ctx.text("assigned_site"),
+            PersonAssignment::Dependent { .. } => ctx.text("dependent"),
+            PersonAssignment::Trainee { .. } => ctx.text("trainee"),
             PersonAssignment::Formation { formation: id } => formation(campaign, id)
                 .map(|formation| ctx.text(troop_key(formation.kind)))
                 .unwrap_or_default(),

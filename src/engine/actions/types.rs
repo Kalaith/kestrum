@@ -13,6 +13,7 @@ use crate::{
         construction::{ConstructionKind, ConstructionTarget, Focus, OrderId},
         military::{ArmyId, FormationId},
         people::PersonId,
+        relationships::{HouseholdId, LegacyCategory, SuccessorLink},
     },
 };
 use std::fmt;
@@ -133,6 +134,39 @@ pub enum Command {
     },
     EndMentorship {
         learner: PersonId,
+    },
+    FormHousehold {
+        first: PersonId,
+        second: PersonId,
+        site: SiteId,
+    },
+    EndHousehold {
+        household: HouseholdId,
+    },
+    SetHouseholdChildraising {
+        household: HouseholdId,
+        enabled: bool,
+    },
+    AdoptWard {
+        guardian: PersonId,
+        site: SiteId,
+    },
+    AssignTrainee {
+        person: PersonId,
+        site: SiteId,
+    },
+    EnterService {
+        person: PersonId,
+        formation: Option<FormationId>,
+    },
+    InviteApprentice {
+        site: SiteId,
+    },
+    DesignateSuccessor {
+        predecessor: PersonId,
+        successor: PersonId,
+        category: LegacyCategory,
+        link: SuccessorLink,
     },
     SpecializeFormation {
         formation: FormationId,
@@ -385,6 +419,8 @@ pub struct ActionOutcome {
     pub disbanded: Option<FormationId>,
     pub movement: Option<MovementOutcome>,
     pub split_army: Option<ArmyId>,
+    pub succession: Vec<crate::state::relationships::SuccessionNotice>,
+    pub new_people: Vec<PersonId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -58,6 +58,14 @@ pub(in crate::engine) fn validate_command(
         | Command::AppointGovernor { .. }
         | Command::StartMentorship { .. }
         | Command::EndMentorship { .. }
+        | Command::FormHousehold { .. }
+        | Command::EndHousehold { .. }
+        | Command::SetHouseholdChildraising { .. }
+        | Command::AdoptWard { .. }
+        | Command::AssignTrainee { .. }
+        | Command::EnterService { .. }
+        | Command::InviteApprentice { .. }
+        | Command::DesignateSuccessor { .. }
         | Command::SpecializeFormation { .. }
         | Command::CancelPersonCourse { .. }
         | Command::CancelFormationCourse { .. } => {

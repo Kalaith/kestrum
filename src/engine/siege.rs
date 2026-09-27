@@ -244,6 +244,8 @@ pub fn reconcile_sieges(
         disbanded: None,
         movement: None,
         split_army: None,
+        succession: Vec::new(),
+        new_people: Vec::new(),
     };
     reconcile(&mut candidate, data, &mut outcome)?;
     super::construction::reconcile(&mut candidate, data, &mut outcome)?;

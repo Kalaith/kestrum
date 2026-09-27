@@ -253,6 +253,7 @@ pub(super) fn personal_tags(
     part.tags.remove(&EvidenceKind::Retreated);
     let destination = match person.assignment {
         PersonAssignment::Site { site } => Some(site),
+        PersonAssignment::Dependent { .. } | PersonAssignment::Trainee { .. } => None,
         PersonAssignment::Formation { formation } => own
             .armies
             .iter()

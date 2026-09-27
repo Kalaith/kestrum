@@ -178,6 +178,7 @@ fn resolve_wipe(
     if campaign.rng.combat.below(100) < data.combat.wipe_death_percent as usize {
         kill(
             campaign,
+            data,
             person,
             context.site,
             PersonDeathReason::FormationDestroyed,
@@ -198,6 +199,7 @@ fn resolve_wipe(
     let Some(assignment) = assignment else {
         kill(
             campaign,
+            data,
             person,
             context.site,
             PersonDeathReason::NoRefuge,
@@ -335,12 +337,13 @@ fn wound(
 
 fn kill(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     id: PersonId,
     site: SiteId,
     reason: PersonDeathReason,
     events: &mut Vec<PersonCombatEvent>,
 ) {
-    super::lifecycle::mark_dead(campaign, id, site);
+    super::lifecycle::mark_dead(campaign, data, id, site);
     push_event(campaign, id, PersonCombatOutcome::Died { reason }, events);
 }
 

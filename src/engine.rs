@@ -21,6 +21,7 @@ mod recruitment;
 mod retreat;
 mod round;
 pub(crate) mod siege;
+mod succession;
 pub(crate) mod threats;
 mod transfer;
 

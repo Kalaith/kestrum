@@ -323,6 +323,8 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             "help_mentorship_contact",
             "help_apprenticeship",
         ]
+    } else if ctx.help_page == 12 {
+        &["help_households", "help_succession"]
     } else if ctx.help_page == 8 {
         &["help_development", "help_local_actions", "help_threats"]
     } else if ctx.help_page == 7 {
@@ -379,7 +381,7 @@ fn help(ctx: &Context<'_>) -> Option<UiAction> {
             ctx,
             Rect::new(766.0, 548.0, 124.0, 48.0),
             &ctx.text("next"),
-            ctx.help_page < 11,
+            ctx.help_page < 12,
             false,
         ) {
             return Some(UiAction::HelpPage(1));

@@ -19,6 +19,10 @@ impl Game {
                     Disposition, EmergenceRecord, PersonAssignment, PersonCourse, PersonId,
                     PersonRelationship, PersonStatus, PersonTrait, Recognition, Tendency,
                 },
+                relationships::{
+                    FamilyLink, FamilyOrigin, Household, HouseholdId, HouseholdStatus,
+                    LegacyCategory, PersonFamily, SuccessorDesignation, SuccessorLink,
+                },
             },
         };
         use std::collections::{BTreeMap, BTreeSet};
@@ -135,6 +139,76 @@ impl Game {
                 );
 
             let capture_kind = scene.trim_end_matches("_minimum");
+            if matches!(capture_kind, "households" | "succession") {
+                campaign.completed_rounds = 4;
+                let shared = PersonRelationship {
+                    shared_service_seasons: 4,
+                    last_shared_service_round: Some(4),
+                    mutual_combat_rounds: 0,
+                    last_mutual_combat_round: None,
+                };
+                let founder = campaign.people.get_mut(&PersonId(1)).expect("founder");
+                founder.birth_round = -120;
+                founder.assignment = PersonAssignment::Site { site: SiteId(1) };
+                founder
+                    .career
+                    .relationships
+                    .insert(PersonId(4), shared.clone());
+                let companion = campaign.people.get_mut(&PersonId(4)).expect("companion");
+                companion.birth_round = -80;
+                companion.assignment = PersonAssignment::Site { site: SiteId(1) };
+                companion.career.relationships.insert(PersonId(1), shared);
+                let household = HouseholdId(1);
+                campaign.households.insert(
+                    household,
+                    Household {
+                        id: household,
+                        faction: campaign.player,
+                        partners: [PersonId(1), PersonId(4)],
+                        home: SiteId(1),
+                        formed_round: 0,
+                        status: HouseholdStatus::Active,
+                        raising_children: true,
+                        last_attempted_year: None,
+                        last_child_round: None,
+                    },
+                );
+                campaign.next_ids.household = HouseholdId(2);
+                let mut ward = campaign.people[&PersonId(4)].clone();
+                ward.id = PersonId(5);
+                ward.name = "Rowan Reed".into();
+                ward.birth_round = -28;
+                ward.assignment = PersonAssignment::Dependent { site: SiteId(1) };
+                ward.career = Default::default();
+                ward.evidence = Default::default();
+                campaign.people.insert(ward.id, ward);
+                campaign.families.insert(
+                    PersonId(5),
+                    PersonFamily {
+                        origin: FamilyOrigin::AdoptedWard,
+                        origin_site: SiteId(1),
+                        household: Some(household),
+                        links: BTreeMap::from([(PersonId(1), FamilyLink::AdoptiveGuardian)]),
+                    },
+                );
+                campaign.next_ids.person = PersonId(6);
+                campaign.successors.entry(PersonId(1)).or_default().insert(
+                    LegacyCategory::Household,
+                    SuccessorDesignation {
+                        predecessor: PersonId(1),
+                        successor: PersonId(5),
+                        category: LegacyCategory::Household,
+                        link: SuccessorLink::Adopted,
+                        designated_round: 4,
+                        shared_seasons: 0,
+                        political_role_witnessed: false,
+                        army: None,
+                        site: None,
+                    },
+                );
+            }
+
+            let capture_kind = scene.trim_end_matches("_minimum");
             if matches!(
                 capture_kind,
                 "lifecycle" | "lifecycle_wounded" | "mentorship" | "mentorship_paused"
@@ -221,12 +295,30 @@ impl Game {
         self.open_armies(SiteId(1));
         self.army.mode = match scene.trim_end_matches("_minimum") {
             "mentorship" | "mentorship_paused" => ui::ArmyMode::Mentorship(PersonId(4)),
+            "households" => ui::ArmyMode::Households,
+            "succession" => ui::ArmyMode::Legacy,
             "lifecycle" | "lifecycle_wounded" | "career" | "career_training" => {
                 ui::ArmyMode::ProgressionPerson(PersonId(1))
             }
             _ => ui::ArmyMode::ProgressionFormation(FormationId(1)),
         };
         self.army.selected = Some(FormationId(1));
+        if matches!(
+            scene.trim_end_matches("_minimum"),
+            "households" | "succession"
+        ) {
+            self.army.household_first = Some(PersonId(1));
+            self.army.household_second =
+                Some(if scene.trim_end_matches("_minimum") == "households" {
+                    PersonId(4)
+                } else {
+                    PersonId(5)
+                });
+        }
+        if scene.trim_end_matches("_minimum") == "succession" {
+            self.army.legacy_category = LegacyCategory::Item;
+            self.army.legacy_link = SuccessorLink::Adopted;
+        }
     }
 
     pub(super) fn capture_logistics(&mut self, scene: &str) {

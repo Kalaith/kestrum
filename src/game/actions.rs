@@ -33,10 +33,24 @@ impl Game {
             UiAction::ArmyOrders
             | UiAction::ArmyPeople
             | UiAction::ArmyPeoplePage(_)
+            | UiAction::ArmyHouseholds
+            | UiAction::ArmyLegacy
+            | UiAction::HouseholdPage(_)
+            | UiAction::SelectHouseholdPerson(_, _)
+            | UiAction::SelectLegacyCategory(_)
+            | UiAction::SelectLegacyLink(_)
             | UiAction::MentorshipPage(_)
             | UiAction::OpenPersonProgression(_)
             | UiAction::OpenMentorship(_)
             | UiAction::StartMentorship(_, _, _)
+            | UiAction::FormHousehold(_, _, _)
+            | UiAction::EndHousehold(_)
+            | UiAction::SetHouseholdChildraising(_, _)
+            | UiAction::AdoptWard(_, _)
+            | UiAction::AssignTrainee(_, _)
+            | UiAction::EnterService(_, _)
+            | UiAction::InviteApprentice(_)
+            | UiAction::DesignateSuccessor(_, _, _, _)
             | UiAction::EndMentorship(_)
             | UiAction::RecoverPersonAtSite(_, _)
             | UiAction::RetirePerson(_, _)
@@ -125,6 +139,26 @@ impl Game {
                 self.army.mode = ui::ArmyMode::People;
                 self.army.people_page = 0;
             }
+            UiAction::ArmyHouseholds => {
+                self.army.mode = ui::ArmyMode::Households;
+                self.army.household_page = 0;
+                self.army.household_first = None;
+                self.army.household_second = None;
+            }
+            UiAction::ArmyLegacy => self.army.mode = ui::ArmyMode::Legacy,
+            UiAction::HouseholdPage(delta) => {
+                self.army.household_page = self
+                    .army
+                    .household_page
+                    .saturating_add_signed(delta as isize)
+            }
+            UiAction::SelectHouseholdPerson(person, slot) => match slot {
+                0 => self.army.household_first = Some(person),
+                1 => self.army.household_second = Some(person),
+                _ => unreachable!("two household selection slots"),
+            },
+            UiAction::SelectLegacyCategory(category) => self.army.legacy_category = category,
+            UiAction::SelectLegacyLink(link) => self.army.legacy_link = link,
             UiAction::ArmyPeoplePage(delta) => {
                 self.army.people_page = self.army.people_page.saturating_add_signed(delta as isize)
             }
@@ -151,6 +185,37 @@ impl Game {
             UiAction::EndMentorship(learner) => {
                 self.apply_campaign_command(Command::EndMentorship { learner })
             }
+            UiAction::FormHousehold(first, second, site) => {
+                self.apply_campaign_command(Command::FormHousehold {
+                    first,
+                    second,
+                    site,
+                })
+            }
+            UiAction::EndHousehold(household) => {
+                self.apply_campaign_command(Command::EndHousehold { household })
+            }
+            UiAction::SetHouseholdChildraising(household, enabled) => self
+                .apply_campaign_command(Command::SetHouseholdChildraising { household, enabled }),
+            UiAction::AdoptWard(guardian, site) => {
+                self.apply_campaign_command(Command::AdoptWard { guardian, site })
+            }
+            UiAction::AssignTrainee(person, site) => {
+                self.apply_campaign_command(Command::AssignTrainee { person, site })
+            }
+            UiAction::EnterService(person, formation) => {
+                self.apply_campaign_command(Command::EnterService { person, formation })
+            }
+            UiAction::InviteApprentice(site) => {
+                self.apply_campaign_command(Command::InviteApprentice { site })
+            }
+            UiAction::DesignateSuccessor(predecessor, successor, category, link) => self
+                .apply_campaign_command(Command::DesignateSuccessor {
+                    predecessor,
+                    successor,
+                    category,
+                    link,
+                }),
             UiAction::RecoverPersonAtSite(person, site) => {
                 self.apply_campaign_command(Command::RecoverPersonAtSite { person, site })
             }
@@ -284,7 +349,7 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(11);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(12);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

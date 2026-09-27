@@ -70,6 +70,9 @@ fn complete_round(
                 field: "completed rounds",
             })?;
     outcome.automatic_retirements = super::lifecycle::resolve_boundary(campaign, data)?;
+    outcome
+        .new_people
+        .extend(super::succession::resolve_boundary(campaign, data)?);
     super::construction::reconcile(campaign, data, outcome)?;
     super::evidence::record_person_treatment(campaign, &medics, &treated_people)?;
     super::evidence::record_recovery(campaign, &medics)?;

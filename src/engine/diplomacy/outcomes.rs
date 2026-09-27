@@ -212,6 +212,7 @@ fn retire_survivors(campaign: &mut StrategicCampaign, faction: FactionId) {
     {
         let site = match person.assignment {
             PersonAssignment::Site { site } => site,
+            PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => site,
             PersonAssignment::Formation { formation } => campaign
                 .armies
                 .values()

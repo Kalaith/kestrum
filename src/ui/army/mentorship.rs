@@ -310,6 +310,7 @@ fn person_site(
 ) -> Option<kestrum::data::world::SiteId> {
     match person.assignment {
         PersonAssignment::Site { site } => Some(site),
+        PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => Some(site),
         PersonAssignment::Formation { formation } => campaign
             .armies
             .iter()

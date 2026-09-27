@@ -197,7 +197,9 @@ impl Game {
             | "army_economy" | "army_deficit" | "recruit" | "recruit_blocked" | "recruit_full"
             | "disband" | "disband_last" => self.capture_army(scene),
             "career" | "career_training" | "specialization" | "lifecycle" | "lifecycle_wounded"
-            | "mentorship" | "mentorship_paused" => self.capture_progression(scene),
+            | "mentorship" | "mentorship_paused" | "households" | "succession" => {
+                self.capture_progression(scene)
+            }
             "menu" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Menu;
@@ -324,6 +326,8 @@ impl Game {
             threat: &self.threat,
             data: &self.data.presentation,
             economy: &self.data.economy,
+            rules: &self.data.rules,
+            household_rules: &self.data.households,
             progression: &self.data.progression,
             history: &self.history,
             army: &self.army,

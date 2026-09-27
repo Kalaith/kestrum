@@ -266,7 +266,7 @@ unpoliced rounds. Older saves acquire no invented occupants or development histo
 All 111 tests, formatting, strict Clippy, source gate, representative native review
 and Windows/WebGL Preview publishing pass. [K11 verification](docs/verification/k11-living-places.md)
 records browser seasonal growth and reload, decisions and platform limitations.
-K15–K18 remain required.
+K16–K18 remain required.
 
 ## Screen brief
 
@@ -304,7 +304,7 @@ eliminated or your vassal, the kingdom milestone ends in victory. Losing your ow
 last base and army ends in defeat. The saved result preserves the final battle's
 service and allows Records, Save, Menu and New Game. Simulation stops there.
 
-K15–K18 remain required for the full generational release.
+K16–K18 remain required for the full generational release.
 
 [K12 verification](docs/verification/k12-kingdoms.md) records 127 passing tests,
 Windows/WebGL Preview publishing, native review and the browser war/AI/save/reload
@@ -327,7 +327,7 @@ Rivals use the same evidence options and validated course/appointment commands.
 
 [K13 verification](docs/verification/k13-careers.md) records nine progression cases,
 136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum
-screen review and Windows/WebGL Preview publishing. K15–K18 remain required;
+screen review and Windows/WebGL Preview publishing. K16–K18 remain required;
 minimum WebGL campaign scaling and physical-touch acceptance remain open.
 
 ### K14 — Elders keep serving in new ways
@@ -349,6 +349,28 @@ validated options and aging rules.
 strict Clippy, formatting, the source-size gate, twelve reviewed 1920×1080 and
 1280×720 captures, and Windows/WebGL Preview publishing. Browser interaction, physical
 touch and minimum-WebGL campaign scaling remain K18 checks.
+
+### K15 — Households and succession
+
+Local adults with four recorded shared-service seasons may form an optional
+household at a safe friendly settlement. Households can opt into sparse yearly
+Spring births; players can adopt a named ward, train dependents from age thirteen,
+and enter local service at seventeen. A separate age-seventeen apprentice can
+join once a year for 20 Gold and one unit from local population when no dependents
+are present. Births, wards and apprentices start as Recruits without copied
+traits or evidence.
+
+Command, household, item and institutional successor designations record their
+real blood, adoption, mentorship or political link. A command heir already has to
+serve with that army. Retirement or death uses the eligible designation, then an
+oldest local pupil or demonstrated command evidence; without one the army stays
+leaderless. Household capture/death and faction defeat clean up active duties
+without moving people or restoring an eliminated faction. Rivals use the same
+validated continuity commands.
+
+[K15 verification](docs/verification/k15-succession.md) records nine focused
+succession cases, 160 passing tests, full validation and native captures.
+Browser interaction and physical-touch checks remain part of K18.
 
 ## Development
 
@@ -394,8 +416,8 @@ describe the implementation now present.
 For future development, use the [implementation plan](docs/implementation-plan.md).
 It supplies 18 ordered work packages, concrete provisional rules, state/data/save
 contracts, behavioral acceptance cases, a complete system coverage ledger, and a
-reusable prompt for implementing one package at a time. Continue with K15 after the
-K14 commit; K15–K18 remain planned.
+reusable prompt for implementing one package at a time. K16 is the next required
+package; K16–K18 remain planned.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.

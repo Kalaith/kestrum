@@ -2,6 +2,7 @@
 
 mod career_requirements;
 mod disband;
+mod households;
 mod mentorship;
 mod orders;
 mod people;
@@ -20,6 +21,7 @@ use kestrum::{
     state::{
         military::{Army, ArmyId, Formation, FormationId},
         people::PersonId,
+        relationships::{LegacyCategory, SuccessorLink},
     },
 };
 use macroquad::prelude::*;
@@ -52,6 +54,8 @@ pub enum ArmyMode {
     Roster,
     Orders,
     People,
+    Households,
+    Legacy,
     ProgressionPerson(PersonId),
     Mentorship(PersonId),
     ProgressionFormation(FormationId),
@@ -74,6 +78,11 @@ pub struct ArmyView {
     pub status: String,
     pub transfer: TransferView,
     pub people_page: usize,
+    pub household_page: usize,
+    pub household_first: Option<PersonId>,
+    pub household_second: Option<PersonId>,
+    pub legacy_category: LegacyCategory,
+    pub legacy_link: SuccessorLink,
     pub mentorship_page: usize,
     pub remaining: u32,
     pub supplied: bool,
@@ -94,6 +103,11 @@ impl Default for ArmyView {
             status: String::new(),
             transfer: TransferView::default(),
             people_page: 0,
+            household_page: 0,
+            household_first: None,
+            household_second: None,
+            legacy_category: LegacyCategory::Command,
+            legacy_link: SuccessorLink::Martial,
             mentorship_page: 0,
             remaining: 0,
             supplied: false,
@@ -138,6 +152,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Roster => "armies",
         ArmyMode::Orders => "army_orders",
         ArmyMode::People => "army_people",
+        ArmyMode::Households => "households",
+        ArmyMode::Legacy => "legacy",
         ArmyMode::ProgressionPerson(_) => "person_progression",
         ArmyMode::Mentorship(_) => "mentorship",
         ArmyMode::ProgressionFormation(_) => "formation_progression",
@@ -172,6 +188,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Roster => roster::draw(ctx, campaign),
         ArmyMode::Orders => orders::draw(ctx, campaign),
         ArmyMode::People => people::draw(ctx, campaign),
+        ArmyMode::Households => households::draw(ctx, campaign, false),
+        ArmyMode::Legacy => households::draw(ctx, campaign, true),
         ArmyMode::ProgressionPerson(person) => progression::person(ctx, campaign, person),
         ArmyMode::Mentorship(person) => {
             mentorship::draw(ctx, campaign, person, ctx.army.mentorship_page)

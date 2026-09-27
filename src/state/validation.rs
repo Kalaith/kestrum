@@ -37,6 +37,7 @@ impl StrategicCampaign {
         self.validate_ai(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
+        self.validate_relationships(data)?;
         self.validate_construction(data)?;
         self.validate_development(data)?;
         self.validate_threats(data)?;
@@ -443,6 +444,11 @@ impl StrategicCampaign {
                 "person",
                 self.next_ids.person.0,
                 self.people.keys().map(|id| id.0).max(),
+            ),
+            (
+                "household",
+                self.next_ids.household.0,
+                self.households.keys().map(|id| id.0).max(),
             ),
         ] {
             require(

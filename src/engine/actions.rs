@@ -152,6 +152,9 @@ fn prepare(
         .validate()
         .map_err(RuleError::InvalidState)?;
     data.lifecycle.validate().map_err(RuleError::InvalidState)?;
+    data.households
+        .validate()
+        .map_err(RuleError::InvalidState)?;
     data.history.validate().map_err(RuleError::InvalidState)?;
     data.construction
         .validate()
@@ -165,6 +168,7 @@ fn prepare(
     super::progression::validate_command(campaign, data, owner, &command)?;
     super::lifecycle::validate(campaign, data, owner, &command)?;
     super::mentorship::validate(campaign, data, owner, &command)?;
+    super::succession::validate(campaign, data, owner, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -185,6 +189,8 @@ fn prepare(
         disbanded: None,
         movement: None,
         split_army: None,
+        succession: Vec::new(),
+        new_people: Vec::new(),
     };
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
@@ -211,6 +217,7 @@ fn finish(
     candidate.reconcile_region_control();
     super::mentorship::reconcile(candidate, data);
     super::lifecycle::reconcile_roles(candidate);
+    super::succession::reconcile(before, candidate);
     if outcome.round_completed {
         super::mentorship::resolve_season(candidate, data);
     }
@@ -230,6 +237,7 @@ fn finish(
     if outcome.round_completed {
         super::history::prune(candidate, data);
     }
+    outcome.succession = super::succession::notices(before, candidate);
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
     Ok(())
@@ -330,6 +338,16 @@ fn execute(
         }
         command @ (Command::StartMentorship { .. } | Command::EndMentorship { .. }) => {
             super::mentorship::execute(candidate, data, owner, &command)?;
+        }
+        command @ (Command::FormHousehold { .. }
+        | Command::EndHousehold { .. }
+        | Command::SetHouseholdChildraising { .. }
+        | Command::AdoptWard { .. }
+        | Command::AssignTrainee { .. }
+        | Command::EnterService { .. }
+        | Command::InviteApprentice { .. }
+        | Command::DesignateSuccessor { .. }) => {
+            outcome.new_people = super::succession::execute(candidate, data, owner, &command)?;
         }
     }
     Ok(())

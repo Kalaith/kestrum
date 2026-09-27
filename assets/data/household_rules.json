@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "partnership_minimum_age_years": 18,
+  "partnership_shared_seasons": 4,
+  "child_minimum_age_years": 20,
+  "child_maximum_age_years": 40,
+  "birth_chance_permille": 200,
+  "birth_gap_seasons": 8,
+  "maximum_dependent_children": 2,
+  "ward_age_years": 8,
+  "trainee_minimum_age_years": 13,
+  "service_minimum_age_years": 17,
+  "apprentice_cost_gold": 20,
+  "apprentice_minimum_habitation": "village"
+}

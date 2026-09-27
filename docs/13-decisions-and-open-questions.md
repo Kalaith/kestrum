@@ -640,3 +640,37 @@ events. These implementation choices follow the documented provisional rules
 and are delegated decisions, not newly confirmed author decisions. K14's
 regressions and validation are recorded in
 [the lifecycle verification](verification/k14-lifecycle.md).
+
+### I15 — Sparse households and several routes to succession
+
+K15 follows P22's age, season, population, and category rules. The validated
+Form Household command is both adults' explicit acceptance; no extra marriage
+confirmation or gender/genetics model is introduced. Partners may be wounded but
+must be alive and not retired. A safe site is friendly, inhabited, nonbesieged,
+without an active threat or battle, and without an at-war army at or beside it.
+
+Raise Children makes one 20% attempt at each eligible Spring in stable household
+ID order, using the people RNG once per attempt. Eight seasons separate births;
+adopted wards share the two-dependent cap. Adoption names one adult guardian,
+costs no Gold, and deducts exactly one unit from local population. A 13-year-old
+dependent may train locally; at 17 a Recruit may enter local site or formation
+service. A separate Village-or-larger apprentice costs 20 Gold and one population
+unit, and is limited to one per faction per year while the faction has no
+dependents. Family origin, not inherited statistics, connects each person.
+
+Blood means biological ancestry; Adopted is the recorded guardian/ward link;
+Martial is a real mentorship; Religious reuses that mentorship at a Temple;
+Political requires four shared-service seasons and a local site role. Institutional
+succession records an existing site. Command successors must already be fit adult
+members of the named army. On vacancy, an eligible designation wins, then the
+oldest local pupil, then highest command evidence and lowest PersonId; no candidate
+leaves the army honestly vacant. K15 exposes an Item designation seam, while K16
+owns item custody and estate transfer. Death, capture, retirement and defeat close
+or prune only current duties; they do not teleport people, copy skills or revive
+an eliminated faction. Rival planning proposes the same validated family and
+continuity commands as the player. K14 payload migration adds empty K15 records
+without advancing any RNG stream.
+
+These are delegated implementation decisions, not newly confirmed author rules.
+K15 validation and screenshots are recorded in
+[the succession verification](verification/k15-succession.md).

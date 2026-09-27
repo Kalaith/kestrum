@@ -52,6 +52,24 @@ impl StrategicCampaign {
                 PersonAssignment::Site { site } => {
                     person.is_alive() && self.world.site(site).is_some()
                 }
+                PersonAssignment::Dependent { site } => {
+                    person.is_alive()
+                        && person.status == PersonStatus::Fit
+                        && !person.career.retired
+                        && person.career.course.is_none()
+                        && self.world.site(site).is_some()
+                }
+                PersonAssignment::Trainee { site } => {
+                    person.is_alive()
+                        && person.status == PersonStatus::Fit
+                        && !person.career.retired
+                        && person.career.course.is_none()
+                        && person.class == PersonClass::Recruit
+                        && (data.households.trainee_minimum_age_years
+                            ..data.households.service_minimum_age_years)
+                            .contains(&person.age_years(self.completed_rounds))
+                        && self.world.site(site).is_some()
+                }
                 PersonAssignment::Dead => !person.is_alive(),
             };
             require(

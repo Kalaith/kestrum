@@ -18,10 +18,15 @@ use super::{
     knowledge::CampaignKnowledge,
     military::{Army, ArmyId, EconomyStatement, Formation, FormationId, RecoveryStatement},
     people::{Person, PersonId},
+    relationships::{Household, HouseholdId, PersonFamily, SuccessorRegister},
     world::CampaignWorld,
 };
 
 pub const STRATEGIC_VERSION: u32 = 2;
+
+fn first_household_id() -> HouseholdId {
+    HouseholdId(1)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -116,6 +121,8 @@ pub struct NextIds {
     pub army: ArmyId,
     pub formation: FormationId,
     pub person: PersonId,
+    #[serde(default = "first_household_id")]
+    pub household: HouseholdId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -221,6 +228,14 @@ pub struct StrategicCampaign {
     pub formations: BTreeMap<FormationId, Formation>,
     pub people: BTreeMap<PersonId, Person>,
     #[serde(default)]
+    pub households: BTreeMap<HouseholdId, Household>,
+    #[serde(default)]
+    pub families: BTreeMap<PersonId, PersonFamily>,
+    #[serde(default)]
+    pub successors: SuccessorRegister,
+    #[serde(default)]
+    pub apprentice_last_invited_year: BTreeMap<FactionId, u32>,
+    #[serde(default)]
     pub mentorships: BTreeMap<PersonId, super::mentorship::Mentorship>,
     pub world: CampaignWorld,
     pub relations: Vec<Relation>,
@@ -283,6 +298,7 @@ impl StrategicCampaign {
                 army: ArmyId(1),
                 formation: FormationId(1),
                 person: PersonId(1),
+                household: HouseholdId(1),
             },
             completed_rounds: 0,
             player: scenario.player,
@@ -293,6 +309,10 @@ impl StrategicCampaign {
             armies: BTreeMap::new(),
             formations: BTreeMap::new(),
             people: BTreeMap::new(),
+            households: BTreeMap::new(),
+            families: BTreeMap::new(),
+            successors: BTreeMap::new(),
+            apprentice_last_invited_year: BTreeMap::new(),
             mentorships: BTreeMap::new(),
             world: CampaignWorld::from_scenario(scenario),
             relations: scenario.relations.clone(),

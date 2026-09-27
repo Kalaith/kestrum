@@ -104,6 +104,45 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
         Command::CancelFormationCourse { formation } => {
             (AiIntentKind::Progression, vec![5, formation.0])
         }
+        Command::FormHousehold {
+            first,
+            second,
+            site,
+        } => (
+            AiIntentKind::Progression,
+            vec![10, first.0, second.0, site.0],
+        ),
+        Command::EndHousehold { household } => (AiIntentKind::Progression, vec![16, household.0]),
+        Command::SetHouseholdChildraising { household, enabled } => (
+            AiIntentKind::Progression,
+            vec![11, household.0, u32::from(*enabled)],
+        ),
+        Command::AdoptWard { guardian, site } => {
+            (AiIntentKind::Progression, vec![12, guardian.0, site.0])
+        }
+        Command::AssignTrainee { person, site } => {
+            (AiIntentKind::Progression, vec![13, person.0, site.0])
+        }
+        Command::EnterService { person, formation } => (
+            AiIntentKind::Progression,
+            vec![14, person.0, formation.map_or(0, |id| id.0)],
+        ),
+        Command::InviteApprentice { site } => (AiIntentKind::Progression, vec![9, site.0]),
+        Command::DesignateSuccessor {
+            predecessor,
+            successor,
+            category,
+            link,
+        } => (
+            AiIntentKind::Progression,
+            vec![
+                15,
+                predecessor.0,
+                successor.0,
+                *category as u32,
+                *link as u32,
+            ],
+        ),
         _ => return None,
     };
     Some(AiIntent { kind, targets })

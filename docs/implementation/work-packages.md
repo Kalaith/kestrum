@@ -382,6 +382,9 @@ equivalent family-independent career opportunity for player and AI.
 **Files:** `src/state/relationships.rs`, `src/engine/succession.rs`, household and
 successor UI, `tests/succession.rs`.
 
+**Status:** complete. See [K15 verification](../verification/k15-succession.md)
+for behavioral coverage, current UI evidence and validation limits.
+
 Implement optional familiar partnerships, household child/ward context, age-based
 trainee/service entry and local apprentices. Keep the vast majority of population
 abstract. Add blood, martial, religious, political and adopted successor links

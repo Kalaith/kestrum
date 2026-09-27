@@ -236,6 +236,9 @@ fn validate_person_snapshot(
                 && !matches!(person.status, PersonStatus::Dead { .. }),
             "invalid witnessed site",
         )?,
+        PersonAssignment::Dependent { .. } | PersonAssignment::Trainee { .. } => {
+            return Err("battle: a dependent cannot be a field participant".into())
+        }
         PersonAssignment::Dead => ensure(
             matches!(person.status, PersonStatus::Dead { .. }),
             "dead assignment mismatch",

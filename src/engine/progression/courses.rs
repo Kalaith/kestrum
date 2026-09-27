@@ -219,6 +219,7 @@ fn person_site(
             .find(|army| army.formation_ids().any(|id| id == formation))
             .map(|army| army.site),
         PersonAssignment::Site { site } => Some(site),
+        PersonAssignment::Dependent { site } | PersonAssignment::Trainee { site } => Some(site),
         PersonAssignment::Dead => None,
     }
 }

@@ -162,7 +162,9 @@ K06 is **Done**: costed group movement, preserved transfer allowances and suppli
 recovery pass [K06 evidence](verification/k06-logistics.md).
 K07 is **Done**: automatic encounters, casualties, retreat, limited wounds and
 recorded reports pass [K07 evidence](verification/k07-combat.md).
-K08–K18 remain **planned, not implemented**.
+K08 is **Done**: participation, veterancy, bounded history and observer-safe records
+pass [K08 evidence](verification/k08-service.md).
+K09–K18 remain **planned, not implemented**.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain

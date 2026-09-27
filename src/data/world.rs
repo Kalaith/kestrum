@@ -186,6 +186,7 @@ impl ResourceGrant {
 #[serde(rename_all = "snake_case")]
 pub enum FounderClass {
     Officer,
+    Medic,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -44,6 +44,7 @@ pub enum PersonStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Person {
+    pub evidence: super::evidence::EvidenceLedger,
     pub id: PersonId,
     pub faction: FactionId,
     pub name: String,

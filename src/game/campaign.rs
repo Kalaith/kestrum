@@ -35,6 +35,8 @@ impl Game {
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();
                 self.battle = ui::BattleView::default();
+                self.reset_history();
+                self.invalidate_projection();
                 self.error = None;
                 self.npc_delay = 0.0;
                 self.save_checkpoint();

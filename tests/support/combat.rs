@@ -43,6 +43,7 @@ pub(super) fn person(campaign: &mut StrategicCampaign, id: u32, faction: u32, fo
     campaign.people.insert(
         PersonId(id),
         Person {
+            evidence: Default::default(),
             id: PersonId(id),
             faction: FactionId(faction),
             name: format!("Witness {id}"),
@@ -94,6 +95,7 @@ pub(super) fn add_army(
     campaign.formations.insert(
         FormationId(formation),
         Formation {
+            service: Default::default(),
             id: FormationId(formation),
             faction: FactionId(faction),
             kind: TroopKind::Warriors,

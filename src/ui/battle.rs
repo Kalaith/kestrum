@@ -66,6 +66,7 @@ impl BattleView {
 struct ReportRow {
     heading: String,
     detail: String,
+    person: Option<kestrum::state::people::PersonId>,
 }
 
 fn current_report<'a>(ctx: &'a Context<'_>) -> Option<&'a BattleReport> {
@@ -128,7 +129,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         if let Some(action) = header(ctx, report) {
             return Some(action);
         }
-        draw_rows(ctx, report);
+        if let Some(action) = draw_rows(ctx, report) {
+            return Some(action);
+        }
         body(
             ctx,
             &ctx.text("battle_recorded"),
@@ -160,17 +163,18 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     None
 }
 
-fn draw_rows(ctx: &Context<'_>, report: &BattleReport) {
+fn draw_rows(ctx: &Context<'_>, report: &BattleReport) -> Option<UiAction> {
     for (index, row) in visible_rows(ctx, report).iter().enumerate() {
         let y = 244.0 + index as f32 * 108.0;
-        for (line, label) in wrap_text_ex(&row.heading, 1056.0, ctx.body_font(), 20.0)
+        let width = if row.person.is_some() { 850.0 } else { 1056.0 };
+        for (line, label) in wrap_text_ex(&row.heading, width, ctx.body_font(), 20.0)
             .iter()
             .take(2)
             .enumerate()
         {
             body(ctx, label, vec2(112.0, y + line as f32 * 24.0), 20.0, CREAM);
         }
-        for (line, label) in wrap_text_ex(&row.detail, 1056.0, ctx.body_font(), 18.0)
+        for (line, label) in wrap_text_ex(&row.detail, width, ctx.body_font(), 18.0)
             .iter()
             .take(2)
             .enumerate()
@@ -183,6 +187,19 @@ fn draw_rows(ctx: &Context<'_>, report: &BattleReport) {
                 MUTED,
             );
         }
+        if let Some(person) = row.person {
+            if button(
+                ctx,
+                Rect::new(984.0, y - 19.0, 184.0, 48.0),
+                &ctx.text("history_open"),
+                true,
+                false,
+            ) {
+                return Some(UiAction::OpenHistory(
+                    kestrum::state::history::HistorySubject::Person(person),
+                ));
+            }
+        }
         draw_line(
             112.0,
             y + 91.0,
@@ -192,6 +209,7 @@ fn draw_rows(ctx: &Context<'_>, report: &BattleReport) {
             Color::new(0.21, 0.29, 0.25, 1.0),
         );
     }
+    None
 }
 
 fn page_controls(ctx: &Context<'_>, report: &BattleReport) -> Option<UiAction> {

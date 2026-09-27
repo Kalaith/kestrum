@@ -82,6 +82,7 @@ pub(super) fn resolve(
     finish_side(campaign, &mut report.attacker);
     finish_side(campaign, &mut report.defender);
     apply_site_result(campaign, data, &mut report);
+    super::knowledge::observe_battle(&mut campaign.knowledge, &report);
     let id = report.id;
     campaign.battles.insert(id, report);
     Ok(id)
@@ -167,12 +168,12 @@ fn snapshot(
         let formations: Vec<_> = army.slots.iter().enumerate().filter_map(|(slot,id)| id.map(|id| {
             let formation = &campaign.formations[&id];
             BattleFormationReport {id,slot,kind:formation.kind,start:formation.headcount,end:formation.headcount,
-                combat_losses:0,encirclement_losses:0}
+                combat_losses:0,encirclement_losses:0,veterancy_permille:formation.service.tier.permille(&data.progression)}
         })).collect();
         let people = campaign.people.values().filter(|person| person.is_alive() && matches!(person.assignment,
             PersonAssignment::Formation {formation} if formations.iter().any(|entry| entry.id == formation)))
             .map(|person| BattlePersonReport {id:person.id,starting_formation:match person.assignment {PersonAssignment::Formation {formation} => formation,_ => unreachable!("attached participant")},name:person.name.clone(),class:person.class,
-                status:person.status,assignment:person.assignment}).collect();
+                starting_status:Some(person.status),status:person.status,assignment:person.assignment}).collect();
         BattleArmyReport {id,name:army.name.clone(),leadership_permille:campaign.army_leadership_permille(id,data).expect("army"),
             commander:army.commander.and_then(|id| campaign.people.get(&id)).map(|person|
                 BattleCommander {id:person.id,name:person.name.clone()}),people,formations,final_site:Some(army.site)}

@@ -146,6 +146,12 @@ fn validate_army<'a>(
                 && formation.slot < 6
                 && formation.start > 0
                 && formation.start <= data.economy.formations[&formation.kind].capacity
+                && [
+                    data.progression.ordinary_permille,
+                    data.progression.seasoned_permille,
+                    data.progression.veteran_permille,
+                ]
+                .contains(&formation.veterancy_permille)
                 && u64::from(formation.start)
                     == u64::from(formation.end)
                         + u64::from(formation.combat_losses)
@@ -199,6 +205,21 @@ fn validate_person_snapshot(
     report: &BattleReport,
     person: &BattlePersonReport,
 ) -> Result<(), String> {
+    match person.starting_status {
+        Some(PersonStatus::Dead { .. }) => {
+            return Err("battle: a dead person cannot enter combat".into())
+        }
+        Some(PersonStatus::Wounded {
+            since_round,
+            remaining_steps,
+        }) => ensure(
+            since_round <= report.completed_rounds
+                && (1..=data.combat.wound_recovery_steps).contains(&remaining_steps)
+                && person.status != PersonStatus::Fit,
+            "invalid starting injury or unsupported healing during combat",
+        )?,
+        Some(PersonStatus::Fit) | None => {}
+    }
     match person.assignment {
         PersonAssignment::Formation { formation } => ensure(
             formation.0 > 0

@@ -1,6 +1,7 @@
 //! Additive v2 upgrades, shared by interim slots and catalogue payloads.
 
 use super::StrategicCampaign;
+mod evidence;
 
 impl StrategicCampaign {
     pub(crate) fn decode_compatible(
@@ -8,6 +9,7 @@ impl StrategicCampaign {
     ) -> Result<Self, serde_json::Error> {
         initialize_earlier_military(&mut value);
         initialize_earlier_battles(&mut value);
+        let earlier_evidence = evidence::initialize(&mut value)?;
         // K02/K03 had neither field and cannot contain a historical regional
         // claim. Initialize both together, then derive the first claim from saved
         // controllers/HQs. Partial or explicitly malformed new fields stay errors.
@@ -25,6 +27,9 @@ impl StrategicCampaign {
         let mut campaign: Self = serde_json::from_value(value)?;
         if legacy {
             campaign.reconcile_region_control();
+        }
+        if earlier_evidence {
+            evidence::restore(&mut campaign)?;
         }
         Ok(campaign)
     }

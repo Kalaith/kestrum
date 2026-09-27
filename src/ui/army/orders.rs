@@ -14,6 +14,58 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         CREAM,
     );
     let selected = ctx.army.selected.and_then(|id| formation(campaign, id));
+    selected_details(ctx, campaign, selected);
+    if let Some(action) = order_controls(ctx, campaign, army, selected) {
+        return Some(action);
+    }
+    if ctx.army.status.is_empty() {
+        block(
+            ctx,
+            &ctx.text(if campaign.player_turn {
+                "transfer_preserves_movement"
+            } else {
+                "transfer_paused_help"
+            }),
+            vec2(112.0, 573.0),
+            1040.0,
+            MUTED,
+        );
+    }
+    for (x, key, subject) in [
+        (
+            310.0,
+            "army_history",
+            Some(kestrum::state::history::HistorySubject::Army(army.id)),
+        ),
+        (
+            762.0,
+            "formation_service",
+            selected.map(|f| kestrum::state::history::HistorySubject::Formation(f.id)),
+        ),
+    ] {
+        if button(
+            ctx,
+            Rect::new(x, 626.0, 406.0, 48.0),
+            &ctx.text(key),
+            subject.is_some(),
+            false,
+        ) {
+            return subject.map(UiAction::OpenHistory);
+        }
+    }
+    if button(
+        ctx,
+        Rect::new(112.0, 626.0, 166.0, 48.0),
+        &ctx.text("back"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::CancelArmyAction);
+    }
+    None
+}
+
+fn selected_details(ctx: &Context<'_>, campaign: &VisibleCampaign, selected: Option<&Formation>) {
     if let Some(selected) = selected {
         let remaining = ctx
             .army
@@ -81,6 +133,14 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             );
         }
     }
+}
+
+fn order_controls(
+    ctx: &Context<'_>,
+    campaign: &VisibleCampaign,
+    army: &Army,
+    selected: Option<&Formation>,
+) -> Option<UiAction> {
     if button(
         ctx,
         Rect::new(112.0, 410.0, 496.0, 48.0),
@@ -116,28 +176,6 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         false,
     ) {
         return selected.map(|formation| UiAction::AskDisband(formation.id));
-    }
-    if ctx.army.status.is_empty() {
-        block(
-            ctx,
-            &ctx.text(if campaign.player_turn {
-                "transfer_preserves_movement"
-            } else {
-                "transfer_paused_help"
-            }),
-            vec2(112.0, 573.0),
-            1040.0,
-            MUTED,
-        );
-    }
-    if button(
-        ctx,
-        Rect::new(112.0, 626.0, 166.0, 48.0),
-        &ctx.text("back"),
-        true,
-        false,
-    ) {
-        return Some(UiAction::CancelArmyAction);
     }
     None
 }

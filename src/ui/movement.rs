@@ -143,55 +143,8 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
             return Some(UiAction::EnterRegion(region.id));
         }
     } else if let Some(preview) = &ctx.movement.preview {
-        let destination = ctx
-            .movement
-            .destination
-            .and_then(|id| campaign.world.site(id))
-            .map(|site| site.name.as_str())
-            .unwrap_or_default();
-        lines(ctx, destination, vec2(x, 198.0), width, 2, CREAM);
-        body(
-            ctx,
-            &cost_summary(ctx, preview),
-            vec2(x, 252.0),
-            18.0,
-            CREAM,
-        );
-        let consequence = if ctx.movement.status.is_empty() {
-            route_consequence(ctx, preview)
-        } else {
-            ctx.movement.status.clone()
-        };
-        lines(ctx, &consequence, vec2(x, 281.0), width, 4, BRASS);
-        lines(
-            ctx,
-            &ctx.text(if preview.supplied_after {
-                "move_supplied_after"
-            } else {
-                "move_unsupplied_after"
-            }),
-            vec2(x, 383.0),
-            width,
-            2,
-            MUTED,
-        );
-        if button(
-            ctx,
-            Rect::new(x, 450.0, width, 48.0),
-            &ctx.text("route_review"),
-            true,
-            false,
-        ) {
-            return Some(UiAction::ReviewMove);
-        }
-        if button(
-            ctx,
-            Rect::new(x, 506.0, width, 48.0),
-            &ctx.text("confirm_move"),
-            preview.reachable_steps > 0,
-            true,
-        ) {
-            return Some(UiAction::ConfirmMove);
+        if let Some(action) = destination_preview(ctx, preview, rect) {
+            return Some(action);
         }
     } else {
         lines(
@@ -218,6 +171,67 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
     None
 }
 
+fn destination_preview(
+    ctx: &Context<'_>,
+    preview: &MovementPreview,
+    rect: Rect,
+) -> Option<UiAction> {
+    let campaign = ctx.campaign_view?;
+    let x = rect.x + 16.0;
+    let width = rect.w - 32.0;
+    let destination = ctx
+        .movement
+        .destination
+        .and_then(|id| campaign.world.site(id))
+        .map(|site| site.name.as_str())
+        .unwrap_or_default();
+    lines(ctx, destination, vec2(x, 198.0), width, 2, CREAM);
+    body(
+        ctx,
+        &cost_summary(ctx, preview),
+        vec2(x, 252.0),
+        18.0,
+        CREAM,
+    );
+    let consequence = if ctx.movement.status.is_empty() {
+        route_consequence(ctx, preview)
+    } else {
+        ctx.movement.status.clone()
+    };
+    lines(ctx, &consequence, vec2(x, 281.0), width, 4, BRASS);
+    lines(
+        ctx,
+        &ctx.text(if preview.supplied_after {
+            "move_supplied_after"
+        } else {
+            "move_unsupplied_after"
+        }),
+        vec2(x, 383.0),
+        width,
+        2,
+        MUTED,
+    );
+    if button(
+        ctx,
+        Rect::new(x, 450.0, width, 48.0),
+        &ctx.text("route_review"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::ReviewMove);
+    }
+    if button(
+        ctx,
+        Rect::new(x, 506.0, width, 48.0),
+        &ctx.text("confirm_move"),
+        preview.reachable_steps > 0,
+        true,
+    ) {
+        return Some(UiAction::ConfirmMove);
+    }
+    None
+}
+
 fn cost_summary(ctx: &Context<'_>, preview: &MovementPreview) -> String {
     format!(
         "{}: {}  ·  {}: {}",
@@ -236,6 +250,8 @@ fn route_consequence(ctx: &Context<'_>, preview: &MovementPreview) -> String {
             .map(|site| site.name.as_str())
             .unwrap_or_default();
         format!("{}: {end}. {}", ctx.text("move_stops_at"), stop.reason)
+    } else if !preview.observed_hostile_sites.is_empty() {
+        ctx.text("move_observed_hostile")
     } else if preview.uncertain_contact {
         ctx.text("move_uncertain_contact")
     } else {

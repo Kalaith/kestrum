@@ -14,6 +14,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
     battle::{BattleId, BattleReport},
+    history::{CampaignHistory, HistoryId},
+    knowledge::CampaignKnowledge,
     military::{Army, ArmyId, EconomyStatement, Formation, FormationId, RecoveryStatement},
     people::{Person, PersonId},
     world::CampaignWorld,
@@ -100,6 +102,7 @@ impl PartialEq for RandomStreams {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NextIds {
+    pub history: HistoryId,
     pub battle: BattleId,
     pub faction: FactionId,
     pub marker: MarkerId,
@@ -116,6 +119,8 @@ pub struct NextIds {
 pub enum DomainFactKind {
     BattleResolved {
         battle: BattleId,
+        #[serde(default)]
+        movement: Option<super::evidence::MovementService>,
     },
     FactionPassed {
         faction: FactionId,
@@ -139,6 +144,8 @@ pub enum DomainFactKind {
         armies: Vec<ArmyId>,
         path: Vec<SiteId>,
         spent: u32,
+        #[serde(default)]
+        movement: Option<super::evidence::MovementService>,
     },
     FormationTransferred {
         faction: FactionId,
@@ -167,6 +174,8 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub history: CampaignHistory,
+    pub knowledge: CampaignKnowledge,
     pub battles: BTreeMap<BattleId, BattleReport>,
     pub version: u32,
     pub content_version: u32,
@@ -216,6 +225,8 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            history: CampaignHistory::default(),
+            knowledge: CampaignKnowledge::default(),
             battles: BTreeMap::new(),
             version: STRATEGIC_VERSION,
             content_version: scenario.content_version,
@@ -223,6 +234,7 @@ impl StrategicCampaign {
             seed: scenario.seed,
             rng: RandomStreams::new(scenario.seed),
             next_ids: NextIds {
+                history: HistoryId(1),
                 battle: BattleId(1),
                 faction: FactionId(next(scenario.factions.iter().map(|f| f.id.0))?),
                 marker: MarkerId(next(scenario.markers.iter().map(|m| m.id.0))?),

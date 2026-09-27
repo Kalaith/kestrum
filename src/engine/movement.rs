@@ -2,6 +2,7 @@
 
 mod execute;
 mod path;
+mod service;
 
 use super::{actions::validate_command, Actor, Command, RuleError};
 use crate::{
@@ -19,6 +20,7 @@ use crate::{
 use std::{collections::BTreeSet, fmt};
 
 pub(super) use execute::execute;
+pub(super) use service::service_snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MoveOrder {
@@ -83,6 +85,8 @@ pub struct MovementPreview {
     pub stop: Option<MovementStop>,
     pub supplied_after: bool,
     pub uncertain_contact: bool,
+    /// Observed at the current positions; future travel never grants remote sight.
+    pub observed_hostile_sites: BTreeSet<SiteId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -259,6 +263,10 @@ pub(super) fn preview_order(
                 .site(*site)
                 .is_some_and(|site| site.controller != Some(observer))
         }),
+        observed_hostile_sites: super::hostile_presence(campaign, observer)
+            .into_iter()
+            .filter(|site| order.path.iter().skip(1).any(|step| step == site))
+            .collect(),
     })
 }
 

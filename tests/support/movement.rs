@@ -22,6 +22,7 @@ pub(super) fn assert_application_command_gates() {
         Overlay::Saves,
         Overlay::SaveRecovery,
         Overlay::Battle,
+        Overlay::History,
     ] {
         state.overlay = overlay;
         let before = state.campaign.clone();

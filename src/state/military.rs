@@ -47,6 +47,7 @@ impl Army {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Formation {
+    pub service: super::evidence::FormationService,
     pub id: FormationId,
     pub faction: FactionId,
     pub kind: TroopKind,

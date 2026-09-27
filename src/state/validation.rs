@@ -36,6 +36,9 @@ impl StrategicCampaign {
         self.validate_world(data)?;
         self.validate_military(data)?;
         self.validate_battles(data)?;
+        self.validate_evidence(data)?;
+        self.validate_history()?;
+        self.validate_knowledge()?;
         self.validate_phase()?;
         self.validate_facts()?;
         self.validate_counters()
@@ -246,93 +249,14 @@ impl StrategicCampaign {
                 "pending_facts",
                 "invalid identity, sequence or date",
             )?;
-            match &fact.kind {
-                DomainFactKind::BattleResolved { battle } => require(
-                    self.battles.get(battle).is_some_and(|report| {
-                        report.sequence == fact.sequence
-                            && report.completed_rounds == fact.completed_rounds
-                    }),
-                    "pending_facts.battle",
-                    "missing or mismatched encounter receipt",
-                )?,
-                DomainFactKind::FactionPassed { faction } => require(
-                    self.acted.contains(faction) && actors.insert(*faction),
+            if let DomainFactKind::FactionPassed { faction } = fact.kind {
+                require(
+                    self.acted.contains(&faction) && actors.insert(faction),
                     "pending_facts.faction",
                     "duplicate or unacted faction",
-                )?,
-                DomainFactKind::FormationRecruited {
-                    faction,
-                    army,
-                    formation,
-                    site,
-                    ..
-                }
-                | DomainFactKind::FormationDisbanded {
-                    faction,
-                    army,
-                    formation,
-                    site,
-                    ..
-                } => require(
-                    self.factions.contains_key(faction)
-                        && self.world.site(*site).is_some()
-                        && army.0 > 0
-                        && *army < self.next_ids.army
-                        && formation.0 > 0
-                        && *formation < self.next_ids.formation,
-                    "pending_facts.formation",
-                    "invalid historical faction, army, formation or site reference",
-                )?,
-                DomainFactKind::ArmiesMoved {
-                    faction,
-                    armies,
-                    path,
-                    spent,
-                } => require(
-                    self.factions.contains_key(faction)
-                        && !armies.is_empty()
-                        && armies.windows(2).all(|pair| pair[0] < pair[1])
-                        && armies.iter().all(|id| id.0 > 0 && *id < self.next_ids.army)
-                        && *spent > 0
-                        && path.len() >= 2
-                        && path
-                            .windows(2)
-                            .all(|pair| self.world.connected_route(pair[0], pair[1]).is_some()),
-                    "pending_facts.movement",
-                    "invalid historical group or physical route",
-                )?,
-                DomainFactKind::FormationTransferred {
-                    faction,
-                    formation,
-                    from_army,
-                    to_army,
-                    site,
-                } => require(
-                    self.factions.contains_key(faction)
-                        && self.world.site(*site).is_some()
-                        && formation.0 > 0
-                        && *formation < self.next_ids.formation
-                        && [from_army, to_army]
-                            .iter()
-                            .all(|id| id.0 > 0 && **id < self.next_ids.army),
-                    "pending_facts.transfer",
-                    "invalid historical formation or army reference",
-                )?,
-                DomainFactKind::PersonTransferred {
-                    faction,
-                    person,
-                    to_formation,
-                    site,
-                } => require(
-                    self.factions.contains_key(faction)
-                        && self.world.site(*site).is_some()
-                        && person.0 > 0
-                        && *person < self.next_ids.person
-                        && to_formation.0 > 0
-                        && *to_formation < self.next_ids.formation,
-                    "pending_facts.transfer",
-                    "invalid historical person or formation reference",
-                )?,
+                )?;
+            } else {
+                self.validate_fact_subject(fact)?;
             }
             previous_sequence = fact.sequence;
         }
@@ -341,6 +265,95 @@ impl StrategicCampaign {
             "pending_facts",
             "each acted phase must have exactly one unconsumed fact",
         )
+    }
+
+    fn validate_fact_subject(&self, fact: &super::campaign::DomainFact) -> Result<(), String> {
+        match &fact.kind {
+            DomainFactKind::BattleResolved { battle, .. } => require(
+                self.battles.get(battle).is_some_and(|report| {
+                    report.sequence == fact.sequence
+                        && report.completed_rounds == fact.completed_rounds
+                }),
+                "pending_facts.battle",
+                "missing or mismatched encounter receipt",
+            )?,
+            DomainFactKind::FactionPassed { .. } => {}
+            DomainFactKind::FormationRecruited {
+                faction,
+                army,
+                formation,
+                site,
+                ..
+            }
+            | DomainFactKind::FormationDisbanded {
+                faction,
+                army,
+                formation,
+                site,
+                ..
+            } => require(
+                self.factions.contains_key(faction)
+                    && self.world.site(*site).is_some()
+                    && army.0 > 0
+                    && *army < self.next_ids.army
+                    && formation.0 > 0
+                    && *formation < self.next_ids.formation,
+                "pending_facts.formation",
+                "invalid historical faction, army, formation or site reference",
+            )?,
+            DomainFactKind::ArmiesMoved {
+                faction,
+                armies,
+                path,
+                spent,
+                ..
+            } => require(
+                self.factions.contains_key(faction)
+                    && !armies.is_empty()
+                    && armies.windows(2).all(|pair| pair[0] < pair[1])
+                    && armies.iter().all(|id| id.0 > 0 && *id < self.next_ids.army)
+                    && *spent > 0
+                    && path.len() >= 2
+                    && path
+                        .windows(2)
+                        .all(|pair| self.world.connected_route(pair[0], pair[1]).is_some()),
+                "pending_facts.movement",
+                "invalid historical group or physical route",
+            )?,
+            DomainFactKind::FormationTransferred {
+                faction,
+                formation,
+                from_army,
+                to_army,
+                site,
+            } => require(
+                self.factions.contains_key(faction)
+                    && self.world.site(*site).is_some()
+                    && formation.0 > 0
+                    && *formation < self.next_ids.formation
+                    && [from_army, to_army]
+                        .iter()
+                        .all(|id| id.0 > 0 && **id < self.next_ids.army),
+                "pending_facts.transfer",
+                "invalid historical formation or army reference",
+            )?,
+            DomainFactKind::PersonTransferred {
+                faction,
+                person,
+                to_formation,
+                site,
+            } => require(
+                self.factions.contains_key(faction)
+                    && self.world.site(*site).is_some()
+                    && person.0 > 0
+                    && *person < self.next_ids.person
+                    && to_formation.0 > 0
+                    && *to_formation < self.next_ids.formation,
+                "pending_facts.transfer",
+                "invalid historical person or formation reference",
+            )?,
+        }
+        Ok(())
     }
 
     fn validate_counters(&self) -> Result<(), String> {

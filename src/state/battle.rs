@@ -88,6 +88,9 @@ pub struct BattleCommander {
 pub struct BattlePersonReport {
     pub id: PersonId,
     pub starting_formation: FormationId,
+    /// Earlier reports did not record starting fitness; absence grants no treatment evidence.
+    #[serde(default)]
+    pub starting_status: Option<PersonStatus>,
     pub name: String,
     pub class: FounderClass,
     pub status: PersonStatus,
@@ -97,6 +100,8 @@ pub struct BattlePersonReport {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattleFormationReport {
+    #[serde(default = "ordinary_factor")]
+    pub veterancy_permille: u32,
     pub id: FormationId,
     pub slot: usize,
     pub kind: TroopKind,
@@ -104,6 +109,10 @@ pub struct BattleFormationReport {
     pub end: u32,
     pub combat_losses: u32,
     pub encirclement_losses: u32,
+}
+
+fn ordinary_factor() -> u32 {
+    1000
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

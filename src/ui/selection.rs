@@ -43,6 +43,67 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
             (site.name.as_str(), world.marker(site.marker)?, Some(site))
         }
     };
+    let mut sections = Vec::new();
+    if let Some(site) = site {
+        site_details(ctx, site, &mut sections);
+    } else {
+        region_details(ctx, marker.id, &mut sections);
+    }
+    panel(ctx, rect, name, sections);
+    let active = ctx.state.overlay == Overlay::None;
+    let is_region = site.is_none() && matches!(marker.location, MarkerLocation::Region { .. });
+    let owned_site = site.filter(|site| site.controller == Some(campaign.observer));
+    if is_region
+        && button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
+            &ctx.text("enter_region"),
+            active,
+            true,
+        )
+    {
+        return Some(UiAction::EnterRegion(marker.id));
+    }
+    if let Some(site) = owned_site {
+        if button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 102.0, 48.0),
+            &ctx.text("armies"),
+            active,
+            true,
+        ) {
+            return Some(UiAction::OpenArmies(site.id));
+        }
+    }
+    if let Some(site) = site {
+        let x = rect.x + if owned_site.is_some() { 126.0 } else { 16.0 };
+        let width = if owned_site.is_some() { 106.0 } else { 192.0 };
+        if button(
+            ctx,
+            Rect::new(x, rect.y + rect.h - 62.0, width, 48.0),
+            &ctx.text("history"),
+            active,
+            false,
+        ) {
+            return Some(UiAction::OpenHistory(
+                kestrum::state::history::HistorySubject::Site(site.id),
+            ));
+        }
+    }
+    let close_rect = if owned_site.is_some() {
+        Rect::new(rect.x + 240.0, rect.y + rect.h - 62.0, 102.0, 48.0)
+    } else if is_region || site.is_some() {
+        Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0)
+    } else {
+        Rect::new(rect.x + 96.0, rect.y + rect.h - 62.0, 166.0, 48.0)
+    };
+    if button(ctx, close_rect, &ctx.text("close"), active, false) {
+        return Some(UiAction::CloseSelection);
+    }
+    None
+}
+
+fn panel(ctx: &Context<'_>, rect: Rect, name: &str, sections: Vec<String>) {
     draw_rectangle(
         rect.x,
         rect.y,
@@ -65,12 +126,6 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         BRASS,
     );
     y += 14.0;
-    let mut sections = Vec::new();
-    if let Some(site) = site {
-        site_details(ctx, site, &mut sections);
-    } else {
-        region_details(ctx, marker.id, &mut sections);
-    }
     for section in sections {
         for line in wrap_text_ex(&section, rect.w - 32.0, ctx.body_font(), 18.0) {
             body(ctx, &line, vec2(rect.x + 16.0, y), 18.0, CREAM);
@@ -78,40 +133,6 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         }
         y += 10.0;
     }
-    let active = ctx.state.overlay == Overlay::None;
-    let is_region = site.is_none() && matches!(marker.location, MarkerLocation::Region { .. });
-    let owned_site = site.filter(|site| site.controller == Some(campaign.observer));
-    if is_region
-        && button(
-            ctx,
-            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
-            &ctx.text("enter_region"),
-            active,
-            true,
-        )
-    {
-        return Some(UiAction::EnterRegion(marker.id));
-    }
-    if let Some(site) = owned_site {
-        if button(
-            ctx,
-            Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
-            &ctx.text("armies"),
-            active,
-            true,
-        ) {
-            return Some(UiAction::OpenArmies(site.id));
-        }
-    }
-    let close_rect = if is_region || owned_site.is_some() {
-        Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0)
-    } else {
-        Rect::new(rect.x + 96.0, rect.y + rect.h - 62.0, 166.0, 48.0)
-    };
-    if button(ctx, close_rect, &ctx.text("close"), active, false) {
-        return Some(UiAction::CloseSelection);
-    }
-    None
 }
 
 fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
@@ -175,6 +196,9 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
         return;
     };
     let world = &campaign.world;
+    if campaign.hostile_presence.contains(&site.id) {
+        sections.push(ctx.text("hostile_presence"));
+    }
     sections.push(format!(
         "{}: {}",
         ctx.text("local_control"),

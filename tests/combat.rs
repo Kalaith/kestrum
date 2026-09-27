@@ -302,7 +302,7 @@ fn save_reload_replay_and_observed_reports_never_repeat_effects_or_reveal_live_e
     assert_eq!(restored, campaign);
     assert_eq!(campaign.pending_facts.len(), 1);
     assert!(
-        matches!(campaign.pending_facts[0].kind,kestrum::state::campaign::DomainFactKind::BattleResolved {battle} if battle == expected.id)
+        matches!(campaign.pending_facts[0].kind,kestrum::state::campaign::DomainFactKind::BattleResolved {battle,..} if battle == expected.id)
     );
     let frozen = campaign.clone();
     for _ in 0..5 {

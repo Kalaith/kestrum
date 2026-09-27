@@ -41,6 +41,8 @@ pub struct VisibleCampaign {
     pub observer: FactionId,
     /// Derived only for the observer; foreign functional HQ roles stay private.
     pub supplied_sites: BTreeSet<SiteId>,
+    /// Boolean hostile contact cues, without foreign army identities or counts.
+    pub hostile_presence: BTreeSet<SiteId>,
     pub active_faction: FactionId,
     pub active_faction_name: String,
     pub player_turn: bool,
@@ -73,6 +75,7 @@ pub fn project(
         player: campaign.player,
         observer,
         supplied_sites: campaign.world.supplied_sites(observer, viewer.headquarters),
+        hostile_presence: super::hostile_presence(campaign, observer),
         active_faction,
         active_faction_name: active.name.clone(),
         player_turn: active_faction == campaign.player,

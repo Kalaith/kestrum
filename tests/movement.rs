@@ -176,8 +176,10 @@ fn later_budget_or_blocked_edges_keep_the_legal_prefix_without_revealing_hidden_
 
     let mut hidden = initial.clone();
     hidden.armies.get_mut(&ArmyId(3)).unwrap().site = SiteId(5);
-    let expected =
+    let mut expected =
         movement_preview(&initial, &data, initial.player, &[ArmyId(1)], SiteId(6)).unwrap();
+    // K08 reveals nearby presence; route cost and hidden strength remain unchanged.
+    expected.observed_hostile_sites.insert(SiteId(5));
     assert_eq!(
         movement_preview(&hidden, &data, hidden.player, &[ArmyId(1)], SiteId(6)).unwrap(),
         expected

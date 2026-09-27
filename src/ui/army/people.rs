@@ -38,14 +38,59 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             CREAM,
         );
     }
-    for (index, person) in people
-        .iter()
+    let visible: Vec<_> = people
+        .into_iter()
         .skip(page * PEOPLE_PAGE_SIZE)
         .take(PEOPLE_PAGE_SIZE)
-        .enumerate()
-    {
+        .collect();
+    if let Some(action) = person_rows(ctx, campaign, &visible) {
+        return Some(action);
+    }
+    if button(
+        ctx,
+        Rect::new(112.0, 537.0, 160.0, 48.0),
+        &ctx.text("previous"),
+        page > 0,
+        false,
+    ) {
+        return Some(UiAction::ArmyPeoplePage(-1));
+    }
+    centered(
+        ctx,
+        &format!("{} / {page_count}", page + 1),
+        vec2(640.0, 568.0),
+        20.0,
+        CREAM,
+    );
+    if button(
+        ctx,
+        Rect::new(1008.0, 537.0, 160.0, 48.0),
+        &ctx.text("next"),
+        page + 1 < page_count,
+        false,
+    ) {
+        return Some(UiAction::ArmyPeoplePage(1));
+    }
+    if button(
+        ctx,
+        Rect::new(112.0, 626.0, 166.0, 48.0),
+        &ctx.text("back"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::CancelArmyAction);
+    }
+    None
+}
+
+fn person_rows(
+    ctx: &Context<'_>,
+    campaign: &VisibleCampaign,
+    people: &[&Person],
+) -> Option<UiAction> {
+    for (index, person) in people.iter().enumerate() {
         let y = 219.0 + index as f32 * 81.0;
-        let name = truncate_text_to_width_ex(&person.name, 822.0, ctx.body_font(), 20.0);
+        let name = truncate_text_to_width_ex(&person.name, 620.0, ctx.body_font(), 20.0);
         body(ctx, &name, vec2(112.0, y), 20.0, CREAM);
         let remaining = ctx
             .army
@@ -81,6 +126,17 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
         ) {
             return Some(UiAction::BeginTransferPerson(person.id));
         }
+        if button(
+            ctx,
+            Rect::new(752.0, y - 23.0, 194.0, 48.0),
+            &ctx.text("history_service"),
+            true,
+            false,
+        ) {
+            return Some(UiAction::OpenHistory(
+                kestrum::state::history::HistorySubject::Person(person.id),
+            ));
+        }
         let status = match person.status {
             PersonStatus::Fit => ctx.text("person_fit"),
             PersonStatus::Wounded {
@@ -101,40 +157,6 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             1.0,
             Color::new(0.21, 0.29, 0.25, 1.0),
         );
-    }
-    if button(
-        ctx,
-        Rect::new(112.0, 537.0, 160.0, 48.0),
-        &ctx.text("previous"),
-        page > 0,
-        false,
-    ) {
-        return Some(UiAction::ArmyPeoplePage(-1));
-    }
-    centered(
-        ctx,
-        &format!("{} / {page_count}", page + 1),
-        vec2(640.0, 568.0),
-        20.0,
-        CREAM,
-    );
-    if button(
-        ctx,
-        Rect::new(1008.0, 537.0, 160.0, 48.0),
-        &ctx.text("next"),
-        page + 1 < page_count,
-        false,
-    ) {
-        return Some(UiAction::ArmyPeoplePage(1));
-    }
-    if button(
-        ctx,
-        Rect::new(112.0, 626.0, 166.0, 48.0),
-        &ctx.text("back"),
-        true,
-        false,
-    ) {
-        return Some(UiAction::CancelArmyAction);
     }
     None
 }

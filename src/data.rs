@@ -2,6 +2,7 @@
 
 pub mod combat;
 pub mod economy;
+pub mod progression;
 pub mod rules;
 mod setup_validation;
 mod validation;
@@ -20,6 +21,8 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub progression: progression::ProgressionRules,
+    pub history: progression::HistoryRules,
     pub troops: combat::Troops,
     pub combat: combat::CombatRules,
     pub presentation: PresentationData,
@@ -31,6 +34,8 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
+            progression: macroquad_toolkit::include_json!("../assets/data/progression.json")?,
+            history: macroquad_toolkit::include_json!("../assets/data/history_rules.json")?,
             troops: macroquad_toolkit::include_json!("../assets/data/troops.json")?,
             combat: macroquad_toolkit::include_json!("../assets/data/combat_rules.json")?,
             presentation: macroquad_toolkit::include_json!("../assets/data/game_config.json")?,
@@ -43,6 +48,8 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.progression.validate()?;
+        self.history.validate()?;
         self.troops.validate()?;
         self.combat.validate()?;
         self.presentation.validate()?;
@@ -68,6 +75,91 @@ pub struct PresentationData {
 }
 
 const REQUIRED_TEXT: &[&str] = &[
+    "move_observed_hostile",
+    "evidence_retreating_enemy_victory",
+    "battle_veterancy_factor",
+    "class_medic",
+    "records",
+    "records_help",
+    "history",
+    "history_overview",
+    "history_events",
+    "history_filters",
+    "history_search",
+    "history_open",
+    "history_report",
+    "history_places",
+    "history_service",
+    "army_history",
+    "formation_service",
+    "history_retention_help",
+    "history_last_known_help",
+    "history_empty",
+    "history_own_person",
+    "last_encountered",
+    "history_filter_help",
+    "history_all_events",
+    "history_battles",
+    "history_movement",
+    "history_veterancy",
+    "history_from",
+    "history_to",
+    "history_any_season",
+    "history_reset_filters",
+    "history_apply_filters",
+    "history_search_help",
+    "history_report_expired",
+    "history_battle",
+    "history_recruited",
+    "history_disbanded",
+    "history_moved",
+    "history_formation_transferred",
+    "history_person_transferred",
+    "history_people_recorded",
+    "history_armies_recorded",
+    "history_current_site",
+    "history_observed_role",
+    "history_observed_condition",
+    "history_observed_army",
+    "history_recorded_details",
+    "history_unknown_person",
+    "history_no_hidden_facts",
+    "history_age",
+    "history_service_start",
+    "history_personal_service",
+    "history_no_inherited_deeds",
+    "service_xp",
+    "service_highest_tier",
+    "service_combat_factor",
+    "service_earning",
+    "service_round_cap",
+    "service_preserved",
+    "service_recovery_help",
+    "service_recent",
+    "service_encounters",
+    "service_recorded_occurrences",
+    "service_encountered",
+    "service_no_evidence",
+    "service_no_evidence_help",
+    "evidence_battle",
+    "evidence_meaningful",
+    "evidence_victory",
+    "evidence_defeat",
+    "evidence_outnumbered",
+    "evidence_defended_anchor",
+    "evidence_captured_anchor",
+    "evidence_retreated",
+    "evidence_treated",
+    "evidence_commander_wounded",
+    "evidence_assumed_command",
+    "evidence_commanded_victory",
+    "tier_ordinary",
+    "tier_seasoned",
+    "tier_veteran",
+    "hostile_presence",
+    "help_service",
+    "help_history",
+    "help_knowledge",
     "new_game",
     "continue",
     "no_save",

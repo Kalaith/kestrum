@@ -2,6 +2,9 @@
 
 pub mod battle;
 pub mod campaign;
+pub mod evidence;
+pub mod history;
+pub mod knowledge;
 pub mod military;
 pub mod people;
 pub mod persistence;
@@ -42,6 +45,7 @@ pub enum Overlay {
     MoveGroup,
     MoveReview,
     Battle,
+    History,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

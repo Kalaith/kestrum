@@ -22,7 +22,11 @@ pub(super) fn build(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> 
 }
 
 fn row(heading: String, detail: String) -> ReportRow {
-    ReportRow { heading, detail }
+    ReportRow {
+        heading,
+        detail,
+        person: None,
+    }
 }
 
 fn sides<'a>(ctx: &Context<'_>, report: &'a BattleReport) -> [(String, &'a BattleSideReport); 2] {
@@ -127,13 +131,15 @@ fn forces(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                         formation.slot + 1
                     ),
                     format!(
-                        "{kind}: {} → {} · {}: {} · {}: {}{}",
+                        "{kind}: {} → {} · {}: {} · {}: {} · {}: {:.1}%{}",
                         formation.start,
                         formation.end,
                         ctx.text("battle_combat_losses"),
                         formation.combat_losses,
                         ctx.text("battle_encirclement_losses"),
                         formation.encirclement_losses,
+                        ctx.text("battle_veterancy_factor"),
+                        formation.veterancy_permille as f32 / 10.0,
                         if formation.end == 0 {
                             format!(" · {}", ctx.text("battle_destroyed"))
                         } else {
@@ -154,6 +160,7 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
             for person in &army.people {
                 let class = match person.class {
                     FounderClass::Officer => ctx.text("class_officer"),
+                    FounderClass::Medic => ctx.text("class_medic"),
                 };
                 let status = match person.status {
                     PersonStatus::Fit => ctx.text("person_fit"),
@@ -173,6 +180,9 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                         assignment(ctx, report, person.assignment)
                     ),
                 ));
+                if let Some(row) = rows.last_mut() {
+                    row.person = Some(person.id);
+                }
             }
         }
     }

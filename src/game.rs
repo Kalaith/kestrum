@@ -7,9 +7,13 @@ mod battle;
 mod battle_capture;
 mod campaign;
 mod composition;
+mod history;
+mod history_capture;
 mod military;
 mod military_capture;
 mod movement;
+mod projection;
+mod resources;
 mod saves;
 mod storage;
 mod world;
@@ -46,8 +50,15 @@ pub struct Game {
     storage_checked: bool,
     saves: ui::SaveView,
     army: ui::ArmyView,
+    army_refresh_pending: bool,
     movement: ui::MoveView,
     battle: ui::BattleView,
+    history: ui::HistoryView,
+    projection: Option<engine::VisibleCampaign>,
+    projection_revision: Option<(kestrum::state::CampaignId, u64)>,
+    history_return: Overlay,
+    history_from_records: bool,
+    battle_return: Option<Overlay>,
     help_page: usize,
     pending_save: Option<storage::PendingWrite>,
     retry_save_when_ready: bool,
@@ -65,53 +76,7 @@ impl Game {
     pub async fn new() -> Result<Self, String> {
         let data = GameData::load()?;
         let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some();
-        let mut assets = AssetManager::new();
-        assets
-            .load_texture_with_filter("atlas", &data.presentation.map_path, FilterMode::Linear)
-            .await?;
-        assets
-            .load_font("cinzel", &data.presentation.font_path)
-            .await?;
-        assets
-            .load_font("body", &data.presentation.body_font_path)
-            .await?;
-        // Prepare all fixed UI sizes together before the first visible frame.
-        // Runtime names and messages are prepared separately before UI drawing.
-        let mut characters: Vec<char> = (b' '..=b'~').map(char::from).collect();
-        characters.extend("…—–×·→".chars());
-        for text in data.presentation.text.values().chain([
-            &data.presentation.title,
-            &data.presentation.subtitle,
-            &data.presentation.edition,
-        ]) {
-            characters.extend(text.chars());
-        }
-        characters.sort_unstable();
-        characters.dedup();
-        let common_text: String = characters.into_iter().collect();
-        for (key, sizes) in [
-            ("cinzel", &[15, 17, 18, 19, 20, 21, 24, 28, 30][..]),
-            ("body", &[16, 18, 19, 20, 21, 23, 25][..]),
-        ] {
-            let font = assets
-                .get_font(key)
-                .ok_or_else(|| format!("Loaded UI font {key} is unavailable"))?;
-            let mut samples: Vec<_> = sizes
-                .iter()
-                .map(|size| (*size, common_text.as_str()))
-                .collect();
-            if key == "cinzel" {
-                samples.push((76, &data.presentation.title));
-                samples.extend(
-                    data.presentation
-                        .geography
-                        .iter()
-                        .map(|label| (label.size as u16, label.name.as_str())),
-                );
-            }
-            macroquad_toolkit::ui::prepare_font_text(font, &samples);
-        }
-        next_frame().await;
+        let assets = resources::load(&data).await?;
         let mut game = Self {
             save_exists: false,
             legacy_save_exists: !capture && slot_exists(&data.presentation.game_id, SAVE_SLOT),
@@ -122,8 +87,15 @@ impl Game {
             storage_checked: false,
             saves: ui::SaveView::default(),
             army: ui::ArmyView::default(),
+            army_refresh_pending: true,
             movement: ui::MoveView::default(),
             battle: ui::BattleView::default(),
+            history: ui::HistoryView::default(),
+            projection: None,
+            projection_revision: None,
+            history_return: Overlay::None,
+            history_from_records: false,
+            battle_return: None,
             help_page: 0,
             pending_save: None,
             retry_save_when_ready: false,
@@ -159,21 +131,7 @@ impl Game {
     }
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
-        self.capture = true;
-        self.state = GameState::default();
-        self.preferences = Preferences::default();
-        self.navigation.reset(&mut self.view);
-        self.notice = None;
-        self.error = None;
-        self.save_exists = false;
-        self.legacy_save_exists = false;
-        self.import_save_exists = false;
-        self.saves = ui::SaveView::default();
-        self.movement = ui::MoveView::default();
-        self.battle = ui::BattleView::default();
-        self.army = ui::ArmyView::default();
-        self.help_page = 0;
-        self.save_error.clear();
+        self.reset_capture_scene();
         match scene.trim_end_matches("_minimum") {
             "title" => {}
             "gameplay" => self.capture_campaign(),
@@ -228,6 +186,15 @@ impl Game {
                 self.state.overlay = Overlay::Help;
                 self.help_page = 4;
             }
+            "help_service" => {
+                self.state.overlay = Overlay::Help;
+                self.help_page = 5;
+            }
+            "history_records" | "history_person" | "history_known" | "history_events"
+            | "history_filters" | "history_search" | "history_empty" | "history_pruned"
+            | "history_dense" | "history_presence" | "history_seasoned" | "history_veteran" => {
+                self.capture_history(scene)
+            }
             "battle_empty" | "battle_outcome" | "battle_forces" | "battle_factors"
             | "battle_people" | "battle_dense" | "battle_defeat" | "battle_destroyed"
             | "battle_victory" | "battle_wounded" | "battle_succession" => {
@@ -252,6 +219,26 @@ impl Game {
         }
     }
 
+    fn reset_capture_scene(&mut self) {
+        self.capture = true;
+        self.state = GameState::default();
+        self.preferences = Preferences::default();
+        self.navigation.reset(&mut self.view);
+        self.notice = None;
+        self.error = None;
+        self.save_exists = false;
+        self.legacy_save_exists = false;
+        self.import_save_exists = false;
+        self.saves = ui::SaveView::default();
+        self.movement = ui::MoveView::default();
+        self.battle = ui::BattleView::default();
+        self.reset_history();
+        self.invalidate_projection();
+        self.army = ui::ArmyView::default();
+        self.help_page = 0;
+        self.save_error.clear();
+    }
+
     pub fn frame(&mut self, dt: f32) {
         self.poll_storage();
         self.progress_npcs(dt);
@@ -269,14 +256,56 @@ impl Game {
         clear_background(Color::new(0.06, 0.10, 0.10, 1.0));
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
-        self.refresh_army();
-        let campaign_view = self
-            .state
-            .campaign
+        let changed = self.refresh_projection();
+        if changed || self.army_refresh_pending {
+            self.refresh_army();
+            self.army_refresh_pending = false;
+        }
+        self.clamp_pages();
+        let ctx = ui::Context {
+            data: &self.data.presentation,
+            economy: &self.data.economy,
+            progression: &self.data.progression,
+            history: &self.history,
+            army: &self.army,
+            movement: &self.movement,
+            battle: &self.battle,
+            help_page: self.help_page,
+            state: &self.state,
+            preferences: &self.preferences,
+            view: &self.view,
+            navigation: &self.navigation,
+            assets: &self.assets,
+            pointer,
+            origin: self.origin,
+            save_exists: self.save_exists,
+            legacy_save_exists: self.legacy_save_exists,
+            import_save_exists: self.import_save_exists,
+            saves: &self.saves,
+            save_error: &self.save_error,
+            campaign_view: self.projection.as_ref(),
+        };
+        let message = self
+            .error
             .as_ref()
-            .and_then(Campaign::strategic)
-            .and_then(|campaign| engine::project(campaign, campaign.player).ok());
-        if let Some(view) = &campaign_view {
+            .or(self.notice.as_ref().map(|(message, _)| message))
+            .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
+        ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
+        let action = ui::draw(&ctx);
+        let map_action = self.map_selection_action(pointer);
+        let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
+        end_virtual_ui_frame();
+        if let Some(intent) = feedback_action.or(action).or(map_action) {
+            self.apply(intent);
+        }
+        if !pointer.down {
+            self.origin = None;
+        }
+        self.was_down = pointer.down;
+    }
+
+    fn clamp_pages(&mut self) {
+        if let Some(view) = self.projection.as_ref() {
             self.battle.clamp(&view.battles);
             self.army.people_page = self.army.people_page.min(
                 self.army
@@ -310,44 +339,6 @@ impl Game {
                         .div_ceil(ui::ROUTE_PAGE_SIZE)
                         .saturating_sub(1)
                 }));
-        let ctx = ui::Context {
-            data: &self.data.presentation,
-            economy: &self.data.economy,
-            army: &self.army,
-            movement: &self.movement,
-            battle: &self.battle,
-            help_page: self.help_page,
-            state: &self.state,
-            preferences: &self.preferences,
-            view: &self.view,
-            navigation: &self.navigation,
-            assets: &self.assets,
-            pointer,
-            origin: self.origin,
-            save_exists: self.save_exists,
-            legacy_save_exists: self.legacy_save_exists,
-            import_save_exists: self.import_save_exists,
-            saves: &self.saves,
-            save_error: &self.save_error,
-            campaign_view: campaign_view.as_ref(),
-        };
-        let message = self
-            .error
-            .as_ref()
-            .or(self.notice.as_ref().map(|(message, _)| message))
-            .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
-        ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
-        let action = ui::draw(&ctx);
-        let map_action = self.map_selection_action(pointer);
-        let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
-        end_virtual_ui_frame();
-        if let Some(intent) = feedback_action.or(action).or(map_action) {
-            self.apply(intent);
-        }
-        if !pointer.down {
-            self.origin = None;
-        }
-        self.was_down = pointer.down;
     }
 
     fn input(&mut self, viewport: &VirtualUi, dt: f32) -> Pointer {
@@ -360,10 +351,15 @@ impl Game {
         }
         let naming = self.state.overlay == Overlay::Saves
             && matches!(self.saves.mode, ui::SaveMode::Name { .. });
-        for edit in macroquad_toolkit::ui::text_entry::read_text_edits(naming) {
-            self.edit_save_name(macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(
-                edit,
-            ));
+        let searching =
+            self.state.overlay == Overlay::History && self.history.mode == ui::HistoryMode::Search;
+        for edit in macroquad_toolkit::ui::text_entry::read_text_edits(naming || searching) {
+            let action = macroquad_toolkit::ui::text_entry::TextEntryAction::Edit(edit);
+            if searching {
+                self.edit_history_search(action);
+            } else {
+                self.edit_save_name(action);
+            }
         }
         // A quick click can press and release between frames. Macroquad still
         // records the press edge even though `down` is already false.

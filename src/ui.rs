@@ -4,6 +4,7 @@ mod army;
 mod atlas;
 mod battle;
 mod components;
+mod history;
 mod menus;
 mod movement;
 mod saves;
@@ -32,6 +33,7 @@ pub use army::{
 };
 pub use atlas::map_controls_contain;
 pub use battle::{BattleTab, BattleView};
+pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
 pub use movement::{
     draw_map_overlay as draw_move_map_overlay,
     map_controls_contain as movement_map_controls_contain,
@@ -42,6 +44,22 @@ pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    OpenRecords,
+    SetRecordCategory(RecordCategory),
+    RecordsPage(i32),
+    OpenHistory(kestrum::state::history::HistorySubject),
+    SetHistoryMode(HistoryMode),
+    HistoryPage(i32),
+    HistoryOverviewPage(i32),
+    SetHistoryKind(Option<kestrum::state::history::HistoryKindFilter>),
+    ShiftHistoryFrom(i32),
+    ShiftHistoryTo(i32),
+    ResetHistoryFilters,
+    ApplyHistoryFilters,
+    HistoryBack,
+    OpenRecordedBattle(kestrum::state::battle::BattleId),
+    EditHistorySearch(macroquad_toolkit::ui::text_entry::TextEntryAction),
+    ApplyHistorySearch,
     OpenBattleReports,
     BattleReport(i32),
     BattlePage(i32),
@@ -117,9 +135,35 @@ pub enum UiAction {
     Quit,
 }
 
+impl UiAction {
+    pub fn is_history(self) -> bool {
+        matches!(
+            self,
+            Self::OpenRecords
+                | Self::SetRecordCategory(_)
+                | Self::RecordsPage(_)
+                | Self::OpenHistory(_)
+                | Self::SetHistoryMode(_)
+                | Self::HistoryPage(_)
+                | Self::HistoryOverviewPage(_)
+                | Self::SetHistoryKind(_)
+                | Self::ShiftHistoryFrom(_)
+                | Self::ShiftHistoryTo(_)
+                | Self::ResetHistoryFilters
+                | Self::ApplyHistoryFilters
+                | Self::HistoryBack
+                | Self::OpenRecordedBattle(_)
+                | Self::EditHistorySearch(_)
+                | Self::ApplyHistorySearch
+        )
+    }
+}
+
 pub struct Context<'a> {
     pub data: &'a PresentationData,
     pub economy: &'a Economy,
+    pub progression: &'a kestrum::data::progression::ProgressionRules,
+    pub history: &'a HistoryView,
     pub army: &'a ArmyView,
     pub movement: &'a MoveView,
     pub battle: &'a BattleView,
@@ -160,6 +204,8 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     };
     if ctx.state.overlay == Overlay::Saves {
         saves::draw(ctx)
+    } else if ctx.state.overlay == Overlay::History {
+        history::draw(ctx)
     } else if ctx.state.overlay == Overlay::Battle {
         battle::draw(ctx)
     } else if ctx.state.overlay == Overlay::Armies {

@@ -2,7 +2,7 @@
 
 Kestrum is a generational strategy game in which connected places create campaigns, campaigns shape people, and people and places carry that history forward. This documentation consolidates the three founding design drafts and subsequent discussion clarifications into a navigable game design document (GDD).
 
-**Project state:** Kestrum has player-first faction rounds, deterministic commands, paused/stepped rival phases and recoverable named saves with separate round checkpoints. Old atlas saves remain read-only. Selectable world and regional maps show physical sites, gates, control, political claims and supply. Six-slot founding armies, Officers, recruitment/disbanding and round income/upkeep are playable. Costed group movement, free local transfers and supplied recovery are playable. Automatic field battles preserve casualties, retreats, wounds and recorded participant reports. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. See [K07 verification](verification/k07-combat.md) and the earlier [UI verification record](verification/initial-map.md).
+**Project state:** Kestrum has player-first faction rounds, deterministic commands, paused/stepped rival phases and recoverable named saves with separate round checkpoints. Old atlas saves remain read-only. Selectable world and regional maps show physical sites, gates, control, political claims and supply. Six-slot founding armies, Officers, recruitment/disbanding and round income/upkeep are playable. Costed group movement, free local transfers and supplied recovery are playable. Automatic field battles preserve casualties, retreats, wounds and recorded participant reports. These chapters describe intended behavior unless the current [implementation README](../README.md) says otherwise. Participation, veterancy, bounded histories and dated enemy observations are playable. See [K08 verification](verification/k08-service.md) and the earlier [UI verification record](verification/initial-map.md).
 
 ## Reading order
 
@@ -11,7 +11,7 @@ It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
 copyable agent handoff. The user requested concrete defaults for unresolved
 mechanics on 2026-09-26; they are labelled **P** for review and are not newly
-confirmed design decisions. K01–K06 are complete; K07–K18 remain required work.
+confirmed design decisions. K01–K08 are complete; K09–K18 remain required work.
 
 | Document | Contents |
 | --- | --- |

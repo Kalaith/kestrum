@@ -339,6 +339,10 @@ fn prepare(
     data.rules.validate().map_err(RuleError::InvalidState)?;
     data.troops.validate().map_err(RuleError::InvalidState)?;
     data.combat.validate().map_err(RuleError::InvalidState)?;
+    data.progression
+        .validate()
+        .map_err(RuleError::InvalidState)?;
+    data.history.validate().map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
     validate_command(campaign, actor, &command)?;
     let mut candidate = campaign.clone();
@@ -365,9 +369,24 @@ fn prepare(
         Actor::Player => campaign.player,
         Actor::Npc(id) => id,
     };
+    execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
+    super::history::record_facts(&mut candidate, campaign, &outcome.facts)?;
+    candidate.validate(data).map_err(RuleError::InvalidState)?;
+    outcome.active_faction = candidate.active_faction();
+    Ok((candidate, outcome))
+}
+
+fn execute(
+    candidate: &mut StrategicCampaign,
+    before: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    command: Command,
+    outcome: &mut ActionOutcome,
+) -> Result<(), RuleError> {
     match command {
         Command::EndTurn | Command::StepNpc => {
-            round::pass_faction(&mut candidate, data, &mut outcome)?;
+            round::pass_faction(candidate, data, outcome)?;
         }
         Command::SetNpcPaused(paused) => {
             candidate.phase = CampaignPhase::NpcTurn {
@@ -376,7 +395,7 @@ fn prepare(
             };
         }
         Command::Recruit { site, army, kind } => {
-            let recruited = recruitment::recruit(&mut candidate, data, site, army, kind)?;
+            let recruited = recruitment::recruit(candidate, data, site, army, kind)?;
             let fact = DomainFactKind::FormationRecruited {
                 faction: candidate.active_faction(),
                 army: recruited.army,
@@ -384,27 +403,32 @@ fn prepare(
                 site,
                 troop: kind,
             };
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            record_fact(candidate, outcome, fact)?;
             outcome.recruited = Some(recruited);
         }
         Command::Disband { formation } => {
-            let fact = recruitment::disband(&mut candidate, formation)?;
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            let fact = recruitment::disband(candidate, formation)?;
+            record_fact(candidate, outcome, fact)?;
             outcome.disbanded = Some(formation);
         }
         Command::Move(order) => {
-            let moved = movement::execute(&mut candidate, data, &order)?;
+            let moved = movement::execute(candidate, data, &order)?;
+            let receipt = movement::service_snapshot(before, &moved);
             let fact = if let Some(battle) = moved.battle {
-                DomainFactKind::BattleResolved { battle }
+                DomainFactKind::BattleResolved {
+                    battle,
+                    movement: Some(receipt),
+                }
             } else {
                 DomainFactKind::ArmiesMoved {
                     faction: owner,
                     armies: moved.armies.clone(),
                     path: moved.path.clone(),
                     spent: moved.spent,
+                    movement: Some(receipt),
                 }
             };
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            record_fact(candidate, outcome, fact)?;
             outcome.battle = moved.battle;
             outcome.movement = Some(moved);
         }
@@ -413,25 +437,23 @@ fn prepare(
             to_army,
             to_slot,
         } => {
-            let fact = transfer::formation(&mut candidate, owner, formation, to_army, to_slot)?;
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            let fact = transfer::formation(candidate, owner, formation, to_army, to_slot)?;
+            record_fact(candidate, outcome, fact)?;
         }
         Command::TransferPerson {
             person,
             to_formation,
         } => {
-            let fact = transfer::person(&mut candidate, owner, person, to_formation)?;
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            let fact = transfer::person(candidate, owner, person, to_formation)?;
+            record_fact(candidate, outcome, fact)?;
         }
         Command::SplitArmy { formation } => {
-            let (army, fact) = transfer::split(&mut candidate, owner, formation)?;
-            record_fact(&mut candidate, &mut outcome, fact)?;
+            let (army, fact) = transfer::split(candidate, owner, formation)?;
+            record_fact(candidate, outcome, fact)?;
             outcome.split_army = Some(army);
         }
     }
-    candidate.validate(data).map_err(RuleError::InvalidState)?;
-    outcome.active_faction = candidate.active_faction();
-    Ok((candidate, outcome))
+    Ok(())
 }
 
 pub(super) fn record_fact(

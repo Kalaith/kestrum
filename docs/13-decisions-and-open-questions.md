@@ -317,3 +317,65 @@ control returns to play. The result opens automatically after a player encounter
 and reopening it remains read-only. These are delegated implementation choices,
 not new author-confirmed rules. K07 verification records the acceptance
 results and platform limitations.
+
+### I07 — Genuine service, bounded histories and dated knowledge
+
+K08 consumes committed facts at the seasonal progression boundary, once in stable
+fact order. Formation and personal progression credit is deduplicated by physical
+site, opposing faction and round. The first meaningful eligible encounter earns
+credit; an earlier trivial contact does not prevent later qualifying service.
+Witnessed troop-type facts still describe actual contact without granting generic
+XP. Formation XP is capped at four per round and only surviving formations retain
+it. Each person's host formation is the recorded starting formation, so a later
+transfer cannot inherit another formation's deeds.
+
+Movement receipts also retain the actual travelling formations and people before
+any later reassignment. Successful physical edges supply distinct route evidence,
+including the approach to a battle. An old receipt without that snapshot grants
+no reconstructed route service. Victories against a retreating enemy retain their
+own factual counter for P18's later Light Cavalry requirement. Neither record
+grants a class, specialization or extra XP in K08.
+
+Strategic anchor evidence uses actual sites in region anchor expressions,
+including entrance supply alternatives. Successful defense requires the defending
+faction's prior control to remain after the encounter. Capture requires a genuine
+change to the attacking faction's control. Neither standing at an anchor nor
+reading a report creates evidence. Ordinary named people physically present can
+witness an encounter while wounded; P11 separately controls whether they contribute
+field strength. K13 applies its own stated fitness and age requirements to courses.
+
+Surviving people actually serving in a participating Medics formation can record
+supervised treatment when their side suffers real casualties. This supplies P18's
+entry requirement for an initial Medic course; requiring an existing Medic class
+for every personal treatment fact would make that route circular. A remote person
+or someone who died in the encounter receives no treatment credit. Recovery-site
+treatment requires an assigned qualified Medic and actual restored headcount.
+Combat treatment also requires recorded fitness at entry. A wounded passenger can
+witness the battle without providing medical service. Earlier reports lack that
+starting-status observation, so they cannot establish treatment eligibility.
+
+Earlier K07 saves begin new progression counters at zero. Retained genuine battle
+reports can seed dated narrative and knowledge records, but consumed facts are
+never rewarded again. Still-pending facts remain eligible for the next boundary.
+No absent pre-combat history is fabricated. Destroyed formations retain no service
+archive or recoverable veteran identity.
+
+Detailed history and linked battle reports share the 40-round/10,000-event budget.
+Independent notable summaries retain up to twelve entries per extant subject for
+80 rounds. Enemy-person observations expire after 80 rounds, with at most 10,000
+across the campaign, ordered by encounter date and stable IDs. They are never
+removed or updated because of an unseen death, move, promotion or rename. Retained
+labels keep history understandable after a detail link expires. These observation
+limits extend the existing P23 budgets as a delegated implementation decision.
+
+P23's departed-person budget already applies to recorded deaths: retain their full
+records for at most 80 rounds and at most 2,000 across the campaign, ordered by
+death date and stable ID. Required pending receipts remain valid through seasonal
+consumption. Battle, history and knowledge snapshots keep their own minimal labels.
+K14 and K15 extend this cleanup for lifecycle and family references when those
+systems exist.
+
+Presence reveals only that a hostile force is at a friendly army's site or an
+adjacent site. Enemy links open the last actual encounter's allowed facts, with
+its date and location; they never inspect current remote rosters, resources,
+biographies or families. UI history queries use the same observer filtering.

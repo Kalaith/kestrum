@@ -1,0 +1,14 @@
+{
+  "meaningful_opposition_permille": 500,
+  "meaningful_loss_permille": 100,
+  "outnumbered_permille": 1500,
+  "battle_xp": 2,
+  "victory_xp": 1,
+  "outnumbered_xp": 1,
+  "round_xp_cap": 4,
+  "seasoned_xp": 8,
+  "veteran_xp": 20,
+  "ordinary_permille": 1000,
+  "seasoned_permille": 1100,
+  "veteran_permille": 1200
+}

@@ -221,8 +221,7 @@ fn calculate_losses(
                 permille: counter,
             });
         }
-        // Ordinary veterancy is 1000 until earned progression is introduced. Its
-        // numerator/denominator cancel exactly; future multipliers belong here.
+        // Each source keeps its earned factor before summing assigned attacks.
         let attack = mul(
             mul(
                 mul(
@@ -233,6 +232,10 @@ fn calculate_losses(
             )?,
             counter.into(),
         )?;
+        let attack = mul(
+            attack,
+            source.service.tier.permille(&data.progression).into(),
+        )?;
         let total = assigned.entry(target.id).or_default();
         *total = add(*total, attack)?;
     }
@@ -240,14 +243,18 @@ fn calculate_losses(
         .into_iter()
         .map(|(id, attack)| {
             let target = &campaign.formations[&id];
-            // Attack denominator 10^6; resistance denominator 10^3. Cancel only
-            // their common factor, preserving e.g. Rider forest resistance 19.8.
+            // Keep source and target veterancy factors until the final division.
+            // Equal factors cancel exactly, preserving ordinary K07 arithmetic.
             let divisor = mul(
                 mul(
                     mul(1000, data.combat.casualty_divisor.into())?,
                     data.troops.formations[&target.kind].resistance.into(),
                 )?,
                 terrain.into(),
+            )?;
+            let divisor = mul(
+                divisor,
+                target.service.tier.permille(&data.progression).into(),
             )?;
             let amount = (attack / divisor)
                 .max(u128::from(attack > 0))

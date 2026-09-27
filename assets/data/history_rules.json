@@ -1,0 +1,12 @@
+{
+  "recent_service_rounds": 8,
+  "detail_max_age_rounds": 40,
+  "detail_max_entries": 10000,
+  "notable_max_age_rounds": 80,
+  "notable_max_entries": 12,
+  "knowledge_max_age_rounds": 80,
+  "knowledge_max_entries": 10000,
+  "departed_max_age_rounds": 80,
+  "departed_max_entries": 2000,
+  "page_size": 50
+}

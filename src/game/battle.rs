@@ -3,6 +3,21 @@
 use super::*;
 
 impl Game {
+    pub(super) fn apply_battle_action(&mut self, action: UiAction) {
+        match action {
+            UiAction::OpenBattleReports => self.open_battle_reports(),
+            UiAction::BattleReport(delta) => self.change_battle_report(delta),
+            UiAction::BattlePage(delta) => {
+                self.battle.page = self.battle.page.saturating_add_signed(delta as isize);
+            }
+            UiAction::SetBattleTab(tab) => {
+                self.battle.tab = tab;
+                self.battle.page = 0;
+            }
+            _ => unreachable!("battle action dispatch"),
+        }
+    }
+
     pub(super) fn witnessed_battle(&self, battle: kestrum::state::battle::BattleId) -> bool {
         self.state
             .campaign
@@ -22,6 +37,7 @@ impl Game {
     }
 
     pub(super) fn open_battle_reports(&mut self) {
+        self.battle_return = (self.state.overlay == Overlay::History).then_some(Overlay::History);
         self.battle = ui::BattleView {
             index: self.battle_report_count().saturating_sub(1),
             ..Default::default()

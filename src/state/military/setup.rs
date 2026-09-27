@@ -32,6 +32,7 @@ impl StrategicCampaign {
                 self.formations.insert(
                     formation_id,
                     Formation {
+                        service: Default::default(),
                         id: formation_id,
                         faction: setup.id,
                         kind,
@@ -51,6 +52,7 @@ impl StrategicCampaign {
             self.people.insert(
                 person_id,
                 Person {
+                    evidence: Default::default(),
                     id: person_id,
                     faction: setup.id,
                     name: setup.founder.name.clone(),

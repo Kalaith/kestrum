@@ -1,5 +1,22 @@
 # 10 — Interface and accessibility
 
+## K08 service and knowledge screen brief
+
+The current decision is to understand a force's earned service or a person's
+recorded experience before choosing its next assignment. The selected subject and
+dated evidence dominate a dismissible History sheet. Overview shows owned current
+service or a clearly dated enemy encounter snapshot; Events shows readable pages;
+Filters opens only when requested. Formation tiers appear beside their roster
+names, while detailed XP and evidence stay in Service. The map remains the normal
+play area and gains only nearby hostile-presence cues.
+
+Records provides a visible route back to battle reports and known subjects.
+Selected physical sites, armies, formations and people can open their contextual
+history. Page navigation, season-range controls, filters and Back use visible
+48-pixel targets. Long histories fetch bounded batches and display five rows per
+screen at both normal and minimum sizes. Forgotten records show missing-history
+text; unknown enemy links never open a live biography.
+
 ## K07 battle report screen brief
 
 The current decision after an automatic encounter is to understand losses,

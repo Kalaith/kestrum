@@ -38,6 +38,7 @@ fn complete_round(
 ) -> Result<(), RuleError> {
     // Income and upkeep precede recovery and the new season's calendar.
     let supply = recovery::snapshot(campaign);
+    let medics = super::evidence::recovery_medics(campaign);
     economy::resolve(campaign, data)?;
     recovery::resolve(campaign, data, &supply)?;
     person_combat::heal_wounds(campaign, &supply);
@@ -49,7 +50,11 @@ fn complete_round(
                 field: "completed rounds",
             })?;
     outcome.consumed_facts = std::mem::take(&mut campaign.pending_facts);
+    super::evidence::consume(campaign, data, &outcome.consumed_facts)?;
+    super::evidence::record_recovery(campaign, &medics)?;
     campaign.consumed_sequence = campaign.accepted_sequence;
+    super::history::prune(campaign, data);
+    super::knowledge::prune_knowledge(campaign, data);
     campaign.acted.clear();
     campaign.round_order = campaign.independent_order();
     campaign.phase = CampaignPhase::PlayerTurn;

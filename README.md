@@ -153,7 +153,7 @@ their remaining movement. Defeated survivors retreat through legal adjacent rout
 trapped forces are destroyed. Inhabited battlefields and hostile captures retain
 structural damage, with occupation recorded after capture.
 
-Battle Reports opens after an encounter and remains available through Menu.
+Battle Reports opens after an encounter and remains available through Menu > Records.
 Outcome, Forces, People and Factors show the recorded result, separate formation
 losses, destinations, wounds, command succession and the strength factors used.
 Previous/Next pages through long rosters; Older/Newer changes encounters. Reports
@@ -167,6 +167,26 @@ encounters, injuries or occupation. All 58 tests, strict Clippy, formatting,
 source-size checks, both-size native review, published browser battle/recovery/
 reload and Windows/WebGL Preview publishing pass. [K07 evidence](docs/verification/k07-combat.md)
 records the checks and remaining platform limitations. K08–K18 remain required.
+
+### K08 — Service and known histories
+
+Records opens from Menu with People, Places and Own Armies. It includes Battle
+Reports and a touch keyboard for known-person search. A selected army, formation,
+place or person opens contextual Overview, Events and date/kind Filters. Back
+returns to the previous view. Enemy-person links show dated encounter snapshots.
+
+Progression consumes genuine participation at the seasonal boundary. Meaningful
+battles earn 2 XP, victories add 1 and surviving while outnumbered adds 1, capped
+at 4 per formation per round. Seasoned begins at 8 XP and Veteran at 20. Their
+attack and resistance factors are 110% and 120%. Recovery preserves earned service;
+a destroyed formation cannot transfer its veteran identity to a replacement.
+Detailed history is bounded separately from persistent gameplay evidence.
+
+All 68 tests, formatting, strict Clippy and source-size checks pass. Forty-two
+normal/minimum native captures and published browser service, search, filters,
+report links and reload were reviewed. Windows/WebGL Preview publication passed;
+Project Roost tracking was unavailable. [K08 evidence](docs/verification/k08-service.md)
+records the checks and remaining platform limitations. K09–K18 remain required.
 
 ## Screen brief
 

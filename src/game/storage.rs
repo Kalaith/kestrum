@@ -180,6 +180,10 @@ impl Game {
             return;
         }
         match self.state.overlay {
+            Overlay::History => self.history_back(),
+            Overlay::Battle if self.battle_return.is_some() => {
+                self.state.overlay = self.battle_return.take().unwrap_or(Overlay::None);
+            }
             Overlay::Armies if self.army.mode != ui::ArmyMode::Roster => {
                 self.army.mode = ui::ArmyMode::Roster;
                 self.army.status.clear();

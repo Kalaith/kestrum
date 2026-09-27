@@ -7,6 +7,9 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     if ctx.state.overlay == Overlay::Battle {
         super::battle::prepare_text(ctx);
     }
+    if ctx.state.overlay == Overlay::History {
+        super::history::prepare_text(ctx);
+    }
     let Some(font) = ctx.body_font() else {
         return;
     };
@@ -49,6 +52,14 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     for size in [18, 20] {
         samples.push((size, ctx.movement.status.as_str()));
     }
+    overlay_samples(ctx, &mut samples);
+    macroquad_toolkit::ui::prepare_font_text(font, &samples);
+    if let Some(font) = ctx.font() {
+        macroquad_toolkit::ui::prepare_font_text(font, &titles);
+    }
+}
+
+fn overlay_samples<'a>(ctx: &'a Context<'_>, samples: &mut Vec<(u16, &'a str)>) {
     match ctx.state.overlay {
         Overlay::Armies => {
             samples.push((18, ctx.army.status.as_str()));
@@ -98,9 +109,5 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
         },
         Overlay::SaveRecovery => samples.push((19, ctx.save_error)),
         _ => {}
-    }
-    macroquad_toolkit::ui::prepare_font_text(font, &samples);
-    if let Some(font) = ctx.font() {
-        macroquad_toolkit::ui::prepare_font_text(font, &titles);
     }
 }

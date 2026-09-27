@@ -4,16 +4,16 @@ use super::*;
 
 impl Game {
     pub(super) fn apply(&mut self, action: UiAction) {
+        self.army_refresh_pending = true;
+        if action.is_history() {
+            self.apply_history_action(action);
+            return;
+        }
         match action {
-            UiAction::OpenBattleReports => self.open_battle_reports(),
-            UiAction::BattleReport(delta) => self.change_battle_report(delta),
-            UiAction::BattlePage(delta) => {
-                self.battle.page = self.battle.page.saturating_add_signed(delta as isize);
-            }
-            UiAction::SetBattleTab(tab) => {
-                self.battle.tab = tab;
-                self.battle.page = 0;
-            }
+            UiAction::OpenBattleReports
+            | UiAction::BattleReport(_)
+            | UiAction::BattlePage(_)
+            | UiAction::SetBattleTab(_) => self.apply_battle_action(action),
             UiAction::ArmyOrders
             | UiAction::ArmyPeople
             | UiAction::ArmyPeoplePage(_)
@@ -83,6 +83,7 @@ impl Game {
             | UiAction::DismissFeedback => self.apply_view_action(action),
             #[cfg(not(target_arch = "wasm32"))]
             UiAction::Fullscreen | UiAction::Quit => self.apply_view_action(action),
+            _ => unreachable!("history actions handled above"),
         }
     }
 
@@ -192,7 +193,7 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(4);
+                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(5);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

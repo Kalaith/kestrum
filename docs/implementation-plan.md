@@ -12,11 +12,13 @@ K01–K17 are complete and committed in order. Normal New Campaign now creates t
 80-major/152-physical production world with deterministic 4–8 faction setup;
 Rosemarch remains the small regression fixture. K18 integrated scenarios,
 long-run retention/replay, measured campaign profiles, native screen review and
-no-argument publishing pass. A production-world battle now validates through
-combat and save reload, but production-AI victory is still uncovered. K18 remains
-In progress because the Preview browser route is unavailable, physical-touch
-acceptance needs hardware, and the 8-faction NPC phase p95 exceeds the provisional
-review target. See the acceptance ledger and
+no-argument publishing pass. A production-world campaign reaches victory and
+defeat against production AI and preserves terminal save state. The deployed
+browser route is reachable; its saved-campaign Continue flow redraws correctly
+in the shared 1200×675 canvas at a 1280×720 page viewport, and Full Screen shows
+the whole campaign. K18 remains In progress because exact 1280×720 WebGL-canvas
+and physical-touch acceptance need device review, and the 8-faction NPC phase
+p95 exceeds the provisional review target. See the acceptance ledger and
 [K18 verification](verification/k18-integrated.md).
 
 ## How to use this plan

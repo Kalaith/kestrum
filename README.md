@@ -14,11 +14,15 @@ Rosemarch remains a separate small scenario for regression tests and captures.
 K13–K17 are complete. K18 integrates production campaigns, long-run continuity,
 retention, save reload and native screen review. A public-observation player
 policy now wins a real 4-faction production campaign at round 60, including
-actual AI turns, player-vs-rival combat, and a terminal save/reload check. K18
-remains in progress: the current Preview browser route is unavailable,
-physical-touch review needs a device, and the 8-faction phase-timing tail is
-above its provisional target. See [K18 verification](docs/verification/k18-integrated.md)
-for results and remaining acceptance work.
+actual AI turns, player-vs-rival combat, and a terminal save/reload check. The
+published browser route is reachable at `http://127.0.0.1/games/kestrum/`.
+At a 1280×720 page viewport, the saved-campaign Continue flow redraws across
+the full 1200×675 host canvas without the reported upper-left shrink; Full
+Screen expands it to 1920×1080. K18 remains in progress because the exact
+1280×720 WebGL canvas and physical-touch review still need device acceptance,
+and the isolated 8-faction phase-timing tail remains above its provisional
+target. See [K18 verification](docs/verification/k18-integrated.md) for results
+and remaining acceptance work.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -479,10 +483,13 @@ army roster.
 
 The locked all-features suite, formatting, strict Clippy, all-target check, and
 no-argument Windows/WebGL Preview publish pass. K18 remains **In progress**:
-the current local Preview server cannot be reached from this session, real touch
-hardware is unavailable, and isolated 8-faction NPC phase p95 is 278 ms against
-the provisional 250 ms review target. Browser scaling and touch-only navigation
-therefore remain unverified.
+the published Preview route is reachable and the saved-campaign Continue flow
+passes in the WebGL page. At a 1280×720 page viewport the shared shell sizes the
+canvas to 1200×675 under its header; the reported upper-left campaign shrink was
+not reproduced, and Full Screen showed the full map and End Turn control at
+1920×1080. The exact 1280×720 WebGL canvas and touch-only navigation still need
+device review. Physical-touch hardware is unavailable, and isolated 8-faction
+NPC phase p95 is 277.5 ms against the provisional 250 ms review target.
 [K18 verification](docs/verification/k18-integrated.md) records the evidence
 and open checks.
 

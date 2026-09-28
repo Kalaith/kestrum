@@ -101,21 +101,35 @@ capture-process peaks representative of a player's session.
 The no-argument publisher passed: Windows and WebGL release builds packaged,
 the Preview deployment was copied to
 `\\wsl.localhost\Ubuntu\home\kalai\dev\games\kestrum`, and Project Roost
-recorded the Preview publish. No current browser session reached that deployed
-page. The existing browser address `http://127.0.0.1:8765/kestrum/` refused the
-connection. The configured `Apache2.4` service is stopped and the current user
-cannot open it through service control. A second browser attempt at
-`http://127.0.0.1/kestrum/` showed the generic WebHatchery landing page, not the
-game. An attempt to start a loopback Python static server for the published
-directory was rejected by execution policy; no more specific reason was
-provided. The title-to-campaign minimum-WebGL scaling regression therefore
-remains unverified and unresolved in this release pass.
+recorded the Preview publish. The deployed page is served at
+`http://127.0.0.1/games/kestrum/` from the local Apache document root. Earlier
+attempts used `:8765/kestrum/` and `/kestrum/`; those are not the deployed game
+route.
 
-No touchscreen or physical pinch device was available. Native captures do not
-test pointer interaction, keyboard text entry, drag, pinch, resize, Full Screen
-or physical touch. Do not treat pointer or automated checks as physical-touch
-acceptance. K18 remains In progress until browser acceptance is completed and
-these remaining checks are resolved or explicitly accepted in scope.
+At a 1280×720 in-app browser viewport, the following pointer-driven flow
+completed on the published WebGL build: title → New Game → visible name-entry
+keyboard → saved campaign → Main Menu → Continue. The campaign redrew across
+the whole available canvas after Continue; the reported upper-left-only map and
+black-space regression did not recur. The canvas measured 1200×675 at
+`(32.5, 103.06)` because the WebHatchery page shell limits its width to 1200 and
+places it below the page header. Its bottom edge falls 58 pixels below the
+720-pixel viewport, and the host's Support and Report a Bug launchers overlap
+the lower corners in page mode. This verifies the continuation scaling path in
+that page layout; it is not the exact 1280×720 WebGL canvas review required by
+the acceptance plan.
+
+Using Play full screen expanded the production map to a 1920×1080 canvas. The
+map occupied the full screen, End Turn and the navigation controls were visible,
+and the upper-left shrink did not occur. Exiting returned to the same 1200×675
+page canvas. No browser console warning or error was recorded during the flow.
+This is pointer/browser acceptance only; it does not establish physical touch,
+pinch, or touch-only navigation.
+
+No touchscreen or physical pinch device was available. The minimum 1280×720
+WebGL canvas review and physical-touch/pinch acceptance therefore remain open.
+Do not treat pointer or automated checks as physical-touch acceptance. K18
+remains In progress until these checks are completed or explicitly accepted in
+scope; the phase-tail target below also remains open.
 
 ## Final validation completed
 
@@ -133,5 +147,7 @@ All commands ran against the actual Kestrum checkout and shared workspace. An
 earlier concurrent suite replay measured 8-faction NPC phase p95 at 278.7 ms;
 the isolated 277.5 ms p95 above is the controlled comparison for the
 provisional target. The game engine was unchanged since those measurements.
-K18 remains open for actual browser/minimum-WebGL verification, physical touch
-and pinch review, and phase tail tuning.
+K18 remains open for exact 1280×720 browser-canvas and physical touch/pinch
+review, and phase-tail tuning. Browser continuation at a 1280×720 page viewport
+and its full-screen path are now verified; they do not substitute for those
+remaining checks.

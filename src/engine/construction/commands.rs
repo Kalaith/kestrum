@@ -217,6 +217,31 @@ pub(in crate::engine) fn set_focus(
     site: SiteId,
     focus: Focus,
 ) -> Result<DomainFactKind, RuleError> {
+    let cost = validate_focus(campaign, data, owner, site, focus)?;
+    let balance = &mut campaign
+        .factions
+        .get_mut(&owner)
+        .expect("validated owner")
+        .resources;
+    balance.gold -= cost.gold;
+    balance.wood -= cost.wood;
+    balance.stone -= cost.stone;
+    campaign.world.focus.insert(site, focus);
+    Ok(DomainFactKind::FocusChanged {
+        faction: owner,
+        site,
+        focus,
+    })
+}
+
+/// The same inexpensive checks used before mutation and by the planner.
+pub(in crate::engine) fn validate_focus(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    site: SiteId,
+    focus: Focus,
+) -> Result<Resources, RuleError> {
     if !campaign.owns_construction_target(owner, ConstructionTarget::Site(site)) {
         return Err(blocked(ConstructionBlock::NotOwned));
     }
@@ -233,18 +258,5 @@ pub(in crate::engine) fn set_focus(
     }
     let cost = data.economy.orders[&OrderKind::ChangeFocus].cost;
     afford(campaign, owner, cost)?;
-    let balance = &mut campaign
-        .factions
-        .get_mut(&owner)
-        .expect("validated owner")
-        .resources;
-    balance.gold -= cost.gold;
-    balance.wood -= cost.wood;
-    balance.stone -= cost.stone;
-    campaign.world.focus.insert(site, focus);
-    Ok(DomainFactKind::FocusChanged {
-        faction: owner,
-        site,
-        focus,
-    })
+    Ok(cost)
 }

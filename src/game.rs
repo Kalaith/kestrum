@@ -15,6 +15,7 @@ mod kingdom_capture;
 mod military;
 mod military_capture;
 mod movement;
+mod profiling;
 mod projection;
 mod resources;
 mod saves;
@@ -91,7 +92,8 @@ pub struct Game {
 impl Game {
     pub async fn new() -> Result<Self, String> {
         let data = GameData::load()?;
-        let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some();
+        let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some()
+            || crate::profiling::benchmark_frames() > 0;
         let assets = resources::load(&data).await?;
         let setup = ui::SetupView {
             seed: data.production_layout.default_seed,

@@ -1,13 +1,16 @@
 //! Deterministic bounded planning over the same observer view and commands as play.
 
 mod economy;
+mod eligibility;
 mod intent;
 mod military;
 mod objectives;
 pub use objectives::{rank_targets, AiTarget};
 mod politics;
 mod progression;
+mod routes;
 mod travel;
+pub use routes::ObservedRoutes;
 
 use super::{preview, project, Actor, Command, RuleError, VisibleCampaign};
 use crate::{
@@ -31,6 +34,8 @@ struct Planner<'a> {
     owner: FactionId,
     view: VisibleCampaign,
     objective: Option<AiObjective>,
+    routes: ObservedRoutes,
+    rejected_candidates: std::cell::RefCell<Vec<Command>>,
 }
 
 pub fn propose(
@@ -51,12 +56,25 @@ pub fn propose(
     }
     data.ai.validate().map_err(RuleError::InvalidState)?;
     let view = project(campaign, faction)?;
+    let enemies = campaign
+        .relations
+        .iter()
+        .filter(|relation| {
+            relation.state == crate::data::world::DiplomaticState::War
+                && relation.factions.contains(&faction)
+        })
+        .flat_map(|relation| relation.factions)
+        .filter(|other| *other != faction)
+        .collect();
+    let routes = ObservedRoutes::new(&view, data, &enemies);
     let mut planner = Planner {
         campaign,
         data,
         owner: faction,
         view,
         objective: None,
+        routes,
+        rejected_candidates: Default::default(),
     };
     planner.objective = planner.retained_objective();
     if campaign.ai.factions.get(&faction).is_some_and(|state| {
@@ -156,6 +174,11 @@ impl Planner<'_> {
                 state.rejected_at_sequence == self.campaign.accepted_sequence
                     && state.rejected.contains(&intent)
             })
+            || self.rejected_candidates.borrow().contains(&command)
+        {
+            return None;
+        }
+        if self.candidate_allowed(&command).is_err()
             || preview(
                 self.campaign,
                 self.data,
@@ -164,6 +187,7 @@ impl Planner<'_> {
             )
             .is_err()
         {
+            self.rejected_candidates.borrow_mut().push(command);
             return None;
         }
         Some(AiDecision {

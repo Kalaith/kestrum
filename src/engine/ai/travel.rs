@@ -8,7 +8,7 @@ use crate::{
     engine::MoveOrder,
     state::military::Army,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 impl Planner<'_> {
     pub(super) fn at_war(&self, other: FactionId) -> bool {
@@ -26,33 +26,7 @@ impl Planner<'_> {
         destination: SiteId,
         attack: bool,
     ) -> Option<(u32, Vec<SiteId>)> {
-        let mut best = BTreeMap::from([(origin, (0_u32, vec![origin]))]);
-        let mut settled = BTreeSet::new();
-        loop {
-            let (&site, (cost, path)) = best
-                .iter()
-                .filter(|(id, _)| !settled.contains(*id))
-                .min_by(|a, b| a.1.cmp(b.1))?;
-            let (cost, path) = (*cost, path.clone());
-            if site == destination {
-                return Some((cost, path));
-            }
-            settled.insert(site);
-            for next in self.view.world.adjacent_sites(site) {
-                if settled.contains(&next) || !self.transit(next, destination, attack) {
-                    continue;
-                }
-                let route = self.view.world.connected_route(site, next)?;
-                let next_cost =
-                    cost.checked_add(crate::engine::movement::route_cost(route, self.data))?;
-                let mut next_path = path.clone();
-                next_path.push(next);
-                let candidate = (next_cost, next_path);
-                if best.get(&next).is_none_or(|old| candidate < *old) {
-                    best.insert(next, candidate);
-                }
-            }
-        }
+        self.routes.path(origin, destination, attack)
     }
 
     fn transit(&self, site: SiteId, destination: SiteId, attack: bool) -> bool {

@@ -128,7 +128,7 @@ pub(super) fn recruit(
     Ok(RecruitmentResult { army, formation })
 }
 
-fn validate_recruit(
+pub(super) fn validate_recruit(
     campaign: &StrategicCampaign,
     data: &GameData,
     site: SiteId,

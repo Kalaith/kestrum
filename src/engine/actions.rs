@@ -164,11 +164,7 @@ fn prepare(
         Actor::Player => campaign.player,
         Actor::Npc(id) => id,
     };
-    super::progression::validate_command(campaign, data, owner, &command)?;
-    super::lifecycle::validate(campaign, data, owner, &command)?;
-    super::mentorship::validate(campaign, data, owner, &command)?;
-    super::succession::validate(campaign, data, owner, &command)?;
-    super::legacy::validate(campaign, owner, &command)?;
+    validate_personnel_command(campaign, data, owner, &command)?;
     let mut candidate = campaign.clone();
     candidate.accepted_sequence =
         candidate
@@ -198,6 +194,20 @@ fn prepare(
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
     Ok((candidate, outcome))
+}
+
+pub(super) fn validate_personnel_command(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    command: &Command,
+) -> Result<(), RuleError> {
+    super::progression::validate_command(campaign, data, owner, command)?;
+    super::lifecycle::validate(campaign, data, owner, command)?;
+    super::mentorship::validate(campaign, data, owner, command)?;
+    super::succession::validate(campaign, data, owner, command)?;
+    super::legacy::validate(campaign, owner, command)?;
+    Ok(())
 }
 
 fn finish(

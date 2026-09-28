@@ -4,6 +4,7 @@ use macroquad::prelude::*;
 use macroquad_toolkit::capture;
 
 mod game;
+mod profiling;
 mod ui;
 
 use game::Game;
@@ -56,9 +57,36 @@ async fn main() {
         return;
     }
 
+    let mut profile = profiling::FrameProfile::new();
+    let benchmark = profiling::benchmark_frames() > 0;
+    if benchmark {
+        if let Err(error) = game.begin_profile() {
+            error!("K18_PROFILE_FAILED {error}");
+            return;
+        }
+    }
+    let mut frame = 0_u64;
     while game.running {
+        if is_key_pressed(KeyCode::F3) {
+            profile.toggle(&game.profile_context());
+        }
+        let started = get_time();
+        if benchmark && frame > 120 && frame.is_multiple_of(12) {
+            game.profile_order();
+        }
+        let input = is_mouse_button_released(MouseButton::Left)
+            || touches()
+                .iter()
+                .any(|touch| touch.phase == TouchPhase::Ended);
         let dt = get_frame_time().min(0.1);
         game.frame(dt);
+        let cpu = get_time() - started;
         next_frame().await;
+        if profile.enabled()
+            && profile.record(cpu, get_time() - started, input, &game.profile_context())
+        {
+            break;
+        }
+        frame += 1;
     }
 }

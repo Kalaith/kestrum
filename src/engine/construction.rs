@@ -4,7 +4,7 @@ mod commands;
 mod progress;
 mod query;
 mod settlers;
-pub(super) use commands::{cancel, reassign, set_focus, start};
+pub(super) use commands::{cancel, reassign, set_focus, start, validate_focus, validate_start};
 pub(super) use progress::{reconcile, resolve};
 pub use query::{construction_options, construction_refund, ConstructionOption};
 

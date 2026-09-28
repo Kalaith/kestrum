@@ -55,6 +55,16 @@ The largest encoded round checkpoint was 977,537 bytes. The 4-faction run
 retained 152 people (121 living), 762 events, seven armies and 39 formations
 after pruning. Replayed checkpoints matched their uninterrupted campaign state.
 
+### Phase-tail tuning trials
+
+Two local planner alternatives were measured against the isolated 4/8-faction
+400-round replay and reverted because neither improved the 8-faction phase
+tail. A sorted route-neighbor index measured 299.6 ms p95 and 336.92 seconds
+total at 8 factions/400 rounds. A heap-backed Dijkstra queue measured 286.9 ms
+p95 and 332.49 seconds. Both p95 results exceeded the 250 ms provisional
+target and the committed baseline's 277.5 ms p95 / 312.37-second total. The
+committed planner is unchanged; phase-tail tuning remains open.
+
 ## Native visual review
 
 The established hidden-window capture wrapper completed ten states at actual

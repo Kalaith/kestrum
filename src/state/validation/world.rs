@@ -86,6 +86,18 @@ impl StrategicCampaign {
                 .find(|authored| authored.id == site.id)
                 .ok_or("campaign.world.sites: unknown site")?;
             let mut position = original.position;
+            let mut tags = original.tags.clone();
+            // Revision 3 reserves regional starts with horse access. Older
+            // worlds keep their saved terrain and original founding locations.
+            if self.scenario_kind == ScenarioKind::Production
+                && self.world.layout_revision < 3
+                && data
+                    .production_layout
+                    .headquarters_candidates
+                    .contains(&site.id)
+            {
+                tags.retain(|tag| *tag != crate::data::world::SiteTag::HorseAccess);
+            }
             if self.scenario_kind == ScenarioKind::Production && self.world.layout_revision == 1
                 && markers.iter().any(|m| matches!(m.location, crate::data::world::MarkerLocation::Site { site: id } if id == site.id)) {
                 position = data.production_layout.legacy_marker_positions.get(&site.marker).copied().unwrap_or(position);
@@ -95,7 +107,7 @@ impl StrategicCampaign {
                     && site.position == position
                     && site.geography == original.geography
                     && site.key == original.key
-                    && site.tags == original.tags,
+                    && site.tags == tags,
                 "world.sites",
                 "fixed site geography changed",
             )?;
@@ -146,7 +158,7 @@ impl StrategicCampaign {
                 self.world.atlas_paths.is_empty()
             }
             (ScenarioKind::Production, revision)
-                if revision == data.production_layout.layout_revision =>
+                if revision == 2 || revision == data.production_layout.layout_revision =>
             {
                 self.world.atlas_paths == data.production_layout.atlas_paths
             }

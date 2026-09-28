@@ -16,6 +16,8 @@ pub const TUTORIAL_TEXT: &[&str] = &[
     "tutorial_back_roster",
     "tutorial_back_map",
     "tutorial_region",
+    "tutorial_region_return",
+    "tutorial_region_explore",
     "tutorial_world",
     "tutorial_career_orders",
     "tutorial_people",

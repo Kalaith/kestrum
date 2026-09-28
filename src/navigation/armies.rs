@@ -54,9 +54,14 @@ impl MapNavigation {
                 view.focus(marker.position, 2.5);
             }
             self.selection = Some(MapSelection::Marker(place.marker));
-        } else if self.enter_region(world, place.marker, view).is_ok() {
-            view.focus(place.position, 1.5);
-            self.selection = Some(MapSelection::Site(site));
+        } else {
+            if let Some(marker) = world.marker(place.marker) {
+                view.focus(marker.position, 2.5);
+            }
+            if self.enter_region(world, place.marker, view).is_ok() {
+                view.focus(place.position, 1.5);
+                self.selection = Some(MapSelection::Site(site));
+            }
         }
     }
 }

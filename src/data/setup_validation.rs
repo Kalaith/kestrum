@@ -100,10 +100,12 @@ impl Scenario {
         require(
             SOURCE,
             &format!("{field}.headquarters"),
-            self.marker(hq.marker).is_some_and(
-                |marker| matches!(marker.location, MarkerLocation::Site { site } if site == hq.id),
-            ),
-            "HQ must be a physical world site",
+            self.marker(hq.marker)
+                .is_some_and(|marker| match &marker.location {
+                    MarkerLocation::Site { site } => *site == hq.id,
+                    MarkerLocation::Region { sites, .. } => sites.contains(&hq.id),
+                }),
+            "HQ must be a physical site belonging to its world marker",
         )?;
         require(
             SOURCE,

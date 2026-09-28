@@ -6,7 +6,7 @@ impl WorldLayout {
         require(
             LAYOUT_SOURCE,
             "layout_revision",
-            self.layout_revision == 2,
+            self.layout_revision == 3,
             "unsupported atlas revision",
         )?;
         for (marker, position) in &self.legacy_marker_positions {

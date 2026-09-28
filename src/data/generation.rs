@@ -228,6 +228,55 @@ fn production_threats(
                 faction.headquarters
             ));
         }
+        // Keep one first journey open inside the home region. Its other nearby
+        // threat waits one route farther out, rather than sealing both exits.
+        let home = scenario.site(faction.headquarters).unwrap();
+        let safe = neighbors
+            .iter()
+            .copied()
+            .filter(|id| {
+                scenario
+                    .site(*id)
+                    .is_some_and(|site| site.marker == home.marker)
+            })
+            .min_by_key(|id| {
+                (
+                    scenario
+                        .routes
+                        .iter()
+                        .find(|route| route.other_endpoint(home.id) == Some(*id))
+                        .map(|route| route.terrain_cost)
+                        .unwrap_or(u32::MAX),
+                    *id,
+                )
+            });
+        if let Some(safe) = safe {
+            let mut farther: Vec<_> = scenario
+                .routes
+                .iter()
+                .flat_map(|route| {
+                    neighbors
+                        .iter()
+                        .filter_map(|site| route.other_endpoint(*site))
+                })
+                .filter(|id| {
+                    !neighbors.contains(id)
+                        && scenario
+                            .site(*id)
+                            .is_some_and(|site| site.controller.is_none())
+                })
+                .collect::<std::collections::BTreeSet<_>>()
+                .into_iter()
+                .collect();
+            shuffle(rng, &mut farther);
+            let next = farther
+                .first()
+                .copied()
+                .ok_or("regional start needs a threat within two routes")?;
+            neighbors.retain(|id| *id != safe);
+            neighbors.truncate(1);
+            neighbors.push(next);
+        }
         threats.push(InitialThreat {
             site: neighbors[0],
             kind: ThreatKind::Bandits,

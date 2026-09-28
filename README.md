@@ -21,8 +21,8 @@ and native screen review. Earlier four/eight-faction runs replayed through round
 400; the optimized eight-faction phase p95 measured 114.63 ms. Windows and WebGL
 release builds are published to Preview at `http://127.0.0.1/games/kestrum/`.
 The latest full suite has two unresolved simulation failures: the four-faction
-continuity campaign ends at round 268 before its round-400 milestone, and the
-scripted seed-88 campaign misses its round-120 victory deadline. All other test
+continuity campaign ends at round 265 before its round-400 milestone, and the
+scripted seed-88 campaign stalls in its player turn at round 31. All other test
 targets pass. [Review-fix verification](docs/verification/review-fixes.md) records
 the current checks; [K18 verification](docs/verification/k18-integrated.md) keeps
 the historical results and deferred checks. K18 closure does not claim settled
@@ -33,6 +33,8 @@ movement and nearby costs, tap a destination, then Confirm Move. New campaigns
 start zoomed into their home area; army travel reveals adjacent places and saves
 those discoveries. [Map movement and exploration verification](docs/verification/map-movement-exploration.md)
 records regression coverage, normal/minimum captures and the published browser check.
+[Home-region tutorial verification](docs/verification/home-region-tutorial.md)
+records the follow-up that makes regional navigation available at the start.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -60,7 +62,10 @@ person wounds and recorded reports. Persistent fortified encounters, escape and 
 Terrain labels are distinct from selectable place markers.
 
 Production setup uses the displayed seed to choose neutral headquarters from eight
-spaced Village candidates, name every founding faction, and place local threats.
+spaced regional Village candidates, name every founding faction, and place local
+threats. Each home region has a clear first route; its two threats are within two
+routes of headquarters. The guide teaches World Map and Enter Region at home,
+without requiring discovery of a distant region. Earlier saves keep their starts.
 Region names and faction seals keep the 80-node world legible; select any marker
 for its full name and facts. Each region's ten detailed sites appear when entered.
 
@@ -344,8 +349,8 @@ is shown in [the chronicle](docs/verification/ui_history_item_deed.png) and its
 
 ### Strategic map
 
-The campaign starts at 2.5× over the player's home, or at the home site inside
-its region. Only owned places, army positions and their immediate route exits
+New campaigns start inside their home region at 1.5×, with its world marker
+framed at 2.5× when World Map is opened. Only owned places, army positions and their immediate route exits
 are initially known. Travel records discoveries in the save; panning and route
 previews reveal nothing. Older saves begin from their current holdings and armies.
 
@@ -360,7 +365,7 @@ explain why the order cannot proceed. Recenter returns to the army or home area.
 
 | Question | Current answer |
 | --- | --- |
-| Current decision | Select an army and choose where to move it. |
+| Current decision | Select an army and choose where to move it; the opening guide then teaches returning to the world map and entering the known home region. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
 | Primary action | Tap Army, tap a destination, then Confirm Move beside its cost. No management overlay is required. |
 | Supporting information | The compact order card shows remaining movement, cost, risks and supply. Nearby legal moves have numbered rings. |
@@ -507,7 +512,7 @@ platform acceptance remains.
 New Campaign now opens a focused setup for the kingdom name, botanical emblem,
 total faction count and displayed seed. The authored production world contains 80
 major locations, 152 physical sites and 191 routes, with eight separated neutral
-Village headquarters candidates. Four to eight kingdoms receive equal starting
+regional Village headquarters candidates. Four to eight kingdoms receive equal starting
 forces, distinct human names and emblems, Peace relations and two local threats.
 The seed determines their starts, settlement tiers and names. Rosemarch remains
 available as the small, fixed regression scenario.

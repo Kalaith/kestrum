@@ -98,6 +98,10 @@ fn four_through_eight_factions_get_connected_separated_starts_and_local_threats(
             assert_eq!(hq.habitation, Habitation::Village);
             assert!(hq.facilities.contains(&Facility::TrainingGround));
             assert!(hq.tags.contains(&SiteTag::HorseAccess));
+            assert!(matches!(
+                scenario.marker(hq.marker).unwrap().location,
+                MarkerLocation::Region { .. }
+            ));
             assert_eq!(faction.capital, faction.headquarters);
             assert_eq!(faction.founder.age_years, 24);
             assert_eq!(faction.founder.class, PersonClass::Officer);
@@ -119,12 +123,19 @@ fn four_through_eight_factions_get_connected_separated_starts_and_local_threats(
                 .initial_threats
                 .iter()
                 .filter(|threat| {
-                    scenario.routes.iter().any(|route| {
-                        route.other_endpoint(faction.headquarters) == Some(threat.site)
-                    })
+                    distance(scenario, faction.headquarters, threat.site)
+                        .is_some_and(|steps| steps <= 2)
                 })
                 .collect();
             assert_eq!(pair.len(), 2);
+            assert!(scenario
+                .routes
+                .iter()
+                .filter_map(|route| route.other_endpoint(faction.headquarters))
+                .any(|site| !generated
+                    .initial_threats
+                    .iter()
+                    .any(|threat| threat.site == site)));
             assert_eq!(
                 pair.iter()
                     .map(|threat| threat.kind)

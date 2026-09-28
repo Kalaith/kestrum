@@ -2,7 +2,6 @@
 
 use super::*;
 use kestrum::{
-    data::world::MarkerLocation,
     engine::HouseholdAction,
     navigation::MapSelection,
     state::tutorial::{TutorialProgress, TutorialStep},
@@ -43,13 +42,7 @@ impl Game {
             .find(|person| person.faction == campaign.player)
             .unwrap()
             .id;
-        let region = campaign
-            .world
-            .markers
-            .iter()
-            .find(|marker| matches!(marker.location, MarkerLocation::Region { .. }))
-            .unwrap()
-            .id;
+        let region = headquarters_marker;
         let destination = campaign
             .world
             .adjacent_sites(headquarters)
@@ -59,7 +52,6 @@ impl Game {
                     .is_ok_and(|preview| preview.stop.is_none() && preview.reachable_steps > 0)
             })
             .expect("production headquarters has a reachable neighbor");
-        let destination_marker = campaign.world.site(destination).unwrap().marker;
         if scene == "tutorial_help" {
             self.apply(UiAction::DismissTutorial);
             self.apply(UiAction::Open(Overlay::Help));
@@ -81,17 +73,13 @@ impl Game {
         }
         self.apply(UiAction::ChooseMoveDestination);
         if scene == "tutorial_blocked" {
-            self.apply(UiAction::SelectMap(MapSelection::Marker(
-                headquarters_marker,
-            )));
+            self.apply(UiAction::SelectMap(MapSelection::Site(headquarters)));
             self.apply(UiAction::ReviewMove);
             assert!(self.movement.preview.is_none());
             self.assert_tutorial(TutorialStep::Movement);
             return true;
         }
-        self.apply(UiAction::SelectMap(MapSelection::Marker(
-            destination_marker,
-        )));
+        self.apply(UiAction::SelectMap(MapSelection::Site(destination)));
         self.apply(UiAction::ReviewMove);
         assert_eq!(self.state.overlay, Overlay::MoveReview);
         if scene == "tutorial_route" {
@@ -99,7 +87,23 @@ impl Game {
         }
         self.apply(UiAction::ConfirmMove);
         self.assert_tutorial(TutorialStep::Region);
-        self.apply(UiAction::Back);
+        if scene == "tutorial_region_return" {
+            return true;
+        }
+        self.apply(UiAction::WorldMap);
+        self.assert_tutorial(TutorialStep::Region);
+        self.refresh_projection();
+        assert!(self
+            .projection
+            .as_ref()
+            .unwrap()
+            .world
+            .marker(region)
+            .is_some());
+        self.apply(UiAction::SelectMap(MapSelection::Marker(region)));
+        if scene == "tutorial_region_select" {
+            return true;
+        }
         self.apply(UiAction::EnterRegion(region));
         self.assert_tutorial(TutorialStep::WorldMap);
         if scene == "tutorial_region" {

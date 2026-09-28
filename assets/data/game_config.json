@@ -159,6 +159,8 @@
     "tutorial_back_roster": "Tap Back to return to the roster, then Orders.",
     "tutorial_back_map": "Tap Back until the map is visible to continue the guide.",
     "tutorial_region": "Tap a named region, then Enter Region to inspect its local places.",
+    "tutorial_region_return": "You are inside your home region. Tap World Map, then select its region marker and Enter Region.",
+    "tutorial_region_explore": "Keep exploring with your army. Discover a region's entrance to reveal its marker and inspect its local places.",
     "tutorial_world": "Tap World Map to return to your previous atlas view.",
     "tutorial_career_orders": "Tap Orders, then People to inspect your named characters.",
     "tutorial_people": "Tap People to inspect local characters and their careers.",

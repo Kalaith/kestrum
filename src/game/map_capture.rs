@@ -89,9 +89,12 @@ impl Game {
         let selection = if campaign.world.physical_site(site.marker) == Some(destination) {
             MapSelection::Marker(site.marker)
         } else {
-            self.navigation
-                .enter_region(&campaign.world, site.marker, &mut self.view)
-                .unwrap();
+            if self.navigation.scope() != kestrum::navigation::MapScope::Region(site.marker) {
+                self.navigation.show_world(&mut self.view);
+                self.navigation
+                    .enter_region(&campaign.world, site.marker, &mut self.view)
+                    .unwrap();
+            }
             MapSelection::Site(destination)
         };
         self.apply(UiAction::SelectMap(selection));

@@ -101,11 +101,11 @@ impl WorldLayout {
             require(
                 LAYOUT_SOURCE,
                 "headquarters_candidates",
-                matches!(marker.map(|marker| &marker.location), Some(MarkerLocation::Site { site: single }) if single == candidate)
+                matches!(marker.map(|marker| &marker.location), Some(MarkerLocation::Region { sites, .. }) if sites.contains(candidate))
                     && site.habitation == crate::data::economy::Habitation::Village
                     && site.controller.is_none()
                     && site.tags.contains(&SiteTag::HorseAccess),
-                "each reserved start must be a neutral Village single site with horse access",
+                "each reserved start must be a neutral regional Village with horse access",
             )?;
             let neighbors: BTreeSet<_> = self
                 .routes

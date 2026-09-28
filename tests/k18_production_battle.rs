@@ -59,7 +59,17 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
         );
     }
     let mut player_orders = 3_u32;
+    let mut observed_round = campaign.completed_rounds;
+    let mut actions_in_round = 0;
     while campaign.diplomacy.ending.is_none() && campaign.completed_rounds < ROUND_CAP {
+        if campaign.completed_rounds != observed_round {
+            observed_round = campaign.completed_rounds;
+            actions_in_round = 0;
+        }
+        actions_in_round += 1;
+        assert!(actions_in_round <= 256,
+            "production script stalled at round {observed_round}, phase {:?}, sequence {}, player orders {player_orders}, NPC orders {npc_actions}",
+            campaign.phase, campaign.accepted_sequence);
         if player_battle.is_none() {
             player_battle = campaign
                 .battles

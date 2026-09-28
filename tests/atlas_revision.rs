@@ -27,7 +27,7 @@ fn campaign(data: &GameData) -> StrategicCampaign {
 fn corrected_coast_keeps_stable_ids_costs_entrances_and_connectivity() {
     let data = GameData::load().unwrap();
     let current = campaign(&data);
-    assert_eq!(current.world.layout_revision, 2);
+    assert_eq!(current.world.layout_revision, 3);
     assert_eq!(
         current.world.site(SiteId(40)).unwrap().position,
         [0.12, 0.55]
@@ -70,6 +70,16 @@ fn old_layout(data: &GameData) -> StrategicCampaign {
     let mut old = campaign(data);
     old.world.layout_revision = 1;
     old.world.atlas_paths.clear();
+    for site in &mut old.world.sites {
+        if data
+            .production_layout
+            .headquarters_candidates
+            .contains(&site.id)
+        {
+            site.tags
+                .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
+        }
+    }
     for marker in &mut old.world.markers {
         if let Some(position) = data
             .production_layout
@@ -116,7 +126,7 @@ fn missing_revision_decodes_as_original_without_moving_any_saved_site() {
 fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let data = GameData::load().unwrap();
     let original = campaign(&data);
-    for revision in [0, 1, 3] {
+    for revision in [0, 1, 4] {
         let mut invalid = original.clone();
         invalid.world.layout_revision = revision;
         assert!(invalid.validate(&data).is_err());

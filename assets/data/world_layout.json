@@ -1615,9 +1615,11 @@
         0.32
       ],
       "geography": "forest",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -1931,9 +1933,11 @@
         0.32
       ],
       "geography": "plains",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -2251,9 +2255,11 @@
         0.32
       ],
       "geography": "river",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -2565,9 +2571,11 @@
         0.32
       ],
       "geography": "hill",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -2879,9 +2887,11 @@
         0.32
       ],
       "geography": "coast",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -3195,9 +3205,11 @@
         0.32
       ],
       "geography": "marsh",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -3513,9 +3525,11 @@
         0.32
       ],
       "geography": "pass",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -3827,9 +3841,11 @@
         0.32
       ],
       "geography": "valley",
-      "tags": [],
+      "tags": [
+        "horse_access"
+      ],
       "controller": null,
-      "habitation": "unsettled",
+      "habitation": "village",
       "military": "none",
       "facilities": []
     },
@@ -6377,16 +6393,16 @@
     }
   ],
   "headquarters_candidates": [
-    5,
-    14,
-    23,
-    32,
-    41,
-    50,
-    59,
-    68
+    1005,
+    1015,
+    1025,
+    1035,
+    1045,
+    1055,
+    1065,
+    1075
   ],
-  "layout_revision": 2,
+  "layout_revision": 3,
   "legacy_marker_positions": {
     "37": [
       0.047,

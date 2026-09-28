@@ -5,6 +5,7 @@ use kestrum::state::{
     tutorial::{TutorialStep, TUTORIAL_STEPS},
     Campaign, GameState, Overlay, Screen,
 };
+use kestrum::{data::world::MarkerLocation, navigation::MapScope};
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 
@@ -95,6 +96,19 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
                 MoveStage::Inactive => "tutorial_find_army",
             },
             TutorialStep::Region if in_army => "tutorial_back_map",
+            TutorialStep::Region if matches!(ctx.navigation.scope(), MapScope::Region(_)) => {
+                "tutorial_region_return"
+            }
+            TutorialStep::Region
+                if !ctx.campaign_view.is_some_and(|view| {
+                    view.world
+                        .markers
+                        .iter()
+                        .any(|marker| matches!(marker.location, MarkerLocation::Region { .. }))
+                }) =>
+            {
+                "tutorial_region_explore"
+            }
             TutorialStep::Region => "tutorial_region",
             TutorialStep::WorldMap if in_army => "tutorial_back_map",
             TutorialStep::WorldMap => "tutorial_world",

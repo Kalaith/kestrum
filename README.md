@@ -573,3 +573,12 @@ current reason when blocked. Only an eligible review offers Confirm. Long names
 wrap in the review, while the list remains paged at both 1920x1080 and 1280x720.
 Back returns to the same selections; confirming refreshes the list and history.
 Succession categories and relationship links remain choices on their own page.
+
+### Atlas route review brief
+
+The world remains the dominant play area. Route lines follow authored coastal
+paths, and small timber crossbars mark supported river crossings. The selected
+route uses the same path and keeps its movement cost visible. Land placements
+must agree with the atlas at normal and minimum size; zoom and visible controls
+remain available for dense coastal groups. New campaigns use layout revision 2.
+Existing saves retain revision 1 coordinates and routes, without relocation.

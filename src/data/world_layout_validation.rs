@@ -2,6 +2,7 @@
 
 use super::{economy::Economy, rules::CampaignRules, validation::require, world::*};
 use std::collections::{BTreeSet, VecDeque};
+mod atlas;
 
 impl WorldLayout {
     pub fn validate(&self, rules: &CampaignRules, economy: &Economy) -> Result<(), String> {
@@ -32,6 +33,7 @@ impl WorldLayout {
             relations: Vec::new(),
         };
         authored.validate_geography(economy)?;
+        self.validate_atlas()?;
         self.validate_counts()?;
         self.validate_connected_graph()?;
         self.validate_headquarters_candidates()?;

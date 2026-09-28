@@ -84,8 +84,8 @@ current effect, builder and missing requirement beside Confirm Build. Builder
 selection pages through local owned armies, with unavailable choices explaining
 their constraint. Active and paused orders retain progress, reason and replacement
 controls. Cancel Order opens the exact refund before confirmation. Focus replaces
-one stored choice and explicitly grants no current bonus; no screen promises
-unsimulated growth. Foreign sites expose public facts through their inspector,
+one stored choice. Its current income, growth, repair or training-price effect
+is shown before confirmation; training focus discounts local courses by 25%. Foreign sites expose public facts through their inspector,
 without another faction's order costs, progress or builder.
 
 Controls use at least 48 logical pixels with visible Back and page actions. Review
@@ -152,22 +152,22 @@ long-name reviews belong to K06 evidence before package completion.
 
 ## Status and goals
 
-This chapter describes the **full proposed interface**. K02 adds strategic faction
-phases to the title and atlas foundation; K04 adds selectable world and regional
-places with inspectors. The current [screen brief](../README.md#screen-brief)
-describes implemented controls. Setup and later system screens below arrive in
-their scheduled packages.
+This chapter describes the implemented production interface and its remaining
+platform acceptance. New Game configures a kingdom name, emblem, four to eight
+factions and a seed on the 80-location atlas. The current
+[screen brief](../README.md#screen-brief) describes the decision hierarchy.
+Historical package captures establish their recorded native layouts; K18 tracks
+fresh browser, touch, performance and integrated-play acceptance.
 
-### Current faction-phase controls (K02)
+### Current faction-phase controls
 
-The atlas remains dominant. Season, year, round and current faction have one home
-along the top edge. End Turn finishes the player's phase. During rival phases it
-becomes Pause or Resume, with Step beside it while paused. A short status names
-the pause and explains that rivals currently pass. Menu/help overlays suspend
-automatic progression; returning to the map continues from the same boundary.
-Help names the visible controls. The old atlas is explicitly read-only and the
-Save action explains when it is unavailable. All controls retain 48-pixel minimum
-height at the 1280 × 720 logical canvas.
+Season, year, round and current faction appear along the top edge. End Turn
+finishes the player's orders. During rival phases, Pause/Resume and Step control
+progress between legal NPC orders. Rivals recruit, train, expand, build and fight.
+Menu and Help suspend automatic progression; returning continues from the same
+boundary. Saved legacy atlas-only campaigns remain read-only. Current strategic
+campaigns support named saves and separate seasonal checkpoints. Required controls
+retain a 48-pixel minimum height at the 1280 by 720 logical canvas.
 
 The strategic map and current decision dominate ordinary play. Give no more than two or three areas strong visual emphasis. A selected object's short inspector can support the map; quiet navigation leads to kingdom, roster, history, and settings views as needed.
 
@@ -194,8 +194,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
   upkeep and missing requirements; Confirm Recruit applies the selected order.
 - **Supporting information:** own resources, supply, leader contribution and the
   last seasonal income/upkeep statement. Disband confirms the loss and no refund.
-- **Deferred information:** unavailable movement, transfers and battle screens
-  arrive with their systems. Foreign army composition is never exposed here.
+- **Deferred information:** movement, transfers and battle reports have their own focused screens. Foreign army composition is never exposed here.
 - **Layout and camera:** one focused sheet at the 1280 × 720 logical minimum;
   roster and recruiting are separate modes. Previous/Next page through any number
   of local armies. New Army remains available when the site has no formations.
@@ -206,7 +205,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 ### Selectable geography (K04)
 
 - **Current decision:** inspect a marked place, its controller and its connections,
-  or enter Rosemarch to inspect the ten physical sites behind its regional claim.
+  or enter a named region to inspect the ten physical sites behind its claim.
 - **Dominant focus:** the connected map. World markers summarize the same saved
   physical sites; region gates identify their external connections.
 - **Primary action:** Enter Region on a regional selection; World Map returns to
@@ -214,7 +213,7 @@ Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; 
 - **Supporting information:** local controller, contested state, regional claim,
   anchor requirements and the player's supplied entrances. Ownership does not
   imply control of every internal site.
-- **Deferred information:** armies and orders arrive with their scheduled systems.
+- **Deferred information:** army rosters and orders open from the selected place.
   Save management stays in Menu, leaving the geography visible during inspection.
 - **Layout and camera:** one 358-pixel inspector sits opposite the selected target
   on the 1280 × 720 logical canvas. The 1920 × 1080 fullscreen view scales the same
@@ -341,15 +340,17 @@ Settlement size, fortification, damage, ruins, roads, and supply breaks should b
 
 ## First-use teaching flow
 
-Proposed prompts use the exact visible action labels:
+Contextual Help uses the visible controls and the selected campaign's names:
 
-1. “Tap your headquarters to inspect it.”
-2. “Tap Briar Host to select the army.”
-3. “Tap a connected destination, then tap Move.”
-4. “Tap Enter Region to inspect Rosemarch's routes.”
-5. “Tap Army to review the six formation slots.”
-6. “Tap End Turn when your orders are complete.”
-7. After combat: “Tap the highlighted person to see what they became known for.”
+1. Tap your headquarters, then Armies to inspect its six-slot roster.
+2. Open Orders, Move Army and Choose Destination; Review Route shows the cost
+   before Confirm Move.
+3. Select a named region and Enter Region; World Map restores the atlas camera.
+4. Use People and Career to inspect service, training and recognition.
+5. In Households or Succession, select local people and review a choice. The
+   review shows its current requirements before Confirm order.
+6. End Turn advances your faction; Pause, Step and Resume control rival work.
+7. Menu > Records opens witnessed battle reports and dated biographies.
 
 Show each only when the supporting feature exists. Dismiss completed prompts. A visible Help control reopens instructions. Hover and shortcuts can supplement every step, but cannot be required. Drag scrolling must not trigger an underlying action when the player releases their finger.
 
@@ -357,7 +358,7 @@ Show each only when the supporting feature exists. Dismiss completed prompts. A 
 
 Place costs and missing requirements by the action. A lost supply route belongs beside the affected army. A high-priority unresolved choice may interrupt End Turn, but ordinary army availability should not force a confirmation after every turn.
 
-Save, load, settings, and debug controls belong behind clear navigation. Provide visible Save and Load controls in the menu: manual saving is available during the player's turn, and automatic saving follows every completed round. Save lists scroll or paginate without a fixed slot count. Show save progress, completion, and failures without obscuring the map. Failed saves, full storage, and invalid loads need an understandable message and a usable route back to play. Enemy turn progress should remain visible; the exact pause/cancel policy requires implementation decisions. Current critical outcomes remain in state after transient notifications fade; older stories may expire under O23.
+Save, load, settings, and debug controls belong behind clear navigation. Provide visible Save and Load controls in the menu: manual saving is available during the player's turn, and automatic saving follows every completed round. Save lists scroll or paginate without a fixed slot count. Show save progress, completion, and failures without obscuring the map. Failed saves, full storage, and invalid loads need an understandable message and a usable route back to play. Enemy turn progress remains visible; Pause stops between orders and Step advances one legal order. Current critical outcomes remain in state after transient notifications fade; older stories may expire under O23.
 
 ## Required visual and interaction review
 
@@ -365,4 +366,4 @@ At 1920 × 1080 full screen and a 1280 × 720 WebGL canvas, inspect first use, o
 
 Check focus, map size, readable text, target sizes, clipping, overlap, hidden controls, drag-release behavior, and picking after resize/zoom/display scaling. Store captures directly in `docs/verification/` under stable scene names and replace equivalent states. Use the shared capture wrapper with its hidden-window default, wait for completion, and confirm the game exits. Browser touch checks supplement captures; neither compilation nor a clean screenshot proves usability.
 
-The initial title/empty-atlas review is recorded in [initial-map.md](verification/initial-map.md), including browser and physical-touch limitations. Reviews of future strategic systems remain outstanding.
+The initial title/empty-atlas review is recorded in [initial-map.md](verification/initial-map.md), including browser and physical-touch limitations. Current system evidence is linked from the implementation acceptance ledger; K18 retains the remaining platform checks.

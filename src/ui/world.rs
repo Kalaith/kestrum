@@ -12,6 +12,8 @@ use kestrum::{
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::truncate_text_to_width_ex;
 
+mod routes;
+
 pub const WORLD_MAP: Rect = Rect::new(24.0, 20.0, 194.0, 48.0);
 
 pub fn draw(ctx: &Context<'_>) {
@@ -21,7 +23,7 @@ pub fn draw(ctx: &Context<'_>) {
     let world = &campaign.world;
     let targets = ctx.navigation.targets(world, ctx.view);
     let panel = selection::bounds(ctx.navigation, world, ctx.view);
-    draw_routes(ctx);
+    routes::draw(ctx);
     for target in &targets {
         if panel.is_some_and(|panel| {
             panel.contains(target.center) && ctx.navigation.selection() != Some(target.selection)
@@ -30,75 +32,6 @@ pub fn draw(ctx: &Context<'_>) {
         }
         draw_target(ctx, target);
         army_presence(ctx, target);
-    }
-}
-
-fn draw_routes(ctx: &Context<'_>) {
-    let Some(campaign) = ctx.campaign_view else {
-        return;
-    };
-    let world = &campaign.world;
-    let production_world = ctx.navigation.scope() == MapScope::World && world.markers.len() > 24;
-    for route in &world.routes {
-        let endpoints = match ctx.navigation.scope() {
-            MapScope::World => route.major_connection.and_then(|[from, to]| {
-                world
-                    .marker(from)
-                    .zip(world.marker(to))
-                    .map(|(from, to)| (from.position, to.position))
-            }),
-            MapScope::Region(region) => world
-                .site(route.from)
-                .zip(world.site(route.to))
-                .filter(|(from, to)| from.marker == region && to.marker == region)
-                .map(|(from, to)| (from.position, to.position)),
-        };
-        if let Some((from, to)) = endpoints {
-            let from = ctx.view.project_normalized(from);
-            let to = ctx.view.project_normalized(to);
-            let (outline, road, outline_color, road_color) = if production_world {
-                (
-                    3.0,
-                    1.0,
-                    Color::new(INK.r, INK.g, INK.b, 0.62),
-                    Color::new(BRASS.r, BRASS.g, BRASS.b, 0.76),
-                )
-            } else {
-                (7.0, 2.5, INK, BRASS)
-            };
-            draw_line(from.x, from.y, to.x, to.y, outline, outline_color);
-            draw_line(from.x, from.y, to.x, to.y, road, road_color);
-            if let Some((index, step, preview)) = ctx
-                .movement
-                .preview
-                .as_ref()
-                .and_then(|preview| {
-                    preview
-                        .steps
-                        .iter()
-                        .enumerate()
-                        .find(|(_, step)| step.route == route.id)
-                        .map(|(index, step)| (index, step, preview))
-                })
-                .filter(|_| ctx.movement.stage != super::MoveStage::Inactive)
-            {
-                let color = if index < preview.reachable_steps {
-                    CREAM
-                } else {
-                    Color::new(0.86, 0.51, 0.39, 1.0)
-                };
-                draw_line(from.x, from.y, to.x, to.y, 5.0, color);
-                let center = (from + to) * 0.5;
-                draw_circle(center.x, center.y, 14.0, INK);
-                body(
-                    ctx,
-                    &format!("{}", step.cost),
-                    center + vec2(-5.0, 6.0),
-                    16.0,
-                    color,
-                );
-            }
-        }
     }
 }
 

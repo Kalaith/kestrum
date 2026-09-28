@@ -476,8 +476,8 @@
       "key": "place_37",
       "name": "Lakeward Gate",
       "position": [
-        0.047,
-        0.595
+        0.05,
+        0.5
       ],
       "location": {
         "site": 37,
@@ -489,8 +489,8 @@
       "key": "place_38",
       "name": "Lakeward Ford",
       "position": [
-        0.115,
-        0.58
+        0.13,
+        0.475
       ],
       "location": {
         "site": 38,
@@ -502,8 +502,8 @@
       "key": "place_39",
       "name": "Lakeward Rise",
       "position": [
-        0.186,
-        0.608
+        0.205,
+        0.475
       ],
       "location": {
         "site": 39,
@@ -515,8 +515,8 @@
       "key": "place_40",
       "name": "Lakeward Hollow",
       "position": [
-        0.035,
-        0.674
+        0.12,
+        0.55
       ],
       "location": {
         "site": 40,
@@ -528,8 +528,8 @@
       "key": "place_41",
       "name": "Lakeward Green",
       "position": [
-        0.12,
-        0.68
+        0.205,
+        0.55
       ],
       "location": {
         "site": 41,
@@ -541,8 +541,8 @@
       "key": "place_42",
       "name": "Lakeward Bridge",
       "position": [
-        0.2,
-        0.692
+        0.285,
+        0.52
       ],
       "location": {
         "site": 42,
@@ -554,8 +554,8 @@
       "key": "place_43",
       "name": "Lakeward Field",
       "position": [
-        0.048,
-        0.757
+        0.25,
+        0.615
       ],
       "location": {
         "site": 43,
@@ -567,8 +567,8 @@
       "key": "place_44",
       "name": "Lakeward Mere",
       "position": [
-        0.13,
-        0.772
+        0.235,
+        0.73
       ],
       "location": {
         "site": 44,
@@ -658,8 +658,8 @@
       "key": "place_51",
       "name": "Rosevale Bridge",
       "position": [
-        0.44,
-        0.692
+        0.455,
+        0.674
       ],
       "location": {
         "site": 51,
@@ -671,8 +671,8 @@
       "key": "place_52",
       "name": "Rosevale Field",
       "position": [
-        0.288,
-        0.757
+        0.3,
+        0.73
       ],
       "location": {
         "site": 52,
@@ -684,8 +684,8 @@
       "key": "place_53",
       "name": "Rosevale Mere",
       "position": [
-        0.37,
-        0.772
+        0.39,
+        0.738
       ],
       "location": {
         "site": 53,
@@ -697,8 +697,8 @@
       "key": "place_54",
       "name": "Rosevale Watch",
       "position": [
-        0.425,
-        0.751
+        0.431,
+        0.732
       ],
       "location": {
         "site": 54,
@@ -775,8 +775,8 @@
       "key": "place_60",
       "name": "Eastfold Bridge",
       "position": [
-        0.68,
-        0.692
+        0.705,
+        0.705
       ],
       "location": {
         "site": 60,
@@ -1168,8 +1168,8 @@
       "key": "region_05",
       "name": "Lakeward",
       "position": [
-        0.225,
-        0.54
+        0.325,
+        0.455
       ],
       "location": {
         "anchors": {
@@ -2659,8 +2659,8 @@
       "name": "Lakeward Gate",
       "marker": 37,
       "position": [
-        0.047,
-        0.595
+        0.05,
+        0.5
       ],
       "geography": "coast",
       "tags": [],
@@ -2675,8 +2675,8 @@
       "name": "Lakeward Ford",
       "marker": 38,
       "position": [
-        0.115,
-        0.58
+        0.13,
+        0.475
       ],
       "geography": "coast",
       "tags": [
@@ -2693,8 +2693,8 @@
       "name": "Lakeward Rise",
       "marker": 39,
       "position": [
-        0.186,
-        0.608
+        0.205,
+        0.475
       ],
       "geography": "coast",
       "tags": [],
@@ -2709,8 +2709,8 @@
       "name": "Lakeward Hollow",
       "marker": 40,
       "position": [
-        0.035,
-        0.674
+        0.12,
+        0.55
       ],
       "geography": "coast",
       "tags": [],
@@ -2725,8 +2725,8 @@
       "name": "Lakeward Green",
       "marker": 41,
       "position": [
-        0.12,
-        0.68
+        0.205,
+        0.55
       ],
       "geography": "coast",
       "tags": [
@@ -2743,8 +2743,8 @@
       "name": "Lakeward Bridge",
       "marker": 42,
       "position": [
-        0.2,
-        0.692
+        0.285,
+        0.52
       ],
       "geography": "coast",
       "tags": [],
@@ -2759,8 +2759,8 @@
       "name": "Lakeward Field",
       "marker": 43,
       "position": [
-        0.048,
-        0.757
+        0.25,
+        0.615
       ],
       "geography": "coast",
       "tags": [],
@@ -2775,8 +2775,8 @@
       "name": "Lakeward Mere",
       "marker": 44,
       "position": [
-        0.13,
-        0.772
+        0.235,
+        0.73
       ],
       "geography": "coast",
       "tags": [
@@ -3059,8 +3059,8 @@
       "name": "Rosevale Bridge",
       "marker": 51,
       "position": [
-        0.44,
-        0.692
+        0.455,
+        0.674
       ],
       "geography": "marsh",
       "tags": [],
@@ -3075,8 +3075,8 @@
       "name": "Rosevale Field",
       "marker": 52,
       "position": [
-        0.288,
-        0.757
+        0.3,
+        0.73
       ],
       "geography": "marsh",
       "tags": [],
@@ -3091,8 +3091,8 @@
       "name": "Rosevale Mere",
       "marker": 53,
       "position": [
-        0.37,
-        0.772
+        0.39,
+        0.738
       ],
       "geography": "marsh",
       "tags": [
@@ -3109,8 +3109,8 @@
       "name": "Rosevale Watch",
       "marker": 54,
       "position": [
-        0.425,
-        0.751
+        0.431,
+        0.732
       ],
       "geography": "marsh",
       "tags": [],
@@ -3377,8 +3377,8 @@
       "name": "Eastfold Bridge",
       "marker": 60,
       "position": [
-        0.68,
-        0.692
+        0.705,
+        0.705
       ],
       "geography": "pass",
       "tags": [],
@@ -6385,5 +6385,351 @@
     50,
     59,
     68
-  ]
+  ],
+  "layout_revision": 2,
+  "legacy_marker_positions": {
+    "37": [
+      0.047,
+      0.595
+    ],
+    "38": [
+      0.115,
+      0.58
+    ],
+    "39": [
+      0.186,
+      0.608
+    ],
+    "40": [
+      0.035,
+      0.674
+    ],
+    "41": [
+      0.12,
+      0.68
+    ],
+    "42": [
+      0.2,
+      0.692
+    ],
+    "43": [
+      0.048,
+      0.757
+    ],
+    "44": [
+      0.13,
+      0.772
+    ],
+    "52": [
+      0.288,
+      0.757
+    ],
+    "53": [
+      0.37,
+      0.772
+    ],
+    "54": [
+      0.425,
+      0.751
+    ],
+    "60": [
+      0.68,
+      0.692
+    ],
+    "77": [
+      0.225,
+      0.54
+    ],
+    "51": [
+      0.44,
+      0.692
+    ]
+  },
+  "atlas_paths": {
+    "8": {
+      "waypoints": [
+        [
+          0.123,
+          0.37
+        ],
+        [
+          0.19,
+          0.375
+        ]
+      ],
+      "bridges": [
+        [
+          0.196,
+          0.35
+        ]
+      ]
+    },
+    "10": {
+      "waypoints": [
+        [
+          0.21,
+          0.37
+        ]
+      ],
+      "bridges": []
+    },
+    "23": {
+      "waypoints": [
+        [
+          0.22,
+          0.36
+        ]
+      ],
+      "bridges": [
+        [
+          0.223,
+          0.236
+        ]
+      ]
+    },
+    "32": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.369,
+          0.406
+        ]
+      ]
+    },
+    "34": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.292,
+          0.398
+        ],
+        [
+          0.359,
+          0.41
+        ]
+      ]
+    },
+    "35": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.394,
+          0.403
+        ]
+      ]
+    },
+    "68": {
+      "waypoints": [
+        [
+          0.66,
+          0.235
+        ],
+        [
+          0.62,
+          0.255
+        ]
+      ],
+      "bridges": []
+    },
+    "99": {
+      "waypoints": [
+        [
+          0.2,
+          0.525
+        ],
+        [
+          0.245,
+          0.56
+        ]
+      ],
+      "bridges": []
+    },
+    "101": {
+      "waypoints": [
+        [
+          0.25,
+          0.58
+        ],
+        [
+          0.27,
+          0.655
+        ]
+      ],
+      "bridges": []
+    },
+    "102": {
+      "waypoints": [
+        [
+          0.27,
+          0.655
+        ],
+        [
+          0.235,
+          0.7
+        ]
+      ],
+      "bridges": [
+        [
+          0.236,
+          0.7
+        ]
+      ]
+    },
+    "103": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.239,
+          0.701
+        ]
+      ]
+    },
+    "115": {
+      "waypoints": [
+        [
+          0.3,
+          0.6
+        ],
+        [
+          0.27,
+          0.655
+        ],
+        [
+          0.235,
+          0.7
+        ]
+      ],
+      "bridges": [
+        [
+          0.236,
+          0.7
+        ]
+      ]
+    },
+    "137": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.428,
+          0.552
+        ]
+      ]
+    },
+    "138": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.455,
+          0.578
+        ]
+      ]
+    },
+    "143": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.691,
+          0.671
+        ]
+      ]
+    },
+    "145": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.523,
+          0.726
+        ]
+      ]
+    },
+    "146": {
+      "waypoints": [
+        [
+          0.64,
+          0.735
+        ],
+        [
+          0.7,
+          0.735
+        ]
+      ],
+      "bridges": []
+    },
+    "161": {
+      "waypoints": [
+        [
+          0.72,
+          0.64
+        ],
+        [
+          0.71,
+          0.72
+        ]
+      ],
+      "bridges": []
+    },
+    "164": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.887,
+          0.6
+        ]
+      ]
+    },
+    "165": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.838,
+          0.646
+        ]
+      ]
+    },
+    "167": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.815,
+          0.678
+        ]
+      ]
+    },
+    "183": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.893,
+          0.556
+        ]
+      ]
+    },
+    "185": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.236,
+          0.241
+        ]
+      ]
+    },
+    "186": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.466,
+          0.243
+        ]
+      ]
+    },
+    "189": {
+      "waypoints": [],
+      "bridges": [
+        [
+          0.488,
+          0.6
+        ]
+      ]
+    }
+  }
 }

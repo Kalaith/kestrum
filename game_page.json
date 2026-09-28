@@ -11,10 +11,12 @@
     "width": 1280,
     "height": 720
   },
-  "controls_hint": "Choose New Game to unfold the atlas. Use Full Screen for the best view.",
+  "controls_hint": "Choose New Game, name your kingdom and choose four to eight factions. Full Screen gives the map more room.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
-    "Begin a Rosemarch campaign with founding armies and officers. Recruit into six formation slots, move groups along physical routes, split armies and transfer co-located troops or people. Inspect route costs, remaining movement and supply before confirmation. Manage owned places to found Outposts with real settlers, improve roads, build Forts and add recruitment facilities. Work keeps its progress through interruptions, with visible costs, builders and cancellation refunds. Each full round grants income, pays upkeep, restores eligible supplied formations and keeps a separate checkpoint. Save named copies, browse past moments and retry failed saves. Hostile field encounters resolve automatically with persistent casualties, retreats and wounds. Meaningful service earns Seasoned and Veteran formations. Menu > Records opens battle reports, searchable known people and filtered histories. Enemy details remain dated to actual encounters. Defended forts become persistent sieges. Choose assault, maintenance, withdrawal, sortie or escape, and bring outside armies through a joint relief battle. Places grow or decline from local conditions, normalize occupation, repair, displace people and become ruins. Resettle refugees and move your capital or headquarters independently. Clear ordinary threats for a single reward. Rival kingdoms recruit, expand, build and fight through the same legal orders. Declare war, agree peace or decide a defeated rival’s fate. Reach a persistent kingdom victory or defeat, then inspect records or begin a new campaign."
+    "Found a human kingdom on the 80-location atlas with a chosen emblem, four to eight factions and a repeatable world seed. Recruit six-slot armies, inspect land routes and supply, build settlements, clear local threats and decide war or peace. Battles and sieges leave persistent casualties, wounds and dated reports.",
+    "Service earns classes, formation specializations and recognition. Teach apprentices, form households, raise or adopt dependents and choose qualified successors as people age. Local training focus discounts courses by 25%. Biographies and place histories retain witnessed milestones; rival details come from actual encounters.",
+    "Each full round advances one season and creates a checkpoint. Save named copies, reload earlier moments and continue a campaign through its kingdom victory or defeat. The supported play canvas is landscape at least 1280 by 720; use Full Screen when the embedded view is smaller."
   ],
   "controls": [
     {
@@ -64,6 +66,14 @@
     {
       "key": "Records / Battle Reports",
       "desc": "Menu > Records opens known people, places, armies and battle reports; Search offers a touch keyboard, Events and Filters page recorded history"
+    },
+    {
+      "key": "Career / Mentor / Training",
+      "desc": "Review personal class requirements, arrange local lessons or specialize a formation; focused sites show the discounted prepaid cost"
+    },
+    {
+      "key": "Households / Succession",
+      "desc": "Select local people, tap an action to read its requirements, then Confirm order; blocked reviews explain what needs to change"
     },
     {
       "key": "Service / History",

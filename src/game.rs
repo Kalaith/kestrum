@@ -182,10 +182,19 @@ impl Game {
                 self.state.overlay = Overlay::Setup;
                 self.setup.editing_name = true;
             }
-            "production_world" | "production_region" => {
+            "production_world" | "production_region" | "atlas_coast" | "atlas_river" => {
                 self.setup.factions = 8;
                 self.setup.seed = self.data.production_layout.default_seed;
                 self.start_game();
+                if scene.starts_with("atlas_") {
+                    let center = if scene.starts_with("atlas_coast") {
+                        vec2(320.0, 435.0)
+                    } else {
+                        vec2(600.0, 300.0)
+                    };
+                    self.view.camera = macroquad_toolkit::camera::CameraTransform::new(center, 2.0)
+                        .expect("valid atlas capture camera");
+                }
                 if scene.trim_end_matches("_minimum") == "production_region" {
                     use kestrum::{data::world::MarkerId, navigation::MapSelection};
                     if let Some(campaign) =
@@ -257,33 +266,33 @@ impl Game {
             "help" => self.state.overlay = Overlay::Help,
             "help_army" => {
                 self.state.overlay = Overlay::Help;
-                self.help_page = 1;
+                self.help_page = 2;
             }
             "help_movement" => {
                 self.state.overlay = Overlay::Help;
-                self.help_page = 2;
+                self.help_page = 4;
             }
             "help_transfer" => {
                 self.state.overlay = Overlay::Help;
-                self.help_page = 3;
+                self.help_page = 5;
             }
             "help_battle" => {
                 self.state.overlay = Overlay::Help;
-                self.help_page = 4;
+                self.help_page = 6;
             }
             "help_service" => {
                 self.state.overlay = Overlay::Help;
-                self.help_page = 5;
+                self.help_page = 7;
             }
             "help_lifecycle" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Help;
-                self.help_page = 10;
+                self.help_page = 12;
             }
             "help_mentorship" => {
                 self.capture_campaign();
                 self.state.overlay = Overlay::Help;
-                self.help_page = 11;
+                self.help_page = 13;
             }
             "history_life" | "history_records" | "history_person" | "history_known"
             | "history_events" | "history_filters" | "history_search" | "history_empty"

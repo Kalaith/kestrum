@@ -29,6 +29,10 @@ pub struct BoundaryCrossing {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignWorld {
+    #[serde(default = "original_layout_revision")]
+    pub layout_revision: u32,
+    #[serde(default)]
+    pub atlas_paths: BTreeMap<RouteId, crate::data::world::AtlasPath>,
     pub development: BTreeMap<SiteId, super::development::SiteDevelopment>,
     pub fort_damage: BTreeMap<SiteId, u32>,
     pub population: BTreeMap<SiteId, u32>,
@@ -51,6 +55,8 @@ pub struct CampaignWorld {
 impl CampaignWorld {
     pub fn from_scenario(scenario: &Scenario) -> Self {
         let mut world = Self {
+            layout_revision: 1,
+            atlas_paths: BTreeMap::new(),
             development: scenario
                 .sites
                 .iter()
@@ -267,4 +273,8 @@ impl CampaignWorld {
         }
         previous
     }
+}
+
+fn original_layout_revision() -> u32 {
+    1
 }

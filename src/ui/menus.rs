@@ -6,6 +6,8 @@ use kestrum::{
     state::Overlay,
 };
 use macroquad::prelude::*;
+mod help;
+pub use help::HELP_PAGE_COUNT;
 
 pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     for column in 0..1280 {
@@ -150,7 +152,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
     let action = match ctx.state.overlay {
         Overlay::Menu => pause(ctx),
         Overlay::Settings => settings(ctx),
-        Overlay::Help => help(ctx),
+        Overlay::Help => help::draw(ctx),
         Overlay::Credits => {
             credits(ctx);
             None
@@ -297,97 +299,6 @@ fn settings(ctx: &Context<'_>) -> Option<UiAction> {
         false,
     ) {
         return Some(UiAction::Fullscreen);
-    }
-    None
-}
-
-fn help(ctx: &Context<'_>) -> Option<UiAction> {
-    let legacy = ctx.state.campaign.is_some() && ctx.campaign_view.is_none();
-    let keys: &[&str] = if legacy {
-        &["legacy_read_only", "help_pan", "help_zoom", "help_menu"]
-    } else if ctx.help_page == 2 {
-        &["help_move", "help_route", "help_spent"]
-    } else if ctx.help_page == 3 {
-        &["help_transfer", "help_recovery", "help_transfer_phase"]
-    } else if ctx.help_page == 4 {
-        &["help_battle", "help_battle_reports", "help_wounds"]
-    } else if ctx.help_page == 9 {
-        &[
-            "help_diplomacy",
-            "help_kingdom_decisions",
-            "help_kingdom_ending",
-        ]
-    } else if ctx.help_page == 10 {
-        &["help_aging", "help_aging_choices", "help_retirement"]
-    } else if ctx.help_page == 11 {
-        &[
-            "help_mentorship",
-            "help_mentorship_contact",
-            "help_apprenticeship",
-        ]
-    } else if ctx.help_page == 12 {
-        &["help_households", "help_succession", "help_heirlooms"]
-    } else if ctx.help_page == 8 {
-        &["help_development", "help_local_actions", "help_threats"]
-    } else if ctx.help_page == 7 {
-        &["help_siege", "help_siege_choices", "help_relief"]
-    } else if ctx.help_page == 6 {
-        &[
-            "help_construction",
-            "help_builder",
-            "help_construction_refund",
-        ]
-    } else if ctx.help_page == 5 {
-        &["help_service", "help_careers", "help_history_knowledge"]
-    } else if ctx.help_page == 1 {
-        &[
-            "help_army",
-            "help_recruit",
-            "help_slots",
-            "help_economy",
-            "help_disband",
-            "help_leadership",
-        ]
-    } else {
-        &[
-            "help_select",
-            "help_region",
-            "help_navigation",
-            "help_turn",
-            "help_menu",
-            "help_scope",
-        ]
-    };
-    for (index, key) in keys.iter().enumerate() {
-        paragraph(
-            ctx,
-            &ctx.text(key),
-            vec2(
-                414.0,
-                223.0 + index as f32 * if ctx.help_page >= 2 { 90.0 } else { 52.0 },
-            ),
-            453.0,
-        );
-    }
-    if !legacy {
-        if button(
-            ctx,
-            Rect::new(390.0, 548.0, 124.0, 48.0),
-            &ctx.text("previous"),
-            ctx.help_page > 0,
-            false,
-        ) {
-            return Some(UiAction::HelpPage(-1));
-        }
-        if button(
-            ctx,
-            Rect::new(766.0, 548.0, 124.0, 48.0),
-            &ctx.text("next"),
-            ctx.help_page < 12,
-            false,
-        ) {
-            return Some(UiAction::HelpPage(1));
-        }
     }
     None
 }

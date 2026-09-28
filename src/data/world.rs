@@ -33,6 +33,9 @@ pub enum ScenarioKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WorldLayout {
+    pub layout_revision: u32,
+    pub legacy_marker_positions: std::collections::BTreeMap<MarkerId, [f32; 2]>,
+    pub atlas_paths: std::collections::BTreeMap<RouteId, AtlasPath>,
     pub schema_version: u32,
     pub content_version: u32,
     pub default_seed: u64,
@@ -40,6 +43,14 @@ pub struct WorldLayout {
     pub sites: Vec<Site>,
     pub routes: Vec<Route>,
     pub headquarters_candidates: Vec<SiteId>,
+}
+
+/// Authored display geometry; movement still follows the fixed route endpoints and cost.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AtlasPath {
+    pub waypoints: Vec<[f32; 2]>,
+    pub bridges: Vec<[f32; 2]>,
 }
 
 impl WorldLayout {

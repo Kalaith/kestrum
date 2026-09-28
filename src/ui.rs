@@ -43,6 +43,7 @@ pub use atlas::map_controls_contain;
 pub use battle::{BattleTab, BattleView};
 pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
 pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
+pub use menus::HELP_PAGE_COUNT;
 pub use movement::{
     draw_map_overlay as draw_move_map_overlay,
     map_controls_contain as movement_map_controls_contain,

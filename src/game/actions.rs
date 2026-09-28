@@ -329,7 +329,10 @@ impl Game {
     fn apply_navigation_action(&mut self, action: UiAction) {
         match action {
             UiAction::HelpPage(delta) => {
-                self.help_page = self.help_page.saturating_add_signed(delta as isize).min(12);
+                self.help_page = self
+                    .help_page
+                    .saturating_add_signed(delta as isize)
+                    .min(ui::HELP_PAGE_COUNT - 1);
             }
             UiAction::NewGame => {
                 if self.save_exists || self.state.campaign.is_some() {

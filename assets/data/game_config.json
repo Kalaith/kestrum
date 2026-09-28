@@ -580,7 +580,7 @@
     "help_menu": "Tap Menu for Save Game or Load Game. Each round keeps its own checkpoint.",
     "help_scope": "Rivals recruit, build, expand and wage war through ordinary orders. Kingdom decisions can pause their progress.",
     "help_select": "Tap a marked place to inspect it. A small number badge shows stationed armies; ! marks an observed local threat. Close returns to the map.",
-    "help_region": "Select Rosemarch, then Enter Region. World Map returns to the atlas.",
+    "help_region": "Select a named region marker, then Enter Region. World Map returns to your previous atlas view.",
     "help_navigation": "Drag to pan. Pinch or tap + and - to zoom. Recenter shows the whole map.",
     "enter_region": "Enter Region",
     "select_place": "Tap a marked place to inspect it",

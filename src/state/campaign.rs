@@ -363,6 +363,10 @@ impl StrategicCampaign {
         for relation in &mut campaign.relations {
             relation.factions.sort();
         }
+        if scenario.kind == ScenarioKind::Production {
+            campaign.world.layout_revision = data.production_layout.layout_revision;
+            campaign.world.atlas_paths = data.production_layout.atlas_paths.clone();
+        }
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.initialize_diplomacy();
         campaign.round_order = campaign.independent_order();

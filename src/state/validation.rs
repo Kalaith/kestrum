@@ -1,5 +1,7 @@
 //! Candidate-save invariants checked before replacing a live campaign.
 
+mod world;
+
 use super::campaign::{
     CampaignPhase, DomainFactKind, FactionStatus, StrategicCampaign, STRATEGIC_VERSION,
 };
@@ -120,113 +122,6 @@ impl StrategicCampaign {
             "relations",
             "every faction pair needs one relation",
         )
-    }
-
-    fn validate_world(&self, data: &GameData) -> Result<(), String> {
-        let (markers, sites, routes): (&[_], &[_], &[_]) = match self.scenario_kind {
-            ScenarioKind::RosemarchPrototype => (
-                &data.scenario.markers,
-                &data.scenario.sites,
-                &data.scenario.routes,
-            ),
-            ScenarioKind::Production => (
-                &data.production_layout.markers,
-                &data.production_layout.sites,
-                &data.production_layout.routes,
-            ),
-        };
-        require(
-            self.world.sites.len() == sites.len()
-                && self.world.routes.len() == routes.len()
-                && self.world.markers.len() == markers.len(),
-            "world",
-            "fixed topology counts changed",
-        )?;
-        require(
-            self.world
-                .sites
-                .windows(2)
-                .all(|pair| pair[0].id < pair[1].id)
-                && self
-                    .world
-                    .routes
-                    .windows(2)
-                    .all(|pair| pair[0].id < pair[1].id)
-                && self
-                    .world
-                    .markers
-                    .windows(2)
-                    .all(|pair| pair[0].id < pair[1].id),
-            "world",
-            "IDs must be unique and ordered",
-        )?;
-        for marker in &self.world.markers {
-            let mut original = markers
-                .iter()
-                .find(|authored| authored.id == marker.id)
-                .cloned()
-                .ok_or("campaign.world.markers: unknown marker")?;
-            if matches!(
-                marker.location,
-                crate::data::world::MarkerLocation::Site { .. }
-            ) {
-                original.name = marker.name.clone();
-            }
-            require(
-                original == *marker && !marker.name.trim().is_empty(),
-                "world.markers",
-                "fixed marker or entrance mapping changed",
-            )?;
-        }
-        for site in &self.world.sites {
-            let original = sites
-                .iter()
-                .find(|authored| authored.id == site.id)
-                .ok_or("campaign.world.sites: unknown site")?;
-            require(
-                site.marker == original.marker
-                    && site.position == original.position
-                    && site.geography == original.geography
-                    && site.key == original.key
-                    && site.tags == original.tags,
-                "world.sites",
-                "fixed site geography changed",
-            )?;
-            require(
-                !site.name.trim().is_empty(),
-                "world.sites.name",
-                "empty site name",
-            )?;
-            require(
-                site.controller
-                    .is_none_or(|controller| self.factions.contains_key(&controller)),
-                "world.sites.controller",
-                "unknown faction",
-            )?;
-            let facilities: BTreeSet<_> = site.facilities.iter().collect();
-            require(
-                facilities.len() == site.facilities.len(),
-                "world.sites.facilities",
-                "duplicate facility",
-            )?;
-        }
-        for route in &self.world.routes {
-            let original = routes
-                .iter()
-                .find(|authored| authored.id == route.id)
-                .ok_or("campaign.world.routes: unknown route")?;
-            require(
-                route.from == original.from
-                    && route.to == original.to
-                    && route.major_connection == original.major_connection
-                    && route.terrain_cost == original.terrain_cost
-                    && route.road.damage <= 100
-                    && (route.road.improved || route.road.damage == 0),
-                "world.routes",
-                "fixed route changed or invalid road damage",
-            )?;
-        }
-        self.validate_region_control()
     }
 
     fn validate_phase(&self) -> Result<(), String> {

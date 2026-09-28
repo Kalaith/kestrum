@@ -172,3 +172,41 @@ pass. Evidence: `ui_household_blocked[_minimum].png`,
 `ui_succession[_minimum].png`.
 
 No-argument Windows/WebGL Preview publishing and Project Roost recording pass.
+
+## Atlas and current teaching (R09/R12)
+
+Reviewed all 80 world placements and 119 external route traces against the atlas.
+Lakeward's former offshore graph now follows the mainland coast; the southern
+Rosevale shore and Eastfold lake placement are corrected too. Thirteen simple
+sites and the Lakeward region marker change position. Ten routes use authored
+land waypoints around bays/lakes; nineteen routes show narrow bridge crossings.
+The normal road and selected route share the same geometry. IDs, endpoints,
+costs, regional entrances, HQ candidates and all 191 simulation edges remain
+unchanged. Internal region coordinates remain in their separate map space.
+
+`world.layout_revision` separates geography from rules/content version. New
+production campaigns save revision 2 and their authored route geometry. Missing
+revision means 1; the frozen previous marker positions validate old saves, whose
+sites are never moved on load. Unknown revisions, mixed coordinates and altered
+route geometry are rejected. Five regression cases cover current and old saves,
+unchanged topology/costs, exact replay after reload, and invalid crossing data.
+The topology, entrance, HQ-spacing, navigation, persistence, content and source
+suites pass: 32 cases in total.
+
+The production page now describes seeded 4–8-faction setup, careers, households,
+succession, history and the training discount. Help teaches named regions from
+the active map. Chapter 10 describes implemented screens and retains historical
+verification limits. A fresh render exposed overlapping Help paragraphs; Help
+now flows by wrapped height across 17 short topic pages with visible Previous,
+Next and Back controls. Capture topic indices follow those pages.
+
+Normal/minimum world, western coast, central river, introductory Help, careers
+Help and lifecycle Help captures were reviewed at actual 1920x1080 and 1280x720.
+The replacement coast removes ocean routes, shows supported crossings and keeps
+dense markers distinct; zoom enlarges these groups. The central river is crossed
+at visible bridge symbols. Help text clears its navigation controls. Evidence:
+`ui_production_world[_minimum].png`, `ui_atlas_coast[_minimum].png`,
+`ui_atlas_river[_minimum].png`, `ui_help[_minimum].png`,
+`ui_help_service[_minimum].png`, `ui_help_lifecycle[_minimum].png`.
+
+Formatting, strict Clippy, Windows release and WebGL release passed. The no-argument publisher deployed this revision to Preview successfully.

@@ -20,7 +20,7 @@ impl Game {
         let scene = scene.trim_end_matches("_minimum");
         if scene == "help_construction" {
             self.state.overlay = Overlay::Help;
-            self.help_page = 6;
+            self.help_page = 8;
             return true;
         }
         if !scene.starts_with("settlement_") {

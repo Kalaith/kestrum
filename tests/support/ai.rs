@@ -104,10 +104,10 @@ pub(super) fn unknown_enemy_and_empty_capture(data: &GameData) {
         .set_site_control(data, SiteId(5), Some(FactionId(1)), false)
         .unwrap();
     let decision = ai::propose(&occupied, data, FactionId(2)).unwrap();
-    assert_eq!(
-        decision.command,
-        Command::EndTurn,
-        "presence alone does not reveal attack strength"
+    assert!(
+        matches!(&decision.command, Command::Move(order)
+        if order.path == [SiteId(2), SiteId(5)]),
+        "{decision:?}"
     );
     let mut weak = occupied.clone();
     for formation in weak
@@ -121,6 +121,29 @@ pub(super) fn unknown_enemy_and_empty_capture(data: &GameData) {
         decision,
         ai::propose(&weak, data, FactionId(2)).unwrap(),
         "AI cannot see tiny live enemy headcounts"
+    );
+    let mut cautious = weak.clone();
+    for formation in cautious
+        .formations
+        .values_mut()
+        .filter(|f| f.faction == FactionId(2))
+    {
+        formation.headcount = formation.capacity / 2;
+    }
+    assert_eq!(
+        ai::propose(&cautious, data, FactionId(2)).unwrap().command,
+        Command::EndTurn,
+        "an understrength army cannot blindly probe"
+    );
+    let restored: StrategicCampaign =
+        serde_json::from_str(&serde_json::to_string(&weak).unwrap()).unwrap();
+    assert_eq!(
+        decision,
+        ai::propose(&restored, data, FactionId(2)).unwrap()
+    );
+    assert!(
+        advance_npc(&mut weak, data).unwrap().battle.is_some(),
+        "the first encounter must actually resolve through ordinary commands"
     );
     occupied.armies.get_mut(&ArmyId(1)).unwrap().site = SiteId(1);
     let decision = ai::propose(&occupied, data, FactionId(2)).unwrap();
@@ -238,13 +261,8 @@ pub(super) fn headquarters_emergency(data: &GameData) {
         AiObjectiveKind::Defend
     );
     assert_eq!(decision.objective.as_ref().unwrap().site, SiteId(2));
-    assert!(matches!(
-        decision.command,
-        Command::Recruit {
-            site: SiteId(2),
-            ..
-        }
-    ));
+    assert!(matches!(decision.command, Command::Move(ref order)
+        if order.path == [SiteId(6), SiteId(5)]));
     let (_, mut weak) = fixture();
     no_resources(&mut weak);
     weak.armies.get_mut(&ArmyId(2)).unwrap().site = SiteId(6);

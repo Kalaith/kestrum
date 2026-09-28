@@ -1,3 +1,4 @@
+//! Attacks, retreats and strength estimates from observed forces.
 use super::*;
 use crate::{
     engine::{MoveOrder, SiegeRole},
@@ -39,7 +40,7 @@ impl Planner<'_> {
             .collect();
         targets.sort_by_key(|site| (*site != headquarters, *site));
         targets.into_iter().find_map(|site| {
-            // A known weaker force blocking the HQ approach can be driven off.
+            // A tolerable force blocking the HQ approach can be driven off.
             // Waiting at an unreachable defensive objective would waste the phase.
             std::iter::once(site)
                 .chain(self.view.world.adjacent_sites(site))
@@ -326,6 +327,15 @@ impl Planner<'_> {
                     .sum::<u128>()
             })
             .sum();
-        enemy > 0 && own * 100 > enemy * u128::from(self.data.ai.attack_advantage_percent)
+        // Presence supplies no headcount. Risk a first encounter only when our
+        // known force clears an authored estimate (two full warrior formations)
+        // by the same safety margin used for reported enemies. Never inspect the
+        // live enemy roster; subsequent reports replace this prior.
+        let estimate = if enemy == 0 {
+            u128::from(self.data.ai.unknown_enemy_power) * 1_000 * 1_000
+        } else {
+            enemy
+        };
+        own * 100 > estimate * u128::from(self.data.ai.attack_advantage_percent)
     }
 }

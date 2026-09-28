@@ -4,6 +4,7 @@
   "objective_rounds": 4,
   "retreat_capacity_percent": 40,
   "attack_advantage_percent": 125,
+  "unknown_enemy_power": 2000,
   "reserve_upkeep_rounds": 2,
   "target_armies": 2,
   "minimum_formations": 3,

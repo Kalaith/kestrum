@@ -14,6 +14,7 @@ pub struct AiRules {
     pub objective_rounds: u32,
     pub retreat_capacity_percent: u32,
     pub attack_advantage_percent: u32,
+    pub unknown_enemy_power: u32,
     pub reserve_upkeep_rounds: u32,
     pub target_armies: usize,
     pub minimum_formations: usize,
@@ -29,6 +30,7 @@ impl AiRules {
             || !(1..=80).contains(&self.objective_rounds)
             || !(1..=100).contains(&self.retreat_capacity_percent)
             || !(101..=1000).contains(&self.attack_advantage_percent)
+            || !(1..=100_000).contains(&self.unknown_enemy_power)
             || !(1..=20).contains(&self.reserve_upkeep_rounds)
             || !(1..=8).contains(&self.target_armies)
             || !(1..=6).contains(&self.minimum_formations)

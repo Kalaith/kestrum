@@ -5,6 +5,13 @@ visual review and a production-AI victory pass. Browser/physical-touch
 acceptance remains unverified, and the isolated 8-faction NPC phase p95 exceeds
 the provisional 250 ms review target. K18 is not closed.
 
+## Subsequent plan review — 2026-09-28
+
+The [full implementation review](../implementation-review.md) found additional
+implementation and presentation gaps at `96385e4`. Its R01–R13 findings and
+A01–A04 acceptance work remain open. The tests, captures and measurements below
+retain their original scope; they do not establish that these findings are fixed.
+
 ## Integrated scenarios
 
 The locked all-features suite exercises these K18 cases against the real project

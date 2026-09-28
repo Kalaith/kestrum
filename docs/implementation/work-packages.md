@@ -14,6 +14,10 @@ Every package inherits C01–C07 and the common completion checklist. Paths belo
 relative to the project and are intended edit locations, not existing-file claims.
 Keep normal player screens honest while a prerequisite feature is unavailable.
 
+The [2026-09-28 review](../implementation-review.md) qualifies those historical
+Done labels with R01–R13 corrective follow-ups. Include them in K18 closure;
+passing an earlier package's tests does not close a newly identified gap.
+
 ## K01 — Typed content and a durable strategic scenario
 
 **Depends on:** existing shell. **Read:** chapters 02/03/11; C02/C05;

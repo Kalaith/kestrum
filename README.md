@@ -4,6 +4,11 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
+The [2026-09-28 implementation review](docs/implementation-review.md) checks all
+K01–K18 packages and records 13 implementation/presentation follow-ups plus four
+release-acceptance work areas. Earlier package delivery records remain historical
+evidence; the newly identified gaps must be resolved before K18 can close.
+
 The production campaign is implemented in Rust, Macroquad, and Macroquad Toolkit.
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
 Play, Credits, and native Quit Game. New Game opens production setup for a kingdom

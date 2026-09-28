@@ -8,6 +8,11 @@ provisional defaults for unresolved mechanics, clearly labelled for review.
 
 ## Progress checkpoint — 2026-09-28
 
+The [full implementation review](implementation-review.md) found additional
+required follow-ups in delivered packages. Its R01–R13 findings and A01–A04
+acceptance work qualify the delivery summary below. K18 remains In progress;
+the historical Done records do not close those newly identified gaps.
+
 K01–K17 are complete and committed in order. Normal New Campaign now creates the
 80-major/152-physical production world with deterministic 4–8 faction setup;
 Rosemarch remains the small regression fixture. K18 integrated scenarios,
@@ -205,8 +210,12 @@ Fifteen lifecycle/mentorship regressions plus the existing suite pass (151 total
 formatting, strict Clippy, source-size gate, twelve normal/minimum native captures and
 Windows/WebGL Preview publishing pass. See
 [K14 evidence](verification/k14-lifecycle.md). Browser interaction, physical
-touch and minimum-WebGL campaign scaling remain open for K18; K16–K18 remain
-planned.
+touch and minimum-WebGL campaign scaling remain open for K18.
+K15–K17 are **Done** as delivered: households/succession, heirlooms/history and
+production setup are recorded in [K15 evidence](verification/k15-succession.md),
+[K16 evidence](verification/k16-heirlooms.md) and
+[K17 evidence](verification/k17-production.md). The full implementation review
+records corrective follow-ups to these and earlier deliveries.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
 army rosters. Minimum-browser display and physical-touch review remain open for K18.

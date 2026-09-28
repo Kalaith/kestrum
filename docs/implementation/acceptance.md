@@ -2,6 +2,20 @@
 
 [Plan](../implementation-plan.md) · [Packages](work-packages.md)
 
+## Current review follow-ups — 2026-09-28
+
+The [full implementation review](../implementation-review.md) compares every
+package with the code, tests and evidence at `96385e4`. It identifies 13 required
+follow-ups (R01–R13) and four release-acceptance work areas (A01–A04). These include
+notification visibility, AI threats/careers/continuity, service dates, training
+focus, peaceful familiarity, generational history, atlas alignment, teaching and
+function-size compliance.
+
+The Done rows below preserve the historical package deliveries. They do not assert
+that these newly identified gaps are fixed. K18 remains In progress for these
+follow-ups as well as minimum-WebGL/touch acceptance and performance. Record each
+fix with regression evidence and a commit before closing the affected coverage row.
+
 ## Definition of done for every package
 
 1. All named rules and package outputs are implemented through real state and

@@ -43,6 +43,7 @@ and the production world belong to later packages.
 | [12 — Delivery and validation](12-delivery-and-validation.md) | Prototype, first release, later scope, acceptance scenarios, template handoff, checks |
 | [13 — Decisions and open questions](13-decisions-and-open-questions.md) | Confirmed decisions, delegated defaults, remaining mechanics and scope questions |
 | [Implementation plan](implementation-plan.md) | Current actionable sequence, precise provisional rules, agent handoff and acceptance ledger |
+| [Full implementation review](implementation-review.md) | Review of K01–K18 at `96385e4`, prioritized changes, package coverage and remaining release acceptance |
 | [Plan verification](verification/implementation-plan.md) | Documentation checks and limits; no new gameplay implementation or balance validation |
 | [Glossary](glossary.md) | Consistent terminology across chapters |
 | [Source coverage](source-coverage.md) | Section-by-section provenance and source preservation checks |

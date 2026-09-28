@@ -78,6 +78,16 @@ pub enum EvidenceKind {
     ClearedThreat,
 }
 
+impl EvidenceKind {
+    /// Formation history may mention these, but only the named actor earns them.
+    pub fn is_personal_command_deed(self) -> bool {
+        matches!(
+            self,
+            Self::CommanderWounded | Self::AssumedCommand | Self::CommandedVictory
+        )
+    }
+}
+
 impl fmt::Display for EvidenceKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {

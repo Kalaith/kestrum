@@ -236,7 +236,10 @@ fn retrospective(
             bump(&mut ledger, EvidenceKind::MeaningfulEncounter);
             bump_troop(&mut ledger, source);
             for tag in &encounter.tags {
-                if *tag != EvidenceKind::Battle && *tag != EvidenceKind::MeaningfulEncounter {
+                if *tag != EvidenceKind::Battle
+                    && *tag != EvidenceKind::MeaningfulEncounter
+                    && !tag.is_personal_command_deed()
+                {
                     bump(&mut ledger, *tag);
                 }
             }
@@ -363,7 +366,7 @@ fn notable_sites(
                     EvidenceKind::CommandedVictory,
                 ),
             ] {
-                if encounter.tags.contains(&kind) {
+                if !kind.is_personal_command_deed() && encounter.tags.contains(&kind) {
                     sites.entry(fact).or_insert(encounter.site);
                 }
             }
@@ -389,7 +392,7 @@ fn emergence_deed(season: &SeasonService) -> (crate::data::world::SiteId, Option
     ];
     for encounter in &season.encounters {
         for (deed, kind) in facts {
-            if encounter.tags.contains(&kind) {
+            if !kind.is_personal_command_deed() && encounter.tags.contains(&kind) {
                 return (encounter.site, Some(deed));
             }
         }

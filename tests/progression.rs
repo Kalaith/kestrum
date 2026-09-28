@@ -100,6 +100,77 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
 }
 
 #[test]
+fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
+    use kestrum::data::progression::EpithetFact;
+    let (data, mut campaign) = fixture();
+    let mut companion = campaign.people[&PersonId(1)].clone();
+    companion.id = PersonId(4);
+    companion.class = PersonClass::Recruit;
+    companion.name = "A serving companion".into();
+    campaign.people.insert(companion.id, companion);
+    campaign.next_ids.person = PersonId(5);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
+    encounter(&mut campaign, &data, 5, 6, 60);
+    let seed = (0..100_000)
+        .find(|seed| SeededRng::new(*seed).below(1000) == 0)
+        .unwrap();
+    campaign.rng.people = SeededRng::new(seed);
+    finish(&mut campaign, &data);
+    assert!(campaign.people[&PersonId(1)].evidence.counts[&EvidenceKind::CommandedVictory] > 0);
+    assert!(
+        campaign.formations[&FormationId(1)].service.recent[0].encounters[0]
+            .tags
+            .contains(&EvidenceKind::CommandedVictory)
+    );
+    let recruit = campaign
+        .people
+        .values()
+        .find(|person| person.faction == FactionId(1) && person.career.emergence.is_some())
+        .expect("seeded emergence");
+    for person in [&campaign.people[&PersonId(4)], recruit] {
+        assert!(person.evidence.counts[&EvidenceKind::MeaningfulEncounter] > 0);
+        for tag in [
+            EvidenceKind::CommandedVictory,
+            EvidenceKind::AssumedCommand,
+            EvidenceKind::CommanderWounded,
+        ] {
+            assert!(!person.evidence.counts.contains_key(&tag));
+        }
+        assert!(!person
+            .career
+            .traits
+            .contains(&PersonTrait::NaturalCommander));
+        assert!(!person
+            .career
+            .notable_sites
+            .contains_key(&EpithetFact::CommandedVictory));
+        assert!(!person
+            .career
+            .notable_sites
+            .contains_key(&EpithetFact::AssumedCommand));
+        assert!(!matches!(
+            person.career.recognition.as_ref().map(|award| award.cause),
+            Some(EpithetFact::CommandedVictory | EpithetFact::AssumedCommand)
+        ));
+    }
+    assert!(!matches!(
+        recruit
+            .career
+            .emergence
+            .as_ref()
+            .unwrap()
+            .distinguishing_deed,
+        Some(EpithetFact::CommandedVictory | EpithetFact::AssumedCommand)
+    ));
+    let loaded: Campaign = serde_json::from_str(
+        &serde_json::to_string(&Campaign::Strategic(Box::new(campaign.clone()))).unwrap(),
+    )
+    .unwrap();
+    loaded.validate(&data).unwrap();
+    assert_eq!(loaded.strategic().unwrap(), &campaign);
+}
+
+#[test]
 fn genuine_evidence_sets_traits_and_one_place_based_recognition() {
     let (data, mut campaign) = fixture();
     let person = campaign.people.get_mut(&PersonId(1)).unwrap();

@@ -224,6 +224,7 @@ pub(super) fn personal_tags(
     person: &BattlePersonReport,
     part: &mut Participation,
 ) {
+    part.tags.retain(|tag| !tag.is_personal_command_deed());
     part.tags.remove(&EvidenceKind::SurvivedOutnumbered);
     let alive = !matches!(person.status, PersonStatus::Dead { .. });
     if part.outnumbered && alive {

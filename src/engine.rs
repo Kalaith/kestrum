@@ -24,6 +24,7 @@ mod retreat;
 mod round;
 pub(crate) mod siege;
 mod succession;
+pub use succession::{household_option, HouseholdAction, HouseholdOption, HouseholdSelection};
 pub(crate) mod threats;
 mod transfer;
 pub use notices::action_notices;

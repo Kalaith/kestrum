@@ -79,6 +79,8 @@ pub struct ArmyView {
     pub transfer: TransferView,
     pub people_page: usize,
     pub household_page: usize,
+    pub household_review: Option<kestrum::engine::HouseholdAction>,
+    pub household_option: Option<kestrum::engine::HouseholdOption>,
     pub household_first: Option<PersonId>,
     pub household_second: Option<PersonId>,
     pub legacy_category: LegacyCategory,
@@ -104,6 +106,8 @@ impl Default for ArmyView {
             transfer: TransferView::default(),
             people_page: 0,
             household_page: 0,
+            household_review: None,
+            household_option: None,
             household_first: None,
             household_second: None,
             legacy_category: LegacyCategory::Command,
@@ -201,7 +205,9 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         ArmyMode::Recruit { army, kind } => recruit::draw(ctx, campaign, army, kind),
         ArmyMode::Disband(formation) => disband::draw(ctx, campaign, formation),
     };
-    if !ctx.army.status.is_empty() {
+    if !ctx.army.status.is_empty()
+        && !matches!(ctx.army.mode, ArmyMode::Households | ArmyMode::Legacy)
+    {
         for (index, line) in wrap_text_ex(&ctx.army.status, 1040.0, ctx.body_font(), 18.0)
             .into_iter()
             .take(2)

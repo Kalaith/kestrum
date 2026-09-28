@@ -49,7 +49,7 @@ pub(super) fn require_local(
     validate_local(campaign, owner, person, site, safe)
 }
 
-pub(super) fn active_household_for(
+pub(in crate::engine::succession) fn active_household_for(
     campaign: &StrategicCampaign,
     person: PersonId,
 ) -> Option<&Household> {
@@ -120,7 +120,7 @@ pub(super) fn owned_household(
         .ok_or_else(|| reason("That household is unavailable."))
 }
 
-pub(super) fn owned_person(
+pub(in crate::engine::succession) fn owned_person(
     campaign: &StrategicCampaign,
     owner: FactionId,
     id: PersonId,

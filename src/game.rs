@@ -172,6 +172,9 @@ impl Game {
         if self.capture_settlement_scene(scene) {
             return;
         }
+        if self.capture_household_review(scene) {
+            return;
+        }
         match scene.trim_end_matches("_minimum") {
             "title" => {}
             "production_setup" => self.state.overlay = Overlay::Setup,

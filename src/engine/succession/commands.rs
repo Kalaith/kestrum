@@ -1,6 +1,6 @@
 //! Explicit family, youth-entry and legacy-designation actions.
 
-mod helpers;
+pub(super) mod helpers;
 use helpers::{
     active_household_for, dependent_children, dependent_children_for_guardian, eligible_for_army,
     has_active_partner, owned_household, owned_person, require_local,
@@ -169,16 +169,25 @@ fn validate_partnership(
     let first = owned_person(campaign, owner, first_id)?;
     let second = owned_person(campaign, owner, second_id)?;
     let minimum_age = data.households.partnership_minimum_age_years;
-    if [first, second].iter().any(|person| {
-        !person.is_alive()
-            || person.career.retired
-            || person.age_years(campaign.completed_rounds) < minimum_age
-            || has_active_partner(campaign, person.id)
-            || person_site(campaign, person.id) != Some(site)
-    }) {
-        return Err(reason(
-            "Both adults must be living, unpartnered and present at this settlement.",
-        ));
+    for person in [first, second] {
+        if !person.is_alive() || person.career.retired {
+            return Err(reason(
+                "Both partners must be living adults in active service.",
+            ));
+        }
+        if person.age_years(campaign.completed_rounds) < minimum_age {
+            return Err(reason(&format!(
+                "Both partners must be at least {minimum_age} years old."
+            )));
+        }
+        if has_active_partner(campaign, person.id) {
+            return Err(reason("A selected person already has an active household."));
+        }
+        if person_site(campaign, person.id) != Some(site) {
+            return Err(reason(
+                "Both partners must be present at this physical settlement.",
+            ));
+        }
     }
     if campaign.known_close_family_relation(first_id, second_id) {
         return Err(reason(
@@ -186,9 +195,11 @@ fn validate_partnership(
         ));
     }
     if shared_seasons(first, second) < data.households.partnership_shared_seasons {
-        return Err(reason(
-            "Partnership needs four recorded shared-service seasons.",
-        ));
+        return Err(reason(&format!(
+            "Partnership needs {} recorded shared-service seasons; these two have {}.",
+            data.households.partnership_shared_seasons,
+            shared_seasons(first, second)
+        )));
     }
     safe_owned_site(campaign, owner, site)
 }

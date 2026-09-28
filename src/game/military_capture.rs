@@ -3,6 +3,8 @@
 use super::*;
 use kestrum::{data::world::SiteId, state::military::ArmyId};
 
+mod households;
+
 impl Game {
     pub(super) fn capture_progression(&mut self, scene: &str) {
         use kestrum::{

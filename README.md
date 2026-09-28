@@ -563,3 +563,13 @@ retirement and natural death. These records preserve their original names and
 places and remain private to the owning kingdom. New own-person emergence,
 recognition and class completion also produce action feedback. Older saves do
 not acquire invented past events; the existing history retention limits apply.
+
+### Household and succession review brief
+
+Choose local people, then review one family or succession decision. The people
+list is the main focus; age, assignment and family role support selection.
+Tapping any action opens its requirements, selected people and the engine's
+current reason when blocked. Only an eligible review offers Confirm. Long names
+wrap in the review, while the list remains paged at both 1920x1080 and 1280x720.
+Back returns to the same selections; confirming refreshes the list and history.
+Succession categories and relationship links remain choices on their own page.

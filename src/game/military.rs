@@ -1,5 +1,6 @@
 //! Application-owned roster navigation and explicit military command submission.
 
+mod households;
 use super::*;
 use kestrum::{
     data::world::SiteId,
@@ -119,6 +120,7 @@ impl Game {
             self.army.options.clear();
         }
         self.refresh_transfer();
+        self.refresh_household();
     }
 
     pub(super) fn army_page(&mut self, delta: i32) {

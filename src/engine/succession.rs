@@ -2,6 +2,8 @@
 
 mod commands;
 mod family;
+mod options;
+pub use options::{household_option, HouseholdAction, HouseholdOption, HouseholdSelection};
 
 use crate::{
     data::GameData,

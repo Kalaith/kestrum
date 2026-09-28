@@ -43,14 +43,9 @@ impl Game {
             | UiAction::OpenPersonProgression(_)
             | UiAction::OpenMentorship(_)
             | UiAction::StartMentorship(_, _, _)
-            | UiAction::FormHousehold(_, _, _)
-            | UiAction::EndHousehold(_)
-            | UiAction::SetHouseholdChildraising(_, _)
-            | UiAction::AdoptWard(_, _)
-            | UiAction::AssignTrainee(_, _)
-            | UiAction::EnterService(_, _)
-            | UiAction::InviteApprentice(_)
-            | UiAction::DesignateSuccessor(_, _, _, _)
+            | UiAction::ReviewHousehold(_)
+            | UiAction::ConfirmHousehold
+            | UiAction::CancelHouseholdReview
             | UiAction::EndMentorship(_)
             | UiAction::RecoverPersonAtSite(_, _)
             | UiAction::RetirePerson(_, _)
@@ -148,11 +143,17 @@ impl Game {
             }
             UiAction::ArmyHouseholds => {
                 self.army.mode = ui::ArmyMode::Households;
+                self.army.household_review = None;
+                self.army.status.clear();
                 self.army.household_page = 0;
                 self.army.household_first = None;
                 self.army.household_second = None;
             }
-            UiAction::ArmyLegacy => self.army.mode = ui::ArmyMode::Legacy,
+            UiAction::ArmyLegacy => {
+                self.army.mode = ui::ArmyMode::Legacy;
+                self.army.household_review = None;
+                self.army.status.clear();
+            }
             UiAction::HouseholdPage(delta) => {
                 self.army.household_page = self
                     .army
@@ -192,37 +193,9 @@ impl Game {
             UiAction::EndMentorship(learner) => {
                 self.apply_campaign_command(Command::EndMentorship { learner })
             }
-            UiAction::FormHousehold(first, second, site) => {
-                self.apply_campaign_command(Command::FormHousehold {
-                    first,
-                    second,
-                    site,
-                })
-            }
-            UiAction::EndHousehold(household) => {
-                self.apply_campaign_command(Command::EndHousehold { household })
-            }
-            UiAction::SetHouseholdChildraising(household, enabled) => self
-                .apply_campaign_command(Command::SetHouseholdChildraising { household, enabled }),
-            UiAction::AdoptWard(guardian, site) => {
-                self.apply_campaign_command(Command::AdoptWard { guardian, site })
-            }
-            UiAction::AssignTrainee(person, site) => {
-                self.apply_campaign_command(Command::AssignTrainee { person, site })
-            }
-            UiAction::EnterService(person, formation) => {
-                self.apply_campaign_command(Command::EnterService { person, formation })
-            }
-            UiAction::InviteApprentice(site) => {
-                self.apply_campaign_command(Command::InviteApprentice { site })
-            }
-            UiAction::DesignateSuccessor(predecessor, successor, category, link) => self
-                .apply_campaign_command(Command::DesignateSuccessor {
-                    predecessor,
-                    successor,
-                    category,
-                    link,
-                }),
+            UiAction::ReviewHousehold(action) => self.army.household_review = Some(action),
+            UiAction::ConfirmHousehold => self.confirm_household(),
+            UiAction::CancelHouseholdReview => self.army.household_review = None,
             UiAction::RecoverPersonAtSite(person, site) => {
                 self.apply_campaign_command(Command::RecoverPersonAtSite { person, site })
             }

@@ -142,3 +142,33 @@ immutable viewing/reload, natural death, four-season familiarity/households,
 adoption, a real spring birth, chosen household end, a ward's 36-season path to
 adult service, and pruning without replay. Strict Clippy and formatting pass.
 No-argument Windows/WebGL Preview publishing and Project Roost recording pass.
+
+## Household and succession reviews (R11; affected R13 functions)
+
+Every family action now opens a visible review, including unavailable actions.
+The review gives full selected names and ages, recorded familiarity or the
+selected legacy category/link, and the authoritative command rejection.
+Confirmation rechecks current state. Back retains the list selections. Eligibility
+comes from one engine query using the same phase and semantic validators as the
+command; the duplicated UI eligibility predicates have been removed.
+
+Five new regression cases compare review reasons with real command errors and
+assert that queries/rejections preserve state. They cover missing/foreign
+selections, off-turn orders, four real stationary seasons, age, active partners,
+guardian capacity, child training/service entry, deficit, exact cost, annual
+invitation limits, missing successor links and duplicate categories. All 27
+focused cases pass (succession 14, life history 7, familiarity 5, source size 1).
+Strict Clippy and formatting pass. A brace-aware source scan confirms each
+household UI/review/query function is at most 100 physical lines.
+
+Twelve replacement native captures cover households, succession, blocked and
+ready reviews, successor review, and a 13-person list with long names at actual
+1920x1080 and 1280x720. Names truncate only in list rows and appear in full in
+review. Text and 48-pixel controls remain separate at both sizes. Capture
+processes exited; pointer and physical-touch acceptance remain in the platform
+pass. Evidence: `ui_household_blocked[_minimum].png`,
+`ui_household_ready[_minimum].png`, `ui_succession_review[_minimum].png`,
+`ui_household_dense[_minimum].png`, `ui_households[_minimum].png`, and
+`ui_succession[_minimum].png`.
+
+No-argument Windows/WebGL Preview publishing and Project Roost recording pass.

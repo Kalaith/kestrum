@@ -558,3 +558,181 @@ fn rival_household_formation_uses_the_same_validated_command() {
         }
     );
 }
+
+// Review options must explain the same rejection as the authoritative transaction.
+fn review_selection(first: PersonId, second: PersonId) -> kestrum::engine::HouseholdSelection {
+    kestrum::engine::HouseholdSelection {
+        site: HOME,
+        first: Some(first),
+        second: Some(second),
+        category: LegacyCategory::Item,
+        link: SuccessorLink::Adopted,
+    }
+}
+
+fn compare_review(
+    data: &GameData,
+    campaign: &StrategicCampaign,
+    action: kestrum::engine::HouseholdAction,
+    selection: kestrum::engine::HouseholdSelection,
+    expected_reason: Option<&str>,
+) -> StrategicCampaign {
+    let before = campaign.clone();
+    let option = kestrum::engine::household_option(campaign, data, OWNER, action, selection);
+    assert_eq!(campaign, &before);
+    let mut after = campaign.clone();
+    let command = option
+        .command
+        .expect("complete selections produce a reviewable command");
+    let result = apply(&mut after, data, Actor::Player, command);
+    match expected_reason {
+        Some(expected) => {
+            let blocked = option.blocked.expect("blocked reason");
+            assert!(blocked.contains(expected), "{blocked}");
+            assert_eq!(result.unwrap_err().to_string(), blocked);
+            assert_eq!(after, before);
+        }
+        None => {
+            assert_eq!(option.blocked, None);
+            result.unwrap();
+        }
+    }
+    after
+}
+
+#[test]
+fn partnership_review_explains_familiarity_age_and_existing_households() {
+    use kestrum::engine::HouseholdAction::Form;
+    let (data, mut campaign) = fixture();
+    let first = add_person(&mut campaign, 25, PersonAssignment::Site { site: HOME });
+    let second = add_person(&mut campaign, 27, PersonAssignment::Site { site: HOME });
+    let selected = review_selection(first, second);
+    compare_review(&data, &campaign, Form, selected, Some("these two have 0"));
+    for _ in 0..4 {
+        complete_round(&mut campaign, &data);
+    }
+    let formed = compare_review(&data, &campaign, Form, selected, None);
+    compare_review(&data, &formed, Form, selected, Some("active household"));
+    campaign.people.get_mut(&second).unwrap().birth_round = -60;
+    compare_review(&data, &campaign, Form, selected, Some("at least 18"));
+}
+
+#[test]
+fn review_handles_missing_people_ownership_and_phase_without_mutation() {
+    use kestrum::engine::{household_option, HouseholdAction::Form};
+    let (data, mut campaign) = fixture();
+    let first = add_person(&mut campaign, 25, PersonAssignment::Site { site: HOME });
+    let second = add_person(&mut campaign, 27, PersonAssignment::Site { site: HOME });
+    let mut selected = review_selection(first, second);
+    selected.second = None;
+    let option = household_option(&campaign, &data, OWNER, Form, selected);
+    assert!(option.command.is_none());
+    assert!(option.blocked.unwrap().contains("Choose a second"));
+    selected.second = campaign
+        .people
+        .values()
+        .find(|person| person.faction == RIVAL)
+        .map(|person| person.id);
+    let option = household_option(&campaign, &data, OWNER, Form, selected);
+    assert!(option.command.is_none());
+    assert!(option.blocked.is_some());
+    apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
+    compare_review(
+        &data,
+        &campaign,
+        Form,
+        review_selection(first, second),
+        Some("turn"),
+    );
+}
+
+#[test]
+fn adoption_review_shows_capacity_and_training_review_shows_age() {
+    use kestrum::engine::HouseholdAction::{Adopt, Service, Train};
+    let (data, mut campaign) = fixture();
+    let guardian = add_person(&mut campaign, 25, PersonAssignment::Site { site: HOME });
+    let selected = review_selection(guardian, guardian);
+    campaign = compare_review(&data, &campaign, Adopt, selected, None);
+    let ward = *campaign.families.keys().next().unwrap();
+    campaign = compare_review(&data, &campaign, Adopt, selected, None);
+    compare_review(&data, &campaign, Adopt, selected, Some("two dependent"));
+    let selected = review_selection(ward, guardian);
+    compare_review(
+        &data,
+        &campaign,
+        Train,
+        selected,
+        Some("thirteen to sixteen"),
+    );
+    compare_review(&data, &campaign, Service, selected, Some("seventeen"));
+    for _ in 0..20 {
+        complete_round(&mut campaign, &data);
+    }
+    campaign = compare_review(&data, &campaign, Train, selected, None);
+    for _ in 0..16 {
+        complete_round(&mut campaign, &data);
+    }
+    compare_review(&data, &campaign, Service, selected, None);
+}
+
+#[test]
+fn apprenticeship_review_shows_deficit_cost_and_annual_limit() {
+    use kestrum::engine::HouseholdAction::Invite;
+    let (data, mut campaign) = fixture();
+    let first = campaign
+        .people
+        .values()
+        .find(|p| p.faction == OWNER)
+        .unwrap()
+        .id;
+    let selected = review_selection(first, first);
+    campaign.factions.get_mut(&OWNER).unwrap().deficit = true;
+    compare_review(&data, &campaign, Invite, selected, Some("shortfall"));
+    campaign.factions.get_mut(&OWNER).unwrap().deficit = false;
+    campaign.factions.get_mut(&OWNER).unwrap().resources.gold = 0;
+    compare_review(&data, &campaign, Invite, selected, Some("needs 20 Gold"));
+    campaign.factions.get_mut(&OWNER).unwrap().resources.gold = 100;
+    campaign = compare_review(&data, &campaign, Invite, selected, None);
+    compare_review(
+        &data,
+        &campaign,
+        Invite,
+        selected,
+        Some("one apprentice per year"),
+    );
+}
+
+#[test]
+fn succession_review_explains_missing_relationship_and_used_category() {
+    use kestrum::engine::HouseholdAction::{Adopt, Designate};
+    let (data, mut campaign) = fixture();
+    let first = add_person(&mut campaign, 25, PersonAssignment::Site { site: HOME });
+    let second = add_person(&mut campaign, 27, PersonAssignment::Site { site: HOME });
+    compare_review(
+        &data,
+        &campaign,
+        Designate,
+        review_selection(first, second),
+        Some("not established"),
+    );
+    campaign = compare_review(
+        &data,
+        &campaign,
+        Adopt,
+        review_selection(first, second),
+        None,
+    );
+    let ward = *campaign.families.keys().next().unwrap();
+    let selected = review_selection(first, ward);
+    campaign = compare_review(&data, &campaign, Designate, selected, None);
+    compare_review(&data, &campaign, Designate, selected, Some("one successor"));
+    let mut command = selected;
+    command.category = LegacyCategory::Command;
+    compare_review(
+        &data,
+        &campaign,
+        Designate,
+        command,
+        Some("current commander"),
+    );
+}

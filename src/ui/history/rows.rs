@@ -54,6 +54,7 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
+        HistoryKind::Life { event, .. } => ctx.data.life_event_text(event),
         HistoryKind::Diplomacy { receipt } => diplomacy_label(ctx, receipt),
         HistoryKind::Development { receipt } => development_label(ctx, receipt),
         HistoryKind::Siege {
@@ -112,6 +113,15 @@ pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
 
 fn summary(ctx: &Context<'_>, event: &HistoryRecord) -> String {
     match &event.kind {
+        HistoryKind::Life { .. } => {
+            return event
+                .people
+                .iter()
+                .map(|entry| entry.name.as_str())
+                .chain(event.sites.iter().map(|entry| entry.name.as_str()))
+                .collect::<Vec<_>>()
+                .join(" / ")
+        }
         HistoryKind::ItemCustodyChanged { from, to, .. } => {
             let item = event
                 .items

@@ -554,3 +554,12 @@ the measured phase-timing tail; see the acceptance ledger.
 
 Follow [AGENTS.md](AGENTS.md), [CODE_STANDARDS.md](CODE_STANDARDS.md), and
 [UI_STYLE.md](UI_STYLE.md). Shared guidance remains owned by `rust_management/docs/`.
+
+### K18 follow-up — Life milestones
+
+Person, place and army Events now share dated records of emergence,
+recognition, class completion, mentorship, households, adult service,
+retirement and natural death. These records preserve their original names and
+places and remain private to the owning kingdom. New own-person emergence,
+recognition and class completion also produce action feedback. Older saves do
+not acquire invented past events; the existing history retention limits apply.

@@ -26,6 +26,7 @@ pub fn action_notices(
             messages.push(data.presentation.text(key).replace("{names}", &names));
         }
     }
+    messages.extend(life_notices(campaign, data, observer, outcome));
     messages.extend(succession_notices(campaign, data, observer, outcome));
     let items = outcome
         .legacy_items_changed
@@ -137,6 +138,51 @@ fn anniversary_notices(
                     .replace("{name}", name)
                     .replace("{years}", &years.to_string()),
             )
+        })
+        .collect()
+}
+
+fn life_notices(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    observer: FactionId,
+    outcome: &ActionOutcome,
+) -> Vec<String> {
+    use crate::state::history::{HistoryKind, LifeEvent};
+    outcome
+        .life_events
+        .iter()
+        .filter_map(|id| {
+            let record = campaign.history.events.get(id)?;
+            let HistoryKind::Life {
+                owner,
+                person,
+                event,
+            } = &record.kind
+            else {
+                return None;
+            };
+            if *owner != observer
+                || !record.visible_to.contains(&observer)
+                || !matches!(
+                    event,
+                    LifeEvent::Emerged { .. }
+                        | LifeEvent::Recognized { .. }
+                        | LifeEvent::ClassCompleted { .. }
+                )
+            {
+                return None;
+            }
+            let name = record
+                .people
+                .iter()
+                .find(|entry| entry.id == *person)?
+                .name
+                .as_str();
+            Some(format!(
+                "{name}: {}",
+                data.presentation.life_event_text(event)
+            ))
         })
         .collect()
 }

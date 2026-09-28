@@ -1,5 +1,6 @@
 //! History captures derive evidence through real orders, combat, and round boundaries.
 
+mod life;
 use super::*;
 use kestrum::{
     data::{
@@ -21,6 +22,10 @@ use kestrum::{
 impl Game {
     pub(super) fn capture_history(&mut self, scene: &str) {
         let scene = scene.trim_end_matches("_minimum");
+        if scene == "history_life" {
+            self.capture_life_history();
+            return;
+        }
         if scene == "history_items" {
             self.capture_campaign();
             self.state.overlay = Overlay::Menu;

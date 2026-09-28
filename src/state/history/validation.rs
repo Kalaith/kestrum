@@ -1,5 +1,6 @@
 //! Retained narratives carry their own labels; expired detail is a weak reference.
 
+mod life;
 use super::*;
 use crate::state::{campaign::DomainFactKind, StrategicCampaign};
 
@@ -69,6 +70,11 @@ impl StrategicCampaign {
             "invalid participants for narrative kind",
         )?;
         match record.kind {
+            HistoryKind::Life {
+                owner,
+                person,
+                ref event,
+            } => self.validate_life_record(record, owner, person, event)?,
             HistoryKind::Diplomacy { ref receipt } => {
                 self.validate_diplomacy_record(record, receipt)?
             }
@@ -246,6 +252,11 @@ impl StrategicCampaign {
 
     fn validate_history_kind(&self, kind: &HistoryKind, date: u32) -> Result<(), String> {
         match kind {
+            HistoryKind::Life {
+                owner,
+                person,
+                event,
+            } => self.validate_life_kind(*owner, *person, event),
             HistoryKind::Diplomacy { receipt } => self.validate_diplomacy_receipt(receipt, date),
             HistoryKind::Development { receipt } => self.validate_development_receipt(receipt),
             HistoryKind::Siege {
@@ -313,6 +324,12 @@ impl StrategicCampaign {
                     "siege notable has the wrong observers",
                 )?;
             }
+            if let HistoryKind::Life { owner, .. } = summary.kind {
+                ensure(
+                    summary.visible_to == BTreeSet::from([owner]),
+                    "life notable has the wrong observer",
+                )?;
+            }
             ensure(seen.insert(summary.id), "duplicate notable identity")?;
             ensure(
                 summary.site.as_ref().is_none_or(|entry| {
@@ -333,6 +350,12 @@ impl StrategicCampaign {
 
 fn valid_record_shape(record: &HistoryRecord) -> bool {
     match record.kind {
+        HistoryKind::Life { .. } => {
+            record.sites.len() == 1
+                && !record.people.is_empty()
+                && record.formations.is_empty()
+                && record.items.is_empty()
+        }
         HistoryKind::Diplomacy { .. } => record.people.is_empty() && record.formations.is_empty(),
         HistoryKind::Development { .. } => {
             record.armies.is_empty() && record.people.is_empty() && record.formations.is_empty()

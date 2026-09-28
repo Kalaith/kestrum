@@ -1,6 +1,23 @@
 //! Player-facing explanations for K13's earned progression.
 
 pub(super) const PROGRESSION_TEXT: &[&str] = &[
+    "life_emerged",
+    "life_born",
+    "life_adopted",
+    "life_apprentice",
+    "life_recognized",
+    "life_class",
+    "life_mentorship_started",
+    "life_mentorship_completed",
+    "life_household_formed",
+    "life_household_ended",
+    "life_chosen",
+    "life_partner_died",
+    "life_site_captured",
+    "life_faction_defeated",
+    "life_service",
+    "life_retired",
+    "life_natural_death",
     "person_progression",
     "formation_progression",
     "career_open",

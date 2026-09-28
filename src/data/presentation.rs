@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
+mod life_text;
 mod progression_text;
 mod required_text;
 use progression_text::PROGRESSION_TEXT;

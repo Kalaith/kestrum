@@ -178,6 +178,7 @@ fn prepare(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,
         accepted_sequence: candidate.accepted_sequence,
@@ -249,6 +250,7 @@ fn finish(
     }
     super::progression::refund_departures(candidate, before)?;
     super::history::record_facts(candidate, before, &outcome.facts)?;
+    outcome.life_events = super::history::record_life_changes(candidate, before)?;
     outcome.legacy_items_changed =
         super::history::record_legacy_custody_changes(candidate, before)?
             .into_iter()

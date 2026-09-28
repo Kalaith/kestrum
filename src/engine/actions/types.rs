@@ -414,6 +414,7 @@ impl std::error::Error for RuleError {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActionOutcome {
+    pub life_events: Vec<crate::state::history::HistoryId>,
     pub automatic_retirements: Vec<crate::state::people::PersonId>,
     pub battle: Option<BattleId>,
     pub accepted_sequence: u64,

@@ -91,6 +91,12 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
         }
     );
     assert_eq!(first.1.formations[&FormationId(7)].headcount, first.2);
+    let record = first.1.history.events.values().find(|record| matches!(record.kind,
+        kestrum::state::history::HistoryKind::Life { person, event: kestrum::state::history::LifeEvent::Emerged { .. }, .. } if person == recruit.id)).unwrap();
+    assert_eq!(record.completed_rounds, emergence.completed_rounds);
+    assert_eq!(record.sites[0].id, emergence.site);
+    assert_eq!(record.visible_to, BTreeSet::from([FactionId(3)]));
+    assert_eq!(record.armies[0].id, ArmyId(3));
 }
 
 #[test]

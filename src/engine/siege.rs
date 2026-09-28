@@ -233,6 +233,7 @@ pub fn reconcile_sieges(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,
         accepted_sequence: candidate.accepted_sequence,

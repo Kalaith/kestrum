@@ -282,11 +282,10 @@ impl Game {
                 self.state.overlay = Overlay::Help;
                 self.help_page = 11;
             }
-            "history_records" | "history_person" | "history_known" | "history_events"
-            | "history_filters" | "history_search" | "history_empty" | "history_pruned"
-            | "history_dense" | "history_presence" | "history_seasoned" | "history_veteran" => {
-                self.capture_history(scene)
-            }
+            "history_life" | "history_records" | "history_person" | "history_known"
+            | "history_events" | "history_filters" | "history_search" | "history_empty"
+            | "history_pruned" | "history_dense" | "history_presence" | "history_seasoned"
+            | "history_veteran" => self.capture_history(scene),
             "history_item" | "history_item_deed" | "history_items" => self.capture_history(scene),
             "battle_empty" | "battle_outcome" | "battle_forces" | "battle_factors"
             | "battle_people" | "battle_dense" | "battle_defeat" | "battle_destroyed"

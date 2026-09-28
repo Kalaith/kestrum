@@ -2,6 +2,8 @@
 
 mod development;
 mod diplomacy;
+mod life;
+pub use life::LifeEvent;
 mod validation;
 
 use super::{
@@ -59,6 +61,11 @@ pub struct FormationLabel {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HistoryKind {
+    Life {
+        owner: FactionId,
+        person: PersonId,
+        event: LifeEvent,
+    },
     Diplomacy {
         receipt: super::diplomacy::DiplomacyReceipt,
     },
@@ -139,7 +146,7 @@ impl HistoryKind {
             Self::VeterancyEarned { .. } => HistoryKindFilter::Veterancy,
             Self::Construction { .. } => HistoryKindFilter::Construction,
             Self::FocusChanged { .. } => HistoryKindFilter::Focus,
-            Self::Anniversary { .. } => HistoryKindFilter::Memory,
+            Self::Anniversary { .. } | Self::Life { .. } => HistoryKindFilter::Memory,
         }
     }
 }

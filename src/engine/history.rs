@@ -2,6 +2,8 @@
 
 mod departed;
 mod legacy;
+mod life;
+pub(crate) use life::record_life_changes;
 mod records;
 mod retention;
 pub(crate) use legacy::current_era;

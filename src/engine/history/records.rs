@@ -387,6 +387,7 @@ pub(super) fn insert(campaign: &mut StrategicCampaign, record: HistoryRecord) {
                 | HistoryKind::VeterancyEarned { .. }
                 | HistoryKind::ItemCustodyChanged { .. }
                 | HistoryKind::Anniversary { .. }
+                | HistoryKind::Life { .. }
         )
     {
         let summary = record.notable();

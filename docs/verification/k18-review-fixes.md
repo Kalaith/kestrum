@@ -104,3 +104,41 @@ stays clear of Cancel. The shared hidden capture processes exited. Native
 captures verify composition; browser and physical-touch interaction remain in
 the final platform pass. The no-argument Windows/WebGL Preview publication
 passed on the final code, including Project Roost bookkeeping.
+
+## Dated lives in shared history — R08
+
+Accepted actions now record emergence, birth/adoption/local invitation,
+recognition with its supported deed, class completion, mentorship start and
+completion, household formation/end and its cause, adult service entry,
+retirement and natural death. Combat deaths remain in their witnessed battle
+receipt. Each life record has one stable ID, date, place, immutable participant
+labels and only its owning faction as observer. Person, place and associated
+army histories read that same record. Both present and released army membership
+are retained for a departure. Recognition, emergence and class completion also
+produce concise own-person notices through the R01 application boundary.
+
+Old saves gain no invented past milestones. Loading and viewing never run the
+transition recorder or notice producer. The existing detail/notable/departed
+budgets remain in force; current class, progression and family state do not
+depend on keeping narrative detail. Life-event notables validate their owner
+visibility even after their detailed event expires.
+
+The biography keeps its existing Events view: dated milestones are the main
+content, with person/place labels beneath them and paging/filter controls below.
+The new `history_life` capture derives an apprentice's five milestones through
+real service, teaching, course and retirement commands. Its actual 1920x1080
+and 1280x720 renders were inspected: five rows and navigation remain readable,
+with no overlapping labels or controls. The shared hidden capture processes
+both exited. Browser and physical-touch navigation are covered in the final
+platform pass.
+
+Validation: 64 focused cases pass across life history (7), progression (9),
+legacy (10), knowledge (5), private feedback/service dates (2), lifecycle (6),
+mentorship (8), succession (9), wounds (6), integrated Medic service (1), and
+source size (1). The emergence regression now checks its real emitted date,
+place, army and owner. New history regressions cover complete local lessons,
+class feedback, retirement, recognition exactly once, rejected foreign access,
+immutable viewing/reload, natural death, four-season familiarity/households,
+adoption, a real spring birth, chosen household end, a ward's 36-season path to
+adult service, and pruning without replay. Strict Clippy and formatting pass.
+No-argument Windows/WebGL Preview publishing and Project Roost recording pass.

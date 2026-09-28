@@ -814,7 +814,24 @@
     "help_apprenticeship": "Injury, separation or lost access pauses lessons. Two seasons open an alternate class path; four complete it. Lessons grant no battle evidence.",
     "help_households": "Two unpartnered adults need four shared service seasons at a safe owned settlement. Births are sparse yearly spring chances. Wards use one population unit; trainees begin at thirteen and field service at seventeen.",
     "help_succession": "Blood, adoption, mentorship and local office establish different successor links. A designation moves neither people nor skills. Command successors must already serve in their commander's army; vacancies prefer local pupils, then command evidence.",
-    "help_heirlooms": "Founding officers begin with a named sword. Transfer or collect it only at the same site. History follows one item identity, shows dated custody deeds and current era, and reports when earlier detail has been forgotten."
+    "help_heirlooms": "Founding officers begin with a named sword. Transfer or collect it only at the same site. History follows one item identity, shows dated custody deeds and current era, and reports when earlier detail has been forgotten.",
+    "life_emerged": "Emerged from {detail}",
+    "life_born": "Born into the household",
+    "life_adopted": "Joined as an adopted ward",
+    "life_apprentice": "Entered local service as an apprentice",
+    "life_recognized": "Recognized as {detail}",
+    "life_class": "Completed training as {detail}",
+    "life_mentorship_started": "Began {detail} mentorship",
+    "life_mentorship_completed": "Completed {detail} apprenticeship",
+    "life_household_formed": "Formed a household",
+    "life_household_ended": "Household ended: {detail}",
+    "life_chosen": "partners chose to separate",
+    "life_partner_died": "a partner died",
+    "life_site_captured": "the home was captured",
+    "life_faction_defeated": "the faction was defeated",
+    "life_service": "Entered adult service",
+    "life_retired": "Retired from active service",
+    "life_natural_death": "Died of natural causes"
   },
   "npc_action_delay_seconds": 0.1
 }

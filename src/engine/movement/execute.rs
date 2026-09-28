@@ -53,6 +53,7 @@ pub(crate) fn execute(
             field: "movement spent",
         })?;
         outcome.path.push(to);
+        super::super::exploration::visit(campaign, owner, to);
         if siege_entry {
             outcome.battle =
                 super::super::siege::arrive(campaign, data, &outcome.armies, from, to, action)?;

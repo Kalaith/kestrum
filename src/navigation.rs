@@ -1,5 +1,8 @@
 //! Bounded atlas navigation and stable selection in shared logical pixels.
 
+mod armies;
+pub use armies::ArmyTarget;
+
 use crate::{
     data::world::{MarkerId, MarkerLocation, SiteId},
     state::world::CampaignWorld,
@@ -30,6 +33,18 @@ impl Default for MapView {
 }
 
 impl MapView {
+    pub fn focus(&mut self, position: [f32; 2], zoom: f32) {
+        if !position.iter().all(|value| value.is_finite()) || !zoom.is_finite() {
+            return;
+        }
+        self.camera = CameraTransform::new(
+            vec2(position[0] * WIDTH, position[1] * HEIGHT),
+            zoom.clamp(ZOOM_LIMITS.0, ZOOM_LIMITS.1),
+        )
+        .expect("finite position and positive zoom");
+        self.constrain();
+    }
+
     pub fn reset(&mut self) {
         *self = Self::default();
     }

@@ -10,6 +10,7 @@ pub(super) fn shortest(
     origin: SiteId,
     destination: SiteId,
     usable_only: bool,
+    known: Option<&BTreeSet<SiteId>>,
 ) -> Option<Vec<SiteId>> {
     let mut best = BTreeMap::from([(origin, (0_u32, vec![origin]))]);
     let mut settled = BTreeSet::new();
@@ -25,6 +26,7 @@ pub(super) fn shortest(
         settled.insert(site);
         for adjacent in campaign.world.adjacent_sites(site) {
             if settled.contains(&adjacent)
+                || known.is_some_and(|known| !known.contains(&adjacent))
                 || (usable_only
                     && adjacent != destination
                     && public_block(campaign, owner, adjacent).is_some())

@@ -7,6 +7,19 @@ use kestrum::{
 };
 
 impl Game {
+    pub(super) fn focus_home(&mut self) {
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        let site = self
+            .movement
+            .site
+            .unwrap_or(campaign.factions[&campaign.player].headquarters);
+        self.navigation
+            .focus_site(&campaign.world, site, &mut self.view);
+        self.navigation.clear_selection();
+    }
+
     pub(super) fn map_controls_block(&self, point: Vec2) -> bool {
         if !kestrum::navigation::MAP_RECT.contains(point)
             || ui::tutorial_bounds(&self.state).is_some_and(|rect| rect.contains(point))
@@ -22,9 +35,7 @@ impl Game {
             .as_ref()
             .and_then(Campaign::strategic)
             .map(|campaign| &campaign.world);
-        ui::map_controls_contain(point, &self.navigation, world, &self.view)
-            || (self.movement.stage == ui::MoveStage::Map
-                && ui::movement_map_controls_contain(point, &self.navigation, world, &self.view))
+        ui::map_controls_contain(point, &self.navigation, world, &self.view, &self.movement)
     }
 
     pub(super) fn map_selection_action(&self, pointer: Pointer) -> Option<UiAction> {
@@ -36,8 +47,33 @@ impl Game {
         {
             return None;
         }
-        let world = &self.state.campaign.as_ref()?.strategic()?.world;
+        let campaign = self.projection.as_ref()?;
+        let world = &campaign.world;
         let origin = self.origin?;
+        if origin.distance(pointer.position) > macroquad_toolkit::input::gestures::DRAG_THRESHOLD {
+            return None;
+        }
+        if campaign.player_turn {
+            if let Some(target) = self
+                .navigation
+                .army_targets(world, &self.view, &campaign.armies)
+                .into_iter()
+                .find(|target| {
+                    target.bounds.contains(origin)
+                        && target.bounds.contains(pointer.position)
+                        && !(self.movement.stage == ui::MoveStage::Map
+                            && ui::movement_panel_bounds(
+                                &self.movement,
+                                &self.navigation,
+                                world,
+                                &self.view,
+                            )
+                            .overlaps(&target.bounds))
+                })
+            {
+                return target.armies.first().copied().map(UiAction::BeginMove);
+            }
+        }
         self.navigation
             .pick_release(world, &self.view, origin, pointer.position)
             .map(UiAction::SelectMap)

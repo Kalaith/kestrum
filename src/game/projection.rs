@@ -17,7 +17,7 @@ impl Game {
         let revision = (campaign.campaign_id, campaign.accepted_sequence);
         let changed = self.projection_revision != Some(revision);
         if changed {
-            self.projection = engine::project(campaign, campaign.player).ok();
+            self.projection = engine::project_map(campaign, campaign.player).ok();
             self.projection_revision = Some(revision);
         }
         changed

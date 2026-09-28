@@ -21,7 +21,7 @@
   "controls": [
     {
       "key": "Tap / Click",
-      "desc": "Select marked places and inspect their control, supply and connections"
+      "desc": "Tap Army, choose a destination and Confirm Move on the map; moving reveals new places"
     },
     {
       "key": "Enter Region / World Map",
@@ -61,7 +61,7 @@
     },
     {
       "key": "Move Army",
-      "desc": "Select co-located armies, Choose Destination on the map, inspect Review Route and Confirm Move"
+      "desc": "Tap an Army banner, tap a destination and Confirm Move; Move Group and Review Route are optional"
     },
     {
       "key": "Records / Battle Reports",
@@ -93,7 +93,7 @@
     },
     {
       "key": "Recenter",
-      "desc": "Return to the full atlas"
+      "desc": "Return to your selected army or home area"
     },
     {
       "key": "End Turn",
@@ -129,7 +129,7 @@
     },
     {
       "key": "Kingdom",
-      "desc": "Menu > Kingdom opens public relations and confirmations for war, peace and a defeated rival’s permanent outcome"
+      "desc": "Menu > Kingdom opens discovered kingdoms and confirmations for war, peace and a defeated rival’s permanent outcome"
     }
   ],
   "details": [

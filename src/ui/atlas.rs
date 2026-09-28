@@ -20,6 +20,7 @@ pub fn map_controls_contain(
     navigation: &MapNavigation,
     campaign_world: Option<&CampaignWorld>,
     view: &MapView,
+    movement: &super::MoveView,
 ) -> bool {
     [
         MENU,
@@ -34,7 +35,15 @@ pub fn map_controls_contain(
     .any(|rect| rect.contains(point))
         || (matches!(navigation.scope(), MapScope::Region(_)) && world::WORLD_MAP.contains(point))
         || campaign_world
-            .and_then(|world| selection::bounds(navigation, world, view))
+            .and_then(|world| {
+                if movement.stage == super::MoveStage::Map {
+                    Some(super::movement_panel_bounds(
+                        movement, navigation, world, view,
+                    ))
+                } else {
+                    selection::bounds(navigation, world, view)
+                }
+            })
             .is_some_and(|rect| rect.contains(point))
 }
 
@@ -61,13 +70,23 @@ pub fn draw_landscape(ctx: &Context<'_>) {
                 HEIGHT,
                 Color::new(INK.r, INK.g, INK.b, 0.62),
             );
-        } else if !ctx.preferences.hide_labels
-            && !ctx
-                .campaign_view
-                .is_some_and(|campaign| campaign.world.markers.len() > 24)
+        }
+        if !ctx.preferences.hide_labels
+            && ctx.campaign_view.is_some_and(|visible| {
+                visible.world.markers.len() <= 24
+                    && ctx
+                        .state
+                        .campaign
+                        .as_ref()
+                        .and_then(kestrum::state::Campaign::strategic)
+                        .is_some_and(|campaign| {
+                            visible.world.markers.len() == campaign.world.markers.len()
+                        })
+            })
         {
             geography(ctx);
         }
+        world::draw_fog(ctx);
         for row in 0..100 {
             let opacity = (1.0 - row as f32 / 100.0).powi(2) * 0.82;
             let shade = Color::new(INK.r, INK.g, INK.b, opacity);
@@ -136,7 +155,15 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
                 "{} {}   ·   {}",
                 ctx.text("round"),
                 campaign.display_turn(),
-                view.active_faction_name
+                if view
+                    .factions
+                    .iter()
+                    .any(|faction| faction.id == view.active_faction)
+                {
+                    view.active_faction_name.clone()
+                } else {
+                    ctx.text("map_unknown_kingdom")
+                }
             )
         } else {
             ctx.text("legacy_phase")

@@ -12,7 +12,9 @@ use kestrum::{
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::truncate_text_to_width_ex;
 
+mod fog;
 mod routes;
+pub use fog::draw as draw_fog;
 
 pub const WORLD_MAP: Rect = Rect::new(24.0, 20.0, 194.0, 48.0);
 
@@ -22,7 +24,16 @@ pub fn draw(ctx: &Context<'_>) {
     };
     let world = &campaign.world;
     let targets = ctx.navigation.targets(world, ctx.view);
-    let panel = selection::bounds(ctx.navigation, world, ctx.view);
+    let panel = if ctx.movement.stage == super::MoveStage::Map {
+        Some(super::movement_panel_bounds(
+            ctx.movement,
+            ctx.navigation,
+            world,
+            ctx.view,
+        ))
+    } else {
+        selection::bounds(ctx.navigation, world, ctx.view)
+    };
     routes::draw(ctx);
     for target in &targets {
         if panel.is_some_and(|panel| {
@@ -31,7 +42,69 @@ pub fn draw(ctx: &Context<'_>) {
             continue;
         }
         draw_target(ctx, target);
+        movement_cost(ctx, target);
         army_presence(ctx, target);
+    }
+    army_banners(ctx, panel);
+}
+
+fn army_banners(ctx: &Context<'_>, panel: Option<Rect>) {
+    let Some(campaign) = ctx.campaign_view else {
+        return;
+    };
+    for target in ctx
+        .navigation
+        .army_targets(&campaign.world, ctx.view, &campaign.armies)
+    {
+        if panel.is_some_and(|panel| panel.overlaps(&target.bounds)) {
+            continue;
+        }
+        let rect = target.bounds;
+        let selected = target
+            .armies
+            .iter()
+            .any(|id| ctx.movement.armies.contains(id));
+        draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
+        draw_rectangle_lines(
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
+            if selected { 3.0 } else { 1.5 },
+            BRASS,
+        );
+        let label = if target.armies.len() == 1 {
+            ctx.text("map_army")
+        } else {
+            format!("{} {}", ctx.text("map_army"), target.armies.len())
+        };
+        centered(
+            ctx,
+            &label,
+            vec2(rect.x + rect.w / 2.0, rect.y + 30.0),
+            17.0,
+            CREAM,
+        );
+    }
+}
+
+fn movement_cost(ctx: &Context<'_>, target: &MapTarget) {
+    if ctx.movement.stage != super::MoveStage::Map {
+        return;
+    }
+    let Some(campaign) = ctx.campaign_view else {
+        return;
+    };
+    let site = match target.selection {
+        MapSelection::Site(id) => Some(id),
+        MapSelection::Marker(id) => campaign.world.physical_site(id),
+    };
+    if let Some(cost) = site.and_then(|site| ctx.movement.nearby.get(&site)) {
+        let at = target.center;
+        draw_circle_lines(at.x, at.y, 29.0, 2.0, CREAM);
+        let badge = at + vec2(0.0, -42.0);
+        draw_circle(badge.x, badge.y, 14.0, INK);
+        centered(ctx, &cost.to_string(), badge + vec2(0.0, 6.0), 17.0, CREAM);
     }
 }
 
@@ -111,42 +184,6 @@ fn army_presence(ctx: &Context<'_>, target: &MapTarget) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
-    let production_world =
-        ctx.navigation.scope() == MapScope::World && campaign.world.markers.len() > 24;
-    let own_armies = campaign
-        .armies
-        .iter()
-        .filter(|army| match target.selection {
-            MapSelection::Marker(marker) => campaign
-                .world
-                .site(army.site)
-                .is_some_and(|site| site.marker == marker),
-            MapSelection::Site(site) => army.site == site,
-        })
-        .count();
-    if own_armies > 0 {
-        if production_world {
-            let at = target.center + vec2(26.0, -24.0);
-            draw_circle(at.x, at.y, 15.0, INK);
-            draw_circle_lines(at.x, at.y, 14.0, 1.5, BRASS);
-            let count = own_armies.to_string();
-            centered(
-                ctx,
-                &count,
-                at + vec2(0.0, 5.0),
-                if own_armies > 9 { 13.0 } else { 16.0 },
-                CREAM,
-            );
-        } else {
-            let label = format!("{}: {own_armies}", ctx.text("own_armies"));
-            let width = measure_text(&label, ctx.body_font(), 16, 1.0).width;
-            let x = (target.center.x - width * 0.5).clamp(12.0, 1268.0 - width);
-            let y = target.center.y + 76.0;
-            draw_rectangle(x - 7.0, y - 18.0, width + 14.0, 25.0, INK);
-            body(ctx, &label, vec2(x, y), 16.0, BRASS);
-        }
-    }
-
     let physical_site = match target.selection {
         MapSelection::Site(site) => Some(site),
         MapSelection::Marker(marker) => campaign.world.physical_site(marker),
@@ -258,7 +295,18 @@ fn map_label(ctx: &Context<'_>, name: &str, center: Vec2, prominent: bool) {
     let mut y = center.y + if prominent { 54.0 } else { 48.0 };
     if let Some(panel) = ctx
         .campaign_view
-        .and_then(|campaign| selection::bounds(ctx.navigation, &campaign.world, ctx.view))
+        .and_then(|campaign| {
+            if ctx.movement.stage == super::MoveStage::Map {
+                Some(super::movement_panel_bounds(
+                    ctx.movement,
+                    ctx.navigation,
+                    &campaign.world,
+                    ctx.view,
+                ))
+            } else {
+                selection::bounds(ctx.navigation, &campaign.world, ctx.view)
+            }
+        })
         .filter(|panel| !panel.overlaps(&Rect::new(center.x - 24.0, center.y - 24.0, 48.0, 48.0)))
     {
         if y - 20.0 < panel.y + panel.h && y + 7.0 > panel.y {
@@ -345,7 +393,10 @@ pub fn navigation(ctx: &Context<'_>) -> Option<UiAction> {
         ) {
             return Some(UiAction::WorldMap);
         }
-    } else if ctx.navigation.selection().is_none() && ctx.state.overlay == Overlay::None {
+    } else if ctx.navigation.selection().is_none()
+        && ctx.state.overlay == Overlay::None
+        && ctx.movement.stage == super::MoveStage::Inactive
+    {
         let label = ctx.text("select_place");
         let width = measure_text(&label, ctx.body_font(), 18, 1.0).width;
         if ctx

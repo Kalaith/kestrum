@@ -10,7 +10,12 @@ impl Game {
             .campaign
             .as_ref()
             .and_then(Campaign::strategic)
-            .map(|campaign| engine::diplomacy_view(campaign, &self.data, campaign.player));
+            .map(|campaign| {
+                let mut view = engine::diplomacy_view(campaign, &self.data, campaign.player);
+                let known = engine::known_factions(campaign, campaign.player);
+                view.factions.retain(|faction| known.contains(&faction.id));
+                view
+            });
         let Some(view) = &self.kingdom.data else {
             return;
         };

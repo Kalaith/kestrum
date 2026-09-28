@@ -240,6 +240,7 @@ impl Game {
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();
+                self.focus_home();
                 self.battle = ui::BattleView::default();
                 self.reset_history();
                 self.kingdom = ui::KingdomView::default();

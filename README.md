@@ -28,6 +28,12 @@ the current checks; [K18 verification](docs/verification/k18-integrated.md) keep
 the historical results and deferred checks. K18 closure does not claim settled
 balance or full platform acceptance.
 
+Armies can now move directly on the map: tap an Army banner, inspect remaining
+movement and nearby costs, tap a destination, then Confirm Move. New campaigns
+start zoomed into their home area; army travel reveals adjacent places and saves
+those discoveries. [Map movement and exploration verification](docs/verification/map-movement-exploration.md)
+records regression coverage, normal/minimum captures and the published browser check.
+
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
 visible. End Turn passes to the next faction; rivals recruit, build, expand and
@@ -338,23 +344,37 @@ is shown in [the chronicle](docs/verification/ui_history_item_deed.png) and its
 
 ### Strategic map
 
+The campaign starts at 2.5× over the player's home, or at the home site inside
+its region. Only owned places, army positions and their immediate route exits
+are initially known. Travel records discoveries in the save; panning and route
+previews reveal nothing. Older saves begin from their current holdings and armies.
+
+The current decision is where to move the selected army. The atlas remains the
+dominant area at both 1920 × 1080 and the 1280 × 720 minimum. Tap an **Army** banner
+to see movement remaining and nearby legal destinations with their costs. Tap a
+place, inspect the highlighted route and **Confirm Move** in the compact order
+card. Arrival and cancellation stay on the map. Army Details, group selection
+and the full route breakdown are optional disclosures. All actions have visible
+tap controls, with 48-pixel minimum targets; depleted movement and blocked routes
+explain why the order cannot proceed. Recenter returns to the army or home area.
+
 | Question | Current answer |
 | --- | --- |
-| Current decision | Inspect a place, manage armies or construction, or confirm a costed route for a travelling group. |
+| Current decision | Select an army and choose where to move it. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
-| Primary action | Enter Region opens a regional marker; World Map returns to the previous world camera. End Turn remains separate from selection. |
-| Supporting information | A dismissible inspector shows local control, regional claim and anchor requirements. The top edge shows season, round and active faction. |
-| Deferred information | Settings, saves, help, and credits appear only when opened. No unimplemented system gets a panel. |
+| Primary action | Tap Army, tap a destination, then Confirm Move beside its cost. No management overlay is required. |
+| Supporting information | The compact order card shows remaining movement, cost, risks and supply. Nearby legal moves have numbered rings. |
+| Deferred information | Undiscovered geography and kingdoms remain hidden. Army Details, Move Group, Review Route and utilities open on request. |
 | Layout and camera | 1280 × 720 logical canvas, scaled to 1920 × 1080; minimum supported landscape canvas is 1280 × 720. Camera stays within the atlas at 1–3× zoom. |
-| Input and feedback | Tap markers to inspect; Close dismisses selection. Drag to pan; pinch, wheel, or visible + / - to zoom; Recenter restores the current map. Targets and controls are at least 48 logical pixels. Help names the controls. |
+| Input and feedback | Tap markers to inspect; Close dismisses selection. Drag to pan; pinch, wheel, or visible + / - to zoom; Recenter returns to the selected army or home. Targets and controls are at least 48 logical pixels. Help names the controls. |
 
 Approximately 80% of the minimum canvas sits between the shallow edge controls;
 the terrain continues beneath them. No framed central map widget or persistent
 sidebar exists. A selected place adds one inspector opposite its map position.
-The 80-marker production world lowers route-line weight and shows region names,
-faction seals, stationed-army counts, observed local threats and the selected
-location. Selecting a marker reveals its full name and facts. Regional maps show
-all ten internal site names.
+The discovered portion of the 80-marker production world shows place names,
+faction seals, tappable Army banners and observed local threats. Regional maps
+reveal internal sites through physical travel. Army Details and group orders
+remain available from the order card; Next selects another local army.
 
 ### K12 — Rival kingdoms, diplomacy and endings
 

@@ -426,6 +426,9 @@ impl Game {
             self.begin_move(army);
             if scene == "move_group_dense" {
                 self.movement.armies = self.local_armies();
+                self.apply(UiAction::EditMoveGroup);
+            } else if scene == "move_group" {
+                self.apply(UiAction::EditMoveGroup);
             } else if scene != "move_group" {
                 self.choose_move_destination();
                 self.enter_region(MarkerId(5));

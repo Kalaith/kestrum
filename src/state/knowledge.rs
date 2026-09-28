@@ -14,6 +14,10 @@ use std::collections::BTreeMap;
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignKnowledge {
+    #[serde(default)]
+    pub contacts: BTreeMap<FactionId, std::collections::BTreeSet<FactionId>>,
+    #[serde(default)]
+    pub explored: BTreeMap<FactionId, std::collections::BTreeSet<SiteId>>,
     pub observers: BTreeMap<FactionId, ObserverKnowledge>,
 }
 

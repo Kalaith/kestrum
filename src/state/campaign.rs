@@ -377,6 +377,7 @@ impl StrategicCampaign {
         campaign.initialize_population(&data.construction);
         campaign.initialize_development(data)?;
         campaign.initialize_legacy_items()?;
+        crate::engine::exploration::observe(&mut campaign);
         campaign.next_ids.threat =
             super::threat::ThreatId(next(campaign.threats.keys().map(|id| id.0))?);
         campaign.reconcile_region_control();

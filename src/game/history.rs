@@ -136,7 +136,7 @@ impl Game {
                 self.history.known_people = Some(result);
                 total
             }
-            ui::RecordCategory::Places => campaign.world.sites.len(),
+            ui::RecordCategory::Places => engine::explored_sites(campaign, campaign.player).len(),
             ui::RecordCategory::Armies => campaign
                 .armies
                 .values()

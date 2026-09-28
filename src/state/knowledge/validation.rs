@@ -5,6 +5,23 @@ use crate::state::StrategicCampaign;
 
 impl StrategicCampaign {
     pub(crate) fn validate_knowledge(&self) -> Result<(), String> {
+        for (observer, factions) in &self.knowledge.contacts {
+            ensure(
+                self.factions.contains_key(observer),
+                "unknown contact observer",
+            )?;
+            ensure(
+                factions.iter().all(|id| self.factions.contains_key(id)),
+                "unknown contacted faction",
+            )?;
+        }
+        for (observer, sites) in &self.knowledge.explored {
+            ensure(self.factions.contains_key(observer), "unknown map observer")?;
+            ensure(
+                sites.iter().all(|site| self.world.site(*site).is_some()),
+                "unknown discovered site",
+            )?;
+        }
         for (observer, known) in &self.knowledge.observers {
             ensure(self.factions.contains_key(observer), "unknown observer")?;
             for (id, person) in &known.people {

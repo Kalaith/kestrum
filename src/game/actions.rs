@@ -66,6 +66,7 @@ impl Game {
             | UiAction::CancelFormationCourse(_)
             | UiAction::SetCommander(_, _)
             | UiAction::BeginMove(_)
+            | UiAction::EditMoveGroup
             | UiAction::ToggleMoveArmy(_)
             | UiAction::MoveGroupPage(_)
             | UiAction::ChooseMoveDestination
@@ -242,6 +243,10 @@ impl Game {
                 self.apply_campaign_command(Command::SetCommander { army, person })
             }
             UiAction::BeginMove(army) => self.begin_move(army),
+            UiAction::EditMoveGroup => {
+                self.movement.stage = ui::MoveStage::Group;
+                self.state.overlay = Overlay::MoveGroup;
+            }
             UiAction::ToggleMoveArmy(army) => self.toggle_move_army(army),
             UiAction::MoveGroupPage(delta) => {
                 self.movement.page = self.movement.page.saturating_add_signed(delta as isize)
@@ -398,7 +403,7 @@ impl Game {
     fn apply_view_action(&mut self, action: UiAction) {
         match action {
             UiAction::Zoom(factor) => self.view.zoom(vec2(WIDTH / 2.0, HEIGHT / 2.0), factor),
-            UiAction::Recenter => self.view.reset(),
+            UiAction::Recenter => self.focus_home(),
             UiAction::ToggleLabels => {
                 self.preferences.hide_labels = !self.preferences.hide_labels;
                 self.save_preferences();

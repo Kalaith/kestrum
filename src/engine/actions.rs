@@ -191,6 +191,7 @@ fn prepare(
         legacy_items_changed: Vec::new(),
         anniversary_reminders: Vec::new(),
     };
+    super::exploration::observe(&mut candidate);
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
     Ok((candidate, outcome))
@@ -288,6 +289,7 @@ fn finish(
         super::history::prune(candidate, data);
     }
     outcome.succession = super::succession::notices(before, candidate);
+    super::exploration::observe(candidate);
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
     Ok(())

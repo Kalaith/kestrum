@@ -8,6 +8,8 @@ pub(crate) mod development;
 pub mod diplomacy;
 mod economy;
 mod evidence;
+pub(crate) mod exploration;
+pub use exploration::{explored_sites, known_factions, project_map};
 pub(crate) mod history;
 pub(crate) mod knowledge;
 mod legacy;
@@ -45,8 +47,9 @@ pub use knowledge::{
 };
 pub use mentorship::{mentorship_options, mentorship_status_text, MentorshipOption};
 pub use movement::{
-    army_remaining, formation_remaining, movement_preview, person_remaining, route_cost, MoveOrder,
-    MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,
+    army_remaining, formation_remaining, map_movement_preview, movement_preview, person_remaining,
+    route_cost, MoveOrder, MovementBlock, MovementEncounter, MovementOutcome, MovementPreview,
+    MovementStop, RouteStep,
 };
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
 pub use progression::{

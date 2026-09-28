@@ -1,6 +1,15 @@
 //! Required presentation keys, grouped in the authored UI registry.
 
 pub(super) const REQUIRED_TEXT: &[&str] = &[
+    "map_move_group",
+    "map_pick_destination",
+    "map_supply_connected",
+    "map_supply_cutoff",
+    "map_army",
+    "map_army_details",
+    "map_move_exhausted",
+    "map_unknown_kingdom",
+    "map_unexplored_region",
     "kingdom",
     "kingdom_scope",
     "kingdom_defeated_choice",

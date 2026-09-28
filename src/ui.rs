@@ -46,8 +46,7 @@ pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCR
 pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
 pub use menus::HELP_PAGE_COUNT;
 pub use movement::{
-    draw_map_overlay as draw_move_map_overlay,
-    map_controls_contain as movement_map_controls_contain,
+    draw_map_overlay as draw_move_map_overlay, panel_bounds as movement_panel_bounds,
 };
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
 pub use saves::{SaveMode, SaveRow, SaveView};
@@ -157,6 +156,7 @@ pub enum UiAction {
     CancelFormationCourse(FormationId),
     SetCommander(ArmyId, Option<PersonId>),
     BeginMove(ArmyId),
+    EditMoveGroup,
     ToggleMoveArmy(ArmyId),
     MoveGroupPage(i32),
     ChooseMoveDestination,

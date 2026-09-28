@@ -177,11 +177,50 @@ pub fn movement_preview(
     if campaign.world.site(destination).is_none() {
         return Err(RuleError::UnknownSite { site: destination });
     }
-    let path = path::shortest(campaign, data, observer, origin, destination, true)
-        .or_else(|| path::shortest(campaign, data, observer, origin, destination, false))
+    let path = path::shortest(campaign, data, observer, origin, destination, true, None)
+        .or_else(|| path::shortest(campaign, data, observer, origin, destination, false, None))
         .ok_or(RuleError::InvalidRoute)?;
     let mut armies = armies.to_vec();
     armies.sort();
+    preview_order(campaign, data, observer, &MoveOrder { armies, path })
+}
+
+/// Player map routes may use only geography this faction has discovered.
+pub fn map_movement_preview(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    observer: FactionId,
+    armies: &[ArmyId],
+    destination: SiteId,
+) -> Result<MovementPreview, RuleError> {
+    let known = super::explored_sites(campaign, observer);
+    if !known.contains(&destination) {
+        return Err(RuleError::UnknownSite { site: destination });
+    }
+    let (origin, _) = validate_group(campaign, data, observer, armies)?;
+    let path = path::shortest(
+        campaign,
+        data,
+        observer,
+        origin,
+        destination,
+        true,
+        Some(&known),
+    )
+    .or_else(|| {
+        path::shortest(
+            campaign,
+            data,
+            observer,
+            origin,
+            destination,
+            false,
+            Some(&known),
+        )
+    })
+    .ok_or(RuleError::InvalidRoute)?;
+    let mut armies = armies.to_vec();
+    armies.sort_unstable();
     preview_order(campaign, data, observer, &MoveOrder { armies, path })
 }
 

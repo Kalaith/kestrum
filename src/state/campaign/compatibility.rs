@@ -15,6 +15,7 @@ impl StrategicCampaign {
     pub(crate) fn decode_compatible(
         mut value: serde_json::Value,
     ) -> Result<Self, serde_json::Error> {
+        let earlier_exploration = value.pointer("/knowledge/explored").is_none();
         initialize_earlier_military(&mut value);
         initialize_earlier_battles(&mut value);
         let earlier_evidence = evidence::initialize(&mut value)?;
@@ -90,6 +91,9 @@ impl StrategicCampaign {
             campaign
                 .initialize_legacy_items()
                 .map_err(serde_json::Error::custom)?;
+        }
+        if earlier_exploration {
+            crate::engine::exploration::observe(&mut campaign);
         }
         Ok(campaign)
     }

@@ -12,6 +12,7 @@ mod history;
 mod history_capture;
 mod kingdom;
 mod kingdom_capture;
+mod map_capture;
 mod military;
 mod military_capture;
 mod movement;
@@ -164,6 +165,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_map_movement(scene) {
+            return;
+        }
         if self.capture_tutorial(scene) {
             return;
         }
@@ -374,6 +378,9 @@ impl Game {
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
         let changed = self.refresh_projection();
+        if changed {
+            self.refresh_movement();
+        }
         if changed || self.army_refresh_pending {
             self.refresh_army();
             self.refresh_settlement();

@@ -1,10 +1,7 @@
 //! Observe real UI destinations; opening a review never issues its proposed order.
 
 use super::*;
-use kestrum::{
-    navigation::{MapScope, MapSelection},
-    state::tutorial::TutorialStep,
-};
+use kestrum::{navigation::MapScope, state::tutorial::TutorialStep};
 
 impl Game {
     pub(super) fn apply_tutorial_action(&mut self, action: UiAction) -> bool {
@@ -26,22 +23,11 @@ impl Game {
             }
             UiAction::TutorialHeadquarters => {
                 let site = campaign.factions[&campaign.player].headquarters;
-                if let Some(marker) = campaign.world.site(site).map(|site| site.marker) {
-                    self.navigation.reset(&mut self.view);
-                    let selection = if campaign.world.physical_site(marker) == Some(site) {
-                        MapSelection::Marker(marker)
-                    } else {
-                        self.navigation
-                            .enter_region(&campaign.world, marker, &mut self.view)
-                            .expect("a regional headquarters belongs to a region");
-                        MapSelection::Site(site)
-                    };
-                    self.navigation
-                        .select(&campaign.world, selection)
-                        .expect("headquarters is selectable on its map");
-                    self.movement = ui::MoveView::default();
-                    self.state.overlay = Overlay::None;
-                }
+                self.navigation
+                    .focus_site(&campaign.world, site, &mut self.view);
+                self.navigation.clear_selection();
+                self.movement = ui::MoveView::default();
+                self.state.overlay = Overlay::None;
             }
             _ => unreachable!("tutorial action guard"),
         }
@@ -56,6 +42,9 @@ impl Game {
             return;
         };
         let step = match action {
+            UiAction::BeginMove(_) if self.movement.stage == ui::MoveStage::Map => {
+                Some(TutorialStep::Headquarters)
+            }
             UiAction::OpenArmies(site)
                 if self.state.overlay == Overlay::Armies
                     && self.army.site == Some(site)

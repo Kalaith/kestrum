@@ -253,12 +253,16 @@ fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
         sites.len(),
         ctx.text("region_sites")
     ));
-    sections.push(format!(
-        "{}: {}",
-        ctx.text("anchor_requirements"),
-        anchor_description(ctx, anchors)
-    ));
-    sections.push(ctx.text("anchors_help"));
+    if world.region_control(id).is_some() {
+        sections.push(format!(
+            "{}: {}",
+            ctx.text("anchor_requirements"),
+            anchor_description(ctx, anchors)
+        ));
+        sections.push(ctx.text("anchors_help"));
+    } else {
+        sections.push(ctx.text("map_unexplored_region"));
+    }
     let mut gates: Vec<_> = entrances
         .iter()
         .filter_map(|entry| world.site(entry.site))

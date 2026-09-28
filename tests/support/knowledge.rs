@@ -236,7 +236,11 @@ pub(super) fn assert_earlier_save(data: &GameData, campaign: &StrategicCampaign)
     let Campaign::Strategic(migrated) = &restored else {
         panic!("strategic migration")
     };
-    assert_eq!(migrated.knowledge, campaign.knowledge);
+    // This earlier schema can reconstruct witnessed people from its reports,
+    // but it never saved the geography revealed during previous journeys.
+    assert_eq!(migrated.knowledge.observers, campaign.knowledge.observers);
+    assert!(campaign.knowledge.explored[&campaign.player]
+        .is_superset(&migrated.knowledge.explored[&campaign.player]));
     assert_eq!(
         migrated.rng.generation.state(),
         campaign.rng.generation.state()

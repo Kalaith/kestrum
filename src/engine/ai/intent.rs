@@ -65,6 +65,13 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
         Command::DeclareWar { faction } => (AiIntentKind::War, vec![faction.0]),
         Command::RelocateHeadquarters { site } => (AiIntentKind::Headquarters, vec![site.0]),
         Command::Resettle { from, to } => (AiIntentKind::Resettle, vec![from.0, to.0]),
+        _ => return progression(command),
+    };
+    Some(AiIntent { kind, targets })
+}
+
+fn progression(command: &Command) -> Option<AiIntent> {
+    let (kind, targets) = match command {
         Command::SetCommander { army, person } => (
             AiIntentKind::Progression,
             vec![0, army.0, person.map_or(0, |id| id.0)],
@@ -146,6 +153,13 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
         Command::TransferLegacyItem { item, to } => {
             (AiIntentKind::Progression, vec![17, item.0, to.0])
         }
+        Command::TransferPerson {
+            person,
+            to_formation,
+        } => (
+            AiIntentKind::Progression,
+            vec![18, person.0, to_formation.0],
+        ),
         _ => return None,
     };
     Some(AiIntent { kind, targets })

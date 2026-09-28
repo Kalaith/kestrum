@@ -1,3 +1,4 @@
+//! Legal overland paths and deterministic objective ranking from observed facts.
 use super::*;
 use crate::{
     data::{
@@ -169,7 +170,7 @@ impl Planner<'_> {
     }
 
     pub(super) fn targets(&self, sites: impl Iterator<Item = SiteId>) -> Vec<SiteId> {
-        let mut targets: Vec<_> = sites
+        let candidates = sites
             .filter_map(|site| {
                 self.view
                     .armies
@@ -177,11 +178,47 @@ impl Planner<'_> {
                     .filter(|army| self.moving(army, false))
                     .filter_map(|army| self.path(army.site, site, true).map(|(cost, _)| cost))
                     .min()
-                    .map(|cost| (cost, self.strategic_priority(site), site))
+                    .map(|travel_cost| AiTarget {
+                        site,
+                        travel_cost,
+                        strategic_priority: self.strategic_priority(site),
+                    })
             })
             .collect();
-        targets.sort();
-        targets.into_iter().map(|(_, _, site)| site).collect()
+        rank_targets(self.campaign, &self.view, candidates)
+            .into_iter()
+            .map(|target| target.site)
+            .collect()
+    }
+
+    pub(super) fn threat_approaches(
+        &self,
+        site: SiteId,
+    ) -> Vec<(u32, crate::state::military::ArmyId, Vec<SiteId>)> {
+        let mut approaches = Vec::new();
+        for staging in self.view.world.adjacent_sites(site) {
+            if !self.transit(staging, staging, false) {
+                continue;
+            }
+            let Some(edge) = self.view.world.connected_route(staging, site) else {
+                continue;
+            };
+            let final_cost = crate::engine::movement::route_cost(edge, self.data);
+            for army in self
+                .view
+                .armies
+                .iter()
+                .filter(|army| self.moving(army, false))
+            {
+                if let Some((cost, path)) = self.path(army.site, staging, false) {
+                    if let Some(total) = cost.checked_add(final_cost) {
+                        approaches.push((total, army.id, path));
+                    }
+                }
+            }
+        }
+        approaches.sort();
+        approaches
     }
 
     pub(super) fn pursue(&self) -> Option<AiDecision> {

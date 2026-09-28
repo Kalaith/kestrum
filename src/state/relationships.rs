@@ -249,10 +249,14 @@ impl StrategicCampaign {
                             })
                         })
                         && person.is_none_or(|person| {
-                            person.class == crate::data::world::PersonClass::Recruit
+                            !matches!(
+                                person.assignment,
+                                PersonAssignment::Dependent { .. }
+                                    | PersonAssignment::Trainee { .. }
+                            ) || person.class == crate::data::world::PersonClass::Recruit
                         }),
                     "families.birth",
-                    "a birth needs two biological parents and an untrained recruit",
+                    "a birth needs two biological parents; dependents remain untrained recruits",
                 )?,
                 FamilyOrigin::AdoptedWard => require(
                     (1..=2).contains(&family.links.len())

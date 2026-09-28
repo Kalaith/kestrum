@@ -3,6 +3,8 @@
 mod economy;
 mod intent;
 mod military;
+mod objectives;
+pub use objectives::{rank_targets, AiTarget};
 mod politics;
 mod progression;
 mod travel;

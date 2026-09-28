@@ -140,9 +140,20 @@ impl Planner<'_> {
     }
 
     pub(super) fn clear_threat(&self) -> Option<AiDecision> {
-        self.targets(self.view.threats.iter().map(|threat| threat.site))
+        let mut targets = self
+            .view
+            .threats
+            .iter()
+            .filter_map(|threat| {
+                self.threat_approaches(threat.site)
+                    .first()
+                    .map(|(cost, _, _)| (*cost, self.strategic_priority(threat.site), threat.site))
+            })
+            .collect::<Vec<_>>();
+        targets.sort();
+        targets
             .into_iter()
-            .find_map(|site| self.clear_threat_at(site))
+            .find_map(|(_, _, site)| self.clear_threat_at(site))
     }
     pub(super) fn clear_threat_at(&self, site: SiteId) -> Option<AiDecision> {
         let threat = self
@@ -156,15 +167,34 @@ impl Planner<'_> {
         }) {
             groups.entry(army.site).or_default().push(army.id);
         }
-        groups.into_values().find_map(|armies| {
-            self.choose(
-                Command::ClearThreat {
-                    armies,
-                    threat: threat.id,
-                },
-                Some(self.objective(site, AiObjectiveKind::Threat)),
-            )
-        })
+        groups
+            .into_values()
+            .find_map(|armies| {
+                self.choose(
+                    Command::ClearThreat {
+                        armies,
+                        threat: threat.id,
+                    },
+                    Some(self.objective(site, AiObjectiveKind::Threat)),
+                )
+            })
+            .or_else(|| {
+                self.threat_approaches(site)
+                    .into_iter()
+                    .find_map(|(_, army, path)| {
+                        (path.len() > 1)
+                            .then(|| {
+                                self.choose(
+                                    Command::Move(MoveOrder {
+                                        armies: vec![army],
+                                        path: path[..2].to_vec(),
+                                    }),
+                                    Some(self.objective(site, AiObjectiveKind::Threat)),
+                                )
+                            })
+                            .flatten()
+                    })
+            })
     }
 
     pub(super) fn attack(&self) -> Option<AiDecision> {

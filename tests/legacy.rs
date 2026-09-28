@@ -13,7 +13,7 @@ use kestrum::{
         history::{AnniversarySubject, HistoryId, HistoryKind, HistoryRecord, HistorySubject},
         legacy::{LegacyItemCustody, LegacyItemId},
         people::{CompletedApprenticeship, PersonAssignment, PersonId, PersonStatus},
-        relationships::{LegacyCategory, SuccessorLink},
+        relationships::{FamilyLink, FamilyOrigin, LegacyCategory, PersonFamily, SuccessorLink},
         Campaign, CampaignPhase, StrategicCampaign,
     },
 };
@@ -277,6 +277,99 @@ fn a_distant_named_heir_leaves_the_item_at_the_death_site_and_retirement_keeps_c
     );
     retired.validate(&retired_data).unwrap();
     campaign.validate(&data).unwrap();
+}
+
+#[test]
+fn dependents_and_trainees_begin_service_anniversaries_only_after_enlistment() {
+    let (data, mut campaign) = fixture();
+    campaign.completed_rounds = 40;
+    let site = campaign.factions[&PLAYER].headquarters;
+    let child = add_person(
+        &mut campaign,
+        PLAYER,
+        PersonAssignment::Dependent { site },
+        10,
+    );
+    let trainee = add_person(
+        &mut campaign,
+        PLAYER,
+        PersonAssignment::Trainee { site },
+        14,
+    );
+    for (id, origin, link) in [
+        (child, FamilyOrigin::Birth, FamilyLink::BiologicalParent),
+        (
+            trainee,
+            FamilyOrigin::AdoptedWard,
+            FamilyLink::AdoptiveGuardian,
+        ),
+    ] {
+        campaign.families.insert(
+            id,
+            PersonFamily {
+                origin,
+                origin_site: site,
+                household: None,
+                links: [(FOUNDER, link)].into(),
+            },
+        );
+    }
+    let parent = add_person(&mut campaign, PLAYER, PersonAssignment::Site { site }, 35);
+    campaign
+        .families
+        .get_mut(&child)
+        .unwrap()
+        .links
+        .insert(parent, FamilyLink::BiologicalParent);
+    for _ in 0..3 {
+        finish_round(&mut campaign, &data);
+    }
+    for id in [child, trainee] {
+        assert!(!campaign.history.person_last_reminded.contains_key(&id));
+        assert!(!campaign.history.events.values().any(|record| matches!(record.kind,
+            HistoryKind::Anniversary { subject: AnniversarySubject::Person(person), .. } if person == id)));
+    }
+    // An adult dependent is still not in service until the real entry command.
+    campaign.people.get_mut(&child).unwrap().birth_round =
+        i64::from(campaign.completed_rounds) - 68;
+    finish_round(&mut campaign, &data);
+    assert!(!campaign.history.person_last_reminded.contains_key(&child));
+    let entered = campaign.completed_rounds;
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::EnterService {
+            person: child,
+            formation: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(campaign.people[&child].service_start_round, entered);
+    finish_round(&mut campaign, &data);
+    assert!(!campaign.history.person_last_reminded.contains_key(&child));
+    // A time jump must also represent the trainee's normal aging-out transition.
+    campaign.people.get_mut(&trainee).unwrap().assignment = PersonAssignment::Dependent { site };
+    campaign.completed_rounds = entered + 38;
+    finish_round(&mut campaign, &data);
+    assert!(!campaign.history.person_last_reminded.contains_key(&child));
+    for _ in 0..3 {
+        finish_round(&mut campaign, &data);
+    }
+    assert_eq!(campaign.history.person_last_reminded.get(&child), Some(&10));
+    let reminders = campaign.history.events.values().filter(|record| matches!(record.kind,
+        HistoryKind::Anniversary { subject: AnniversarySubject::Person(person), years: 10 } if person == child)).count();
+    assert_eq!(reminders, 1);
+    assert!(!campaign.history.person_last_reminded.contains_key(&trainee));
+    let loaded: Campaign = serde_json::from_str(
+        &serde_json::to_string(&Campaign::Strategic(Box::new(campaign.clone()))).unwrap(),
+    )
+    .unwrap();
+    loaded.validate(&data).unwrap();
+    campaign = loaded.strategic().unwrap().clone();
+    finish_round(&mut campaign, &data);
+    assert_eq!(campaign.history.events.values().filter(|record| matches!(record.kind,
+        HistoryKind::Anniversary { subject: AnniversarySubject::Person(person), years: 10 } if person == child)).count(), 1);
 }
 
 #[test]

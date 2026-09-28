@@ -93,7 +93,14 @@ pub(crate) fn record_anniversaries(
         FactionId,
         Vec<(AnniversarySubject, u32, Option<crate::data::world::SiteId>)>,
     > = BTreeMap::new();
-    for person in campaign.people.values().filter(|person| person.is_alive()) {
+    for person in campaign.people.values().filter(|person| {
+        person.is_alive()
+            && matches!(
+                person.assignment,
+                crate::state::people::PersonAssignment::Formation { .. }
+                    | crate::state::people::PersonAssignment::Site { .. }
+            )
+    }) {
         let years = campaign
             .completed_rounds
             .saturating_sub(person.service_start_round)

@@ -66,142 +66,15 @@ impl Game {
     ) {
         match result {
             Ok(outcome) => {
-                let mut messages = Vec::new();
-                if !outcome.automatic_retirements.is_empty() {
-                    let names = self
-                        .state
-                        .campaign
-                        .as_ref()
-                        .and_then(Campaign::strategic)
-                        .map(|campaign| {
-                            outcome
-                                .automatic_retirements
-                                .iter()
-                                .filter_map(|id| {
-                                    campaign.people.get(id).map(|person| person.name.as_str())
-                                })
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        })
-                        .unwrap_or_default();
-                    let message = self
-                        .data
-                        .presentation
-                        .text("automatic_retirement_notice")
-                        .replace("{names}", &names);
-                    messages.push(message);
-                }
-                if !outcome.new_people.is_empty() {
-                    let names = self
-                        .state
-                        .campaign
-                        .as_ref()
-                        .and_then(Campaign::strategic)
-                        .map(|campaign| {
-                            outcome
-                                .new_people
-                                .iter()
-                                .filter_map(|id| {
-                                    campaign.people.get(id).map(|person| person.name.as_str())
-                                })
-                                .collect::<Vec<_>>()
-                                .join(", ")
-                        })
-                        .unwrap_or_default();
-                    messages.push(
-                        self.data
-                            .presentation
-                            .text("new_people_notice")
-                            .replace("{names}", &names),
-                    );
-                }
-                if !outcome.succession.is_empty() {
-                    if let Some(campaign) =
-                        self.state.campaign.as_ref().and_then(Campaign::strategic)
-                    {
-                        for succession in &outcome.succession {
-                            let predecessor = campaign
-                                .people
-                                .get(&succession.predecessor)
-                                .map_or_else(|| "".to_owned(), |person| person.name.clone());
-                            let army = campaign
-                                .armies
-                                .get(&succession.army)
-                                .map_or_else(|| "".to_owned(), |entry| entry.name.clone());
-                            if let Some(successor) =
-                                succession.successor.and_then(|id| campaign.people.get(&id))
-                            {
-                                messages.push(
-                                    self.data
-                                        .presentation
-                                        .text("succession_notice")
-                                        .replace("{predecessor}", &predecessor)
-                                        .replace("{successor}", &successor.name)
-                                        .replace("{army}", &army),
-                                );
-                            } else {
-                                messages.push(
-                                    self.data
-                                        .presentation
-                                        .text("vacant_succession_notice")
-                                        .replace("{predecessor}", &predecessor)
-                                        .replace("{army}", &army),
-                                );
-                            }
-                        }
-                    }
-                }
-                if let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
-                    if !outcome.legacy_items_changed.is_empty() {
-                        let names = outcome
-                            .legacy_items_changed
-                            .iter()
-                            .filter_map(|id| campaign.legacy_items.get(id))
-                            .map(|item| item.name.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", ");
-                        if !names.is_empty() {
-                            messages.push(
-                                self.data
-                                    .presentation
-                                    .text("legacy_item_transfer_notice")
-                                    .replace("{names}", &names),
-                            );
-                        }
-                    }
-                    for subject in &outcome.anniversary_reminders {
-                        let (name, years, kind) = match subject {
-                            kestrum::state::history::AnniversarySubject::Person(id) => {
-                                let Some(person) = campaign.people.get(id) else {
-                                    continue;
-                                };
-                                (
-                                    person.name.clone(),
-                                    campaign.history.person_last_reminded[id],
-                                    "history_service_anniversary",
-                                )
-                            }
-                            kestrum::state::history::AnniversarySubject::Site(id) => {
-                                let Some(site) = campaign.world.site(*id) else {
-                                    continue;
-                                };
-                                (
-                                    site.name.clone(),
-                                    campaign.history.site_last_reminded[id],
-                                    "history_foundation_anniversary",
-                                )
-                            }
-                        };
-                        messages.push(
-                            self.data
-                                .presentation
-                                .text("history_anniversary_notice")
-                                .replace("{kind}", self.data.presentation.text(kind))
-                                .replace("{name}", &name)
-                                .replace("{years}", &years.to_string()),
-                        );
-                    }
-                }
+                let messages = self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .and_then(Campaign::strategic)
+                    .map(|campaign| {
+                        engine::action_notices(campaign, &self.data, campaign.player, &outcome)
+                    })
+                    .unwrap_or_default();
                 if !messages.is_empty() {
                     self.notice = Some((messages.join(" "), 5.0));
                 }

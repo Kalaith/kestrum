@@ -14,6 +14,7 @@ mod legacy;
 mod lifecycle;
 mod mentorship;
 mod movement;
+mod notices;
 mod person_combat;
 pub(crate) mod progression;
 mod projection;
@@ -25,6 +26,7 @@ pub(crate) mod siege;
 mod succession;
 pub(crate) mod threats;
 mod transfer;
+pub use notices::action_notices;
 
 pub use actions::{
     advance_npc, apply, preview, ActionOutcome, ActionPreview, Actor, Command, RuleError,

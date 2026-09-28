@@ -152,10 +152,14 @@ pub(super) fn person(
         .people
         .get_mut(&person)
         .ok_or(RuleError::UnknownPerson { person })?;
+    let entering_service = matches!(
+        selected.assignment,
+        PersonAssignment::Dependent { .. } | PersonAssignment::Trainee { .. }
+    );
     selected.assignment = PersonAssignment::Formation {
         formation: to_formation,
     };
-    if campaign.families.contains_key(&person) {
+    if entering_service {
         selected.service_start_round = campaign.completed_rounds;
     }
     selected.career.site_role = None;

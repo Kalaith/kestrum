@@ -67,11 +67,25 @@ pub(super) fn career_requirements(
         ),
         (
             Scout,
-            vec![vec![(
-                "requirement_routes",
-                person.evidence.traversed_routes.len(),
-                rules.careers.scout_routes as usize,
-            )]],
+            vec![
+                vec![(
+                    "requirement_routes",
+                    person.evidence.traversed_routes.len(),
+                    rules.careers.scout_routes as usize,
+                )],
+                vec![
+                    (
+                        "requirement_mentorship_scouting",
+                        mentorship(kestrum::data::progression::TrainingDiscipline::Scouting),
+                        rules.careers.mentorship_seasons as usize,
+                    ),
+                    (
+                        "requirement_routes",
+                        person.evidence.traversed_routes.len(),
+                        rules.careers.mentored_scout_routes as usize,
+                    ),
+                ],
+            ],
         ),
         (
             Cavalry,
@@ -104,11 +118,25 @@ pub(super) fn career_requirements(
         ),
         (
             Medic,
-            vec![vec![(
-                "requirement_treatment",
-                count(EvidenceKind::TreatedWounded),
-                rules.careers.treatment_occasions as usize,
-            )]],
+            vec![
+                vec![(
+                    "requirement_treatment",
+                    count(EvidenceKind::TreatedWounded),
+                    rules.careers.treatment_occasions as usize,
+                )],
+                vec![
+                    (
+                        "requirement_mentorship_medicine",
+                        mentorship(kestrum::data::progression::TrainingDiscipline::Medicine),
+                        rules.careers.mentorship_seasons as usize,
+                    ),
+                    (
+                        "requirement_treatment",
+                        count(EvidenceKind::TreatedWounded),
+                        rules.careers.mentored_treatment_occasions as usize,
+                    ),
+                ],
+            ],
         ),
         (
             Officer,

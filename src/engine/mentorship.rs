@@ -14,6 +14,19 @@ pub(crate) use commands::{execute, validate};
 pub use qualification::MentorshipOption;
 pub(crate) use seasons::{reconcile, resolve_season};
 
+/// Check live teaching conditions before recovery, including wounds and separation.
+pub(crate) fn medical_assistant(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    learner: PersonId,
+) -> Option<PersonId> {
+    let link = campaign.mentorships.get(&learner)?;
+    (link.discipline == TrainingDiscipline::Medicine
+        && qualification::contact_reason(campaign, data, learner, link.mentor, link.discipline)
+            .is_none())
+    .then_some(link.mentor)
+}
+
 pub fn mentorship_options(
     campaign: &StrategicCampaign,
     data: &GameData,

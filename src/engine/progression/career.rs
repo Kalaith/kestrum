@@ -108,11 +108,25 @@ pub(super) fn requirements(
                 rules.mentorship_seasons as usize,
             ),
         ],
-        PersonClass::Scout => vec![alternative(
-            "Distinct physical routes",
-            person.evidence.traversed_routes.len(),
-            rules.scout_routes as usize,
-        )],
+        PersonClass::Scout => vec![
+            alternative(
+                "Distinct physical routes",
+                person.evidence.traversed_routes.len(),
+                rules.scout_routes as usize,
+            ),
+            requirement(
+                1,
+                "Scouting mentorship seasons",
+                mentorship(crate::data::progression::TrainingDiscipline::Scouting),
+                rules.mentorship_seasons as usize,
+            ),
+            requirement(
+                1,
+                "Distinct physical routes",
+                person.evidence.traversed_routes.len(),
+                rules.mentored_scout_routes as usize,
+            ),
+        ],
         PersonClass::Cavalry => vec![
             requirement(
                 0,
@@ -139,11 +153,25 @@ pub(super) fn requirements(
                 rules.rider_battles as usize,
             ),
         ],
-        PersonClass::Medic => vec![alternative(
-            "People treated",
-            count(EvidenceKind::TreatedWounded),
-            rules.treatment_occasions as usize,
-        )],
+        PersonClass::Medic => vec![
+            alternative(
+                "People treated",
+                count(EvidenceKind::TreatedWounded),
+                rules.treatment_occasions as usize,
+            ),
+            requirement(
+                1,
+                "Medicine mentorship seasons",
+                mentorship(crate::data::progression::TrainingDiscipline::Medicine),
+                rules.mentorship_seasons as usize,
+            ),
+            requirement(
+                1,
+                "People treated",
+                count(EvidenceKind::TreatedWounded),
+                rules.mentored_treatment_occasions as usize,
+            ),
+        ],
         PersonClass::Officer => {
             let encounters = count(EvidenceKind::MeaningfulEncounter);
             let command =

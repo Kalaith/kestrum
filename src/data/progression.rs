@@ -81,9 +81,11 @@ pub struct CareerRules {
     pub infantry_battles: u32,
     pub archer_battles: u32,
     pub scout_routes: u32,
+    pub mentored_scout_routes: u32,
     pub riding_seasons: u32,
     pub rider_battles: u32,
     pub treatment_occasions: u32,
+    pub mentored_treatment_occasions: u32,
     pub officer_encounters: u32,
     pub officer_command_facts: u32,
     pub mentorship_seasons: u32,
@@ -288,9 +290,11 @@ impl ProgressionRules {
                 && rules.infantry_battles > 0
                 && rules.archer_battles > 0
                 && rules.scout_routes > 0
+                && (1..=rules.scout_routes).contains(&rules.mentored_scout_routes)
                 && rules.riding_seasons > 0
                 && rules.rider_battles > 0
                 && rules.treatment_occasions > 0
+                && (1..=rules.treatment_occasions).contains(&rules.mentored_treatment_occasions)
                 && rules.officer_encounters > 0
                 && rules.officer_command_facts > 0
                 && rules.mentorship_seasons > 0

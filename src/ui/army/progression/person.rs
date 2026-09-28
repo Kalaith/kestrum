@@ -221,7 +221,7 @@ fn class_row(
         && enough_gold;
     let fact_line = requirement_line(ctx, &facts);
     let description = format!(
-        "{} / {price}{} / {} / {fact_line}",
+        "{} / {price}{} / {}",
         class_name(ctx, class),
         ctx.text("gold_short"),
         ctx.text(course_facility_key(rule.facility))
@@ -230,7 +230,14 @@ fn class_row(
     body(
         ctx,
         &line,
-        vec2(x, y + 32.0),
+        vec2(x, y + 17.0),
+        14.0,
+        if met { CREAM } else { MUTED },
+    );
+    body(
+        ctx,
+        &truncate_text_to_width_ex(&fact_line, 340.0, ctx.body_font(), 14.0),
+        vec2(x, y + 36.0),
         14.0,
         if met { CREAM } else { MUTED },
     );

@@ -55,7 +55,7 @@ fn complete_round(
     super::siege::reconcile(campaign, data, outcome)?;
     let supply = recovery::snapshot(campaign);
     let development = super::development::snapshot(campaign, data);
-    let medics = super::evidence::recovery_medics(campaign);
+    let medics = super::evidence::recovery_medics(campaign, data);
     economy::resolve(campaign, data)?;
     super::construction::resolve(campaign, data, &supply, outcome)?;
     super::siege::progress(campaign, data, outcome)?;

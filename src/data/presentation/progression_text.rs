@@ -1,6 +1,8 @@
 //! Player-facing explanations for K13's earned progression.
 
 pub(super) const PROGRESSION_TEXT: &[&str] = &[
+    "requirement_mentorship_scouting",
+    "requirement_mentorship_medicine",
     "life_emerged",
     "life_born",
     "life_adopted",

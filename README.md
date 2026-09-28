@@ -349,6 +349,15 @@ all ten internal site names.
 
 ### K12 — Rival kingdoms, diplomacy and endings
 
+Specialist mentorship supplements practical service: two Medicine lesson seasons
+and one real treatment occasion qualify for the Medic course; two Scouting
+lesson seasons and two distinct physical routes qualify for Scout. Independent
+qualification still needs two treatment occasions or six routes. A Medicine
+pupil assists only while co-located with a fit Medic mentor at an available,
+supplied infirmary, and earns no treatment evidence without actual recovery.
+Career rows keep the course, price and facility above their evidence progress,
+so the player can compare the next useful course without another panel.
+
 Rivals now recruit legal forces, conserve upkeep reserves, build useful works,
 clear known threats, capture territory and respond to danger. Planning uses their
 own observation and dated enemy encounters. Unknown forces do not reveal private

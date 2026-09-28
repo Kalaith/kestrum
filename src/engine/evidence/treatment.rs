@@ -34,8 +34,11 @@ pub(crate) fn record_person_treatment(
     Ok(())
 }
 
-pub(crate) fn recovery_medics(campaign: &StrategicCampaign) -> Vec<(PersonId, FactionId, SiteId)> {
-    campaign
+pub(crate) fn recovery_medics(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+) -> Vec<(PersonId, FactionId, SiteId)> {
+    let mut participants: Vec<_> = campaign
         .people
         .values()
         .filter(|person| person.class == FounderClass::Medic && person.status == PersonStatus::Fit)
@@ -52,7 +55,19 @@ pub(crate) fn recovery_medics(campaign: &StrategicCampaign) -> Vec<(PersonId, Fa
             }?;
             Some((person.id, person.faction, site))
         })
-        .collect()
+        .collect();
+    let assistants: Vec<_> = campaign
+        .mentorships
+        .keys()
+        .filter_map(|learner| {
+            let mentor = crate::engine::mentorship::medical_assistant(campaign, data, *learner)?;
+            let (_, faction, site) = participants.iter().find(|(id, _, _)| *id == mentor)?;
+            (!participants.iter().any(|(id, _, _)| id == learner))
+                .then_some((*learner, *faction, *site))
+        })
+        .collect();
+    participants.extend(assistants);
+    participants
 }
 
 pub(crate) fn record_recovery(

@@ -8,23 +8,19 @@ provisional defaults for unresolved mechanics, clearly labelled for review.
 
 ## Progress checkpoint — 2026-09-28
 
-The [full implementation review](implementation-review.md) found additional
-required follow-ups in delivered packages. Its R01–R13 findings and A01–A04
-acceptance work qualify the delivery summary below. K18 remains In progress;
-the historical Done records do not close those newly identified gaps.
+K01–K18 are **Done under the user's amended testing scope**. The
+[full implementation review](implementation-review.md) maps R01–R13 to their
+fixes. Normal New Campaign creates the 80-major/152-physical production world
+with deterministic 4–8 faction setup; Rosemarch remains the regression fixture.
 
-K01–K17 are complete and committed in order. Normal New Campaign now creates the
-80-major/152-physical production world with deterministic 4–8 faction setup;
-Rosemarch remains the small regression fixture. K18 integrated scenarios,
-long-run retention/replay, measured campaign profiles, native screen review and
-no-argument publishing pass. A production-world campaign reaches victory and
-defeat against production AI and preserves terminal save state. The deployed
-browser route is reachable; its saved-campaign Continue flow redraws correctly
-in the shared 1200×675 canvas at a 1280×720 page viewport, and Full Screen shows
-the whole campaign. K18 remains In progress because exact 1280×720 WebGL-canvas
-and physical-touch acceptance need device review, and the 8-faction NPC phase
-p95 exceeds the provisional review target. See the acceptance ledger and
-[K18 verification](verification/k18-integrated.md).
+On 2026-09-28 the user waived physical-touch testing and ended further testing
+while gameplay and balance may still change. Remaining browser, rendered
+performance and multi-seed balance acceptance is deferred. The serial 4/8-faction
+400-round replay passed; eight-faction phase p95 improved to 114.63 ms. The
+latest full suite failed the existing seed-88 victory deadline at round 120.
+That result is retained, with no further investigation or claim of a full-suite
+pass. Known platform limitations and the final publication result are recorded
+in [K18 verification](verification/k18-integrated.md).
 
 ## How to use this plan
 
@@ -218,5 +214,6 @@ production setup are recorded in [K15 evidence](verification/k15-succession.md),
 records corrective follow-ups to these and earlier deliveries.
 [Acceptance](implementation/acceptance.md#completion-record) owns the per-package
 status table. The current atlas has faction-phase controls, selectable places and
-army rosters. Minimum-browser display and physical-touch review remain open for K18.
+army rosters. K18's remaining browser testing is deferred and physical-touch
+testing is waived under the user's 2026-09-28 scope amendment.
 K10 fixed WASM update caching through the existing publisher option.

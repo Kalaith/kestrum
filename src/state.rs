@@ -215,6 +215,25 @@ impl GameState {
                     | Command::TransferFormation { .. }
                     | Command::TransferPerson { .. }
                     | Command::SplitArmy { .. }
+                    | Command::SetCommander { .. }
+                    | Command::TrainPerson { .. }
+                    | Command::PracticeRiding { .. }
+                    | Command::CancelPersonCourse { .. }
+                    | Command::RecoverPersonAtSite { .. }
+                    | Command::RetirePerson { .. }
+                    | Command::AppointGovernor { .. }
+                    | Command::StartMentorship { .. }
+                    | Command::EndMentorship { .. }
+                    | Command::FormHousehold { .. }
+                    | Command::EndHousehold { .. }
+                    | Command::SetHouseholdChildraising { .. }
+                    | Command::AdoptWard { .. }
+                    | Command::AssignTrainee { .. }
+                    | Command::EnterService { .. }
+                    | Command::InviteApprentice { .. }
+                    | Command::DesignateSuccessor { .. }
+                    | Command::SpecializeFormation { .. }
+                    | Command::CancelFormationCourse { .. }
             );
         let military_order = military_order
             || (self.overlay == Overlay::MoveReview && matches!(&command, Command::Move(_)));

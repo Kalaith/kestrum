@@ -4,7 +4,32 @@
 [Acceptance ledger](implementation/acceptance.md) ·
 [K18 evidence](verification/k18-integrated.md)
 
-## Conclusion
+## Closeout — 2026-09-28
+
+R01–R13 have been implemented. The user then explicitly waived the physical
+touch requirement and ended further testing while the game is still changing.
+K18 is **Done under that amended scope**. A01/A03/A04's remaining testing is
+deferred; this is not full platform acceptance or a claim of settled balance.
+
+| Findings | Delivery | Evidence |
+| --- | --- | --- |
+| R01, R05 | `26b10a8`: observer-safe notices and preserved service dates | [Fix record](verification/k18-review-fixes.md) |
+| R02–R04, R10 | `876de69`: threat approaches, local learners, useful careers and known-rival ties | [Fix record](verification/k18-review-fixes.md) |
+| R06, R07 | `6cce6d6`: paid training discounts and real stationary familiarity | [Fix record](verification/k18-review-fixes.md) |
+| R08 | `fc52569`: dated private life history and own-person feedback | [Fix record](verification/k18-review-fixes.md) |
+| R11 | `2395ebe`: authoritative household reviews; final closeout also permits these commands from the Armies panel | [Fix record](verification/k18-review-fixes.md) |
+| R09, R12 | `7d6598a`: compatible atlas corrections and current teaching | [Fix record](verification/k18-review-fixes.md) |
+| R13 | Cohesive extractions in the affected progression, AI and household modules | [Function audit](verification/k18-review-fixes.md#engineering-contract-r13) |
+
+Planner work in `f854c17` reduced measured eight-faction phase p95 to 114.63 ms
+in a serial 400-round release run. The subsequent full test run failed the
+seed-88 scripted victory deadline at round 120 and stopped before later test
+binaries. That assertion remains intact and its cause remains uninvestigated;
+there is no current full-suite pass. See [performance](verification/k18-performance.md)
+and [K18 closeout](verification/k18-integrated.md) for the exact evidence and
+remaining browser/performance limitations.
+
+## Original review conclusion
 
 Reviewed `96385e4` on `master`, against K01–K18, contracts C01–C07,
 provisional rules P01–P23 and the recorded I01–I20 implementation decisions.
@@ -340,7 +365,11 @@ presentation, and check function lengths as well as file lengths. Avoid unrelate
 restructuring or compressing formatting. Run behavioral and visual checks for the
 affected responsibilities.
 
-## Remaining release acceptance
+## Original release acceptance requirements
+
+Disposition: A02 is waived by the user. Further A01/A03/A04 testing was ended by
+the user and is deferred beyond this K18 closeout. The original requirements
+below remain a useful future checklist; their unexecuted cases are not passes.
 
 | ID | Required work | Evidence needed to close |
 | --- | --- | --- |

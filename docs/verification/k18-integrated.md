@@ -1,16 +1,50 @@
 # K18 — Integrated campaigns and release acceptance
 
-**Status: In progress.** Integrated simulation, long-run continuity, native
-visual review and a production-AI victory pass. Browser/physical-touch
-acceptance remains unverified, and the isolated 8-faction NPC phase p95 exceeds
-the provisional 250 ms review target. K18 is not closed.
+**Status: Done under amended scope — 2026-09-28.** The review's R01–R13 fixes
+are implemented. The user explicitly waived physical-touch testing and ended
+further testing while the game is still changing. Remaining platform, rendered
+performance and balance checks are deferred. This closes the current work
+package without claiming full release acceptance.
+
+## Current closeout
+
+- The [review disposition](../implementation-review.md#closeout--2026-09-28)
+  maps all 13 findings to delivered changes. Detailed regression and native
+  visual evidence is in [the fix record](k18-review-fixes.md).
+- `f854c17` caches observed paths and shares early eligibility checks. Serial
+  release 4/8-faction campaigns reached round 400 and exactly replayed their
+  round-200 save. Eight-faction phase p95 was 114.63 ms; late atomic actions
+  still exceeded one display frame. See [performance](k18-performance.md).
+- Formatting and strict Clippy passed before the final application guard fix.
+  The locked all-target/all-feature suite passed its 400-round replay and source
+  gate, then failed the seed-88 scripted victory test at its round-120 deadline.
+  Later test binaries were not reached. This failure remains unchanged and
+  uninvestigated after the user's stop; the historical victory below no longer
+  establishes a pass on the current AI.
+- Browser work before the stop loaded an earlier saved layout, used the visible
+  keyboard to name a fresh eight-faction campaign, and opened its headquarters,
+  armies, people and household review. Enlarged play reported an actual
+  1280×720 canvas at DPR 1. The host's upper-right Done control overlaps part of
+  the game's Menu; the broad resize, dense-state and display-scale matrix was
+  not completed. The shared host was not changed in this closeout.
+- That browser session found eligible household confirmation blocked by the
+  application's open-panel guard. The final correction admits personnel,
+  career, mentorship, household and succession orders from Armies, retaining
+  engine validation. It was formatted but received no new runtime test after
+  the user's stop.
+- A02 physical touch is [waived](k18-touch.md), with no device or pinch result.
+  Remaining A01/A03/A04 testing is deferred. No measured browser/native frame
+  rate, input latency, steady-state memory or multi-seed balance claim is made.
+- Final no-argument `./publish.ps1` completed successfully: Windows and WebGL
+  release builds, both packages, Preview deployment and Project Roost recording.
+  No further gameplay test is running or planned.
 
 ## Subsequent plan review — 2026-09-28
 
 The [full implementation review](../implementation-review.md) found additional
-implementation and presentation gaps at `96385e4`. Its R01–R13 findings and
-A01–A04 acceptance work remain open. The tests, captures and measurements below
-retain their original scope; they do not establish that these findings are fixed.
+implementation and presentation gaps at `96385e4`. Their current disposition is
+above. The remaining sections preserve the earlier K18 baseline, including its
+then-open checks and old measurements; they do not supersede this closeout.
 
 ## Integrated scenarios
 
@@ -103,7 +137,7 @@ process peaks, not steady-state gameplay memory measurements. GPU counters were
 available. Further memory profiling remains appropriate before calling these
 capture-process peaks representative of a player's session.
 
-## Browser and touch acceptance still open
+## Historical browser and touch acceptance
 
 The no-argument publisher passed: Windows and WebGL release builds packaged,
 the Preview deployment was copied to
@@ -138,7 +172,7 @@ Do not treat pointer or automated checks as physical-touch acceptance. K18
 remains In progress until these checks are completed or explicitly accepted in
 scope; the phase-tail target below also remains open.
 
-## Final validation completed
+## Historical validation before the review fixes
 
 On the actual Kestrum checkout:
 
@@ -154,7 +188,6 @@ All commands ran against the actual Kestrum checkout and shared workspace. An
 earlier concurrent suite replay measured 8-faction NPC phase p95 at 278.7 ms;
 the isolated 277.5 ms p95 above is the controlled comparison for the
 provisional target. The game engine was unchanged since those measurements.
-K18 remains open for exact 1280×720 browser-canvas and physical touch/pinch
-review, and phase-tail tuning. Browser continuation at a 1280×720 page viewport
-and its full-screen path are now verified; they do not substitute for those
-remaining checks.
+At this historical checkpoint K18 remained open for exact 1280×720 browser-canvas,
+physical touch/pinch and phase-tail work. The current closeout above records the
+later fixes, measurements, failing victory test and user-directed end to testing.

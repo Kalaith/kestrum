@@ -210,3 +210,49 @@ at visible bridge symbols. Help text clears its navigation controls. Evidence:
 `ui_help_service[_minimum].png`, `ui_help_lifecycle[_minimum].png`.
 
 Formatting, strict Clippy, Windows release and WebGL release passed. The no-argument publisher deployed this revision to Preview successfully.
+
+## Engineering contract (R13)
+
+The four modules named by R13 now separate course controls, household reviews,
+continuity decisions and training execution. A brace-aware physical-line audit
+of those responsibilities found the following maximum function lengths:
+
+| Module | Maximum function lines |
+| --- | ---: |
+| `engine/progression/commands.rs` | 87 |
+| `engine/ai/progression.rs` | 53 |
+| `engine/ai/progression/continuity.rs` | 48 |
+| `engine/ai/progression/training.rs` | 77 |
+| `ui/army/progression.rs` | 64 |
+| `ui/army/progression/formation.rs` | 92 |
+| `ui/army/progression/person.rs` | 88 |
+| `ui/army/households.rs` | 71 |
+| `ui/army/households/review.rs` | 80 |
+
+The behavioral checks and captures for those extractions are recorded above.
+The complete Rust file-size gate passed in the latest suite. This is a function
+audit of the review's named responsibilities, not a claim that every older
+function elsewhere was restructured.
+
+## Final application routing correction
+
+An ordinary eight-faction WebGL campaign exposed an application guard omission:
+Armies → People → Households → Invite Apprentice showed an eligible review,
+but Confirm returned “Close the open panel and return to the campaign first.”
+The same guard also blocked career, mentorship and lifecycle commands issued
+from the Armies panel.
+
+`GameState::command` now admits those commands from their owning panel, including
+formation courses and succession. The shared engine still validates ownership,
+phase, costs and eligibility; unrelated overlays still block orders and an open
+panel still blocks End Turn/NPC advancement. No simulation rules were changed.
+The user ended testing before this final correction, so no new regression or
+browser rerun is claimed. Formatting was applied and the final no-argument
+publication result is recorded in [K18 closeout](k18-integrated.md).
+
+## Testing scope change
+
+On 2026-09-28 the user waived the physical-touch requirement and asked to end
+further testing because the game may change substantially before balance review.
+References above to a future platform pass describe the plan at the time of each
+fix. That pass is now deferred; existing evidence retains its original scope.

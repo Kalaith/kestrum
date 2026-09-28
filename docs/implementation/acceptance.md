@@ -11,10 +11,11 @@ notification visibility, AI threats/careers/continuity, service dates, training
 focus, peaceful familiarity, generational history, atlas alignment, teaching and
 function-size compliance.
 
-The Done rows below preserve the historical package deliveries. They do not assert
-that these newly identified gaps are fixed. K18 remains In progress for these
-follow-ups as well as minimum-WebGL/touch acceptance and performance. Record each
-fix with regression evidence and a commit before closing the affected coverage row.
+R01–R13 are implemented; the review's closeout maps each to its delivery and
+evidence. K18 is Done under the user's 2026-09-28 scope amendment below: physical
+touch is waived and further testing is deferred. The latest full suite's seed-88
+victory deadline failure remains unresolved. Historical package passes do not
+establish a current full-suite pass or replace the disclosed platform limits.
 
 ## Definition of done for every package
 
@@ -214,6 +215,16 @@ not guarantees. Record peak entity/event counts, rounds tested, native/browser
 timings and save sizes. Keep gameplay state bounded by actual modeled population
 and relationships; narrative caps alone do not prove total memory is bounded.
 
+## K18 scope amendment — 2026-09-28
+
+The user explicitly said “ignore the test touch requirement” and then asked to
+end testing because the game may change substantially before balance review.
+Physical touch is waived for K18; remaining A01/A03/A04 testing is deferred.
+K18 closes with the implementation fixes, existing evidence and disclosed
+limitations. The checklists above are retained for future development, not as
+claims that unexecuted cases passed. No balance values or failing assertions
+were changed to obtain this status.
+
 ## Completion record
 
 Replace Planned only with In progress, Blocked (specific reason), or Done (commit
@@ -240,7 +251,7 @@ acceptance criterion without explicit scope acceptance.
 | K15 | Done | Sparse households, youth service entry, deterministic family progression and qualified succession; nine focused regressions and 160 total tests, strict Clippy, source-size gate, normal/minimum native captures and Windows/WebGL Preview publish pass. Browser interaction, physical touch and minimum-WebGL scaling remain K18 checks; [evidence](../verification/k15-succession.md). |
 | K16 | Done | `Kestrum's heirs carry a sword and its story forward (K16 heirlooms and eras)`; ten focused K16 cases and all 170 locked all-target/all-feature tests pass. Format, check, strict Clippy and the source-size gate pass. Eight inventory/item/deed/filter captures were reviewed at 1920×1080 and 1280×720. No-argument publishing built and deployed Windows/WebGL Preview and Project Roost recorded the publish. Browser interaction, minimum-WebGL campaign scaling and physical touch remain K18 checks; [evidence](../verification/k16-heirlooms.md). |
 | K17 | Done | Authored 80-marker/152-site world, seeded 4–8 faction setup and normal New Game integration; five generation/content regressions and 175 total tests. Formatting, check, strict Clippy, source-size gate, ten normal/minimum setup/keyboard/map captures and Windows/WebGL Preview publishing pass. [Evidence](../verification/k17-production.md). Browser end-to-end production play and minimum-WebGL scaling remain K18 checks. |
-| K18 | In progress | Integrated scenarios, 200/400-round 4/8-faction replay/retention, production-AI defeat and round-60 victory (seed 88; 406 NPC actions; 131 player orders; real player-v-rival battle; exact terminal save reload), native fullscreen/720p review, static checks and no-argument Preview publish pass. The reachable Preview route is `http://127.0.0.1/games/kestrum/`: title → New Game → save → Main Menu → Continue completed at a 1280×720 browser page viewport, and the upper-left shrink regression did not recur. The shared page shell constrained the canvas to 1200×675; its Full Screen path showed the whole map and End Turn at 1920×1080. Exact 1280×720 WebGL-canvas review and touch-only navigation remain open. Isolated 8-faction NPC phase: 64.1 ms median, 277.5 ms p95, 452.7 ms max; p95 exceeds the provisional 250 ms review target, and two planner tuning trials were reverted after worse p95 results. Physical-touch/pinch review needs hardware. See [K18 evidence](../verification/k18-integrated.md). |
+| K18 | Done (amended scope) | R01–R13 implemented; [review disposition](../implementation-review.md) and [fix evidence](../verification/k18-review-fixes.md). Four/eight-faction 400-round replay passes; eight-faction phase p95 is 114.63 ms. The latest full suite fails the seed-88 scripted victory deadline at round 120 and stops there; that result remains unresolved. On 2026-09-28 the user waived physical-touch testing and ended further testing while gameplay is still changing. Remaining minimum-browser, rendered performance and multi-seed balance checks are deferred. The final Armies-panel personnel guard correction receives no new runtime test after that stop. [Current closeout and publication](../verification/k18-integrated.md) records the host Menu/Done overlap and all evidence limits. |
 
 ## Plan review priorities
 

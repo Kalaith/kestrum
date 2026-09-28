@@ -4,10 +4,10 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
-The [2026-09-28 implementation review](docs/implementation-review.md) checks all
-K01–K18 packages and records 13 implementation/presentation follow-ups plus four
-release-acceptance work areas. Earlier package delivery records remain historical
-evidence; the newly identified gaps must be resolved before K18 can close.
+K01–K18 are complete under the user's amended testing scope. The
+[2026-09-28 implementation review](docs/implementation-review.md) maps all 13
+findings to their fixes. Physical-touch testing is waived; further platform,
+performance and balance testing is deferred at the user's request.
 
 The production campaign is implemented in Rust, Macroquad, and Macroquad Toolkit.
 The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
@@ -16,18 +16,15 @@ name, botanical emblem, 4–8 factions and displayed seed. A confirmed setup cre
 the authored 80-major / 152-physical-site campaign over the illustrated atlas.
 Rosemarch remains a separate small scenario for regression tests and captures.
 
-K13–K17 are complete. K18 integrates production campaigns, long-run continuity,
-retention, save reload and native screen review. A public-observation player
-policy now wins a real 4-faction production campaign at round 60, including
-actual AI turns, player-vs-rival combat, and a terminal save/reload check. The
-published browser route is reachable at `http://127.0.0.1/games/kestrum/`.
-At a 1280×720 page viewport, the saved-campaign Continue flow redraws across
-the full 1200×675 host canvas without the reported upper-left shrink; Full
-Screen expands it to 1920×1080. K18 remains in progress because the exact
-1280×720 WebGL canvas and physical-touch review still need device acceptance,
-and the isolated 8-faction phase-timing tail remains above its provisional
-target. See [K18 verification](docs/verification/k18-integrated.md) for results
-and remaining acceptance work.
+K18 integrates production campaigns, long-run continuity, retention, save reload
+and native screen review. Four/eight-faction campaigns replay through round 400;
+the optimized eight-faction phase p95 measures 114.63 ms. Windows and WebGL
+release builds are published to Preview at `http://127.0.0.1/games/kestrum/`.
+The latest full suite failed the scripted seed-88 victory deadline at round 120;
+that result remains unresolved. [K18 verification](docs/verification/k18-integrated.md)
+records the completed work, final application routing fix, known host overlap
+and deferred checks. K18 closure does not claim settled balance or full platform
+acceptance.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -491,17 +488,19 @@ production-world battle and defeat against actual AI, and 200/400-round
 fullscreen and 1280 × 720 found and fixed a wrapped-text overlap in the dense
 army roster.
 
-The locked all-features suite, formatting, strict Clippy, all-target check, and
-no-argument Windows/WebGL Preview publish pass. K18 remains **In progress**:
-the published Preview route is reachable and the saved-campaign Continue flow
-passes in the WebGL page. At a 1280×720 page viewport the shared shell sizes the
-canvas to 1200×675 under its header; the reported upper-left campaign shrink was
-not reproduced, and Full Screen showed the full map and End Turn control at
-1920×1080. The exact 1280×720 WebGL canvas and touch-only navigation still need
-device review. Physical-touch hardware is unavailable, and isolated 8-faction
-NPC phase p95 is 277.5 ms against the provisional 250 ms review target.
-[K18 verification](docs/verification/k18-integrated.md) records the evidence
-and open checks.
+The review fixes add private notifications, useful AI training/threat behavior,
+preserved service dates, paid training discounts, stationary familiarity, dated
+life history, clear household reviews, atlas corrections and current teaching.
+The named oversized responsibilities were split into cohesive functions. A
+final application guard fix allows personnel orders from the Armies panel.
+
+K18 is **Done under amended scope**: on 2026-09-28 the user waived physical touch
+and ended further testing while the game may still change. Formatting and prior
+strict Clippy pass; the final Windows/WebGL release build and no-argument Preview
+publish pass. The latest full suite stops at the existing seed-88 victory
+deadline failure. No runtime rerun followed the final panel guard fix.
+[K18 verification](docs/verification/k18-integrated.md) preserves the precise
+evidence, performance gains and deferred platform/balance checks.
 
 ## Development
 

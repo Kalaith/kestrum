@@ -16,6 +16,7 @@ pub(super) fn record(
     campaign: &mut StrategicCampaign,
     data: &GameData,
     facts: &[DomainFact],
+    round_completed: bool,
 ) -> Result<(), RuleError> {
     for fact in facts {
         match &fact.kind {
@@ -73,6 +74,9 @@ pub(super) fn record(
             }
             _ => continue,
         }
+    }
+    if round_completed {
+        stationary_service(campaign, data);
     }
     prune(campaign, data.progression.relationships_per_person);
     Ok(())
@@ -195,6 +199,51 @@ fn prune(campaign: &mut StrategicCampaign, maximum: usize) {
             }
             if let Some(person) = campaign.people.get_mut(&second) {
                 person.career.relationships.remove(&first);
+            }
+        }
+    }
+}
+
+/// Boundary contact uses the season just completed, matching movement and combat
+/// receipts so three kinds of contact can still credit only one shared season.
+fn stationary_service(campaign: &mut StrategicCampaign, data: &GameData) {
+    use crate::state::people::{PersonAssignment, PersonStatus};
+    let Some(season) = campaign.completed_rounds.checked_sub(1) else {
+        return;
+    };
+    let mut sites = BTreeMap::new();
+    for person in campaign.people.values() {
+        if person.status != PersonStatus::Fit
+            || person.career.retired
+            || person.age_years(season) < data.households.service_minimum_age_years
+            || person.service_start_round > season
+            || !matches!(
+                person.assignment,
+                PersonAssignment::Formation { .. } | PersonAssignment::Site { .. }
+            )
+        {
+            continue;
+        }
+        let Some(site) = crate::engine::person_site(campaign, person.id) else {
+            continue;
+        };
+        if campaign
+            .world
+            .site(site)
+            .is_none_or(|place| place.controller != Some(person.faction))
+            || campaign.sieges.contains_key(&site)
+        {
+            continue;
+        }
+        sites
+            .entry((person.faction, site))
+            .or_insert_with(Vec::new)
+            .push(person.id);
+    }
+    for group in sites.values() {
+        for (index, first) in group.iter().enumerate() {
+            for second in group.iter().skip(index + 1) {
+                update_shared(campaign, *first, *second, season);
             }
         }
     }

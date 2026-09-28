@@ -23,92 +23,17 @@ pub(super) fn validate(
 ) -> Result<(), RuleError> {
     match command {
         Command::SetCommander { army, person } => {
-            let entry = campaign
-                .armies
-                .get(army)
-                .ok_or(RuleError::UnknownArmy { army: *army })?;
-            if entry.faction != owner {
-                return Err(RuleError::ArmyNotOwned { army: *army });
-            }
-            if let Some(person) = person {
-                let candidate = campaign
-                    .people
-                    .get(person)
-                    .ok_or(RuleError::UnknownPerson { person: *person })?;
-                if candidate.faction != owner
-                    || candidate.career.retired
-                    || !candidate.is_fit_for_field(
-                        campaign.completed_rounds,
-                        data.rules.leadership.field_min_age_years,
-                    )
-                    || !matches!(candidate.assignment, PersonAssignment::Formation { formation } if entry.formation_ids().any(|id| id == formation))
-                {
-                    return Err(RuleError::Progression(
-                        "Choose a fit adult attached to this army.".into(),
-                    ));
-                }
-            }
+            validate_commander(campaign, data, owner, army, person)?
         }
+
         Command::TrainPerson {
             person,
             class,
             site,
-        } => {
-            if *class == PersonClass::Recruit {
-                return Err(RuleError::Progression(
-                    "Recruit is the starting class, not a course.".into(),
-                ));
-            }
-            let entry = campaign
-                .people
-                .get(person)
-                .ok_or(RuleError::UnknownPerson { person: *person })?;
-            if entry.faction != owner {
-                return Err(RuleError::PersonNotOwned { person: *person });
-            }
-            let option = career::option(campaign, data, entry, *class);
-            if !option.eligible {
-                return Err(RuleError::Progression(format!(
-                    "{} career prerequisites are not met.",
-                    class_name(*class)
-                )));
-            }
-            if entry.class == *class || entry.career.course.is_some() {
-                return Err(RuleError::Progression(
-                    "This person already has that career or an active course.".into(),
-                ));
-            }
-            validate_person_site(
-                campaign,
-                owner,
-                *person,
-                *site,
-                option.course.facility,
-                option.course.requires_horse_access,
-            )?;
-            check_gold(campaign, owner, option.course.gold_cost)?;
-        }
-        Command::PracticeRiding { person, site } => {
-            let entry = campaign
-                .people
-                .get(person)
-                .ok_or(RuleError::UnknownPerson { person: *person })?;
-            if entry.faction != owner {
-                return Err(RuleError::PersonNotOwned { person: *person });
-            }
-            if !entry.is_alive()
-                || entry.career.retired
-                || entry.status != PersonStatus::Fit
-                || entry.age_years(campaign.completed_rounds) < 17
-                || entry.career.course.is_some()
-                || matches!(entry.assignment, PersonAssignment::Dead)
-            {
-                return Err(RuleError::Progression(
-                    "Riding practice needs a fit, unretired adult with no active course.".into(),
-                ));
-            }
-            validate_person_site(campaign, owner, *person, *site, Facility::Stable, true)?;
-        }
+        } => validate_class(campaign, data, owner, person, class, site)?,
+
+        Command::PracticeRiding { person, site } => validate_riding(campaign, owner, person, site)?,
+
         Command::CancelPersonCourse { person } => {
             let entry = campaign
                 .people
@@ -127,50 +52,8 @@ pub(super) fn validate(
             formation,
             specialization: kind,
             site,
-        } => {
-            let entry = campaign
-                .formations
-                .get(formation)
-                .ok_or(RuleError::UnknownFormation {
-                    formation: *formation,
-                })?;
-            if entry.faction != owner {
-                return Err(RuleError::FormationNotOwned {
-                    formation: *formation,
-                });
-            }
-            let option = specialization::specialization_options(campaign, data, *formation)?
-                .into_iter()
-                .find(|option| option.specialization == *kind)
-                .ok_or_else(|| {
-                    RuleError::Progression("That specialization is unavailable.".into())
-                })?;
-            if !option.eligible {
-                return Err(RuleError::Progression(
-                    "This formation does not meet the specialization requirements.".into(),
-                ));
-            }
-            let army = campaign
-                .armies
-                .values()
-                .find(|army| army.formation_ids().any(|id| id == *formation))
-                .ok_or(RuleError::UnknownFormation {
-                    formation: *formation,
-                })?;
-            if army.site != *site
-                || !specialization::course_site(campaign, owner, *site, Facility::TrainingGround)
-            {
-                return Err(RuleError::Progression("Specialization needs this formation at its supplied, unbesieged Training Ground.".into()));
-            }
-            if movement::formation_remaining(campaign, data, *formation)?
-                < entry.movement_allowance(data)
-            {
-                return Err(RuleError::Progression(
-                    "A formation that has moved this season cannot begin training.".into(),
-                ));
-            }
-            check_gold(campaign, owner, option.gold_cost)?;
-        }
+        } => validate_specialization(campaign, data, owner, formation, kind, site)?,
+
         Command::CancelFormationCourse { formation } => {
             let entry = campaign
                 .formations
@@ -212,20 +95,8 @@ pub(super) fn execute(
             person,
             class,
             site,
-        } => {
-            let course = &data.progression.careers.courses[class];
-            charge(campaign, owner, course.gold_cost)?;
-            campaign
-                .people
-                .get_mut(person)
-                .expect("validated person")
-                .career
-                .course = Some(PersonCourse::Class {
-                target: *class,
-                site: *site,
-                steps_completed: 0,
-            });
-        }
+        } => start_class(campaign, data, owner, person, class, site)?,
+
         Command::PracticeRiding { person, site } => {
             campaign
                 .people
@@ -246,14 +117,7 @@ pub(super) fn execute(
                 .course
                 .take()
                 .expect("validated course");
-            let refund = match course {
-                PersonCourse::Class {
-                    target,
-                    steps_completed: 0,
-                    ..
-                } => data.progression.careers.courses[&target].gold_cost,
-                _ => 0,
-            };
+            let refund = super::pricing::person_refund(&course);
             refund_gold(campaign, owner, refund)?;
         }
         Command::SpecializeFormation {
@@ -262,13 +126,15 @@ pub(super) fn execute(
             site,
         } => {
             let rule = &data.progression.specializations[kind];
-            charge(campaign, owner, rule.gold_cost)?;
+            let paid_gold = super::pricing::local_cost(campaign, data, *site, rule.gold_cost);
+            charge(campaign, owner, paid_gold)?;
             campaign
                 .formations
                 .get_mut(formation)
                 .expect("validated formation")
                 .service
                 .course = Some(FormationCourse {
+                paid_gold,
                 target: *kind,
                 site: *site,
                 steps_completed: 0,
@@ -284,7 +150,7 @@ pub(super) fn execute(
                 .take()
                 .expect("validated course");
             let refund = if course.steps_completed == 0 {
-                data.progression.specializations[&course.target].gold_cost
+                course.paid_gold
             } else {
                 0
             };
@@ -413,4 +279,193 @@ fn facility_name(facility: Facility) -> &'static str {
         Facility::Workshop => "Workshop",
         Facility::Temple => "Temple",
     }
+}
+
+fn validate_commander(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: crate::data::world::FactionId,
+    army: &crate::state::military::ArmyId,
+    person: &Option<PersonId>,
+) -> Result<(), RuleError> {
+    let entry = campaign
+        .armies
+        .get(army)
+        .ok_or(RuleError::UnknownArmy { army: *army })?;
+    if entry.faction != owner {
+        return Err(RuleError::ArmyNotOwned { army: *army });
+    }
+    if let Some(person) = person {
+        let candidate = campaign
+            .people
+            .get(person)
+            .ok_or(RuleError::UnknownPerson { person: *person })?;
+        if candidate.faction != owner
+            || candidate.career.retired
+            || !candidate.is_fit_for_field(
+                campaign.completed_rounds,
+                data.rules.leadership.field_min_age_years,
+            )
+            || !matches!(candidate.assignment, PersonAssignment::Formation { formation } if entry.formation_ids().any(|id| id == formation))
+        {
+            return Err(RuleError::Progression(
+                "Choose a fit adult attached to this army.".into(),
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_class(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: crate::data::world::FactionId,
+    person: &PersonId,
+    class: &PersonClass,
+    site: &SiteId,
+) -> Result<(), RuleError> {
+    if *class == PersonClass::Recruit {
+        return Err(RuleError::Progression(
+            "Recruit is the starting class, not a course.".into(),
+        ));
+    }
+    let entry = campaign
+        .people
+        .get(person)
+        .ok_or(RuleError::UnknownPerson { person: *person })?;
+    if entry.faction != owner {
+        return Err(RuleError::PersonNotOwned { person: *person });
+    }
+    let option = career::option(campaign, data, entry, *class);
+    if !option.eligible {
+        return Err(RuleError::Progression(format!(
+            "{} career prerequisites are not met.",
+            class_name(*class)
+        )));
+    }
+    if entry.class == *class || entry.career.course.is_some() {
+        return Err(RuleError::Progression(
+            "This person already has that career or an active course.".into(),
+        ));
+    }
+    validate_person_site(
+        campaign,
+        owner,
+        *person,
+        *site,
+        option.course.facility,
+        option.course.requires_horse_access,
+    )?;
+    check_gold(campaign, owner, option.course.gold_cost)?;
+
+    Ok(())
+}
+
+fn validate_riding(
+    campaign: &StrategicCampaign,
+    owner: crate::data::world::FactionId,
+    person: &PersonId,
+    site: &SiteId,
+) -> Result<(), RuleError> {
+    let entry = campaign
+        .people
+        .get(person)
+        .ok_or(RuleError::UnknownPerson { person: *person })?;
+    if entry.faction != owner {
+        return Err(RuleError::PersonNotOwned { person: *person });
+    }
+    if !entry.is_alive()
+        || entry.career.retired
+        || entry.status != PersonStatus::Fit
+        || entry.age_years(campaign.completed_rounds) < 17
+        || entry.career.course.is_some()
+        || matches!(entry.assignment, PersonAssignment::Dead)
+    {
+        return Err(RuleError::Progression(
+            "Riding practice needs a fit, unretired adult with no active course.".into(),
+        ));
+    }
+    validate_person_site(campaign, owner, *person, *site, Facility::Stable, true)?;
+
+    Ok(())
+}
+
+fn validate_specialization(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: crate::data::world::FactionId,
+    formation: &crate::state::military::FormationId,
+    kind: &crate::data::progression::FormationSpecialization,
+    site: &SiteId,
+) -> Result<(), RuleError> {
+    let entry = campaign
+        .formations
+        .get(formation)
+        .ok_or(RuleError::UnknownFormation {
+            formation: *formation,
+        })?;
+    if entry.faction != owner {
+        return Err(RuleError::FormationNotOwned {
+            formation: *formation,
+        });
+    }
+    let option = specialization::specialization_options(campaign, data, *formation)?
+        .into_iter()
+        .find(|option| option.specialization == *kind)
+        .ok_or_else(|| RuleError::Progression("That specialization is unavailable.".into()))?;
+    if !option.eligible {
+        return Err(RuleError::Progression(
+            "This formation does not meet the specialization requirements.".into(),
+        ));
+    }
+    let army = campaign
+        .armies
+        .values()
+        .find(|army| army.formation_ids().any(|id| id == *formation))
+        .ok_or(RuleError::UnknownFormation {
+            formation: *formation,
+        })?;
+    if army.site != *site
+        || !specialization::course_site(campaign, owner, *site, Facility::TrainingGround)
+    {
+        return Err(RuleError::Progression(
+            "Specialization needs this formation at its supplied, unbesieged Training Ground."
+                .into(),
+        ));
+    }
+    if movement::formation_remaining(campaign, data, *formation)? < entry.movement_allowance(data) {
+        return Err(RuleError::Progression(
+            "A formation that has moved this season cannot begin training.".into(),
+        ));
+    }
+    check_gold(campaign, owner, option.gold_cost)?;
+
+    Ok(())
+}
+
+fn start_class(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    owner: crate::data::world::FactionId,
+    person: &PersonId,
+    class: &PersonClass,
+    site: &SiteId,
+) -> Result<(), RuleError> {
+    let course = &data.progression.careers.courses[class];
+    let paid_gold = super::pricing::local_cost(campaign, data, *site, course.gold_cost);
+    charge(campaign, owner, paid_gold)?;
+    campaign
+        .people
+        .get_mut(person)
+        .expect("validated person")
+        .career
+        .course = Some(PersonCourse::Class {
+        paid_gold,
+        target: *class,
+        site: *site,
+        steps_completed: 0,
+    });
+
+    Ok(())
 }

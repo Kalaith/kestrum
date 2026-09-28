@@ -4,7 +4,10 @@ mod career;
 mod commands;
 mod courses;
 mod emergence;
+mod pricing;
 mod relationships;
+pub use pricing::course_gold_cost;
+pub(crate) use pricing::refund_departures;
 mod specialization;
 
 use crate::{
@@ -41,7 +44,7 @@ pub(super) fn resolve(
     round_completed: bool,
 ) -> Result<(), RuleError> {
     emergence::update_tracked(campaign, data);
-    relationships::record(campaign, data, facts)?;
+    relationships::record(campaign, data, facts, round_completed)?;
     courses::advance(campaign, data, facts, round_completed)?;
     if round_completed {
         emergence::advance(campaign, data)?;

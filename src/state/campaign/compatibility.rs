@@ -3,6 +3,7 @@
 use super::StrategicCampaign;
 use serde::de::Error as _;
 mod construction;
+mod course_payments;
 mod development;
 mod evidence;
 mod households;
@@ -21,6 +22,7 @@ impl StrategicCampaign {
         siege::initialize(&mut value)?;
         development::initialize(&mut value)?;
         progression::initialize(&mut value)?;
+        course_payments::initialize(&mut value)?;
         households::initialize(&mut value)?;
         let legacy_migration = legacy::initialize(&mut value)?;
         let earlier_diplomacy = value.get("diplomacy").is_none() && value.get("ai").is_none();

@@ -253,9 +253,11 @@ impl StrategicCampaign {
                 PersonCourse::Class {
                     target,
                     site,
+                    paid_gold,
                     steps_completed,
                 } => {
-                    *target != PersonClass::Recruit
+                    *paid_gold >= 0
+                        && *target != PersonClass::Recruit
                         && data.progression.careers.courses.contains_key(target)
                         && *steps_completed < data.progression.careers.course_steps
                         && self.world.site(*site).is_some()

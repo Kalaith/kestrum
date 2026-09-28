@@ -338,6 +338,7 @@ fn birthdays_roll_once_in_person_id_order_and_death_releases_every_duty() {
         .discipline_service_seasons
         .insert(kestrum::data::progression::TrainingDiscipline::Command, 4);
     first.career.course = Some(PersonCourse::Class {
+        paid_gold: 20,
         target: PersonClass::Archer,
         site: SiteId(1),
         steps_completed: 0,

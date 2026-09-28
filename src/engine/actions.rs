@@ -247,6 +247,7 @@ fn finish(
         candidate.consumed_sequence = candidate.accepted_sequence;
         candidate.acted.clear();
     }
+    super::progression::refund_departures(candidate, before)?;
     super::history::record_facts(candidate, before, &outcome.facts)?;
     outcome.legacy_items_changed =
         super::history::record_legacy_custody_changes(candidate, before)?

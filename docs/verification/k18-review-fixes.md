@@ -60,3 +60,47 @@ these are not a substitute for ordinary multi-seed balance acceptance.
 Strict all-target/all-feature Clippy and formatting passed.
 
 The no-argument Windows/WebGL Preview publication passed for this AI group.
+
+## Local training and peaceful familiarity — R06 / R07
+
+Troop Training focus discounts the local course total by 25%, rounded upward.
+Person and formation previews, command checks, AI affordability and screen
+prices use the same calculation. Every new course stores its actual payment.
+Unstarted cancellation, retirement, death and loss of the training site refund
+that receipt; started courses refund zero. Focus changes and reloads cannot
+reprice a receipt. Old saves without receipts migrate using the frozen original
+class/specialization prices in `legacy_course_prices.json`; no past discount
+is invented. Courses still advance once at an eligible seasonal boundary.
+
+At each boundary, fit adults in active site or formation service at the same
+owned, unbesieged physical site gain one shared-service season. This includes
+stationary garrisons, governors and active adult household members. Dependents,
+trainees, underage people, displaced/wounded people and retirees do not qualify.
+Different internal sites do not share this credit. The stamp names the season
+just completed, so movement, battle and stationary contact cannot count that
+season more than once. Symmetric relationship caps still apply; familiarity
+never grants battle evidence.
+
+The career screen shows local prices before the longer prerequisite summary.
+Course and specialization rendering is divided into identity/status/options
+helpers. The current decision remains which local course to begin or cancel;
+prices and progress sit beside those controls, with full biography deferred to
+history. Normal and minimum layouts retain the existing two-column class list.
+
+Validation: 56 focused cases passed across `training_focus` (6),
+`stationary_familiarity` (5), AI review (5), progression (9), lifecycle (6),
+mentorship (8), succession (9), persistence (7) and the source-size gate (1).
+The new cases exercise actual charges, exact affordability, upward rounding,
+legacy receipt migration, reload/focus changes, started cancellation, death,
+retirement and captured-site cleanup. Four real stationary turns followed by
+Form Household pass across repeated reloads; exclusions, movement deduplication
+and bounded symmetric relationships also pass. Existing battle tests cover
+battle/stationary deduplication.
+
+Strict all-target/all-feature Clippy and formatting pass. The six replacement
+career, active-course and specialization captures were inspected at actual
+1920x1080 fullscreen and 1280x720; local prices remain visible and status text
+stays clear of Cancel. The shared hidden capture processes exited. Native
+captures verify composition; browser and physical-touch interaction remain in
+the final platform pass. The no-argument Windows/WebGL Preview publication
+passed on the final code, including Project Roost bookkeeping.

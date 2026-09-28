@@ -61,6 +61,15 @@ impl Game {
                 }
             }
 
+            if matches!(
+                scene.trim_end_matches("_minimum"),
+                "career" | "career_training" | "specialization"
+            ) {
+                campaign.world.focus.insert(
+                    SiteId(1),
+                    kestrum::state::construction::Focus::TroopTraining,
+                );
+            }
             let person = campaign.people.get_mut(&PersonId(1)).expect("founder");
             person.name = "Aveline Rose".into();
             person.class = PersonClass::Recruit;
@@ -114,6 +123,7 @@ impl Game {
             });
             person.career.course = (scene.trim_end_matches("_minimum") == "career_training")
                 .then_some(PersonCourse::Class {
+                    paid_gold: 20,
                     target: PersonClass::Archer,
                     site: SiteId(1),
                     steps_completed: 1,
@@ -298,6 +308,7 @@ impl Game {
                 .map(|route| route.id)
                 .collect();
             formation.service.course = Some(FormationCourse {
+                paid_gold: 30,
                 target: FormationSpecialization::ShieldGuard,
                 site: SiteId(1),
                 steps_completed: 1,

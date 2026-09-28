@@ -78,6 +78,7 @@ pub enum PersonCourse {
     Class {
         target: PersonClass,
         site: SiteId,
+        paid_gold: i64,
         steps_completed: u32,
     },
     RidingPractice {

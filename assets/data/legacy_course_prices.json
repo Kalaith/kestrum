@@ -1,0 +1,4 @@
+{
+  "classes": { "infantry": 20, "archer": 20, "scout": 20, "cavalry": 40, "medic": 20, "officer": 50 },
+  "formations": { "shield_guard": 30, "pikemen": 30, "light_cavalry": 30 }
+}

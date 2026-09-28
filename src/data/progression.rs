@@ -75,6 +75,7 @@ pub enum EpithetFact {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CareerRules {
+    pub training_focus_discount_percent: u32,
     pub course_steps: u32,
     pub courses: BTreeMap<PersonClass, CareerCourseRule>,
     pub infantry_battles: u32,
@@ -266,6 +267,12 @@ impl ProgressionRules {
     }
 
     fn validate_careers(&self) -> Result<(), String> {
+        require(
+            "progression.json",
+            "careers.training_focus_discount_percent",
+            self.careers.training_focus_discount_percent <= 100,
+            "must be at most 100",
+        )?;
         use PersonClass::*;
         let rules = &self.careers;
         let expected = [Infantry, Archer, Scout, Cavalry, Medic, Officer];

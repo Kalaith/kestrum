@@ -391,6 +391,11 @@ eligible seasons; riding practice supplies riding evidence only. A fit adult att
 to an army can be appointed as commander. Shield Guard, Pikemen and Light Cavalry
 convert an existing formation while preserving its identity, experience and capacity.
 Rivals use the same evidence options and validated course/appointment commands.
+Troop Training focus reduces local class and specialization prices by 25%,
+rounding the total up. The course retains its payment for an exact unstarted
+refund even after focus changes. Peaceful adults serving at the same friendly
+site build the seasonal familiarity needed to form a household.
+
 
 [K13 verification](docs/verification/k13-careers.md) records nine progression cases,
 136 passing tests, strict Clippy, formatting, the source-size gate, normal/minimum

@@ -142,6 +142,7 @@ pub struct FormationService {
 pub struct FormationCourse {
     pub target: FormationSpecialization,
     pub site: SiteId,
+    pub paid_gold: i64,
     pub steps_completed: u32,
 }
 

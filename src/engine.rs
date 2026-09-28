@@ -27,6 +27,7 @@ mod succession;
 pub(crate) mod threats;
 mod transfer;
 pub use notices::action_notices;
+pub use progression::course_gold_cost;
 
 pub use actions::{
     advance_npc, apply, preview, ActionOutcome, ActionPreview, Actor, Command, RuleError,

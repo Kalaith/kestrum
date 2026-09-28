@@ -189,7 +189,13 @@ pub(super) fn option(
         class,
         eligible: base_valid && path_satisfied(&requirements),
         requirements,
-        course: view(course),
+        course: CareerCourseRuleView {
+            gold_cost: crate::engine::person_site(campaign, person.id)
+                .map_or(course.gold_cost, |site| {
+                    super::pricing::local_cost(campaign, data, site, course.gold_cost)
+                }),
+            ..view(course)
+        },
     }
 }
 

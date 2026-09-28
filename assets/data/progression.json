@@ -38,6 +38,7 @@
     ]
   },
   "careers": {
+    "training_focus_discount_percent": 25,
     "course_steps": 2,
     "courses": {
       "infantry": {"gold_cost": 20, "facility": "training_ground", "requires_horse_access": false},

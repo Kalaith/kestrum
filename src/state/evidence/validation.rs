@@ -27,6 +27,7 @@ impl StrategicCampaign {
                         rule.sources.contains(&formation.kind)
                             && course.steps_completed < rule.course_steps
                     })
+                    && course.paid_gold >= 0
                     && service.specialization.is_none()
                     && self.world.site(course.site).is_some();
                 if !valid {

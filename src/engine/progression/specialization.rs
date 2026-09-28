@@ -87,7 +87,13 @@ pub fn specialization_options(
                         .is_none_or(|(actual, expected)| actual >= expected),
                 current,
                 required,
-                gold_cost: rule.gold_cost,
+                gold_cost: campaign
+                    .armies
+                    .values()
+                    .find(|army| army.formation_ids().any(|id| id == formation.id))
+                    .map_or(rule.gold_cost, |army| {
+                        super::pricing::local_cost(campaign, data, army.site, rule.gold_cost)
+                    }),
                 secondary_current,
                 secondary_required,
             }

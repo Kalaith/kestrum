@@ -340,6 +340,15 @@ Settlement size, fortification, damage, ruins, roads, and supply breaks should b
 
 ## First-use teaching flow
 
+The current decision is one introductory action on the existing screen. Keep the
+atlas or army roster dominant: a temporary guide occupies the calendar/title
+band, leaving costs, requirements and ordinary action controls available. Defer
+the full reference pages to Help. Use at least 48-pixel Close and Show HQ targets;
+closing pauses guidance without claiming completion, and Help resumes it.
+Persist completed actions with each campaign. New campaigns start the guide;
+older saves opt in through Help. Credit successful movement and turn commands,
+and actual visits to the roster, region, career, household review and Records.
+
 Contextual Help uses the visible controls and the selected campaign's names:
 
 1. Tap your headquarters, then Armies to inspect its six-slot roster.

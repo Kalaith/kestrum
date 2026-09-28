@@ -322,7 +322,12 @@ pub fn is_anchor(expression: &AnchorExpression, target: SiteId) -> bool {
 
 pub fn navigation(ctx: &Context<'_>) -> Option<UiAction> {
     if let MapScope::Region(id) = ctx.navigation.scope() {
-        if let Some(marker) = ctx.campaign_view?.world.marker(id) {
+        if let Some(marker) = ctx
+            .campaign_view?
+            .world
+            .marker(id)
+            .filter(|_| super::tutorial_bounds(ctx.state).is_none())
+        {
             let label = truncate_text_to_width_ex(
                 &format!("/ {}", marker.name),
                 265.0,

@@ -9,6 +9,7 @@ use kestrum::{
 impl Game {
     pub(super) fn map_controls_block(&self, point: Vec2) -> bool {
         if !kestrum::navigation::MAP_RECT.contains(point)
+            || ui::tutorial_bounds(&self.state).is_some_and(|rect| rect.contains(point))
             || ((self.error.is_some() || self.notice.is_some())
                 && !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery)
                 && ui::FEEDBACK.contains(point))

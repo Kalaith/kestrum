@@ -53,6 +53,27 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     if legacy {
         return None;
     }
+    if let Some(campaign) = ctx
+        .state
+        .campaign
+        .as_ref()
+        .and_then(kestrum::state::Campaign::strategic)
+    {
+        let key = if campaign.tutorial.is_complete() {
+            "tutorial_restart"
+        } else {
+            "tutorial_resume"
+        };
+        if button(
+            ctx,
+            Rect::new(378.0, 40.0, 524.0, 48.0),
+            &ctx.text(key),
+            true,
+            true,
+        ) {
+            return Some(UiAction::ReopenTutorial);
+        }
+    }
     if button(
         ctx,
         Rect::new(390.0, 548.0, 124.0, 48.0),

@@ -9,6 +9,9 @@ impl Game {
         if let Err(error) = self.state.new_game(&self.data) {
             self.error = Some(error);
         }
+        if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+            campaign.tutorial.dismiss();
+        }
     }
 
     pub(super) fn start_game(&mut self) {
@@ -17,6 +20,9 @@ impl Game {
                 &self.data,
                 &self.setup.campaign_setup(),
             )?;
+            if self.capture {
+                campaign.tutorial.dismiss();
+            }
             if !self.capture {
                 let library = self
                     .library

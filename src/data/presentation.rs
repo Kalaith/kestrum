@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 mod life_text;
 mod progression_text;
 mod required_text;
+mod tutorial_text;
 use progression_text::PROGRESSION_TEXT;
 use required_text::REQUIRED_TEXT;
 
@@ -43,7 +44,11 @@ impl PresentationData {
                 "Kestrum requires its own save identity, a positive year, and four seasons".into(),
             );
         }
-        for key in REQUIRED_TEXT.iter().chain(PROGRESSION_TEXT) {
+        for key in REQUIRED_TEXT
+            .iter()
+            .chain(PROGRESSION_TEXT)
+            .chain(tutorial_text::TUTORIAL_TEXT)
+        {
             if self
                 .text
                 .get(*key)

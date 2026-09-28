@@ -214,6 +214,8 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    #[serde(default)]
+    pub tutorial: super::tutorial::TutorialProgress,
     pub diplomacy: super::diplomacy::CampaignDiplomacy,
     pub ai: super::ai::AiState,
     pub threats: BTreeMap<super::threat::ThreatId, super::threat::Threat>,
@@ -304,6 +306,7 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            tutorial: super::tutorial::TutorialProgress::new(),
             diplomacy: Default::default(),
             ai: Default::default(),
             threats: super::threat::initialize_threats(data, scenario, initial_threats)?,

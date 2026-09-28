@@ -15,6 +15,7 @@ mod settlement;
 mod setup;
 mod siege;
 mod threat;
+mod tutorial;
 mod typography;
 mod world;
 
@@ -57,10 +58,14 @@ pub use settlement::{
 pub use setup::SetupView;
 pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
 pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
+pub use tutorial::{bounds as tutorial_bounds, draw as draw_tutorial};
 pub use typography::prepare_dynamic_text;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    DismissTutorial,
+    ReopenTutorial,
+    TutorialHeadquarters,
     OpenKingdom(Option<kestrum::data::world::FactionId>),
     SelectKingdom(kestrum::data::world::FactionId),
     KingdomPage(i32),

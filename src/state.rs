@@ -17,6 +17,7 @@ pub mod persistence;
 pub mod relationships;
 pub mod siege;
 pub mod threat;
+pub mod tutorial;
 mod validation;
 pub mod world;
 
@@ -268,8 +269,24 @@ impl GameState {
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }
+        let lesson = match &command {
+            Command::Move(_) => Some(tutorial::TutorialStep::Movement),
+            Command::EndTurn => Some(tutorial::TutorialStep::FirstTurn),
+            _ => None,
+        };
         let campaign = self.strategic_campaign()?;
-        engine::apply(campaign, data, Actor::Player, command)
+        let outcome = engine::apply(campaign, data, Actor::Player, command)?;
+        if let Some(step) = lesson.filter(|step| {
+            *step != tutorial::TutorialStep::Movement
+                || outcome
+                    .movement
+                    .as_ref()
+                    .is_some_and(|movement| movement.path.len() > 1)
+                || outcome.battle.is_some()
+        }) {
+            campaign.tutorial.record(step);
+        }
+        Ok(outcome)
     }
 
     pub fn advance_npc(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {

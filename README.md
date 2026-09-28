@@ -17,14 +17,16 @@ the authored 80-major / 152-physical-site campaign over the illustrated atlas.
 Rosemarch remains a separate small scenario for regression tests and captures.
 
 K18 integrates production campaigns, long-run continuity, retention, save reload
-and native screen review. Four/eight-faction campaigns replay through round 400;
-the optimized eight-faction phase p95 measures 114.63 ms. Windows and WebGL
+and native screen review. Earlier four/eight-faction runs replayed through round
+400; the optimized eight-faction phase p95 measured 114.63 ms. Windows and WebGL
 release builds are published to Preview at `http://127.0.0.1/games/kestrum/`.
-The latest full suite failed the scripted seed-88 victory deadline at round 120;
-that result remains unresolved. [K18 verification](docs/verification/k18-integrated.md)
-records the completed work, final application routing fix, known host overlap
-and deferred checks. K18 closure does not claim settled balance or full platform
-acceptance.
+The latest full suite has two unresolved simulation failures: the four-faction
+continuity campaign ends at round 268 before its round-400 milestone, and the
+scripted seed-88 campaign misses its round-120 victory deadline. All other test
+targets pass. [Review-fix verification](docs/verification/review-fixes.md) records
+the current checks; [K18 verification](docs/verification/k18-integrated.md) keeps
+the historical results and deferred checks. K18 closure does not claim settled
+balance or full platform acceptance.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn
@@ -35,6 +37,13 @@ advances one season and saves the campaign. The menu contains manual save/load,
 settings, help, and the route back to the title. Continue restores the current
 campaign or its disk/browser save. Starting over requires confirmation before
 production setup.
+
+New campaigns show an action-driven introduction through headquarters, movement,
+regional navigation, careers, household reviews, the first turn and Records.
+Prompts advance after the relevant action succeeds and disappear when complete.
+Close pauses guidance; Menu > How to Play > Resume guided introduction resumes
+it (or restarts a completed guide). Progress travels with manual saves and round
+checkpoints. Older campaigns keep the guide closed until reopened from Help.
 
 The save catalogue keeps each round checkpoint and each new named save. It offers
 explicit overwrite/deletion and retries failed writes without replaying the round.
@@ -506,8 +515,9 @@ final application guard fix allows personnel orders from the Armies panel.
 K18 is **Done under amended scope**: on 2026-09-28 the user waived physical touch
 and ended further testing while the game may still change. Formatting and prior
 strict Clippy pass; the final Windows/WebGL release build and no-argument Preview
-publish pass. The latest full suite stops at the existing seed-88 victory
-deadline failure. No runtime rerun followed the final panel guard fix.
+publish pass. That full suite stopped at the existing seed-88 victory
+deadline failure. No runtime rerun followed that final panel guard fix; the
+later review-fix run and its two simulation failures are recorded above.
 [K18 verification](docs/verification/k18-integrated.md) preserves the precise
 evidence, performance gains and deferred platform/balance checks.
 

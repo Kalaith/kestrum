@@ -27,6 +27,16 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     };
     let mut samples = Vec::with_capacity(16);
     let mut titles = Vec::new();
+    let tutorial = ctx
+        .state
+        .campaign
+        .as_ref()
+        .and_then(kestrum::state::Campaign::strategic)
+        .and_then(|campaign| campaign.tutorial.current())
+        .map(|step| super::tutorial::prompt(ctx, step));
+    if let Some(prompt) = &tutorial {
+        samples.push((18, prompt.as_str()));
+    }
     if let Some(view) = ctx.campaign_view {
         samples.push((18, view.active_faction_name.as_str()));
         // Names come from saved campaigns, including Unicode and renamed sites.

@@ -26,6 +26,8 @@ mod siege;
 mod siege_capture;
 mod storage;
 mod threat;
+mod tutorial;
+mod tutorial_capture;
 mod world;
 use kestrum::{
     data::GameData,
@@ -162,6 +164,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_tutorial(scene) {
+            return;
+        }
         if self.capture_kingdom_scene(scene) {
             return;
         }
@@ -399,7 +404,14 @@ impl Game {
             view: &self.view,
             navigation: &self.navigation,
             assets: &self.assets,
-            pointer,
+            pointer: if ui::tutorial_bounds(&self.state).is_some_and(|rect| {
+                rect.contains(pointer.position)
+                    || self.origin.is_some_and(|origin| rect.contains(origin))
+            }) {
+                pointer.suppressed()
+            } else {
+                pointer
+            },
             origin: self.origin,
             save_exists: self.save_exists,
             legacy_save_exists: self.legacy_save_exists,
@@ -416,10 +428,15 @@ impl Game {
             .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
         ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
         let action = ui::draw(&ctx);
+        let tutorial_action = ui::draw_tutorial(&ui::Context { pointer, ..ctx });
         let map_action = self.map_selection_action(pointer);
         let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
         end_virtual_ui_frame();
-        if let Some(intent) = feedback_action.or(action).or(map_action) {
+        if let Some(intent) = tutorial_action
+            .or(feedback_action)
+            .or(action)
+            .or(map_action)
+        {
             self.apply(intent);
         }
         if !pointer.down {

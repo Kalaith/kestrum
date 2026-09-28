@@ -4,6 +4,14 @@ use super::*;
 
 impl Game {
     pub(super) fn apply(&mut self, action: UiAction) {
+        if self.apply_tutorial_action(action) {
+            return;
+        }
+        self.dispatch(action);
+        self.observe_tutorial(action);
+    }
+
+    fn dispatch(&mut self, action: UiAction) {
         self.army_refresh_pending = true;
         if action.is_kingdom() {
             self.apply_kingdom_action(action);

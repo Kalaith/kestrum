@@ -30,6 +30,78 @@ mod support;
 use support::*;
 
 #[test]
+fn pending_leader_edits_refresh_the_witnessed_roster_and_survive_save_commit() {
+    let (data, mut campaign) = fixture(100, 100);
+    person(&mut campaign, 1, 1, 1);
+    person(&mut campaign, 2, 1, 1);
+    person(&mut campaign, 3, 3, 7);
+    apply(&mut campaign, &data, Actor::Player, command()).unwrap();
+    for leader in [
+        Some(PersonId(1)),
+        Some(PersonId(2)),
+        None,
+        Some(PersonId(1)),
+    ] {
+        let movement = campaign.pending_battle.as_ref().unwrap().movement.clone();
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::SetBattleLeader {
+                formation: FormationId(1),
+                leader,
+            },
+        )
+        .unwrap();
+        let pending = campaign.pending_battle.as_ref().unwrap();
+        assert_eq!(pending.movement, movement);
+        assert_eq!(
+            pending.report.attacker.armies[0].formations[0].battle_leader,
+            leader
+        );
+        let opening = &pending.report.simulation.as_ref().unwrap().opening;
+        let unit = opening
+            .armies
+            .iter()
+            .flat_map(|army| army.slots.iter().flatten())
+            .find(|unit| unit.id == BattleUnitId::Formation(FormationId(1)))
+            .unwrap();
+        assert_eq!(unit.leader.as_ref().map(|leader| leader.id), leader);
+        assert_catalogue(&data, &campaign);
+    }
+    let before = campaign.clone();
+    assert!(apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::SetBattleLeader {
+            formation: FormationId(1),
+            leader: Some(PersonId(3)),
+        }
+    )
+    .is_err());
+    assert_eq!(campaign, before);
+    let expected = campaign
+        .pending_battle
+        .as_ref()
+        .unwrap()
+        .report
+        .simulation
+        .clone();
+    let id = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap()
+    .battle
+    .unwrap();
+    assert_eq!(campaign.battles[&id].simulation, expected);
+    campaign.validate(&data).unwrap();
+}
+
+#[test]
 fn visible_start_battle_commits_through_the_application_guard_once() {
     use kestrum::state::{GameState, Overlay};
 

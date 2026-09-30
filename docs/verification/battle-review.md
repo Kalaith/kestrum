@@ -10,6 +10,7 @@ the actual checkout and shared Cargo/capture/publish tools.
 | Priority | Finding and player consequence | Correction and regression |
 | --- | --- | --- |
 | P1 | Start Battle calls `GameState::command` while the Battlefield overlay is open, but its guard rejects that command as obstructed. Live encounters cannot start even though direct engine tests pass. | Authorize StartPendingBattle only at the pending battlefield boundary. `visible_start_battle_commits_through_the_application_guard_once` exercises the real screen guard, duplicate rejection and unrelated order blocking. The aftermath capture now opens preparation before starting. |
+| P2 | Assigning, replacing or clearing a leader in pending preparation updates simulation input but leaves the witnessed report leader unchanged. Validation rejects the legal edit. | Synchronize report leader IDs with live formations before recomputing preparation. Regression checks four assignment transitions, save compatibility, invalid rival assignment rollback and the immutable committed receipt. The native review-save generator exposed the original error through a normal command. |
 | P2 | Brace can kill a charger, but the subsequent attack still inflicts the minimum one casualty. | Revalidate the attacker after retaliation. `lethal_brace_retaliation_cancels_the_chargers_damage` preserves all defenders. |
 | P2 | Incoming Guard does not react to Attack/Volley and applies its reduction twice against Charge/Breakthrough. An earlier Brace also obscures a later eligible Guard. | Evaluate applicable reactions for every attack; Brace remains charge-only and raised Guard reduces damage once. Table-driven coverage checks all four attacks. |
 | P2 | A later unit's rout shock can reduce an already visited ally to zero morale, leaving it active into the next round. | Process eligible routs to completion in stable ID order. Each unit clears its slot once. Regression covers a shock that routes an earlier ID. |
@@ -20,7 +21,7 @@ their fixes. Resolver version 3 identifies corrected results. Existing receipts
 remain immutable and readable; already saved pending resolutions commit their
 saved outcome unless the player edits preparation and refreshes it.
 
-Five new cases target these distinct faults. Existing battle suites have more
+Six new cases target these distinct faults. Existing battle suites have more
 than five tests because positioning, reactions, support abilities and campaign
 transactions retain independent regression coverage.
 
@@ -77,3 +78,45 @@ were inspected. The shared wrapper completed and its launched games exited.
 The actual campaign aftermath capture also passes through the Battlefield
 application guard. Screenshots establish these supported scenes, not
 maximum-board usability, live browser input or physical touch acceptance.
+
+## Native midgame save
+
+`examples/prepare_midgame.rs` creates a separate native catalogue save through
+the toolkit's normal writer and game SaveLibrary APIs. Its production campaign
+uses seed 88, recruits three Warrior formations, clears an opening threat,
+returns to supplied headquarters and advances NPC turns through 60 completed
+rounds. It accepts incoming peace and resolves player victories through normal
+commands; no time, army health or treasury is fabricated. Preparation stores the
+Ranged Support doctrine and Homeward Line template.
+
+The installed entry is **#21, Briarhold - Midgame Battle Review**, Year 16,
+60 completed rounds, eight retained battle receipts, no pending encounter and
+a surviving player army. The payload reloads identically. Earlier native entries
+remain in place. Native debug startup now loads Continue once storage is ready;
+`--title` selects the title screen explicitly. Captures, benchmarks, native
+release and WebGL startup keep their existing behavior.
+
+The second focused command covers combat, doctrines, persistence, the new
+midgame fixture and source-size checks: **33 passed**. It verifies save equality,
+immutable battle history and subsequent ordinary End Turn behavior.
+
+The actual pooled native debug run restored Spring, Year 16 / Round 61 without
+a title-screen action. Live mouse navigation opened Rose Host at Westmere
+Green: six formations, 580 troops, six remaining movement and headquarters
+supply. Treasury showed 101 Gold, 1436 Wood and 927 Stone; the last upkeep was
+fully paid. Closing the verification game returned exit code 0 and released its
+native writer. The catalogue still selects #21 and retains the five earlier
+entries. These observations used the computer-use skill on the actual window.
+
+The explicit `--title` option also opens the title screen. The shared
+`rust_management/cargo.ps1` has a separate forwarding issue: a single game
+argument becomes a scalar and splats into characters (`- - t i t l e` in the
+observed native command line). Passing `--title --title` through the same
+launcher preserves both strings and verified the option. This tool issue is
+recorded without modifying another project's files; it does not affect normal
+argument-free run or `cargo run -- --title` directly. All verification windows
+exited successfully and no game process remains.
+
+Final no-parameter `publish.ps1` also passes after the leader snapshot and debug
+startup changes: Windows/WebGL release builds, packaging, Preview deployment,
+Project Roost recording and catalogue synchronization complete successfully.

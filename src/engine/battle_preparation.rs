@@ -327,7 +327,7 @@ pub(super) fn apply(
         .expect("validated pending battle")
         .report
         .sequence = candidate.accepted_sequence;
-    sync_report_doctrines(&mut candidate);
+    sync_report_preparation(&mut candidate);
     combat::refresh_pending(&mut candidate, data)?;
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     let outcome = ActionOutcome {
@@ -446,7 +446,7 @@ fn base_tactics(
         .clone()
 }
 
-fn sync_report_doctrines(campaign: &mut StrategicCampaign) {
+fn sync_report_preparation(campaign: &mut StrategicCampaign) {
     let Some(pending) = campaign.pending_battle.as_mut() else {
         return;
     };
@@ -457,6 +457,9 @@ fn sync_report_doctrines(campaign: &mut StrategicCampaign) {
             .armies
             .get(&army.id)
             .and_then(|actual| actual.battle_doctrine);
+        for formation in &mut army.formations {
+            formation.battle_leader = campaign.formations[&formation.id].battle_leader;
+        }
     }
 }
 

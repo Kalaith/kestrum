@@ -11,6 +11,23 @@ scope and verification state live in the
 The [fresh battle review](docs/verification/battle-review.md) records subsequent
 regressions, fixes and remaining presentation issues.
 
+## Native development saves
+
+Native debug runs resume the catalogue's Continue save after storage becomes
+ready. Running `cargo run` therefore opens the prepared **Briarhold - Midgame
+Battle Review** campaign: Year 16, 60 completed rounds, eight recorded battles
+and a surviving player army. The installed save is #21 in this machine's native
+catalogue. Later saves become Continue normally. Use `cargo run -- --title` to
+open the title screen. Release and browser builds retain their title startup.
+
+To recreate a separate review save, run
+`..\rust_management\cargo.ps1 run -p kestrum --example prepare_midgame` with the
+native game closed. The example advances the production campaign through real
+commands and NPC turns, then writes and verifies a new named catalogue entry.
+It preserves existing saves. Native files live under
+`%LOCALAPPDATA%\kestrum`; the review save is local data, while the reproducible
+generator is tracked in `examples/prepare_midgame.rs`.
+
 ## Formation battle screen brief
 
 | Phase question | Answer |
@@ -35,7 +52,7 @@ findings to their fixes. Physical-touch testing is waived; further platform,
 performance and balance testing is deferred at the user's request.
 
 The production campaign is implemented in Rust, Macroquad, and Macroquad Toolkit.
-The game opens on a Kestrum title screen with Continue, New Game, Settings, How to
+Release builds open on a Kestrum title screen with Continue, New Game, Settings, How to
 Play, Credits, and native Quit Game. New Game opens production setup for a kingdom
 name, botanical emblem, 4–8 factions and displayed seed. A confirmed setup creates
 the authored 80-major / 152-physical-site campaign over the illustrated atlas.

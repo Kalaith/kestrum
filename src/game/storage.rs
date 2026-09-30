@@ -64,6 +64,13 @@ impl Game {
             self.retry_save_when_ready = false;
             self.write_pending();
         }
+        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
+        if self.saves.ready && self.resume_on_storage_ready {
+            self.resume_on_storage_ready = false;
+            if self.save_exists {
+                self.load();
+            }
+        }
     }
 
     pub(super) fn save_checkpoint(&mut self) {

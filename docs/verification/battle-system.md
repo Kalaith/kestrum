@@ -12,8 +12,9 @@ morale factors, and legal default rules for all six troop kinds. Kestrum loads
 and validates this content through `GameData`. The public
 `engine::resolve_battle` accepts a plain opening snapshot and returns a versioned
 resolution with its opening data, final group positions and counts, outcome, and
-ordered typed events. It has no graphics, campaign mutation, frame-time input,
-or random draws.
+ordered typed events. The receipt preserves opening morale with the revision,
+so a future balance edit cannot change the displayed initial condition. It has
+no graphics, campaign mutation, frame-time input, or random draws.
 
 Every army retains six slots; up to four boards per side share one initiative
 order. Ordinary melee cannot pass an occupied front, while an empty front opens

@@ -161,6 +161,7 @@ pub struct BattleResolution {
     pub resolver_version: u32,
     pub rules_revision: String,
     pub opening: FormationBattleInput,
+    pub opening_morale: u32,
     pub completed_rounds: u32,
     pub outcome: super::BattleOutcome,
     pub reason: BattleResolutionReason,

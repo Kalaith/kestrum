@@ -480,6 +480,7 @@ fn identical_inputs_replay_identically_and_all_waits_end_at_the_round_cap() {
     let first = resolve_battle(&battle, &rules).unwrap();
     let second = resolve_battle(&battle, &rules).unwrap();
     assert_eq!(first, second);
+    assert_eq!(first.opening_morale, rules.initial_morale);
     assert_eq!(first.completed_rounds, 8);
     assert_eq!(first.outcome, BattleOutcome::Stalemate);
     assert_eq!(first.reason, BattleResolutionReason::RoundLimit);

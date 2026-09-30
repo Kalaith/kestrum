@@ -94,6 +94,7 @@ pub fn resolve_battle(
         resolver_version: RESOLVER_VERSION,
         rules_revision: rules.rules_revision.clone(),
         opening,
+        opening_morale: rules.initial_morale,
         completed_rounds,
         outcome,
         reason,

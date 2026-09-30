@@ -152,7 +152,23 @@ fn assaults_apply_real_wall_arithmetic_engine_advantage_and_lasting_damage() {
     assert!(matches!(report.context, BattleContext::Assault { .. }));
     assert_eq!(report.wall_permille, 1410);
     assert_eq!(report.exchanges[0].wall_permille, 1210);
-    assert!(first_loss(&report, 7) > first_loss(&ordinary, 7));
+    let resistance = |report: &kestrum::state::battle::BattleReport| {
+        report
+            .simulation
+            .as_ref()
+            .unwrap()
+            .opening
+            .armies
+            .iter()
+            .flat_map(|army| army.slots.iter().flatten())
+            .find(|unit| {
+                unit.id
+                    == kestrum::state::battle::simulation::BattleUnitId::Formation(FormationId(7))
+            })
+            .unwrap()
+            .resistance
+    };
+    assert!(resistance(&report) < resistance(&ordinary));
     assert_eq!(report.fort_damage_added, 10);
     assert_eq!(campaign.world.fort_damage[&SiteId(9)], 15);
     assert!(report.structural_damage_added >= 10);
@@ -164,7 +180,7 @@ fn assaults_apply_real_wall_arithmetic_engine_advantage_and_lasting_damage() {
         order(SiegeAction::Assault, &[1, 5], None),
     );
     assert_assault_capture_and_roads();
-    assert_engine_destruction();
+    assert_opening_engine_wall_factor();
 }
 
 #[test]

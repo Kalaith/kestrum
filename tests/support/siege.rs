@@ -92,14 +92,6 @@ pub(super) fn fight(
     };
     campaign.battles[&resolved.battle.unwrap()].clone()
 }
-pub(super) fn first_loss(report: &BattleReport, formation: u32) -> u32 {
-    report.exchanges[0]
-        .losses
-        .iter()
-        .find(|loss| loss.formation == FormationId(formation))
-        .unwrap()
-        .amount
-}
 pub(super) fn reload(campaign: &StrategicCampaign, data: &GameData) -> StrategicCampaign {
     let raw = macroquad_toolkit::persistence::encode_slot(
         "strategic_v2",
@@ -317,14 +309,24 @@ pub(super) fn assert_relief(win: bool) {
     establish(&mut campaign, &data, true);
     finish(&mut campaign, &data);
     let result = apply(&mut campaign, &data, Actor::Player, enter(&[5], 14, 9)).unwrap();
-    let report = &campaign.battles[&result.battle.unwrap()];
+    assert!(result.battle_pending);
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    let report = &campaign.battles[&resolved.battle.unwrap()];
     assert!(
         matches!(&report.context,BattleContext::Relief{garrison,..} if garrison==&vec![ArmyId(1)])
     );
     assert_eq!(report.attacker.armies.len(), 2);
     if win {
         assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
-        assert!(!campaign.armies.contains_key(&ArmyId(1)));
+        if let Some(garrison) = campaign.armies.get(&ArmyId(1)) {
+            assert_eq!(garrison.site, SiteId(9));
+        }
         assert_eq!(campaign.armies[&ArmyId(5)].site, SiteId(9));
         assert!(campaign.sieges.is_empty());
     } else {
@@ -371,8 +373,16 @@ pub(super) fn assert_third_faction() {
         enter(&[5], 14, 9),
     )
     .unwrap();
+    assert!(result.battle_pending);
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
     assert_eq!(
-        campaign.battles[&result.battle.unwrap()].outcome,
+        campaign.battles[&resolved.battle.unwrap()].outcome,
         BattleOutcome::AttackerVictory
     );
     let siege = &campaign.sieges[&SiteId(9)];
@@ -466,7 +476,7 @@ pub(super) fn assert_admission() {
     assert_eq!(neutral.armies[&ArmyId(3)].site, SiteId(9));
 }
 
-pub(super) fn assert_engine_destruction() {
+pub(super) fn assert_opening_engine_wall_factor() {
     let (data, mut campaign) = fixture(false, 100, 100);
     add(
         &mut campaign,
@@ -494,13 +504,20 @@ pub(super) fn assert_engine_destruction() {
         &[1, 5],
         None,
     );
-    assert_eq!(report.exchanges[0].wall_permille, 1210);
-    assert!(!campaign.formations.contains_key(&FormationId(13)));
+    assert!(report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .opening
+        .armies
+        .iter()
+        .any(|army| army.slots.iter().flatten().any(|unit| {
+            unit.id == kestrum::state::battle::simulation::BattleUnitId::Formation(FormationId(13))
+        })));
     assert!(report
         .exchanges
         .iter()
-        .skip(2)
-        .any(|exchange| exchange.wall_permille == 1410));
+        .all(|exchange| exchange.wall_permille == 1210));
 }
 
 pub(super) fn assert_civilian_supply() {

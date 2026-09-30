@@ -288,7 +288,7 @@ fn validate_exchanges(
     roster: &Roster<'_>,
 ) -> Result<(), String> {
     if let Some(simulation) = &report.simulation {
-        return validate_simulation(report, roster, simulation);
+        return validate_simulation(data, report, roster, simulation);
     }
     let mut remaining: BTreeMap<_, _> = roster
         .formations
@@ -430,6 +430,7 @@ fn validate_pending(campaign: &StrategicCampaign) -> Result<(), String> {
 }
 
 fn validate_simulation(
+    data: &GameData,
     report: &BattleReport,
     roster: &Roster<'_>,
     simulation: &crate::state::battle::simulation::BattleResolution,
@@ -594,6 +595,23 @@ fn validate_simulation(
                 .all(|pair| pair[0].number < pair[1].number),
         "exchange summary disagrees with event rounds",
     )?;
+    let has_opening_engines = report
+        .attacker
+        .armies
+        .iter()
+        .flat_map(|army| &army.formations)
+        .any(|formation| {
+            formation.kind == crate::data::economy::TroopKind::SiegeEngines && formation.start > 0
+        });
+    let applied_wall =
+        if matches!(report.context, BattleContext::Assault { .. }) && has_opening_engines {
+            report
+                .wall_permille
+                .saturating_sub(data.siege.engine_wall_reduction_permille)
+                .max(data.siege.wall_minimum_permille)
+        } else {
+            report.wall_permille
+        };
     let mut leadership: Vec<_> = report
         .faction_sides()
         .flat_map(|side| &side.armies)
@@ -614,7 +632,7 @@ fn validate_simulation(
             exchange.number == *number
                 && exchange.losses == losses
                 && exchange.threat_losses == round_threat_losses.remove(number).unwrap_or_default()
-                && exchange.wall_permille == report.wall_permille
+                && exchange.wall_permille == applied_wall
                 && exchange.leadership == leadership,
             "exchange summary differs from immutable battle events",
         )?;

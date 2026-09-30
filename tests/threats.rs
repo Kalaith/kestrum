@@ -73,7 +73,7 @@ fn authored_ordinary_encounter_uses_shared_exact_casualties_and_real_identity() 
 }
 
 #[test]
-fn defeat_retains_threat_casualties_and_applies_real_wounds_or_death() {
+fn defeat_and_last_strike_resolve_real_losses_and_rewards_once() {
     for death in [0, 100] {
         let (mut data, mut campaign) = fixture(true);
         data.combat.wipe_death_percent = death;
@@ -111,30 +111,30 @@ fn defeat_retains_threat_casualties_and_applies_real_wounds_or_death() {
             Campaign::Strategic(Box::new(campaign))
         );
     }
-    let (data, mut mutual) = fixture(false);
-    mutual
+    let (data, mut last_strike) = fixture(false);
+    last_strike
         .formations
         .get_mut(&FormationId(1))
         .unwrap()
         .headcount = 1;
-    mutual.threats.get_mut(&ThreatId(1)).unwrap().headcount = 1;
-    let balance = mutual.factions[&FactionId(1)].resources;
-    let report = clear(&mut mutual, &data, 1);
-    assert_eq!(report.outcome, BattleOutcome::MutualDestruction);
-    assert!(mutual.active_threat(SiteId(13)).is_none());
-    assert_eq!(mutual.factions[&FactionId(1)].resources, balance);
+    last_strike.threats.get_mut(&ThreatId(1)).unwrap().headcount = 1;
+    let balance = last_strike.factions[&FactionId(1)].resources;
+    let report = clear(&mut last_strike, &data, 1);
+    assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
+    assert!(last_strike.active_threat(SiteId(13)).is_none());
     let BattleDefender::Threat(threat) = report.defender else {
         unreachable!()
     };
+    assert_eq!(threat.payout, data.threats.definitions[&threat.kind].reward);
     assert_eq!(
-        threat.payout,
+        last_strike.factions[&FactionId(1)].resources,
         Resources {
-            gold: 0,
-            wood: 0,
-            stone: 0
+            gold: balance.gold + threat.payout.gold,
+            wood: balance.wood + threat.payout.wood,
+            stone: balance.stone + threat.payout.stone,
         }
     );
-    mutual.validate(&data).unwrap();
+    last_strike.validate(&data).unwrap();
 }
 
 #[test]
@@ -221,19 +221,29 @@ fn explicit_clearance_unlocks_reclamation_without_inventing_land_or_population()
         .map(|site| site.id)
         .collect::<Vec<_>>();
     let population = campaign.world.population.clone();
-    let before = campaign.clone();
-    assert!(apply(
+    let contact = apply(
         &mut campaign,
         &data,
         Actor::Player,
         Command::Move(MoveOrder {
             armies: vec![ArmyId(1)],
-            path: vec![SiteId(12), SiteId(13)]
-        })
+            path: vec![SiteId(12), SiteId(13)],
+        }),
     )
-    .is_err());
-    assert_eq!(campaign, before);
-    clear(&mut campaign, &data, 1);
+    .unwrap();
+    assert!(contact.battle_pending);
+    assert!(contact.battle.is_none());
+    assert_eq!(contact.movement.unwrap().path, [SiteId(12), SiteId(13)]);
+    assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(13));
+    let started = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    assert!(started.battle.is_some());
+    assert!(campaign.pending_battle.is_none());
     assert_eq!(campaign.world.population, population);
     assert_eq!(
         campaign

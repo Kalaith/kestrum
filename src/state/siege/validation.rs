@@ -79,8 +79,26 @@ impl StrategicCampaign {
                 .chain(&siege.besieging)
                 .copied()
                 .collect();
+            let pending_clash: BTreeSet<_> = self
+                .pending_battle
+                .as_ref()
+                .filter(|pending| {
+                    pending.report.site == *site
+                        && matches!(
+                            pending.report.context,
+                            crate::state::battle::BattleContext::BesiegerClash {
+                                siege: pending_siege,
+                                ..
+                            } if pending_siege == siege.id
+                        )
+                })
+                .into_iter()
+                .flat_map(|pending| &pending.report.attacker.armies)
+                .map(|army| army.id)
+                .collect();
+            let expected = partition.union(&pending_clash).copied().collect();
             ensure(
-                actual == partition,
+                actual == expected,
                 "siege partition omits a physical occupant",
             )?;
         }

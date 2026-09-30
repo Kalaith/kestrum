@@ -179,6 +179,14 @@ fn outpost_and_fortified_siege_survive_catalogue_reload_then_resolve_relief_once
         }),
     )
     .expect("relief enters the besieged fort");
+    assert!(result.battle_pending);
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .expect("player accepts the saved relief battle");
     let replayed_result = apply(
         &mut resumed,
         &data,
@@ -189,8 +197,16 @@ fn outpost_and_fortified_siege_survive_catalogue_reload_then_resolve_relief_once
         }),
     )
     .expect("loaded relief enters the same fort");
-    assert_eq!(result, replayed_result);
-    let report = &campaign.battles[&result.battle.expect("relief battle")];
+    assert!(replayed_result.battle_pending);
+    let replayed_resolved = apply(
+        &mut resumed,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .expect("loaded player accepts the same relief battle");
+    assert_eq!(resolved, replayed_resolved);
+    let report = &campaign.battles[&resolved.battle.expect("relief battle")];
     assert!(matches!(report.context, BattleContext::Relief { .. }));
     assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
     assert!(

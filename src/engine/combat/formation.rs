@@ -117,9 +117,19 @@ fn prepare(
     campaign.next_ids.battle = BattleId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "battle identifiers",
     })?);
+    let applied_wall = assault_wall(campaign, data, &report);
     let input = battle_input(campaign, data, &report)?;
     let resolution = crate::engine::resolve_battle(&input, &data.battle_tactics)
         .map_err(RuleError::InvalidState)?;
+    if resolution.outcome == BattleOutcome::AttackerVictory {
+        if let BattleDefender::Threat(threat) = &report.defender {
+            let mut projected_resources = campaign.factions[&report.attacker.faction].resources;
+            add_resources(
+                &mut projected_resources,
+                data.threats.definitions[&threat.kind].reward,
+            )?;
+        }
+    }
     report.outcome = resolution.outcome;
     report.reason = match resolution.reason {
         crate::state::battle::simulation::BattleResolutionReason::Annihilation => {
@@ -130,7 +140,7 @@ fn prepare(
             BattleEndReason::ExchangeLimit
         }
     };
-    report.exchanges = resolution_exchanges(&report, &resolution, data);
+    report.exchanges = resolution_exchanges(&report, &resolution, applied_wall);
     report.simulation = Some(resolution);
     campaign.pending_battle = Some(crate::state::battle::PendingBattle {
         started_by: report.attacker.faction,
@@ -187,7 +197,7 @@ fn battle_input(
                 if side.1 == BattleSide::Defender
                     && matches!(report.context, BattleContext::Assault { .. })
                 {
-                    resistance = (u128::from(resistance) * 1000 / u128::from(assault_wall))
+                    resistance = (u128::from(resistance) * u128::from(assault_wall) / 1000)
                         .clamp(1, u128::from(u32::MAX)) as u32;
                 }
                 slots[formation.slot] = Some(BattleUnitInput {
@@ -293,7 +303,7 @@ fn initiative_for_threat() -> u32 {
 fn resolution_exchanges(
     report: &BattleReport,
     resolution: &crate::state::battle::simulation::BattleResolution,
-    _data: &GameData,
+    applied_wall: u32,
 ) -> Vec<BattleExchange> {
     let mut exchanges = BTreeMap::<u32, BTreeMap<FormationId, u32>>::new();
     let mut threat_losses = BTreeMap::<u32, u32>::new();
@@ -323,7 +333,7 @@ fn resolution_exchanges(
         .into_iter()
         .map(|number| BattleExchange {
             threat_losses: threat_losses.get(&number).copied().unwrap_or_default(),
-            wall_permille: report.wall_permille,
+            wall_permille: applied_wall,
             number,
             losses: exchanges
                 .remove(&number)

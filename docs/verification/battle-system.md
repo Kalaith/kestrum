@@ -124,19 +124,27 @@ movement receipt preserves the route spent before field contact. Player-particip
 NPC attacks pause on the pending encounter until acceptance, and report playback
 projects the stored receipt without mutating campaign state.
 
+Threat rewards that would overflow are rejected before a pending battle can
+strand the campaign. Siege-engine wall reduction is applied to defender
+resistance and stored as the opening battle's effective wall factor for every
+playback exchange.
+
 ### Checkpoint evidence
 
 | Check | Result |
 | --- | --- |
 | `cargo fmt -p kestrum -- --check` | Passed. |
 | `cargo.ps1 test -p kestrum --test combat '--' --nocapture` | Passed: 7 focused campaign-combat cases, including saved pending acceptance, no duplicate confirmation, replay immutability and NPC phase pause. |
+| `cargo.ps1 test -p kestrum --test siege` | Passed: 5 cases, including relief acceptance, assault wall factors, siege reconciliation and persistent damage. |
+| `cargo.ps1 test -p kestrum --test threats` | Passed: 5 cases, including threat contact, exact losses, reward overflow, replay and reclamation. |
+| `cargo.ps1 test -p kestrum --test k18_siege_continuity` | Passed: saved relief battle commits identically after reload. |
 | `cargo.ps1 test -p kestrum --test code_standards` | Passed: the Rust source-size gate. |
 | `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
 
 ### Remaining B03 verification
 
-Full affected regression suites, multi-army relief/assault and threat payout
-coverage, live browser interaction,
+Campaign, movement, multi-army relief/assault and threat payout suites beyond the
+listed fixtures, live browser interaction,
 normal/minimum integration captures, and no-parameter publishing are pending.
 The B03 campaign integration must pass these before this milestone is marked
 complete.

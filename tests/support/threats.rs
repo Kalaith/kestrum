@@ -151,16 +151,34 @@ fn assert_hidden_route_supply(data: &GameData) {
         Command::Move(forecast.order),
     )
     .unwrap();
+    assert!(outcome.battle_pending);
     let moved = outcome.movement.unwrap();
-    assert_eq!(moved.path, vec![SiteId(10), SiteId(11)]);
-    assert_eq!(moved.spent, 2);
+    assert_eq!(moved.path, vec![SiteId(10), SiteId(11), SiteId(13)]);
     assert_eq!(
-        moved.stop.unwrap().reason,
-        kestrum::engine::MovementBlock::ThreatRequiresClear
+        moved.spent,
+        forecast
+            .steps
+            .iter()
+            .take(moved.path.len() - 1)
+            .map(|step| step.cost)
+            .sum::<u32>()
     );
-    assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(11));
+    assert!(moved.stop.is_none());
+    assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(13));
     assert_eq!(campaign.threats[&ThreatId(1)].headcount, 60);
-    assert_eq!(project(&campaign, FactionId(1)).unwrap().threats.len(), 1);
+    let resolved = apply(
+        &mut campaign,
+        data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    let report = &campaign.battles[&resolved.battle.unwrap()];
+    assert!(matches!(
+        report.defender,
+        kestrum::state::battle::BattleDefender::Threat(_)
+    ));
+    assert!(campaign.pending_battle.is_none());
 }
 
 #[derive(Default)]

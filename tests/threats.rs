@@ -43,7 +43,8 @@ fn authored_ordinary_encounter_uses_shared_exact_casualties_and_real_identity() 
         "same state and command yield the same complete campaign"
     );
     assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
-    assert_eq!(report.exchanges[0].threat_losses, 5);
+    // Incoming Guard now protects the threat against ordinary attacks too.
+    assert_eq!(report.exchanges[0].threat_losses, 4);
     assert_eq!(report.exchanges[0].losses[0].amount, 4);
     assert_eq!(report.exchanges[0].leadership.len(), 1);
     assert_eq!(report.exchanges[0].leadership[0].permille, 500);

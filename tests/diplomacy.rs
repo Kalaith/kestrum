@@ -255,7 +255,7 @@ fn annex_and_submission_are_final_and_displaced_survivors_never_join_the_victor(
 }
 
 #[test]
-fn real_conquest_reaches_victory_and_mutual_last_army_loss_is_player_defeat() {
+fn real_conquest_reaches_victory_and_braced_last_army_loss_is_player_defeat() {
     let (data, mut campaign) = conquest_fixture();
     for path in [
         &[1, 5, 2][..],
@@ -298,5 +298,5 @@ fn real_conquest_reaches_victory_and_mutual_last_army_loss_is_player_defeat() {
     let before = campaign.clone();
     reject(&mut campaign, &data, Actor::Player, Command::EndTurn);
     assert_eq!(reload(&campaign, &data), before);
-    assert_mutual_defeat();
+    assert_braced_defeat();
 }

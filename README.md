@@ -4,11 +4,12 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
-Battle-system milestones B01 (deterministic formation combat) and B02
-(battlefield presentation) are complete. B03 connects encounters to campaign
-consequences and opens the playback scene from witnessed battles. The ordered
+Battle-system milestones B01–B07 are complete, including deterministic formation
+combat, campaign consequences, tactics, leaders and rival doctrines. The ordered
 scope and verification state live in the
 [battle-system implementation plan](docs/battle-system-implementation-plan.md).
+The [fresh battle review](docs/verification/battle-review.md) records subsequent
+regressions, fixes and remaining presentation issues.
 
 ## Formation battle screen brief
 
@@ -44,13 +45,15 @@ K18 integrates production campaigns, long-run continuity, retention, save reload
 and native screen review. Earlier four/eight-faction runs replayed through round
 400; the optimized eight-faction phase p95 measured 114.63 ms. Windows and WebGL
 release builds are published to Preview at `http://127.0.0.1/games/kestrum/`.
-The latest full suite has two unresolved simulation failures: the four-faction
-continuity campaign ends at round 265 before its round-400 milestone, and the
-scripted seed-88 campaign stalls in its player turn at round 31. All other test
-targets pass. [Review-fix verification](docs/verification/review-fixes.md) records
-the current checks; [K18 verification](docs/verification/k18-integrated.md) keeps
-the historical results and deferred checks. K18 closure does not claim settled
-balance or full platform acceptance.
+The original B07 suite passed, including four/eight-faction round-400 continuity
+and the seed-88 production campaign. After the fresh reaction/rout corrections,
+the production victory script no longer wins within its 240-round cap; that
+assertion remains intact as a balance blocker. Continuity fixtures renew truces;
+the production victory path does not. One release profiling test remains
+intentionally ignored. [Review-fix verification](docs/verification/review-fixes.md)
+and [K18 verification](docs/verification/k18-integrated.md) keep historical results
+and deferred checks. K18 closure does not claim settled balance or full platform
+acceptance.
 
 Armies can now move directly on the map: tap an Army banner, inspect remaining
 movement and nearby costs, tap a destination, then Confirm Move. New campaigns

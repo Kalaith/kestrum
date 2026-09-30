@@ -320,12 +320,10 @@ impl Runtime {
         if !self.can_damage(target) {
             return;
         }
-        if matches!(action, TacticAction::Charge | TacticAction::Breakthrough) {
-            if let Some(brace_factor) = self.resolve_reaction(target, actor) {
-                multiplier = multiplier.saturating_mul(brace_factor) / 1000;
-            }
+        if let Some(brace_factor) = self.resolve_reaction(target, actor, action) {
+            multiplier = multiplier.saturating_mul(brace_factor) / 1000;
         }
-        if !self.can_damage(target) {
+        if !self.can_activate(actor) || !self.can_damage(target) {
             return;
         }
         if self.units[&target]
@@ -348,14 +346,14 @@ impl Runtime {
     }
 
     pub(super) fn resolve_routs(&mut self) {
-        let ids: Vec<_> = self.units.keys().copied().collect();
-        for id in ids {
-            let Some(position) = self.units[&id].position else {
-                continue;
-            };
-            if self.units[&id].headcount == 0 || self.units[&id].morale > self.rules.rout_morale {
-                continue;
-            }
+        // Restart in stable ID order after each shock. An earlier unit may have
+        // reached the threshold; no zero-morale unit may enter the next round.
+        while let Some((id, position)) = self.units.iter().find_map(|(id, unit)| {
+            (unit.headcount > 0 && unit.morale <= self.rules.rout_morale)
+                .then_some(unit.position)
+                .flatten()
+                .map(|position| (*id, position))
+        }) {
             let side = self.armies[&position.army].side;
             let survivors = self.units[&id].headcount;
             self.armies

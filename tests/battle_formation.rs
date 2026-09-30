@@ -22,6 +22,9 @@ use kestrum::{
 #[path = "support/battle_abilities.rs"]
 mod abilities;
 
+#[path = "support/battle_review.rs"]
+mod review;
+
 fn rules() -> BattleTacticsRules {
     GameData::load().unwrap().battle_tactics
 }

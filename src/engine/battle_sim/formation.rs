@@ -19,7 +19,7 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 use validation::canonical_input;
 
-const RESOLVER_VERSION: u32 = 2;
+const RESOLVER_VERSION: u32 = 3;
 const SLOTS_PER_ARMY: usize = 6;
 
 #[derive(Debug, Clone)]
@@ -306,15 +306,24 @@ impl Runtime {
         slot >= 3 && self.armies[&position.army].slots[slot - 3].is_none()
     }
 
-    fn resolve_reaction(&mut self, defender: BattleUnitId, attacker: BattleUnitId) -> Option<u32> {
+    fn resolve_reaction(
+        &mut self,
+        defender: BattleUnitId,
+        attacker: BattleUnitId,
+        attack: TacticAction,
+    ) -> Option<u32> {
         let defender_state = &self.units[&defender];
         if defender_state.reaction_used || defender_state.headcount == 0 {
             return None;
         }
         let rules = defender_state.input.reaction_tactics.clone();
-        let incoming_cavalry = self.units[&attacker].input.kind == Some(TroopKind::Riders);
+        let charge = matches!(attack, TacticAction::Charge | TacticAction::Breakthrough);
+        let incoming_cavalry =
+            charge && self.units[&attacker].input.kind == Some(TroopKind::Riders);
         let chosen = rules.into_iter().find(|rule| {
             rule.trigger == TacticTrigger::IncomingAttack
+                && (rule.action == TacticAction::Guard
+                    || (rule.action == TacticAction::Brace && charge))
                 && (rule.condition == TacticCondition::Always
                     || (rule.condition == TacticCondition::IncomingCavalryCharge
                         && incoming_cavalry))
@@ -346,7 +355,8 @@ impl Runtime {
                     retaliation: 0,
                 });
                 self.raise_guard(defender, self.round);
-                Some(self.rules.guard_damage_permille)
+                // The raised guard handles this hit and the rest of the round.
+                None
             }
             _ => None,
         }
@@ -524,6 +534,7 @@ impl Runtime {
 
     fn remaining_power(&self, side: BattleSide) -> u128 {
         self.side_units(side)
+            .filter(|unit| unit.position.is_some())
             .map(|unit| u128::from(unit.headcount) * u128::from(unit.input.attack))
             .sum()
     }

@@ -286,7 +286,10 @@ impl GameState {
         let military_order = military_order
             || (self.overlay == Overlay::Battlefield
                 && pending_battle
-                && matches!(&command, Command::SetBattleLeader { .. }));
+                && matches!(
+                    &command,
+                    Command::SetBattleLeader { .. } | Command::StartPendingBattle
+                ));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }

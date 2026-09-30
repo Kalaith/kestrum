@@ -346,6 +346,7 @@ impl Game {
             .expect("dense tactics capture edits the pending battle");
         }
         if scene == "battle_campaign_aftermath" {
+            self.open_pending_battlefield();
             let resolved = self
                 .state
                 .command(&self.data, engine::Command::StartPendingBattle)

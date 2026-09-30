@@ -293,7 +293,7 @@ pub(super) fn assert_inherited_vassal() {
     assert_eq!(reload(&campaign, &data), campaign);
 }
 
-pub(super) fn assert_mutual_defeat() {
+pub(super) fn assert_braced_defeat() {
     let (data, mut campaign) = conquest_fixture();
     let first = campaign.armies[&ArmyId(1)].formation_ids().next().unwrap();
     let second = campaign.armies[&ArmyId(2)].formation_ids().next().unwrap();
@@ -346,8 +346,10 @@ pub(super) fn assert_mutual_defeat() {
     .unwrap();
     assert_eq!(
         campaign.battles[&outcome.battle.unwrap()].outcome,
-        kestrum::state::battle::BattleOutcome::MutualDestruction
+        kestrum::state::battle::BattleOutcome::DefenderVictory
     );
+    assert_eq!(campaign.formations[&second].headcount, 1);
+    assert!(!campaign.formations.contains_key(&first));
     assert_eq!(
         campaign.diplomacy.ending.as_ref().unwrap().kind,
         EndingKind::Defeat

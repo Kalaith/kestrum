@@ -30,6 +30,25 @@ mod support;
 use support::*;
 
 #[test]
+fn visible_start_battle_commits_through_the_application_guard_once() {
+    use kestrum::state::{GameState, Overlay};
+
+    let (data, mut campaign) = fixture(100, 100);
+    apply(&mut campaign, &data, Actor::Player, command()).unwrap();
+    let mut state = GameState::default();
+    state
+        .load_campaign(Campaign::Strategic(Box::new(campaign)), &data)
+        .unwrap();
+    state.overlay = Overlay::Battlefield;
+    let result = state.command(&data, Command::StartPendingBattle).unwrap();
+    assert!(result.battle.is_some());
+    let committed = state.campaign.clone();
+    assert!(state.command(&data, Command::StartPendingBattle).is_err());
+    assert_eq!(state.campaign, committed);
+    assert!(state.command(&data, Command::EndTurn).is_err());
+}
+
+#[test]
 fn committed_formation_receipts_drive_campaign_losses_and_keep_the_round_clock() {
     for named in [false, true] {
         let (data, mut campaign) = fixture(100, 100);

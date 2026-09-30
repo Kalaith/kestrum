@@ -2,6 +2,7 @@
 
 mod actions;
 pub mod ai;
+pub mod battle_sim;
 mod combat;
 pub(crate) mod construction;
 pub(crate) mod development;
@@ -35,6 +36,7 @@ pub use progression::course_gold_cost;
 pub use actions::{
     advance_npc, apply, preview, ActionOutcome, ActionPreview, Actor, Command, RuleError,
 };
+pub use battle_sim::resolve_battle;
 pub use combat::battle_reports;
 pub use construction::{
     construction_options, construction_refund, ConstructionBlock, ConstructionOption,

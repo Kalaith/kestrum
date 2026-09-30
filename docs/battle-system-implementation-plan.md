@@ -352,11 +352,26 @@ replay payload must be filtered too.
 ## Delivery sequence and acceptance gates
 
 Complete, validate and commit each useful milestone before beginning the next.
-All milestones below are proposed and unstarted. B01–B02 prove the combat and
-its visible battlefield before a substantial management interface is built.
-B01–B04 form the first complete campaign version; B05–B07 complete the intended
-system. No calendar estimate is asserted before the new resolver and
-pending-command changes have been measured.
+B01–B02 prove the combat and its visible battlefield before a substantial
+management interface is built. B01–B04 form the first complete campaign
+version; B05–B07 complete the intended system. No calendar estimate is asserted
+before the new resolver and pending-command changes have been measured.
+
+### Implementation status — 2026-09-30
+
+| Milestone | Status | Verification record |
+| --- | --- | --- |
+| B01 Deterministic formation combat | Complete; headless resolver and authored rules | [Battle system verification](verification/battle-system.md#b01--deterministic-formation-combat) |
+| B02 Battlefield presentation | Not started | — |
+| B03 Campaign encounter integration | Not started | — |
+| B04 Deployment and tactics authoring | Not started | — |
+| B05 Leaders and support roles | Not started | — |
+| B06 Doctrines and rival preparation | Not started | — |
+| B07 Balance and campaign readiness | Not started | — |
+
+The full Kestrum test run currently stops at the documented long-campaign
+continuity regression; its result and the successful B01 checks are recorded
+with the milestone evidence. The focused B01 resolver acceptance suite passes.
 
 ### B01 Prototype deterministic formation combat
 

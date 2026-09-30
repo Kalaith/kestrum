@@ -1,6 +1,7 @@
 //! Toolkit-loaded content assembled and validated without a graphics context.
 
 pub mod ai;
+pub mod battle_tactics;
 pub mod combat;
 pub mod construction;
 pub mod development;
@@ -25,6 +26,7 @@ pub use presentation::{GeographyLabel, PresentationData};
 #[derive(Debug, Clone)]
 pub struct GameData {
     pub ai: ai::AiRules,
+    pub battle_tactics: battle_tactics::BattleTacticsRules,
     pub diplomacy: diplomacy::DiplomacyRules,
     pub development: development::DevelopmentRules,
     pub lifecycle: lifecycle::LifecycleRules,
@@ -49,6 +51,7 @@ impl GameData {
     pub fn load() -> Result<Self, String> {
         let data = Self {
             ai: macroquad_toolkit::include_json!("../assets/data/ai.json")?,
+            battle_tactics: macroquad_toolkit::include_json!("../assets/data/battle_tactics.json")?,
             diplomacy: macroquad_toolkit::include_json!("../assets/data/diplomacy.json")?,
             development: macroquad_toolkit::include_json!("../assets/data/development.json")?,
             lifecycle: macroquad_toolkit::include_json!("../assets/data/lifecycle.json")?,
@@ -77,6 +80,7 @@ impl GameData {
 
     pub fn validate(&self) -> Result<(), String> {
         self.ai.validate()?;
+        self.battle_tactics.validate()?;
         self.diplomacy.validate()?;
         self.development.validate()?;
         self.lifecycle.validate()?;

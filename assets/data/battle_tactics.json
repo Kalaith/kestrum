@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "rules_revision": "kestrum-battle-1",
+  "max_rounds": 8,
+  "max_armies_per_side": 4,
+  "max_activations_per_round": 48,
+  "max_tactic_rows": 5,
+  "max_reactions_per_unit_round": 1,
+  "victory_margin_permille": 100,
+  "casualty_divisor": 10,
+  "initial_morale": 100,
+  "morale_loss_per_casualty": 1,
+  "rout_morale": 0,
+  "ally_rout_morale_loss": 15,
+  "charge_damage_permille": 1400,
+  "breakthrough_damage_permille": 1300,
+  "brace_damage_permille": 500,
+  "brace_retaliation_permille": 350,
+  "guard_damage_permille": 750,
+  "defaults": {
+    "warriors": {
+      "activation": [
+        {"id": "warrior-front", "trigger": "activation", "action": "attack", "condition": "always", "target_filter": "any_enemy", "target_priority": "own_column_first"}
+      ],
+      "reaction": []
+    },
+    "spearmen": {
+      "activation": [
+        {"id": "spear-front", "trigger": "activation", "action": "attack", "condition": "always", "target_filter": "any_enemy", "target_priority": "own_column_first"}
+      ],
+      "reaction": [
+        {"id": "spear-brace-cavalry", "trigger": "incoming_attack", "action": "brace", "condition": "incoming_cavalry_charge", "target_filter": "none", "target_priority": "own_column_first"}
+      ]
+    },
+    "archers": {
+      "activation": [
+        {"id": "archer-rear-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "enemy_rear", "target_priority": "lowest_strength"},
+        {"id": "archer-front-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "any_enemy", "target_priority": "lowest_strength"}
+      ],
+      "reaction": []
+    },
+    "riders": {
+      "activation": [
+        {"id": "rider-breakthrough", "trigger": "activation", "action": "breakthrough", "condition": "enemy_rear_exposed", "target_filter": "exposed_enemy_rear", "target_priority": "lowest_strength"},
+        {"id": "rider-charge", "trigger": "activation", "action": "charge", "condition": "always", "target_filter": "enemy_front", "target_priority": "own_column_first"}
+      ],
+      "reaction": []
+    },
+    "medics": {
+      "activation": [
+        {"id": "medic-defend-self", "trigger": "activation", "action": "attack", "condition": "always", "target_filter": "any_enemy", "target_priority": "own_column_first"}
+      ],
+      "reaction": []
+    },
+    "siege_engines": {
+      "activation": [
+        {"id": "engine-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "any_enemy", "target_priority": "lowest_resistance"}
+      ],
+      "reaction": []
+    }
+  }
+}

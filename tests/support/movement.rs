@@ -134,7 +134,18 @@ pub(super) fn assert_fort_entry_and_hidden_contact(initial: &StrategicCampaign, 
         preview(initial, data, Actor::Player, order(&[1], &[1, 5, 6]))
     );
     let contact = apply(&mut hidden, data, Actor::Player, order(&[1], &[1, 5, 6])).unwrap();
-    assert!(contact.battle.is_some());
+    assert!(contact.battle_pending);
+    assert!(contact.battle.is_none());
     assert_eq!(contact.movement.unwrap().path, [SiteId(1), SiteId(5)]);
+    assert_eq!(hidden.armies[&ArmyId(1)].site, SiteId(5));
+    assert_eq!(hidden.battles.len(), 0);
+    let resolved = apply(
+        &mut hidden,
+        data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    assert!(resolved.battle.is_some());
     assert_eq!(hidden.battles.len(), 1);
 }

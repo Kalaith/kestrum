@@ -15,6 +15,12 @@ use kestrum::{
 impl Game {
     pub(super) fn capture_battlefield(&mut self, requested_scene: &str) -> bool {
         let scene = requested_scene.trim_end_matches("_minimum");
+        if matches!(
+            scene,
+            "battle_campaign_pending" | "battle_campaign_aftermath"
+        ) {
+            return self.capture_campaign_battle(scene);
+        }
         if !matches!(
             scene,
             "battle_scene_demo"
@@ -121,6 +127,48 @@ impl Game {
             _ => {}
         }
         self.battlefield = Some(resolution);
+        true
+    }
+
+    fn capture_campaign_battle(&mut self, scene: &str) -> bool {
+        let mut campaign =
+            kestrum::state::StrategicCampaign::new(&self.data).expect("campaign capture fixture");
+        campaign.armies.get_mut(&ArmyId(1)).unwrap().site = kestrum::data::world::SiteId(8);
+        campaign.armies.get_mut(&ArmyId(3)).unwrap().site = kestrum::data::world::SiteId(10);
+        campaign.tutorial.dismiss();
+        self.state
+            .load_campaign(Campaign::Strategic(Box::new(campaign)), &self.data)
+            .expect("live battle capture campaign validates");
+        let contact = self
+            .state
+            .command(
+                &self.data,
+                engine::Command::Move(engine::MoveOrder {
+                    armies: vec![ArmyId(1)],
+                    path: vec![
+                        kestrum::data::world::SiteId(8),
+                        kestrum::data::world::SiteId(10),
+                    ],
+                }),
+            )
+            .expect("live battle capture reaches the opposing army");
+        assert!(contact.battle_pending);
+        self.battle_return = None;
+        if scene == "battle_campaign_aftermath" {
+            let resolved = self
+                .state
+                .command(&self.data, engine::Command::StartPendingBattle)
+                .expect("live battle capture accepts the saved encounter");
+            self.open_committed_battlefield(resolved.battle.expect("committed capture battle"));
+            self.battlefield_view.event_cursor = self
+                .battlefield
+                .as_ref()
+                .map_or(0, |resolution| resolution.events.len());
+        } else {
+            self.open_pending_battlefield();
+            self.battlefield_view.event_cursor = 0;
+        }
+        self.battlefield_view.is_paused = true;
         true
     }
 }

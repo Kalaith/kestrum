@@ -24,7 +24,15 @@ pub(super) fn field_campaign() -> (GameData, StrategicCampaign) {
         }),
     )
     .unwrap();
-    assert!(outcome.battle.is_some());
+    assert!(outcome.battle_pending);
+    assert!(outcome.battle.is_none());
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
     (data, campaign)
 }
 

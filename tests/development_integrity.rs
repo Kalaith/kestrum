@@ -211,7 +211,15 @@ fn actual_threat_combat_earns_service_without_inventing_enemy_people_or_troops()
     kestrum::engine::preview(&campaign, &data, Actor::Player, command.clone()).unwrap();
     assert_eq!(campaign, before);
     let outcome = apply(&mut campaign, &data, Actor::Player, command.clone()).unwrap();
-    let report = campaign.battles[&outcome.battle.unwrap()].clone();
+    assert!(outcome.battle_pending);
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    let report = campaign.battles[&resolved.battle.unwrap()].clone();
     assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
     let BattleDefender::Threat(defender) = &report.defender else {
         panic!("typed local opponent")
@@ -247,7 +255,7 @@ fn forgetting_threat_reports_cannot_restore_the_occupant_or_repeat_its_reward() 
     let (mut data, mut campaign) = threat_campaign();
     data.history.detail_max_entries = 1;
     let id = campaign.active_threat(SiteId(13)).unwrap().id;
-    apply(
+    let pending = apply(
         &mut campaign,
         &data,
         Actor::Player,
@@ -255,6 +263,14 @@ fn forgetting_threat_reports_cannot_restore_the_occupant_or_repeat_its_reward() 
             armies: vec![ArmyId(1)],
             threat: id,
         },
+    )
+    .unwrap();
+    assert!(pending.battle_pending);
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
     )
     .unwrap();
     let terminal = campaign.threats[&id].clone();

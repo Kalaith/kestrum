@@ -141,9 +141,15 @@ pub(super) fn unknown_enemy_and_empty_capture(data: &GameData) {
         decision,
         ai::propose(&restored, data, FactionId(2)).unwrap()
     );
+    let encounter = advance_npc(&mut weak, data).unwrap();
+    assert!(encounter.battle_pending);
+    assert!(encounter.battle.is_none());
+    assert!(weak.pending_battle.is_some());
     assert!(
-        advance_npc(&mut weak, data).unwrap().battle.is_some(),
-        "the first encounter must actually resolve through ordinary commands"
+        apply(&mut weak, data, Actor::Player, Command::StartPendingBattle)
+            .unwrap()
+            .battle
+            .is_some()
     );
     occupied.armies.get_mut(&ArmyId(1)).unwrap().site = SiteId(1);
     let decision = ai::propose(&occupied, data, FactionId(2)).unwrap();
@@ -180,7 +186,15 @@ pub(super) fn actual_last_known_attack(data: &GameData) {
         }),
     )
     .unwrap();
-    let report = campaign.battles[&result.battle.unwrap()].clone();
+    assert!(result.battle_pending);
+    let resolved = apply(
+        &mut campaign,
+        data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    let report = campaign.battles[&resolved.battle.unwrap()].clone();
     let target = report.attacker.armies[0]
         .final_site
         .expect("surviving recorded enemy");

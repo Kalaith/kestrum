@@ -206,8 +206,14 @@ fn medic_career_witnesses_casualties_then_recovers_a_wounded_commander_once() {
     assert_eq!(first.site, MILLTOWN);
     assert_side_casualties_and_medic(&first, ROSE, ROSE_ARMY, medic_formation, apprentice);
     assert_eq!(
-        campaign.people[&apprentice].evidence.counts[&EvidenceKind::TreatedWounded],
-        1
+        campaign.people[&apprentice]
+            .evidence
+            .counts
+            .get(&EvidenceKind::TreatedWounded)
+            .copied()
+            .unwrap_or_default(),
+        1,
+        "a living medic attached to the casualty-taking army earns treatment service"
     );
     assert!(!campaign.people[&remote_person]
         .evidence
@@ -230,7 +236,6 @@ fn medic_career_witnesses_casualties_then_recovers_a_wounded_commander_once() {
         campaign, rejected_course,
         "one casualty encounter cannot bypass two occasions"
     );
-
     // Hawthorn moves its other army by the same legal roads, then counterattacks
     // the Milltown garrison again in a distinct season with real losses.
     finish_hawthorn_approach(&mut campaign, &data);
@@ -392,7 +397,16 @@ fn medic_career_witnesses_casualties_then_recovers_a_wounded_commander_once() {
         }),
     )
     .expect("attack the real surviving Hawthorn force");
-    let final_battle = final_move.battle.expect("the hostile army triggers combat");
+    assert!(final_move.battle_pending);
+    let final_battle = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap()
+    .battle
+    .expect("the hostile army triggers combat");
     let final_report = campaign.battles[&final_battle].clone();
     assert!(
         final_report

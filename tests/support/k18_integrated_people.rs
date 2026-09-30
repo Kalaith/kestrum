@@ -102,8 +102,14 @@ pub(super) fn finish_hawthorn_counterattack(
                 ArmyId(6),
                 &[BRIDGE, MILLTOWN],
             );
-            battle = result.battle;
-            assert!(battle.is_some(), "Hawthorn must attack the occupied town");
+            assert!(
+                result.battle_pending,
+                "Hawthorn must attack the occupied town"
+            );
+            battle = apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+                .unwrap()
+                .battle;
+            assert!(battle.is_some(), "the player confirms Hawthorn's encounter");
         }
         apply(campaign, data, Actor::Npc(faction), Command::EndTurn).unwrap();
     }
@@ -127,7 +133,10 @@ pub(super) fn finish_hawthorn_main_counterattack(
                 HAWTHORN_ARMY,
                 &[BRIDGE, MILLTOWN],
             );
-            battle = result.battle;
+            assert!(result.battle_pending);
+            battle = apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+                .unwrap()
+                .battle;
             assert!(
                 battle.is_some(),
                 "Hawthorn's main army must counterattack legally"
@@ -179,10 +188,20 @@ pub(super) fn assert_side_casualties_and_medic(
         .iter()
         .find(|formation| formation.id == medic_formation)
         .expect("the real Medics formation participates");
-    assert!(medic.end > 0, "the Medics formation must survive to treat");
-    assert!(army.people.iter().any(|person| {
-        person.id == medic_person && person.starting_formation == medic_formation
-    }));
+    assert!(medic.start > 0, "a real Medics formation must participate");
+    assert!(
+        army.people.iter().any(|person| {
+            person.id == medic_person
+                && person.starting_formation == medic_formation
+                && !matches!(
+                    person.status,
+                    kestrum::state::people::PersonStatus::Dead { .. }
+                )
+        }),
+        "the living medic must witness the army's real casualties in round {}: {:?}",
+        report.completed_rounds,
+        army.people.iter().find(|person| person.id == medic_person)
+    );
 }
 
 pub(super) fn side_for(report: &BattleReport, faction: FactionId) -> &BattleSideReport {

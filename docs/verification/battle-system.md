@@ -135,16 +135,34 @@ playback exchange.
 | --- | --- |
 | `cargo fmt -p kestrum -- --check` | Passed. |
 | `cargo.ps1 test -p kestrum --test combat '--' --nocapture` | Passed: 7 focused campaign-combat cases, including saved pending acceptance, no duplicate confirmation, replay immutability and NPC phase pause. |
+| `cargo.ps1 test -p kestrum --test movement --test ai --test development_integrity --test k18_integrated_scenarios` | Passed: 16 campaign movement, NPC decision, compatibility and retreat/rematch cases. |
 | `cargo.ps1 test -p kestrum --test siege` | Passed: 5 cases, including relief acceptance, assault wall factors, siege reconciliation and persistent damage. |
 | `cargo.ps1 test -p kestrum --test threats` | Passed: 5 cases, including threat contact, exact losses, reward overflow, replay and reclamation. |
 | `cargo.ps1 test -p kestrum --test k18_siege_continuity` | Passed: saved relief battle commits identically after reload. |
 | `cargo.ps1 test -p kestrum --test code_standards` | Passed: the Rust source-size gate. |
 | `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
+| `cargo.ps1 test -p kestrum --test k18_integrated_people` | Known balance failure reserved for B07: Hawthorn's second counterattack destroys the Rose Medics formation and kills its attached apprentice at completed round 7, so this older two-treatment progression route cannot continue. The casualty and succession assertion remains intact. |
+
+### Integration visuals
+
+The stable capture harness now stages a real campaign movement contact, saved
+pending encounter and accepted aftermath. It uses the same command and resolver
+path as the campaign. Capture processes exited after completion.
+
+| State | 1920×1080 | 1280×720 |
+| --- | --- | --- |
+| Pending battle with the current-plan action | [image](ui_battle_campaign_pending.png) | [image](ui_battle_campaign_pending_minimum.png) |
+| Committed campaign aftermath | [image](ui_battle_campaign_aftermath.png) | [image](ui_battle_campaign_aftermath_minimum.png) |
 
 ### Remaining B03 verification
 
-Campaign, movement, multi-army relief/assault and threat payout suites beyond the
-listed fixtures, live browser interaction,
-normal/minimum integration captures, and no-parameter publishing are pending.
-The B03 campaign integration must pass these before this milestone is marked
-complete.
+The focused campaign, movement, relief/assault and threat suites pass. The
+Rosemarch medic progression outcome and the 120-round production victory fixture
+remain for B07's casualty pacing and campaign balance work. `publish.ps1` built
+Windows and WebGL releases and deployed the Preview target. The browser preview
+loaded the updated title screen and fullscreen presentation. Its existing
+Continue entry indicated a local campaign; the New Game confirmation warned that
+unsaved orders would be left behind, so it was cancelled to preserve that state.
+The pending and aftermath campaign visuals therefore rely on the real campaign
+capture harness at both supported review sizes; browser battle interaction has
+not yet been exercised.

@@ -117,12 +117,21 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
         match campaign.phase {
             CampaignPhase::NpcTurn { .. } => {
                 let before = campaign.completed_rounds;
-                engine::advance_npc(&mut campaign, &data).unwrap_or_else(|error| {
+                let outcome = engine::advance_npc(&mut campaign, &data).unwrap_or_else(|error| {
                     panic!(
                         "NPC action failed in {:?} at round {before}, sequence {}: {error}",
                         campaign.phase, campaign.accepted_sequence
                     )
                 });
+                if outcome.battle_pending {
+                    apply(
+                        &mut campaign,
+                        &data,
+                        Actor::Player,
+                        Command::StartPendingBattle,
+                    )
+                    .expect("player accepts the NPC encounter");
+                }
                 npc_actions += 1;
                 campaign.validate(&data).unwrap_or_else(|error| {
                     panic!(
@@ -560,6 +569,10 @@ fn is_player_battle(
 
 fn issue(campaign: &mut StrategicCampaign, data: &GameData, command: Command) {
     let label = format!("{command:?}");
-    apply(campaign, data, Actor::Player, command)
+    let result = apply(campaign, data, Actor::Player, command)
         .unwrap_or_else(|error| panic!("production campaign order {label}: {error}"));
+    if result.battle_pending {
+        apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+            .unwrap_or_else(|error| panic!("production battle acceptance for {label}: {error}"));
+    }
 }

@@ -243,7 +243,10 @@ fn finish_npc_turns_with_counterattack(
     while let CampaignPhase::NpcTurn { faction, .. } = campaign.phase {
         if faction == FactionId(3) {
             let result = move_army(campaign, data, Actor::Npc(faction), ArmyId(6), &[8, 6]);
-            battle = result.battle;
+            assert!(result.battle_pending);
+            battle = apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+                .unwrap()
+                .battle;
             assert!(
                 battle.is_some(),
                 "the NPC counterattack must meet Milltown's garrison: {result:?}, army={:?}",
@@ -268,7 +271,9 @@ fn rematch(
         other => panic!("unexpected legal Rosemarch retreat site {other:?}"),
     };
     let result = move_army(campaign, data, Actor::Player, ArmyId(5), path);
-    let battle = result
+    assert!(result.battle_pending);
+    let battle = apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+        .unwrap()
         .battle
         .expect("the advancing Rose force must meet the same rival");
     assert_eq!(campaign.battles[&battle].site, retreat);

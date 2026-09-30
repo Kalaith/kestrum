@@ -177,8 +177,9 @@ fn consume_side(
                 participation::personal_tags(report, army, person, &mut personal);
                 let key = (person.id, (report.site, enemy.identity()));
                 let first = !credit.people.contains_key(&key);
-                let meaningful =
-                    personal.meaningful && !credit.people.get(&key).copied().unwrap_or(false);
+                let meaningful = (personal.meaningful
+                    || personal.tags.contains(&EvidenceKind::TreatedWounded))
+                    && !credit.people.get(&key).copied().unwrap_or(false);
                 let tracked = campaign.people.get_mut(&person.id).expect("present person");
                 record(&mut tracked.evidence, &personal, first, meaningful)?;
                 if meaningful {

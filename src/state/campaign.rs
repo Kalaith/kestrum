@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::{
-    battle::{BattleId, BattleReport},
+    battle::{BattleId, BattleReport, PendingBattle},
     history::{CampaignHistory, HistoryId},
     knowledge::CampaignKnowledge,
     legacy::{LegacyItem, LegacyItemId},
@@ -227,6 +227,8 @@ pub struct StrategicCampaign {
     pub history: CampaignHistory,
     pub knowledge: CampaignKnowledge,
     pub battles: BTreeMap<BattleId, BattleReport>,
+    #[serde(default)]
+    pub pending_battle: Option<PendingBattle>,
     pub version: u32,
     pub content_version: u32,
     #[serde(default = "default_scenario_kind")]
@@ -319,6 +321,7 @@ impl StrategicCampaign {
             history: CampaignHistory::default(),
             knowledge: CampaignKnowledge::default(),
             battles: BTreeMap::new(),
+            pending_battle: None,
             version: STRATEGIC_VERSION,
             content_version: scenario.content_version,
             scenario_kind: scenario.kind,

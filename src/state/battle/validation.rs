@@ -16,9 +16,21 @@ use std::collections::{BTreeMap, BTreeSet};
 impl StrategicCampaign {
     pub(crate) fn validate_battles(&self, data: &GameData) -> Result<(), String> {
         ensure(
-            self.next_ids.battle.0 > self.battles.keys().map(|id| id.0).max().unwrap_or(0),
+            self.next_ids.battle.0
+                > self
+                    .battles
+                    .keys()
+                    .map(|id| id.0)
+                    .chain(
+                        self.pending_battle
+                            .iter()
+                            .map(|pending| pending.report.id.0),
+                    )
+                    .max()
+                    .unwrap_or(0),
             "counter must exceed all battle IDs",
         )?;
+        validate_pending(self)?;
         for (site, occupation) in &self.world.occupation {
             ensure(
                 self.world.site(*site).is_some() && *occupation <= 100,
@@ -79,11 +91,13 @@ fn validate_header(
         "invalid location, faction or effects",
     )?;
     context::validate_context(campaign, data, report)?;
-    ensure(
-        !report.exchanges.is_empty()
-            && report.exchanges.len() <= data.combat.max_exchanges as usize,
-        "invalid exchange count",
-    )?;
+    if report.simulation.is_none() {
+        ensure(
+            !report.exchanges.is_empty()
+                && report.exchanges.len() <= data.combat.max_exchanges as usize,
+            "invalid exchange count",
+        )?;
+    }
     Ok(())
 }
 
@@ -273,6 +287,9 @@ fn validate_exchanges(
     report: &BattleReport,
     roster: &Roster<'_>,
 ) -> Result<(), String> {
+    if let Some(simulation) = &report.simulation {
+        return validate_simulation(report, roster, simulation);
+    }
     let mut remaining: BTreeMap<_, _> = roster
         .formations
         .iter()
@@ -326,12 +343,38 @@ fn validate_result(
     data: &GameData,
     report: &BattleReport,
 ) -> Result<(), String> {
+    if let Some(simulation) = &report.simulation {
+        let reason_matches = matches!(
+            (report.reason, simulation.reason),
+            (
+                BattleEndReason::Annihilation,
+                crate::state::battle::simulation::BattleResolutionReason::Annihilation
+            ) | (
+                BattleEndReason::Rout,
+                crate::state::battle::simulation::BattleResolutionReason::Rout
+            ) | (
+                BattleEndReason::ExchangeLimit,
+                crate::state::battle::simulation::BattleResolutionReason::RoundLimit
+            )
+        );
+        ensure(
+            simulation.resolver_version > 0
+                && !simulation.rules_revision.trim().is_empty()
+                && simulation.opening.terrain_permille == report.terrain_permille
+                && simulation.outcome == report.outcome
+                && reason_matches
+                && !simulation.events.is_empty(),
+            "invalid immutable formation resolution",
+        )?;
+    }
     context::validate_outcome(campaign, report)?;
-    ensure(
-        report.reason != BattleEndReason::ExchangeLimit
-            || report.exchanges.len() == data.combat.max_exchanges as usize,
-        "limit result ended too early",
-    )?;
+    if report.simulation.is_none() {
+        ensure(
+            report.reason != BattleEndReason::ExchangeLimit
+                || report.exchanges.len() == data.combat.max_exchanges as usize,
+            "limit result ended too early",
+        )?;
+    }
     let mut counters = BTreeSet::new();
     for counter in &report.counters {
         ensure(
@@ -339,6 +382,266 @@ fn validate_result(
                 && counter.permille == data.combat.counter(counter.source, counter.target)
                 && counter.permille != 1000,
             "invalid observed counter",
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_pending(campaign: &StrategicCampaign) -> Result<(), String> {
+    let Some(pending) = &campaign.pending_battle else {
+        return Ok(());
+    };
+    let report = &pending.report;
+    let simulation = report.simulation.as_ref();
+    ensure(
+        !campaign.battles.contains_key(&report.id)
+            && report.id.0 > 0
+            && report.id.0 < campaign.next_ids.battle.0
+            && report.sequence == campaign.accepted_sequence
+            && report.completed_rounds == campaign.completed_rounds
+            && campaign.factions.contains_key(&pending.started_by)
+            && report
+                .faction_sides()
+                .any(|side| side.faction == pending.started_by)
+            && campaign.world.site(report.site).is_some(),
+        "invalid pending battle identity or timing",
+    )?;
+    let simulation = simulation.ok_or("campaign.pending_battle: missing saved resolution")?;
+    ensure(
+        simulation.resolver_version > 0
+            && !simulation.rules_revision.trim().is_empty()
+            && simulation.opening.terrain_permille == report.terrain_permille
+            && simulation.outcome == report.outcome
+            && simulation.events.last().is_some_and(|event| {
+                matches!(event, crate::state::battle::simulation::BattleEvent::BattleEnded { outcome, .. } if *outcome == report.outcome)
+            }),
+        "invalid pending formation resolution",
+    )?;
+    for army in report.faction_sides().flat_map(|side| &side.armies) {
+        ensure(
+            campaign
+                .armies
+                .get(&army.id)
+                .is_some_and(|actual| actual.site == report.site),
+            "pending participants left the encounter site",
+        )?;
+    }
+    Ok(())
+}
+
+fn validate_simulation(
+    report: &BattleReport,
+    roster: &Roster<'_>,
+    simulation: &crate::state::battle::simulation::BattleResolution,
+) -> Result<(), String> {
+    use crate::state::battle::simulation::{BattleEvent, BattleSide, BattleUnitId};
+    let opening: BTreeMap<_, _> = simulation
+        .opening
+        .armies
+        .iter()
+        .flat_map(|army| army.slots.iter().flatten())
+        .map(|unit| (unit.id, unit.headcount))
+        .collect();
+    let final_units: BTreeMap<_, _> = simulation
+        .units
+        .iter()
+        .map(|unit| (unit.id, unit))
+        .collect();
+    ensure(
+        opening.len()
+            == simulation
+                .opening
+                .armies
+                .iter()
+                .map(|army| army.slots.iter().flatten().count())
+                .sum::<usize>()
+            && final_units.len() == simulation.units.len()
+            && opening.len() == final_units.len(),
+        "duplicate or missing unit in formation receipt",
+    )?;
+    ensure(
+        simulation.opening.armies.len()
+            == report
+                .faction_sides()
+                .map(|side| side.armies.len())
+                .sum::<usize>()
+                + usize::from(matches!(report.defender, BattleDefender::Threat(_))),
+        "formation receipt has an unwitnessed army board",
+    )?;
+    for side in std::iter::once((&report.attacker, BattleSide::Attacker)).chain(
+        report
+            .defender
+            .faction_side()
+            .map(|side| (side, BattleSide::Defender)),
+    ) {
+        for army in &side.0.armies {
+            let input = simulation
+                .opening
+                .armies
+                .iter()
+                .find(|input| input.id == army.id)
+                .ok_or("campaign.battles: missing army board")?;
+            ensure(
+                input.faction == side.0.faction && input.side == side.1 && input.name == army.name,
+                "army board identity disagrees with witnessed roster",
+            )?;
+            for formation in &army.formations {
+                let unit = input.slots[formation.slot]
+                    .as_ref()
+                    .ok_or("campaign.battles: missing formation opening slot")?;
+                ensure(
+                    unit.id == BattleUnitId::Formation(formation.id)
+                        && unit.kind == Some(formation.kind)
+                        && unit.headcount == formation.start,
+                    "formation opening disagrees with witnessed roster",
+                )?;
+            }
+        }
+    }
+    let expected_formations: BTreeSet<_> = roster.formations.keys().copied().collect();
+    let actual_formations: BTreeSet<_> = opening
+        .keys()
+        .filter_map(|id| match id {
+            BattleUnitId::Formation(id) => Some(*id),
+            BattleUnitId::Threat(_) => None,
+        })
+        .collect();
+    ensure(
+        expected_formations == actual_formations,
+        "formation receipt differs from witnessed participants",
+    )?;
+    let mut event_losses = BTreeMap::<BattleUnitId, u32>::new();
+    let mut round_losses = BTreeMap::<u32, BTreeMap<FormationId, u32>>::new();
+    let mut round_threat_losses = BTreeMap::<u32, u32>::new();
+    let mut current_counts = opening.clone();
+    let mut round = 0_u32;
+    let mut ended = false;
+    for (index, event) in simulation.events.iter().enumerate() {
+        ensure(!ended, "event occurs after the battle ended")?;
+        match event {
+            BattleEvent::RoundStarted { round: next } => {
+                ensure(
+                    *next == round.saturating_add(1),
+                    "invalid battle event round order",
+                )?;
+                round = *next;
+            }
+            BattleEvent::Damage {
+                target,
+                amount,
+                remaining,
+                ..
+            } => {
+                let before = current_counts
+                    .get_mut(target)
+                    .ok_or("campaign.battles: damage targets an unknown unit")?;
+                ensure(
+                    *amount > 0
+                        && *amount <= *before
+                        && before.saturating_sub(*amount) == *remaining,
+                    "damage event has an invalid remaining count",
+                )?;
+                *before = *remaining;
+                *event_losses.entry(*target).or_default() += amount;
+                match target {
+                    BattleUnitId::Formation(id) => {
+                        *round_losses
+                            .entry(round)
+                            .or_default()
+                            .entry(*id)
+                            .or_default() += amount;
+                    }
+                    BattleUnitId::Threat(_) => {
+                        *round_threat_losses.entry(round).or_default() += amount;
+                    }
+                }
+            }
+            BattleEvent::Routed {
+                unit, survivors, ..
+            } => ensure(
+                current_counts.get(unit) == Some(survivors),
+                "rout survivors disagree with prior damage",
+            )?,
+            BattleEvent::BattleEnded { outcome, .. } => {
+                ensure(
+                    index + 1 == simulation.events.len() && *outcome == report.outcome,
+                    "battle end event disagrees with its receipt",
+                )?;
+                ended = true;
+            }
+            _ => {}
+        }
+    }
+    ensure(ended && round > 0, "formation receipt did not end a battle")?;
+    for unit in &simulation.units {
+        ensure(
+            current_counts.get(&unit.id) == Some(&unit.headcount),
+            "final unit count disagrees with event playback",
+        )?;
+    }
+    let mut exchange_rounds: Vec<_> = round_losses
+        .keys()
+        .chain(round_threat_losses.keys())
+        .copied()
+        .collect();
+    exchange_rounds.sort_unstable();
+    exchange_rounds.dedup();
+    ensure(
+        exchange_rounds.len() == report.exchanges.len()
+            && report
+                .exchanges
+                .windows(2)
+                .all(|pair| pair[0].number < pair[1].number),
+        "exchange summary disagrees with event rounds",
+    )?;
+    let mut leadership: Vec<_> = report
+        .faction_sides()
+        .flat_map(|side| &side.armies)
+        .map(|army| ArmyLeadership {
+            army: army.id,
+            permille: army.leadership_permille,
+        })
+        .collect();
+    leadership.sort_by_key(|entry| entry.army);
+    for (number, exchange) in exchange_rounds.iter().zip(&report.exchanges) {
+        let losses: Vec<_> = round_losses
+            .remove(number)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(formation, amount)| FormationLoss { formation, amount })
+            .collect();
+        ensure(
+            exchange.number == *number
+                && exchange.losses == losses
+                && exchange.threat_losses == round_threat_losses.remove(number).unwrap_or_default()
+                && exchange.wall_permille == report.wall_permille
+                && exchange.leadership == leadership,
+            "exchange summary differs from immutable battle events",
+        )?;
+    }
+    for (id, formation) in &roster.formations {
+        let unit = BattleUnitId::Formation(*id);
+        let final_unit = final_units[&unit];
+        ensure(
+            opening.get(&unit) == Some(&formation.start)
+                && event_losses.get(&unit).copied().unwrap_or_default() == formation.combat_losses
+                && formation.combat_losses == formation.start.saturating_sub(final_unit.headcount)
+                && formation.end.saturating_add(formation.encirclement_losses)
+                    == final_unit.headcount,
+            "formation losses disagree with immutable resolution",
+        )?;
+    }
+    if let BattleDefender::Threat(threat) = &report.defender {
+        let id = BattleUnitId::Threat(threat.id);
+        let resolved = final_units
+            .get(&id)
+            .ok_or("campaign.battles: missing threat unit")?;
+        ensure(
+            opening.get(&id) == Some(&threat.start)
+                && event_losses.get(&id).copied().unwrap_or_default() == threat.combat_losses
+                && threat.combat_losses == threat.start.saturating_sub(resolved.headcount)
+                && threat.end.saturating_add(threat.encirclement_losses) == resolved.headcount,
+            "threat losses disagree with immutable resolution",
         )?;
     }
     Ok(())

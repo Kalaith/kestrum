@@ -85,7 +85,12 @@ pub(super) fn fight(
     destination: Option<u32>,
 ) -> BattleReport {
     let result = apply(campaign, data, actor, order(action, armies, destination)).unwrap();
-    campaign.battles[&result.battle.unwrap()].clone()
+    let resolved = if result.battle_pending {
+        apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap()
+    } else {
+        result
+    };
+    campaign.battles[&resolved.battle.unwrap()].clone()
 }
 pub(super) fn first_loss(report: &BattleReport, formation: u32) -> u32 {
     report.exchanges[0]

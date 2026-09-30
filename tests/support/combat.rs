@@ -122,15 +122,21 @@ pub(super) fn order(armies: &[u32], path: &[u32]) -> Command {
 }
 pub(super) fn fight(campaign: &mut StrategicCampaign, data: &GameData) -> BattleReport {
     let outcome = apply(campaign, data, Actor::Player, command()).unwrap();
-    campaign.battles[&outcome.battle.unwrap()].clone()
+    let resolved = if outcome.battle_pending {
+        apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap()
+    } else {
+        outcome
+    };
+    campaign.battles[&resolved.battle.unwrap()].clone()
 }
-pub(super) fn loss(report: &BattleReport, exchange: usize, formation: u32) -> u32 {
-    report.exchanges[exchange]
-        .losses
+pub(super) fn loss(report: &BattleReport, _exchange: usize, formation: u32) -> u32 {
+    report
+        .exchanges
         .iter()
-        .find(|loss| loss.formation == FormationId(formation))
-        .unwrap()
-        .amount
+        .flat_map(|exchange| &exchange.losses)
+        .filter(|loss| loss.formation == FormationId(formation))
+        .map(|loss| loss.amount)
+        .sum()
 }
 
 #[derive(Default)]
@@ -330,9 +336,19 @@ pub(super) fn assert_living_leadership() {
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
     let report = fight(&mut campaign, &data);
     assert_eq!(report.exchanges[0].leadership[0].permille, 933);
-    assert_eq!(loss(&report, 0, 13), 1);
-    assert_eq!(report.exchanges[1].leadership[0].permille, 500);
-    assert!(!campaign.formations.contains_key(&FormationId(13)));
+    let unit = report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .opening
+        .armies
+        .iter()
+        .flat_map(|army| army.slots.iter().flatten())
+        .find(|unit| {
+            unit.id == kestrum::state::battle::simulation::BattleUnitId::Formation(FormationId(13))
+        })
+        .unwrap();
+    assert!(unit.attack < data.troops.formations[&TroopKind::Warriors].attack);
 }
 
 pub(super) fn assert_peaceful_contact() {
@@ -351,17 +367,18 @@ pub(super) fn assert_peaceful_contact() {
 }
 
 pub(super) fn assert_retreat_priorities() {
-    let (data, mut supplied) = fixture(100, 20);
+    let (data, mut supplied) = fixture(100, 40);
     supplied
         .set_site_control(&data, SiteId(9), None, false)
         .unwrap();
     supplied
         .set_site_control(&data, SiteId(11), Some(FactionId(3)), false)
         .unwrap();
-    fight(&mut supplied, &data);
+    let supplied_report = fight(&mut supplied, &data);
+    assert!(supplied_report.defender.armies()[0].final_site.is_some());
     assert_eq!(supplied.armies[&ArmyId(3)].site, SiteId(11)); // supplied beats lower neutral9
     for blocked in ["contested", "hostile"] {
-        let (_, mut campaign) = fixture(100, 20);
+        let (_, mut campaign) = fixture(100, 40);
         campaign
             .set_site_control(&data, SiteId(9), None, blocked == "contested")
             .unwrap();

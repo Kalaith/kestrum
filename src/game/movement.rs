@@ -188,6 +188,12 @@ impl Game {
             .command(&self.data, Command::Move(preview.order.clone()));
         match result {
             Ok(outcome) => {
+                if outcome.battle_pending {
+                    self.movement = ui::MoveView::default();
+                    self.navigation.clear_selection();
+                    self.open_pending_battlefield();
+                    return;
+                }
                 if let Some(movement) = outcome.movement {
                     let selected = movement.armies.first().copied();
                     let message = if let Some(stop) = movement.stop {

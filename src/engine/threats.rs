@@ -6,10 +6,7 @@ pub use projection::{
     VisibleThreat,
 };
 
-use super::{
-    actions::record_fact, combat, movement, ActionOutcome, MovementBlock, MovementOutcome,
-    RuleError,
-};
+use super::{combat, movement, ActionOutcome, MovementBlock, MovementOutcome, RuleError};
 use crate::{
     data::{
         threats::ThreatKind,
@@ -17,7 +14,6 @@ use crate::{
         GameData,
     },
     state::{
-        campaign::DomainFactKind,
         military::ArmyId,
         threat::{Threat, ThreatId, ThreatStatus},
         StrategicCampaign,
@@ -100,7 +96,7 @@ pub(crate) fn execute(
     );
     let mut armies = armies.to_vec();
     armies.sort();
-    let mut moved = MovementOutcome {
+    let moved = MovementOutcome {
         battle: None,
         armies,
         path: vec![origin, site],
@@ -109,18 +105,9 @@ pub(crate) fn execute(
     };
     let receipt = movement::service_snapshot(campaign, &moved);
     movement::spend_edge(campaign, &moved.armies, site, cost)?;
-    let battle = combat::resolve_threat(campaign, data, &moved.armies, origin, id)?;
-    moved.battle = Some(battle);
-    outcome.battle = Some(battle);
+    combat::prepare_threat(campaign, data, &moved.armies, origin, id, Some(receipt))?;
     outcome.movement = Some(moved);
-    record_fact(
-        campaign,
-        outcome,
-        DomainFactKind::BattleResolved {
-            battle,
-            movement: Some(receipt),
-        },
-    )
+    Ok(())
 }
 
 pub(crate) fn spawn_ruin(

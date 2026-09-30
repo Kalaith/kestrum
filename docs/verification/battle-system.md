@@ -113,3 +113,30 @@ browser interaction review. Browser battle evidence is therefore pending B03.
 | `cargo.ps1 test -p kestrum --all-features` | Stopped at `campaign_scenarios::four_and_eight_faction_campaigns_retain_and_replay_through_four_hundred_rounds`; the campaign ended at round 188. All reported targets before that test, including both battle suites, passed. |
 | `publish.ps1` with no parameters | Passed Windows and WebGL release builds, packaging, Preview deployment, tracker recording and catalogue synchronization. |
 | Browser review | Preview and full-screen title loaded. The battle scene is pending live campaign integration in B03. |
+
+## B03 — Campaign encounter integration
+
+**Status:** in progress. Field, threat and siege contacts now prepare a saved
+pending battle using the deterministic resolver. The current player accepts it
+from the battlefield scene; the committed receipt applies formation and threat
+losses, retreats, person events, site consequences and one battle fact. A pending
+movement receipt preserves the route spent before field contact. Player-participant
+NPC attacks pause on the pending encounter until acceptance, and report playback
+projects the stored receipt without mutating campaign state.
+
+### Checkpoint evidence
+
+| Check | Result |
+| --- | --- |
+| `cargo fmt -p kestrum -- --check` | Passed. |
+| `cargo.ps1 test -p kestrum --test combat '--' --nocapture` | Passed: 7 focused campaign-combat cases, including saved pending acceptance, no duplicate confirmation, replay immutability and NPC phase pause. |
+| `cargo.ps1 test -p kestrum --test code_standards` | Passed: the Rust source-size gate. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
+
+### Remaining B03 verification
+
+Full affected regression suites, multi-army relief/assault and threat payout
+coverage, live browser interaction,
+normal/minimum integration captures, and no-parameter publishing are pending.
+The B03 campaign integration must pass these before this milestone is marked
+complete.

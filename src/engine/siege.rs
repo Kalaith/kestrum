@@ -236,6 +236,7 @@ pub fn reconcile_sieges(
         life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,
+        battle_pending: false,
         accepted_sequence: candidate.accepted_sequence,
         active_faction: candidate.active_faction(),
         round_completed: false,

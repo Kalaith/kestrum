@@ -109,7 +109,7 @@ pub(in crate::engine) fn execute(
         ),
         _ => unreachable!("noncombat actions returned"),
     };
-    let battle = combat::resolve_encounter(
+    combat::prepare_encounter(
         campaign,
         data,
         combat::Encounter {
@@ -118,15 +118,6 @@ pub(in crate::engine) fn execute(
             origin: order.site,
             site: order.site,
             context,
-        },
-    )?;
-    outcome.battle = Some(battle);
-    record_fact(
-        campaign,
-        outcome,
-        DomainFactKind::BattleResolved {
-            battle,
-            movement: None,
         },
     )?;
     reconcile(campaign, data, outcome)

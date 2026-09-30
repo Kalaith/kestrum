@@ -335,6 +335,7 @@ pub struct Context<'a> {
     pub movement: &'a MoveView,
     pub battle: &'a BattleView,
     pub battlefield: &'a BattlefieldView,
+    pub pending_battle: bool,
     pub battle_resolution: Option<&'a kestrum::state::battle::simulation::BattleResolution>,
     pub help_page: usize,
     pub state: &'a GameState,

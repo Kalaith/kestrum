@@ -107,9 +107,11 @@ impl Game {
                 self.siege.destination = None;
                 self.siege.page = 0;
                 self.siege.status = self.data.presentation.text("siege_order_done").into();
-                if outcome.battle.is_some() {
-                    self.open_battle_reports();
-                    self.battle_return = Some(Overlay::Siege);
+                if outcome.battle_pending {
+                    self.open_pending_battlefield();
+                }
+                if let Some(battle) = outcome.battle {
+                    self.open_committed_battlefield(battle);
                 }
             }
             Err(error) => self.siege.status = error.to_string(),

@@ -67,10 +67,18 @@ impl StrategicCampaign {
             }
             match threat.status {
                 ThreatStatus::Active => {
+                    let pending_participation = self.pending_battle.as_ref().is_some_and(|pending| {
+                        pending.report.site == threat.site
+                            && matches!(&pending.report.defender,
+                                crate::state::battle::BattleDefender::Threat(side) if side.id == threat.id)
+                            && self.armies.values().filter(|army| army.site == threat.site)
+                                .all(|army| pending.report.attacker.armies.iter().any(|entry| entry.id == army.id))
+                    });
                     if threat.headcount == 0
                         || !active.insert(threat.site)
                         || self.sieges.contains_key(&threat.site)
-                        || self.armies.values().any(|army| army.site == threat.site)
+                        || (self.armies.values().any(|army| army.site == threat.site)
+                            && !pending_participation)
                     {
                         return Err(invalid());
                     }

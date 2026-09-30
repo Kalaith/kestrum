@@ -44,7 +44,12 @@ pub(super) fn clear(
     threat: u32,
 ) -> BattleReport {
     let outcome = apply(campaign, data, Actor::Player, command(threat)).unwrap();
-    campaign.battles[&outcome.battle.unwrap()].clone()
+    let resolved = if outcome.battle_pending {
+        apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap()
+    } else {
+        outcome
+    };
+    campaign.battles[&resolved.battle.unwrap()].clone()
 }
 pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();

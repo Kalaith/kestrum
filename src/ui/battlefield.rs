@@ -11,6 +11,8 @@ const EVENT_SECONDS: f32 = 0.42;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BattlefieldAction {
+    StartPendingBattle,
+    Close,
     TogglePause,
     Step,
     SetSpeed(u8),
@@ -65,6 +67,7 @@ impl BattlefieldView {
 
     pub fn apply(&mut self, action: BattlefieldAction, event_count: usize) {
         match action {
+            BattlefieldAction::StartPendingBattle | BattlefieldAction::Close => {}
             BattlefieldAction::TogglePause => self.is_paused = !self.is_paused,
             BattlefieldAction::Step => {
                 self.is_paused = true;

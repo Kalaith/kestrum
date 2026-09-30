@@ -55,19 +55,32 @@ pub(crate) fn execute(
         outcome.path.push(to);
         super::super::exploration::visit(campaign, owner, to);
         if siege_entry {
-            outcome.battle =
-                super::super::siege::arrive(campaign, data, &outcome.armies, from, to, action)?;
+            super::super::siege::arrive(campaign, data, &outcome.armies, from, to, action)?;
             break;
         }
-        if !contact.defenders.is_empty() {
-            outcome.battle = Some(combat::resolve(
+        if let Some(threat) = campaign.active_threat(to).map(|threat| threat.id) {
+            super::super::combat::prepare_threat(
                 campaign,
                 data,
                 &outcome.armies,
-                &contact.defenders,
                 from,
-                to,
-            )?);
+                threat,
+                None,
+            )?;
+            break;
+        }
+        if !contact.defenders.is_empty() {
+            super::super::combat::prepare_encounter(
+                campaign,
+                data,
+                super::super::combat::Encounter {
+                    attackers: outcome.armies.clone(),
+                    defenders: contact.defenders,
+                    origin: from,
+                    site: to,
+                    context: crate::state::battle::BattleContext::Field,
+                },
+            )?;
             break;
         }
         if !contact.neutral_peaceful_stack {
@@ -89,11 +102,6 @@ fn step_block(
         return Some(MovementBlock::RouteUnavailable);
     };
     public_block(campaign, owner, site)
-        .or_else(|| {
-            campaign
-                .active_threat(site)
-                .map(|_| MovementBlock::ThreatRequiresClear)
-        })
         .or_else(|| {
             (cost > remaining).then_some(MovementBlock::InsufficientMovement {
                 required: cost,

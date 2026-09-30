@@ -16,6 +16,18 @@ pub(in crate::engine) fn validate_command(
             "This campaign has ended. Its records and saves remain available.".into(),
         ));
     }
+    if campaign.pending_battle.is_some() && *command != Command::StartPendingBattle {
+        return Err(RuleError::BattlePending);
+    }
+    if *command == Command::StartPendingBattle {
+        if actor != Actor::Player {
+            return Err(RuleError::WrongActor);
+        }
+        if campaign.pending_battle.is_none() {
+            return Err(RuleError::NoPendingBattle);
+        }
+        return Ok(());
+    }
     let decision = matches!(
         command,
         Command::RespondPeace { .. } | Command::ResolveDefeat { .. }
@@ -29,6 +41,7 @@ pub(in crate::engine) fn validate_command(
         return Err(RuleError::UnknownActor);
     }
     match command {
+        Command::StartPendingBattle => return Err(RuleError::NoPendingBattle),
         Command::RespondPeace { .. } | Command::ResolveDefeat { .. } => {
             if actor != Actor::Player {
                 return Err(RuleError::WrongActor);

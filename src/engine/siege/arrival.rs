@@ -1,7 +1,7 @@
 //! Entry spends the physical edge before establishment, relief or a camp challenge.
 
 use super::*;
-use crate::state::battle::{BattleContext, BattleId, BattleOutcome};
+use crate::state::battle::{BattleContext, BattleId};
 
 pub(in crate::engine) fn admission(
     campaign: &StrategicCampaign,
@@ -78,7 +78,7 @@ pub(in crate::engine) fn arrive(
                 garrison_faction: siege.defender,
             }
         };
-        let battle = combat::resolve_encounter(
+        combat::prepare_encounter(
             campaign,
             data,
             combat::Encounter {
@@ -89,23 +89,7 @@ pub(in crate::engine) fn arrive(
                 context,
             },
         )?;
-        if owner != siege.defender
-            && campaign.battles[&battle].outcome == BattleOutcome::AttackerVictory
-        {
-            campaign.sieges.remove(&site);
-            record_fact(
-                campaign,
-                outcome,
-                DomainFactKind::SiegeChanged {
-                    siege: siege.clone(),
-                    change: SiegeChange::Lifted,
-                },
-            )?;
-            establish(campaign, data, site, siege.defender, owner, outcome)?;
-        } else {
-            reconcile(campaign, data, outcome)?;
-        }
-        return Ok(Some(battle));
+        return Ok(None);
     }
     establish_or_capture(campaign, data, owner, site, outcome)
 }

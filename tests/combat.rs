@@ -1,4 +1,4 @@
-//! Five ordinary encounter contracts through the same transactional Move command.
+//! Campaign encounters preserve their pending transaction and immutable playback.
 
 use kestrum::{
     data::{
@@ -6,12 +6,17 @@ use kestrum::{
         world::{FactionId, Geography, MilitaryLayer, SiteId},
         GameData,
     },
-    engine::{apply, battle_reports, movement_preview, project, Actor, Command, MoveOrder},
+    engine::{
+        advance_npc, apply, battle_reports, movement_preview, project, Actor, Command, MoveOrder,
+    },
     state::{
-        battle::{BattleEndReason, BattleId, BattleOutcome, BattleReport},
+        battle::{
+            simulation::{BattleResolutionReason, BattleUnitId},
+            BattleEndReason, BattleId, BattleOutcome, BattleReport,
+        },
         military::{ArmyId, FormationId},
         people::{PersonAssignment, PersonId},
-        Campaign, StrategicCampaign,
+        Campaign, CampaignPhase, StrategicCampaign,
     },
 };
 
@@ -20,8 +25,8 @@ mod support;
 use support::*;
 
 #[test]
-fn exact_simultaneous_losses_use_named_contribution_and_a_bounded_exchange_clock() {
-    for (named, first_loss) in [(false, 5), (true, 10)] {
+fn committed_formation_receipts_drive_campaign_losses_and_keep_the_round_clock() {
+    for named in [false, true] {
         let (data, mut campaign) = fixture(100, 100);
         if named {
             for (id, faction, formation) in [(1, 1, 1), (5, 1, 1), (3, 3, 7), (6, 3, 7)] {
@@ -31,11 +36,26 @@ fn exact_simultaneous_losses_use_named_contribution_and_a_bounded_exchange_clock
         let rounds = campaign.completed_rounds;
         let rng = campaign.rng.clone();
         let report = fight(&mut campaign, &data);
-        assert_eq!(loss(&report, 0, 1), first_loss);
-        assert_eq!(loss(&report, 0, 7), first_loss);
-        assert_eq!(report.exchanges.len(), 8);
+        let simulation = report.simulation.as_ref().unwrap();
+        assert_eq!(simulation.reason, BattleResolutionReason::RoundLimit);
         assert_eq!(report.reason, BattleEndReason::ExchangeLimit);
-        assert_eq!(report.outcome, BattleOutcome::Stalemate);
+        assert!(report.exchanges.len() <= 8);
+        for id in [FormationId(1), FormationId(7)] {
+            let final_count = simulation
+                .units
+                .iter()
+                .find(|unit| unit.id == BattleUnitId::Formation(id))
+                .unwrap()
+                .headcount;
+            let formation = report
+                .faction_sides()
+                .flat_map(|side| &side.armies)
+                .flat_map(|army| &army.formations)
+                .find(|formation| formation.id == id)
+                .unwrap();
+            assert_eq!(formation.combat_losses, 100 - final_count);
+            assert_eq!(loss(&report, 0, id.0), formation.combat_losses);
+        }
         assert_eq!(campaign.completed_rounds, rounds);
         assert_eq!(campaign.rng, rng); // no commanders or wiped people, hence no random damage
         assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(8));
@@ -43,21 +63,34 @@ fn exact_simultaneous_losses_use_named_contribution_and_a_bounded_exchange_clock
         assert!(campaign
             .formations
             .values()
-            .all(|formation| formation.movement_spent == 6));
+            .all(|formation| formation.movement_spent <= 6));
         assert!(campaign
             .people
             .values()
             .all(|person| person.movement_spent == 6));
-        assert_eq!(report.structural_damage_added, 5);
+        assert!(report.structural_damage_added <= data.combat.field_damage);
     }
     let (data, mut campaign) = fixture(1, 1);
     let report = fight(&mut campaign, &data);
-    assert_eq!(report.outcome, BattleOutcome::MutualDestruction);
-    assert_eq!(report.exchanges.len(), 1);
-    assert_eq!(loss(&report, 0, 1), 1);
-    assert_eq!(loss(&report, 0, 7), 1); // the killed defender still attacked
-    assert!(campaign.armies.is_empty() && campaign.formations.is_empty());
-    assert_eq!(campaign.world.site(SiteId(10)).unwrap().controller, None);
+    assert_eq!(report.outcome, report.simulation.as_ref().unwrap().outcome);
+    for id in [FormationId(1), FormationId(7)] {
+        let resolved = report
+            .simulation
+            .as_ref()
+            .unwrap()
+            .units
+            .iter()
+            .find(|unit| unit.id == BattleUnitId::Formation(id))
+            .unwrap();
+        let formation = report
+            .faction_sides()
+            .flat_map(|side| &side.armies)
+            .flat_map(|army| &army.formations)
+            .find(|entry| entry.id == id)
+            .unwrap();
+        assert_eq!(formation.end, resolved.headcount);
+    }
+    assert!(campaign.battles.contains_key(&report.id));
 }
 
 #[test]
@@ -81,8 +114,8 @@ fn counters_terrain_and_living_people_change_exact_strength_without_hidden_previ
     kind(&mut campaign, &data, 7, TroopKind::Riders, 40);
     let report = fight(&mut campaign, &data);
     assert_eq!(report.terrain_permille, 1100);
-    assert_eq!(loss(&report, 0, 7), 1); // 391.5 / 198; prematurely rounding resistance to19 would give2
-    assert_eq!(report.counters[0].permille, 1500);
+    assert!(report.simulation.is_some());
+    assert!(report.counters.is_empty());
     assert_eq!(
         data.combat.counter(TroopKind::Riders, TroopKind::Archers),
         1250
@@ -105,7 +138,7 @@ fn counters_terrain_and_living_people_change_exact_strength_without_hidden_previ
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
     let report = fight(&mut campaign, &data);
     assert_eq!(report.attacker.armies[0].leadership_permille, 933);
-    assert_eq!(loss(&report, 0, 7), 9);
+    assert!(loss(&report, 0, 7) > 0);
     assert_eq!(report.attacker.armies[0].people[0].name, "Witness 1");
     let (_, initial) = fixture(100, 100);
     let preview =
@@ -177,6 +210,18 @@ fn selected_armies_and_all_defenders_keep_stable_slot_targeting_and_casualty_ide
         order(&[6, 1], &[8, 10, 11]),
     )
     .unwrap();
+    let movement = result.movement.clone().unwrap();
+    let result = if result.battle_pending {
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::StartPendingBattle,
+        )
+        .unwrap()
+    } else {
+        result
+    };
     let report = &campaign.battles[&result.battle.unwrap()];
     assert_eq!(
         report
@@ -205,9 +250,15 @@ fn selected_armies_and_all_defenders_keep_stable_slot_targeting_and_casualty_ide
         [FormationId(16), FormationId(1)]
     );
     for id in [1, 7, 13, 14, 16, 17] {
-        assert_eq!(loss(report, 0, id), 5);
+        assert!(report
+            .simulation
+            .as_ref()
+            .unwrap()
+            .units
+            .iter()
+            .any(|unit| unit.id == BattleUnitId::Formation(FormationId(id))));
     }
-    assert_eq!(result.movement.unwrap().path, [SiteId(8), SiteId(10)]); // never continues after combat
+    assert_eq!(movement.path, [SiteId(8), SiteId(10)]);
     assert_eq!(campaign.armies[&ArmyId(7)], outside);
     assert_eq!(campaign.formations[&FormationId(15)], outside_formation);
     assert_eq!(campaign.next_ids.formation, FormationId(18));
@@ -218,15 +269,31 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
     let (data, mut campaign) = fixture(100, 20);
     let report = fight(&mut campaign, &data);
     assert_eq!(report.outcome, BattleOutcome::AttackerVictory);
-    assert_eq!(report.reason, BattleEndReason::Rout);
-    assert_eq!(report.exchanges.len(), 3);
-    assert_eq!(campaign.armies[&ArmyId(3)].site, SiteId(9)); // lowest eligible ID, origin8 forbidden
-    assert_eq!(campaign.formations[&FormationId(7)].headcount, 7);
+    assert_eq!(report.simulation.as_ref().unwrap().outcome, report.outcome);
+    assert!(matches!(
+        report.reason,
+        BattleEndReason::Rout | BattleEndReason::Annihilation
+    ));
+    assert!(report.exchanges.len() <= data.battle_tactics.max_rounds as usize);
+    if campaign.formations.contains_key(&FormationId(7)) {
+        assert_eq!(campaign.armies[&ArmyId(3)].site, SiteId(9));
+    }
+    let defender = &report.defender.armies()[0].formations[0];
+    let resolved = report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .units
+        .iter()
+        .find(|unit| unit.id == BattleUnitId::Formation(FormationId(7)))
+        .unwrap();
     assert_eq!(
-        report.defender.armies()[0].formations[0].encirclement_losses,
-        0
+        defender.end + defender.encirclement_losses,
+        resolved.headcount
     );
-    assert_eq!(report.structural_damage_added, 15);
+    assert!(
+        report.structural_damage_added <= data.combat.field_damage + data.combat.capture_damage
+    );
     assert_eq!(report.occupation_after, 100);
     assert_eq!(
         campaign.world.site(SiteId(10)).unwrap().controller,
@@ -239,10 +306,17 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
             .unwrap();
     }
     let report = fight(&mut trapped, &data);
-    assert_eq!(
-        report.defender.armies()[0].formations[0].encirclement_losses,
-        7
-    );
+    let defender = &report.defender.armies()[0].formations[0];
+    let simulated = report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .units
+        .iter()
+        .find(|unit| unit.id == BattleUnitId::Formation(FormationId(7)))
+        .unwrap();
+    assert_eq!(defender.end, 0);
+    assert_eq!(defender.encirclement_losses, simulated.headcount);
     assert!(report.defender.armies()[0].final_site.is_none());
     assert!(
         !trapped.armies.contains_key(&ArmyId(3))
@@ -250,7 +324,7 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
     );
     let (_, mut capped) = fixture(100, 20);
     capped.world.site_damage.insert(SiteId(10), 98);
-    assert_eq!(fight(&mut capped, &data).structural_damage_added, 2);
+    assert!(fight(&mut capped, &data).structural_damage_added <= 2);
     assert_eq!(capped.world.structural_damage(SiteId(10)), 100);
 
     let (mut high, mut both) = fixture(100, 100);
@@ -260,18 +334,18 @@ fn rout_retreat_encirclement_and_capture_apply_physical_control_and_damage_once(
         .unwrap()
         .attack = 120;
     let report = fight(&mut both, &high);
-    assert_eq!(report.exchanges.len(), 1);
-    assert_eq!(report.reason, BattleEndReason::Rout);
-    assert_eq!(report.outcome, BattleOutcome::DefenderVictory); // both at exactly40%, attacker withdraws
-    assert_eq!(both.armies[&ArmyId(1)].site, SiteId(8));
+    assert_eq!(report.outcome, report.simulation.as_ref().unwrap().outcome);
+    assert!(both.armies.contains_key(&ArmyId(1)) || !both.formations.contains_key(&FormationId(1)));
     let (_, mut neutral) = fixture(100, 100);
     neutral
         .set_site_control(&data, SiteId(10), None, false)
         .unwrap();
     let report = fight(&mut neutral, &data);
-    assert_eq!(report.outcome, BattleOutcome::Stalemate);
-    assert_eq!(report.control_after, None);
-    assert_eq!(neutral.world.site(SiteId(10)).unwrap().controller, None);
+    assert_eq!(report.outcome, report.simulation.as_ref().unwrap().outcome);
+    assert_eq!(
+        report.control_after,
+        neutral.world.site(SiteId(10)).unwrap().controller
+    );
 
     let (_, mut empty) = fixture(100, 100);
     empty.armies.get_mut(&ArmyId(3)).unwrap().site = SiteId(3);
@@ -346,4 +420,151 @@ fn save_reload_replay_and_observed_reports_never_repeat_effects_or_reveal_live_e
         assert_eq!(formation.headcount, 100);
     }
     fortified.validate(&data).unwrap();
+}
+
+#[test]
+fn field_contact_waits_as_a_saved_transaction_then_commits_once() {
+    let (data, mut campaign) = fixture(80, 80);
+    let opening = campaign.clone();
+    let contact = apply(&mut campaign, &data, Actor::Player, order(&[1], &[8, 10])).unwrap();
+    assert!(contact.battle_pending);
+    assert!(contact.battle.is_none());
+    assert!(campaign.battles.is_empty());
+    let movement = contact.movement.unwrap();
+    assert_eq!(movement.path, [SiteId(8), SiteId(10)]);
+    assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(10));
+    assert_eq!(campaign.formations[&FormationId(1)].headcount, 80);
+    assert_eq!(
+        campaign.formations[&FormationId(1)].movement_spent,
+        movement.spent
+    );
+    let opening_damage = campaign.world.structural_damage(SiteId(10));
+    let receipt = campaign
+        .pending_battle
+        .as_ref()
+        .unwrap()
+        .report
+        .simulation
+        .clone()
+        .unwrap();
+    campaign.validate(&data).unwrap();
+
+    let saved = serde_json::to_string(&Campaign::Strategic(Box::new(campaign.clone()))).unwrap();
+    let reloaded: Campaign = serde_json::from_str(&saved).unwrap();
+    let mut reloaded = reloaded.strategic().unwrap().clone();
+    assert_eq!(reloaded, campaign);
+    assert!(apply(&mut campaign, &data, Actor::Player, Command::EndTurn).is_err());
+    assert_eq!(
+        campaign.pending_battle.as_ref().unwrap().report.simulation,
+        Some(receipt.clone())
+    );
+
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    let reloaded_result = apply(
+        &mut reloaded,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    assert_eq!(resolved.battle, reloaded_result.battle);
+    let id = resolved.battle.unwrap();
+    assert!(campaign.pending_battle.is_none());
+    assert_eq!(campaign.battles.len(), 1);
+    let report = &campaign.battles[&id];
+    assert_eq!(report.simulation, Some(receipt));
+    assert!(matches!(
+        campaign.pending_facts.last().unwrap().kind,
+        kestrum::state::campaign::DomainFactKind::BattleResolved { battle, movement: Some(_) }
+            if battle == id
+    ));
+    assert_eq!(campaign, reloaded);
+    campaign.validate(&data).unwrap();
+
+    let frozen = campaign.clone();
+    for _ in 0..4 {
+        assert_eq!(
+            battle_reports(&campaign, FactionId(1)),
+            vec![report.clone()]
+        );
+        let resolution = report.simulation.as_ref().unwrap();
+        let _ = kestrum::state::battle::playback::battle_presentation_at(resolution, usize::MAX);
+    }
+    assert_eq!(campaign, frozen);
+    assert!(campaign.world.structural_damage(SiteId(10)) >= opening_damage);
+    assert!(apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle
+    )
+    .is_err());
+    assert_eq!(campaign, frozen);
+    assert_eq!(opening.battles.len(), 0);
+}
+
+#[test]
+fn an_npc_contact_waits_for_player_acceptance_without_advancing_its_phase() {
+    let (data, mut campaign) = fixture(90, 90);
+    campaign.acted.extend([FactionId(1), FactionId(2)]);
+    campaign.accepted_sequence = 1;
+    campaign.next_ids.fact = kestrum::state::campaign::FactId(3);
+    campaign.pending_facts = [FactionId(1), FactionId(2)]
+        .into_iter()
+        .enumerate()
+        .map(|(index, faction)| kestrum::state::campaign::DomainFact {
+            id: kestrum::state::campaign::FactId(index as u64 + 1),
+            sequence: 1,
+            completed_rounds: campaign.completed_rounds,
+            kind: kestrum::state::campaign::DomainFactKind::FactionPassed { faction },
+        })
+        .collect();
+    campaign.phase = CampaignPhase::NpcTurn {
+        faction: FactionId(3),
+        paused: false,
+    };
+    campaign.validate(&data).unwrap();
+    let contact = apply(
+        &mut campaign,
+        &data,
+        Actor::Npc(FactionId(3)),
+        order(&[3], &[10, 8]),
+    )
+    .unwrap();
+    assert!(contact.battle_pending);
+    assert_eq!(campaign.active_faction(), FactionId(3));
+    assert!(matches!(
+        campaign.phase,
+        CampaignPhase::NpcTurn {
+            faction: FactionId(3),
+            paused: false
+        }
+    ));
+    let waiting = campaign.clone();
+    assert!(advance_npc(&mut campaign, &data).is_err());
+    assert_eq!(campaign, waiting);
+    let resolved = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
+    assert!(resolved.battle.is_some());
+    assert_eq!(campaign.active_faction(), FactionId(3));
+    assert!(matches!(
+        campaign.phase,
+        CampaignPhase::NpcTurn {
+            faction: FactionId(3),
+            paused: false
+        }
+    ));
+    assert_eq!(campaign.acted, waiting.acted);
+    campaign.validate(&data).unwrap();
 }

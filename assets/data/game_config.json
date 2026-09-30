@@ -542,6 +542,8 @@
     "battle_play_step": "Step",
     "battle_play_skip": "To result",
     "battle_play_complete": "Result shown",
+    "battle_start_current_plan": "Start Battle · Use Current Plan",
+    "battle_continue": "Continue",
     "battle_play_inspect": "Select a group to inspect",
     "battle_play_gap": "OPEN LANE",
     "battle_play_routed": "ROUTED",

@@ -2,8 +2,8 @@
 
 mod arithmetic;
 mod context;
-mod threat;
-pub(super) use threat::resolve_threat;
+mod formation;
+pub(super) use formation::{commit_pending, prepare_encounter, prepare_threat};
 
 use super::{resolve_person_combat, retreat, PersonCombatContext, PersonCombatSide, RuleError};
 use crate::{
@@ -41,84 +41,6 @@ pub(super) struct Encounter {
     pub origin: SiteId,
     pub site: SiteId,
     pub context: BattleContext,
-}
-
-pub(super) fn resolve(
-    campaign: &mut StrategicCampaign,
-    data: &GameData,
-    attackers: &[ArmyId],
-    defenders: &[ArmyId],
-    origin: SiteId,
-    site: SiteId,
-) -> Result<BattleId, RuleError> {
-    resolve_encounter(
-        campaign,
-        data,
-        Encounter {
-            attackers: attackers.to_vec(),
-            defenders: defenders.to_vec(),
-            origin,
-            site,
-            context: BattleContext::Field,
-        },
-    )
-}
-
-pub(super) fn resolve_encounter(
-    campaign: &mut StrategicCampaign,
-    data: &GameData,
-    encounter: Encounter,
-) -> Result<BattleId, RuleError> {
-    let mut report = new_report(campaign, data, &encounter)?;
-    if !retreat::hostile(
-        campaign,
-        report.attacker.faction,
-        report.defender.faction().expect("faction encounter"),
-    ) {
-        return Err(RuleError::InvalidState(
-            "Encounter participants are not hostile.".into(),
-        ));
-    }
-    campaign.next_ids.battle = BattleId(report.id.0.checked_add(1).ok_or(RuleError::Overflow {
-        field: "battle identifiers",
-    })?);
-    let mut people = PersonCombatContext {
-        site: report.site,
-        sides: vec![
-            person_side(campaign, data, &report.attacker),
-            person_side(
-                campaign,
-                data,
-                report.defender.faction_side().expect("faction encounter"),
-            ),
-        ],
-    };
-    arithmetic::exchanges(campaign, data, &mut report)?;
-    record_losses(campaign, data, &mut report);
-    context::withdrawals(campaign, &mut report);
-    people.sides[0].refuges =
-        retreat::refuges(campaign, report.attacker.faction, report.site, None);
-    people.sides[1].refuges = retreat::refuges(
-        campaign,
-        report.defender.faction().expect("faction encounter"),
-        report.site,
-        Some(report.origin),
-    );
-    report.person_events = resolve_person_combat(campaign, data, &people)?;
-    cleanup(campaign, data);
-    finish_side(campaign, &mut report.attacker);
-    finish_side(
-        campaign,
-        report
-            .defender
-            .faction_side_mut()
-            .expect("faction encounter"),
-    );
-    context::site_result(campaign, data, &mut report);
-    super::knowledge::observe_battle(&mut campaign.knowledge, &report);
-    let id = report.id;
-    campaign.battles.insert(id, report);
-    Ok(id)
 }
 
 fn record_losses(campaign: &mut StrategicCampaign, data: &GameData, report: &mut BattleReport) {
@@ -175,6 +97,7 @@ fn new_report(
         .site(site)
         .ok_or(RuleError::UnknownSite { site })?;
     Ok(BattleReport {
+        simulation: None,
         context: encounter.context.clone(),
         wall_permille: if matches!(encounter.context, BattleContext::Assault { .. }) {
             campaign

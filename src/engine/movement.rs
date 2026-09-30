@@ -269,25 +269,21 @@ pub(super) fn preview_order(
         if stop.is_some() {
             continue;
         }
-        let reason = public_block(campaign, observer, to)
-            .or_else(|| {
-                threats
-                    .iter()
-                    .any(|threat| threat.site == to)
-                    .then_some(MovementBlock::ThreatRequiresClear)
+        let reason = public_block(campaign, observer, to).or_else(|| {
+            (cost > left).then_some(MovementBlock::InsufficientMovement {
+                required: cost,
+                remaining: left,
             })
-            .or_else(|| {
-                (cost > left).then_some(MovementBlock::InsufficientMovement {
-                    required: cost,
-                    remaining: left,
-                })
-            });
+        });
         if let Some(reason) = reason {
             stop = Some(MovementStop { site: to, reason });
         } else {
             left -= cost;
             reachable_steps += 1;
             reachable_site = to;
+            if threats.iter().any(|threat| threat.site == to) {
+                break;
+            }
         }
     }
     Ok(MovementPreview {

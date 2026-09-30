@@ -275,6 +275,11 @@ impl Game {
             self.history.status = "This encounter's detailed report is no longer retained.".into();
             return;
         };
+        if reports[index].simulation.is_some() {
+            self.battle_return = Some(Overlay::History);
+            self.open_committed_battlefield(id);
+            return;
+        }
         self.battle = ui::BattleView {
             index,
             ..Default::default()

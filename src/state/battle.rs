@@ -38,6 +38,10 @@ pub enum BattleEndReason {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattleReport {
+    /// Immutable event log from the formation resolver. Earlier campaign reports
+    /// predate this field and keep their exchange-only receipt.
+    #[serde(default)]
+    pub simulation: Option<simulation::BattleResolution>,
     #[serde(default)]
     pub context: BattleContext,
     #[serde(default = "ordinary_factor")]
@@ -64,6 +68,15 @@ pub struct BattleReport {
     pub structural_damage_added: u32,
     pub occupation_after: u32,
     pub person_events: Vec<PersonCombatEvent>,
+}
+
+/// A movement/order may wait here until the player starts the encounter.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PendingBattle {
+    pub report: BattleReport,
+    pub movement: Option<super::evidence::MovementService>,
+    pub started_by: FactionId,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

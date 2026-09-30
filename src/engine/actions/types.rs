@@ -26,6 +26,8 @@ pub enum Actor {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
+    /// Player acceptance commits the saved pending encounter exactly once.
+    StartPendingBattle,
     DeclareWar {
         faction: FactionId,
     },
@@ -203,6 +205,8 @@ pub enum RuleError {
     },
     NotNpcPhase,
     NpcPaused,
+    BattlePending,
+    NoPendingBattle,
     PauseRequired,
     PauseUnchanged,
     UnknownSite {
@@ -324,6 +328,10 @@ impl fmt::Display for RuleError {
             Self::NotYourTurn { .. } => formatter.write_str("Wait for your faction's turn."),
             Self::NotNpcPhase => formatter.write_str("NPC phases have already finished."),
             Self::NpcPaused => formatter.write_str("NPC phases are paused. Tap STEP or RESUME."),
+            Self::BattlePending => {
+                formatter.write_str("Start the pending battle before issuing another order.")
+            }
+            Self::NoPendingBattle => formatter.write_str("There is no battle waiting to start."),
             Self::PauseRequired => {
                 formatter.write_str("Pause NPC phases before taking a single step.")
             }
@@ -417,6 +425,7 @@ pub struct ActionOutcome {
     pub life_events: Vec<crate::state::history::HistoryId>,
     pub automatic_retirements: Vec<crate::state::people::PersonId>,
     pub battle: Option<BattleId>,
+    pub battle_pending: bool,
     pub accepted_sequence: u64,
     pub active_faction: FactionId,
     pub round_completed: bool,

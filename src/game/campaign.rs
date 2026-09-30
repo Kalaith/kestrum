@@ -85,6 +85,10 @@ impl Game {
                 if !messages.is_empty() {
                     self.notice = Some((messages.join(" "), 5.0));
                 }
+                if outcome.battle_pending {
+                    self.battle_return = None;
+                    self.open_pending_battlefield();
+                }
                 if outcome.round_completed
                     && self
                         .state
@@ -100,7 +104,8 @@ impl Game {
                     .is_some_and(|battle| self.witnessed_battle(battle))
                     && self.state.overlay != Overlay::SaveRecovery
                 {
-                    self.open_battle_reports();
+                    self.battle_return = None;
+                    self.open_committed_battlefield(outcome.battle.expect("witnessed battle"));
                 }
             }
             Err(error) => self.error = Some(error.to_string()),
@@ -123,6 +128,7 @@ impl Game {
             .and_then(Campaign::strategic)
             .is_some_and(|campaign| {
                 !campaign.diplomacy.is_blocked()
+                    && campaign.pending_battle.is_none()
                     && matches!(
                         campaign.phase,
                         kestrum::state::campaign::CampaignPhase::NpcTurn { paused: false, .. }

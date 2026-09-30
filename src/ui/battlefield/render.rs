@@ -30,6 +30,8 @@ pub(super) fn prepare_text(ctx: &Context<'_>) {
         (20, ctx.text("battle_play_step")),
         (20, ctx.text("battle_play_skip")),
         (20, ctx.text("battle_play_complete")),
+        (20, ctx.text("battle_start_current_plan")),
+        (20, ctx.text("battle_continue")),
         (18, ctx.text("battle_play_inspect")),
         (20, ctx.text("battle_play_attack")),
         (20, ctx.text("battle_play_volley")),
@@ -474,6 +476,17 @@ fn draw_controls(ctx: &Context<'_>) -> Option<UiAction> {
     );
     let resolution = ctx.battle_resolution.expect("draw requires a resolution");
     let finished = ctx.battlefield.event_cursor >= resolution.events.len();
+    if ctx.pending_battle {
+        let label = ctx.text("battle_start_current_plan");
+        return components::button(
+            ctx,
+            Rect::new(455.0, 667.0, 370.0, 40.0),
+            &label,
+            true,
+            true,
+        )
+        .then_some(UiAction::Battlefield(BattlefieldAction::StartPendingBattle));
+    }
     let pause_label = if finished {
         ctx.text("battle_play_complete")
     } else if ctx.battlefield.is_paused {
@@ -524,15 +537,23 @@ fn draw_controls(ctx: &Context<'_>) -> Option<UiAction> {
             action = Some(UiAction::Battlefield(BattlefieldAction::SetSpeed(speed)));
         }
     }
-    let skip_label = ctx.text("battle_play_skip");
+    let skip_label = if finished {
+        ctx.text("battle_continue")
+    } else {
+        ctx.text("battle_play_skip")
+    };
     if components::button(
         ctx,
         Rect::new(766.0, 667.0, 165.0, 40.0),
         &skip_label,
-        !finished,
+        true,
         false,
     ) {
-        action = Some(UiAction::Battlefield(BattlefieldAction::SkipToResult));
+        action = Some(UiAction::Battlefield(if finished {
+            BattlefieldAction::Close
+        } else {
+            BattlefieldAction::SkipToResult
+        }));
     }
     action
 }

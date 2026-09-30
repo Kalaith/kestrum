@@ -98,6 +98,9 @@ pub fn advance_npc(
     campaign: &mut StrategicCampaign,
     data: &GameData,
 ) -> Result<ActionOutcome, RuleError> {
+    if campaign.pending_battle.is_some() {
+        return Err(RuleError::BattlePending);
+    }
     let CampaignPhase::NpcTurn { faction, .. } = campaign.phase else {
         return Err(RuleError::NotNpcPhase);
     };
@@ -112,7 +115,21 @@ pub fn advance_npc(
         Actor::Npc(faction),
         decision.command.clone(),
     ) {
-        Ok(outcome) => {
+        Ok(mut outcome) => {
+            if candidate.pending_battle.as_ref().is_some_and(|pending| {
+                !pending
+                    .report
+                    .participant_factions()
+                    .any(|participant| participant == campaign.player)
+            }) {
+                let accepted = apply(
+                    &mut candidate,
+                    data,
+                    Actor::Player,
+                    Command::StartPendingBattle,
+                )?;
+                merge_outcome(&mut outcome, accepted);
+            }
             super::ai::accepted(&mut candidate, campaign, data, faction, &decision)?;
             outcome
         }
@@ -123,6 +140,34 @@ pub fn advance_npc(
     };
     *campaign = candidate;
     Ok(outcome)
+}
+
+fn merge_outcome(target: &mut ActionOutcome, mut later: ActionOutcome) {
+    target.life_events.append(&mut later.life_events);
+    target
+        .automatic_retirements
+        .append(&mut later.automatic_retirements);
+    target.battle = later.battle.or(target.battle);
+    target.battle_pending = later.battle_pending;
+    target.accepted_sequence = later.accepted_sequence;
+    target.active_faction = later.active_faction;
+    target.round_completed |= later.round_completed;
+    target.facts.append(&mut later.facts);
+    target.consumed_facts.append(&mut later.consumed_facts);
+    target.recruited = later.recruited.or(target.recruited);
+    target.disbanded = later.disbanded.or(target.disbanded);
+    if later.movement.is_some() {
+        target.movement = later.movement;
+    }
+    target.split_army = later.split_army.or(target.split_army);
+    target.succession.append(&mut later.succession);
+    target.new_people.append(&mut later.new_people);
+    target
+        .legacy_items_changed
+        .append(&mut later.legacy_items_changed);
+    target
+        .anniversary_reminders
+        .append(&mut later.anniversary_reminders);
 }
 
 mod npc;
@@ -177,6 +222,7 @@ fn prepare(
         life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,
+        battle_pending: false,
         accepted_sequence: candidate.accepted_sequence,
         active_faction: candidate.active_faction(),
         round_completed: false,
@@ -289,6 +335,7 @@ fn finish(
         super::history::prune(candidate, data);
     }
     outcome.succession = super::succession::notices(before, candidate);
+    outcome.battle_pending = candidate.pending_battle.is_some();
     super::exploration::observe(candidate);
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     outcome.active_faction = candidate.active_faction();
@@ -312,6 +359,9 @@ fn execute(
         }
         Command::ClearThreat { armies, threat } => {
             super::threats::execute(candidate, data, owner, &armies, threat, outcome)?;
+        }
+        Command::StartPendingBattle => {
+            super::combat::commit_pending(candidate, data, outcome)?;
         }
         command @ (Command::Resettle { .. }
         | Command::RenameSite { .. }
@@ -418,21 +468,21 @@ fn execute_move(
 ) -> Result<(), RuleError> {
     let moved = movement::execute(candidate, data, &order, outcome)?;
     let receipt = movement::service_snapshot(before, &moved);
-    let fact = if let Some(battle) = moved.battle {
-        DomainFactKind::BattleResolved {
-            battle,
-            movement: Some(receipt),
-        }
+    let fact = if let Some(pending) = candidate.pending_battle.as_mut() {
+        pending.movement = Some(receipt);
+        None
     } else {
-        DomainFactKind::ArmiesMoved {
+        Some(DomainFactKind::ArmiesMoved {
             faction: owner,
             armies: moved.armies.clone(),
             path: moved.path.clone(),
             spent: moved.spent,
             movement: Some(receipt),
-        }
+        })
     };
-    record_fact(candidate, outcome, fact)?;
+    if let Some(fact) = fact {
+        record_fact(candidate, outcome, fact)?;
+    }
     outcome.battle = moved.battle;
     outcome.movement = Some(moved);
     Ok(())

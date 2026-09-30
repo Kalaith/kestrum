@@ -562,6 +562,8 @@ pub(super) const REQUIRED_TEXT: &[&str] = &[
     "battle_play_step",
     "battle_play_skip",
     "battle_play_complete",
+    "battle_start_current_plan",
+    "battle_continue",
     "battle_play_inspect",
     "battle_play_gap",
     "battle_play_routed",

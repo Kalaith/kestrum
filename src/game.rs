@@ -377,6 +377,7 @@ impl Game {
 
     pub fn frame(&mut self, dt: f32) {
         self.poll_storage();
+        self.sync_pending_battle();
         self.progress_npcs(dt);
         self.advance_battlefield(dt);
         if self.state.overlay == Overlay::Saves {
@@ -422,6 +423,12 @@ impl Game {
             movement: &self.movement,
             battle: &self.battle,
             battlefield: &self.battlefield_view,
+            pending_battle: self
+                .state
+                .campaign
+                .as_ref()
+                .and_then(Campaign::strategic)
+                .is_some_and(|campaign| campaign.pending_battle.is_some()),
             battle_resolution: self.battlefield.as_ref(),
             help_page: self.help_page,
             state: &self.state,

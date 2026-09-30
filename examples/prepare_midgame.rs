@@ -46,6 +46,58 @@ fn main() -> Result<(), String> {
         saved.battles.len(),
         saved.pending_battle.is_some(),
     );
+    let view =
+        kestrum::engine::project_map(saved, saved.player).map_err(|error| error.to_string())?;
+    let settlements = saved
+        .world
+        .sites
+        .iter()
+        .filter(|site| {
+            site.controller == Some(saved.player)
+                && site.habitation >= kestrum::data::economy::Habitation::Outpost
+        })
+        .count();
+    let people = saved
+        .people
+        .values()
+        .filter(|person| person.faction == saved.player && person.is_alive())
+        .count();
+    let armies = saved
+        .armies
+        .values()
+        .filter(|army| army.faction == saved.player)
+        .count();
+    println!("Revealed {}/{} markers and {}/{} sites; {settlements} settlements, {armies} armies, {people} living named people, {} known factions",
+        view.world.markers.len(), saved.world.markers.len(), view.world.sites.len(), saved.world.sites.len(), view.factions.len());
+    for person in saved
+        .people
+        .values()
+        .filter(|person| person.faction == saved.player && person.is_alive())
+    {
+        println!(
+            "{}: {:?}, age {}",
+            person.name,
+            person.class,
+            person.age_years(saved.completed_rounds)
+        );
+    }
+    let borders: std::collections::BTreeSet<_> = saved
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(saved.player))
+        .flat_map(|site| saved.world.adjacent_sites(site.id))
+        .filter_map(|id| saved.world.site(id)?.controller)
+        .filter(|faction| *faction != saved.player && saved.is_independent(*faction))
+        .collect();
+    println!(
+        "Bordering kingdoms: {}",
+        borders
+            .iter()
+            .map(|faction| saved.factions[faction].name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
     if let Some(path) = get_app_data_path("kestrum", "") {
         println!("Native save catalogue: {}", path.display());
     }

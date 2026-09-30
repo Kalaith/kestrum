@@ -81,6 +81,10 @@ maximum-board usability, live browser input or physical touch acceptance.
 
 ## Native midgame save
 
+The original #21 fixture below is superseded by the
+[developed midgame campaign](midgame-campaign.md), installed as #25 on 2026-10-01
+with broad discovery, settlements, rival borders and ten named adults.
+
 `examples/prepare_midgame.rs` creates a separate native catalogue save through
 the toolkit's normal writer and game SaveLibrary APIs. Its production campaign
 uses seed 88, recruits three Warrior formations, clears an opening threat,

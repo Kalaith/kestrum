@@ -10,6 +10,34 @@ pub struct ArmyTarget {
 }
 
 impl MapNavigation {
+    /// Resume with all discovered markers in view; the caller supplies the
+    /// observer-filtered world so hidden geography cannot affect the camera.
+    pub fn frame_discovered(&mut self, world: &CampaignWorld, view: &mut MapView) {
+        let Some(first) = world.markers.first() else {
+            return;
+        };
+        let mut minimum = first.position;
+        let mut maximum = first.position;
+        for marker in &world.markers {
+            for axis in 0..2 {
+                minimum[axis] = minimum[axis].min(marker.position[axis]);
+                maximum[axis] = maximum[axis].max(marker.position[axis]);
+            }
+        }
+        self.show_world(view);
+        let margin = 2.0 * MAP_TAP_SIZE / HEIGHT;
+        let extent = (maximum[0] - minimum[0]).max(maximum[1] - minimum[1]);
+        let zoom = (1.0 / (extent + margin)).min(2.5);
+        view.focus(
+            [
+                (minimum[0] + maximum[0]) / 2.0,
+                (minimum[1] + maximum[1]) / 2.0,
+            ],
+            zoom,
+        );
+        self.clear_selection();
+    }
+
     pub fn army_targets(
         &self,
         world: &CampaignWorld,

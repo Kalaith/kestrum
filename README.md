@@ -15,10 +15,19 @@ regressions, fixes and remaining presentation issues.
 
 Native debug runs resume the catalogue's Continue save after storage becomes
 ready. Running `cargo run` therefore opens the prepared **Briarhold - Midgame
-Battle Review** campaign: Year 16, 60 completed rounds, eight recorded battles
-and a surviving player army. The installed save is #21 in this machine's native
+Battle Review** campaign: Year 16, 60 completed rounds, 32 revealed world markers
+(59 physical sites), 26 player settlements, four armies, ten living named adults
+and three retained battle receipts. Eight apprentices have earned Scout careers
+through real patrols and courses; the founder is an Officer, and a battle-emerged
+Recruit remains with the field host. The realm borders Orren Frostmarch and Bera
+Pike, with active war on its frontier. The installed save is #25 in this machine's native
 catalogue. Later saves become Continue normally. Use `cargo run -- --title` to
 open the title screen. Release and browser builds retain their title startup.
+
+Loading a developed campaign frames its discovered world markers together.
+Early saves with only their home region still focus headquarters. Recenter
+continues to return to the selected army or headquarters. The wider resume view
+uses only discovered geography and does not reveal unknown land.
 
 To recreate a separate review save, run
 `..\rust_management\cargo.ps1 run -p kestrum --example prepare_midgame` with the
@@ -27,6 +36,18 @@ commands and NPC turns, then writes and verifies a new named catalogue entry.
 It preserves existing saves. Native files live under
 `%LOCALAPPDATA%\kestrum`; the review save is local data, while the reproducible
 generator is tracked in `examples/prepare_midgame.rs`.
+
+## Resumed campaign map screen brief
+
+| Phase question | Answer |
+| --- | --- |
+| Current decision | Choose where to expand or defend an established kingdom along its rival borders. |
+| Dominant focus | The discovered realm and its routes fill the atlas, showing multiple holdings at once. |
+| Primary action | Tap Army, choose a destination, then Confirm Move after reviewing movement, supply and encounter risks. |
+| Supporting information | Season, active faction, settlement ownership and nearby army banners remain visible. |
+| Deferred information | Place details open on selection; named careers and biographies live in Menu > Records. |
+| Layout and camera | The resume camera fits discovered markers at 1920×1080 and the minimum 1280×720 viewport; regional inspection and Recenter retain their local framing. |
+| Input and feedback | Visible map, zoom, region, selection and Records controls work by tap/click; completed moves update the army position and remaining movement. |
 
 ## Formation battle screen brief
 

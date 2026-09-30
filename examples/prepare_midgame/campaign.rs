@@ -1,5 +1,10 @@
 //! Deterministic review campaign; time, economy and rivals advance through real commands.
 
+#[path = "campaign/expansion.rs"]
+mod expansion;
+#[path = "campaign/roster.rs"]
+mod roster;
+
 use kestrum::{
     data::{
         battle_tactics::BattleDoctrine, economy::TroopKind, generation::ProductionSetup,
@@ -41,6 +46,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
         )?;
     }
     let mut opening_complete = false;
+    let mut patrol = expansion::Patrol::default();
     for _ in 0..20_000 {
         if campaign.diplomacy.ending.is_some() {
             return Err(format!(
@@ -91,7 +97,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
                 if !campaign.armies.contains_key(&army) {
                     return Err("The review army was lost before midgame.".into());
                 }
-                stage_local_battle(&mut campaign, data, army)?;
+                expansion::open_frontier(&mut campaign, data)?;
                 campaign.validate(data)?;
                 return Ok(campaign);
             }
@@ -106,22 +112,8 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
                         continue;
                     }
                 }
-                // Return to supplied headquarters after the opening clearance.
-                if opening_complete
-                    && campaign
-                        .armies
-                        .get(&army)
-                        .is_some_and(|army| army.site != home)
-                {
-                    if let Ok(preview) =
-                        engine::movement_preview(&campaign, data, campaign.player, &[army], home)
-                    {
-                        if preview.reachable_steps > 0 {
-                            issue(&mut campaign, data, Command::Move(preview.order))?;
-                            continue;
-                        }
-                    }
-                }
+                roster::develop(&mut campaign, data, home)?;
+                expansion::develop(&mut campaign, data, army, home, &mut patrol)?;
                 issue(&mut campaign, data, Command::EndTurn)?;
             }
             CampaignPhase::NpcTurn { .. } => {

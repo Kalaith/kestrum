@@ -16,6 +16,7 @@ mod history_capture;
 mod kingdom;
 mod kingdom_capture;
 mod map_capture;
+mod midgame_capture;
 mod military;
 mod military_capture;
 mod movement;
@@ -176,6 +177,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_midgame(scene) {
+            return;
+        }
         if self.capture_battlefield(scene) {
             return;
         }

@@ -240,7 +240,6 @@ impl Game {
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();
-                self.focus_home();
                 self.battle = ui::BattleView::default();
                 self.reset_history();
                 self.kingdom = ui::KingdomView::default();
@@ -248,6 +247,15 @@ impl Game {
                 self.refresh_kingdom();
                 self.ending_saved = self.kingdom_ended();
                 self.invalidate_projection();
+                self.refresh_projection();
+                if let Some(projection) = &self.projection {
+                    if projection.world.markers.len() == 1 {
+                        self.focus_home();
+                    } else {
+                        self.navigation
+                            .frame_discovered(&projection.world, &mut self.view);
+                    }
+                }
                 self.npc_delay = 0.0;
                 self.error = None;
                 self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));

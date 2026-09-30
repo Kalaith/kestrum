@@ -4,7 +4,7 @@
 mod review_campaign;
 
 use kestrum::{
-    data::GameData,
+    data::{economy::Habitation, world::DiplomaticState, GameData},
     engine::{apply, Actor, Command},
     state::{Campaign, CampaignPhase, StrategicCampaign},
 };
@@ -17,6 +17,134 @@ fn fixture() -> (GameData, StrategicCampaign) {
         .get_or_init(|| review_campaign::generate(&data).unwrap())
         .clone();
     (data, campaign)
+}
+
+#[test]
+fn midgame_reveals_a_broad_connected_atlas_and_known_rivals() {
+    let (_, campaign) = fixture();
+    let visible = kestrum::engine::project_map(&campaign, campaign.player).unwrap();
+    assert!(
+        visible.world.markers.len() >= 30,
+        "only {} markers",
+        visible.world.markers.len()
+    );
+    assert!(
+        visible.world.sites.len() >= 55,
+        "only {} sites",
+        visible.world.sites.len()
+    );
+    assert!(
+        visible.factions.len() >= 3,
+        "only {} known factions",
+        visible.factions.len()
+    );
+    let mut navigation = kestrum::navigation::MapNavigation::default();
+    let mut view = kestrum::navigation::MapView::default();
+    navigation.frame_discovered(&visible.world, &mut view);
+    assert_eq!(navigation.scope(), kestrum::navigation::MapScope::World);
+    assert!(view.camera.zoom() < 1.5);
+    assert_eq!(
+        navigation.targets(&visible.world, &view).len(),
+        visible.world.markers.len()
+    );
+}
+
+#[test]
+fn midgame_has_supplied_settlements_and_an_active_rival_border() {
+    let (_, campaign) = fixture();
+    let supplied = campaign.supplied_sites(campaign.player);
+    let settlements: Vec<_> = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| {
+            site.controller == Some(campaign.player) && site.habitation >= Habitation::Outpost
+        })
+        .collect();
+    assert!(
+        settlements.len() >= 10,
+        "only {} settlements",
+        settlements.len()
+    );
+    assert!(
+        settlements
+            .iter()
+            .filter(|site| supplied.contains(&site.id))
+            .count()
+            >= 10
+    );
+    let borders: std::collections::BTreeSet<_> = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(campaign.player))
+        .flat_map(|site| campaign.world.adjacent_sites(site.id))
+        .filter_map(|id| campaign.world.site(id).unwrap().controller)
+        .filter(|faction| *faction != campaign.player && campaign.is_independent(*faction))
+        .collect();
+    assert!(
+        borders.len() >= 2,
+        "only {} bordering factions",
+        borders.len()
+    );
+    assert!(campaign
+        .relations
+        .iter()
+        .any(|relation| relation.factions.contains(&campaign.player)
+            && relation.state == DiplomaticState::War
+            && relation
+                .factions
+                .iter()
+                .any(|faction| borders.contains(faction))));
+    assert!(
+        campaign
+            .armies
+            .values()
+            .filter(|army| army.faction == campaign.player)
+            .count()
+            >= 3
+    );
+}
+
+#[test]
+fn midgame_has_ten_distinct_living_named_people_with_service() {
+    let (_, campaign) = fixture();
+    let people: Vec<_> = campaign
+        .people
+        .values()
+        .filter(|person| {
+            person.faction == campaign.player
+                && person.is_alive()
+                && !person.career.retired
+                && person.age_years(campaign.completed_rounds) >= 18
+        })
+        .collect();
+    assert!(
+        people.len() >= 10,
+        "only {} adult named people",
+        people.len()
+    );
+    let names: std::collections::BTreeSet<_> = people.iter().map(|person| &person.name).collect();
+    assert_eq!(names.len(), people.len());
+    assert!(
+        people
+            .iter()
+            .filter(|person| person.class != kestrum::data::world::PersonClass::Recruit)
+            .count()
+            >= 8,
+        "only {} trained heroes",
+        people
+            .iter()
+            .filter(|person| person.class != kestrum::data::world::PersonClass::Recruit)
+            .count()
+    );
+    assert!(
+        people
+            .iter()
+            .filter(|person| person.service_start_round < 40)
+            .count()
+            >= 8
+    );
 }
 
 #[test]

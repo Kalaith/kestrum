@@ -139,6 +139,16 @@ site. No hard army or friendly-stack cap. Whole formations transfer; do not add
 partial-headcount splitting/merging before an explicit design extension. A person
 may transfer independently to another surviving friendly formation at that site.
 
+The roster displays living named members in their actual formation slot:
+`Lord Name + Warriors`, `Hero Name + Archers` after recognition, or an untitled
+`Name + Troops` before recognition. This supplements the distinct army commander
+appointment. Several members use one representative name plus an explicit others
+count; Orders > People retains every full record. Transfers update source and
+recipient labels without changing headcounts, capacities, slot usage or upkeep.
+Wounds do not hide continuing attachment; site-assigned, displaced and dead
+people are not current formation members. See the
+[formation-slot display contract](../04-armies-and-logistics.md#characters-belong-inside-formation-slots).
+
 | Troop | Seasonal movement allowance |
 | --- | ---: |
 | Warriors, Spearmen, Archers, Medics | 6 |

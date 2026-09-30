@@ -12,6 +12,8 @@ pub const MUTED: Color = Color::new(0.65, 0.68, 0.62, 1.0);
 pub fn person_name(ctx: &Context<'_>, person: &kestrum::state::people::Person) -> String {
     if person.career.founding_lord {
         format!("{} {}", ctx.text("person_title_lord"), person.name)
+    } else if person.career.recognition.is_some() {
+        format!("{} {}", ctx.text("person_title_hero"), person.name)
     } else {
         person.name.clone()
     }

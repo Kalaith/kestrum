@@ -77,6 +77,14 @@ one known site/event. A personal name, recognition, class and command appointmen
 are distinct. Existing named adults already contribute under P11; recognition
 does not retroactively add phantom formation members or force a class change.
 
+Roster identity uses the Lord title for founding nobility and Hero for formal
+recognition; these are presentation of existing status, not additional classes
+or combat multipliers. A named or recognized person stays visible beside their
+current host troop type until reassigned, displaced or dead. Their profession
+does not convert that formation, and command appointment alone does not change
+attachment. Emergence within Archers can therefore become `Name + Archers`, then
+`Hero Name + Archers` after recognition. Founders start as `Lord Name + Warriors`.
+
 Record shared-service seasons and repeated opposing encounters as compact pair
 facts only for tracked people actually present. After two mutual combats, an
 observed opponent can be described as a recurring rival. Initially bonds/rivalry

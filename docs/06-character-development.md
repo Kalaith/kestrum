@@ -34,6 +34,14 @@ An ordinary personal name is not the same as recognized status. Tomas can be nam
 
 A warrior formation can become “Squire Elian + Warriors” after relevant service. Veteran formations are more likely to produce someone notable because they have survived and accumulated history.
 
+This is a required roster representation: a named person appears with their
+current host formation, not only in an army Commander summary. An archer emerging
+from Archers remains `Elian + Archers`; formal recognition adds the Hero title,
+giving `Hero Elian + Archers`. The starting full lord appears as `Lord Name +
+Warriors` from the first turn. Neither emergence nor recognition grants an extra
+troop or formation slot. Membership, multiple people, transfers and display
+overflow follow [the formation-slot contract](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
+
 **Agreed direction (O14):** emergence is semi-rare, easier when the faction has few named heroes, and progressively rarer toward roughly 20–30. Veteran formations have a higher chance, and meaningful experiences influence who emerges. Source illustrations suggest a few meaningful fights with one hero, less frequent emergence around ten, and possibly a major war around twenty. Those are qualitative examples, not probability thresholds or a hard cap.
 
 **Remaining mechanics (D07/O14):** define which named roles count toward the faction's roster, how retirees are treated, and the exact probability curve. Historical dead figures should not prevent later generations from emerging.

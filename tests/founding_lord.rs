@@ -1,7 +1,10 @@
 use kestrum::{
-    data::{generation::ProductionSetup, rules::Emblem, world::PersonClass, GameData},
+    data::{
+        economy::TroopKind, generation::ProductionSetup, rules::Emblem, world::PersonClass,
+        GameData,
+    },
     state::{
-        people::{PersonId, PersonStatus},
+        people::{PersonAssignment, PersonId, PersonStatus},
         StrategicCampaign,
     },
 };
@@ -44,6 +47,19 @@ fn each_new_kingdom_has_one_named_young_lord_commanding_its_starting_army() {
                 .unwrap();
             assert_eq!(army.commander, Some(lord.id));
             assert_eq!(army.site, faction.headquarters);
+            let warriors = army
+                .formation_ids()
+                .map(|id| &campaign.formations[&id])
+                .find(|formation| formation.kind == TroopKind::Warriors)
+                .unwrap();
+            assert_eq!(
+                lord.assignment,
+                PersonAssignment::Formation {
+                    formation: warriors.id
+                }
+            );
+            assert_eq!((warriors.headcount, warriors.capacity), (100, 100));
+            assert_eq!(army.formation_ids().count(), 3);
             assert!(lord.career.recognition.is_none());
             assert!(lord.career.traits.is_empty());
             assert!(lord.evidence.counts.is_empty());

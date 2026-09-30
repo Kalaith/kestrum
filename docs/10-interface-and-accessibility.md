@@ -1,5 +1,24 @@
 # 10 — Interface and accessibility
 
+## Named characters within the army roster
+
+The six formation slots remain the composition focus. Each occupied row shows
+its living attached named character plus its troop type, with current/capacity
+headcount aligned separately. Starting Warriors read `Lord Name + Warriors`;
+an emerged archer reads `Name + Archers` and a formally recognized one reads
+`Hero Name + Archers`. No character occupies a seventh slot. Tier and movement
+share the supporting line. The army Commander summary describes the separate
+appointment rather than substituting for formation membership.
+
+Multiple attached people use one representative name and an explicit others
+count. Shorten long names while preserving troop type and the others count;
+Orders > People keeps full identities and individual Career, History and Transfer
+actions in its existing paged view. Tapping a formation continues to select it
+for training and orders; Back, Orders and recruitment retain their visible
+controls. Review new-game, recognized archer, several-members, long-name and
+transferred-member states at normal and 1280 × 720 sizes. Full membership and
+display rules are in [Armies and logistics](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
+
 ## K13 career decisions
 
 The current decision is whether a named person's documented service opens a new

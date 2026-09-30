@@ -1,5 +1,10 @@
 # Founding lord verification — 2026-09-30
 
+The follow-up [formation membership review](formation-members.md) corrects the
+missing roster relationship: the lord now appears as `Lord Name + Warriors`
+inside the first slot. The army-level Commander summary remains a separate fact.
+The army screenshots below have been replaced with that corrected display.
+
 New production campaigns give each kingdom exactly one generated, named lord,
 aged 18–24, attached to Warriors and commanding its starting army. The player's
 lord founded the chosen kingdom; rival founders receive the same grant. Noble

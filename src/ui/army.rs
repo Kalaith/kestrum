@@ -2,6 +2,7 @@
 
 mod career_requirements;
 mod disband;
+mod formation_slots;
 mod households;
 mod mentorship;
 mod orders;

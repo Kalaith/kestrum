@@ -336,10 +336,10 @@ K18 integrated/platform acceptance remains required.
 | Current decision | Inspect the starting army and choose where its founding lord should lead it. |
 | Dominant focus | The existing army roster or selected person's career, opened from the map. |
 | Primary action | Use Orders to move the army; People opens its named commander and Career explains their role. |
-| Supporting information | The commander carries the Lord title. Career shows age, founding kingdom and the five-point command bonus beside identity; ordinary Officer mechanics remain available. |
+| Supporting information | Each formation shows its named members with its troops: Lord Name + Warriors, or Hero Name + Archers after recognition. Headcount stays separate; tier and movement share the second line. Career shows age, founding kingdom and the five-point command bonus beside identity. |
 | Deferred information | Earned deeds, traits, household and succession choices stay in their existing views. Founding nobility requires no earned recognition. |
 | Layout and camera | Existing landscape sheets at 1920 × 1080 and the 1280 × 720 minimum; dense people lists retain paging. |
-| Input and feedback | Tap Army, Details, Orders, People and Career. The named lord and 98.3% starting leadership confirm the initial grant. |
+| Input and feedback | Tap Army and Details to see Lord Name + Warriors in the first slot. Tap slots to select them; Orders > People retains full identities, Career, History and Transfer. Transferring a person updates the source and receiving labels. |
 
 Each new kingdom starts with exactly one named lord, including rivals under the
 same rules. Names are always generated from the existing human-name data. Ages
@@ -349,6 +349,16 @@ characters. The extra five leadership points apply while the lord is fit,
 attached to a surviving formation, and appointed commander.
 [Founding lord verification](docs/verification/founding-lord.md) records the
 feature tests, native and browser review, Preview publish and remaining blockers.
+
+Named people remain part of their host formation rather than occupying a
+separate army slot. A row with several people shows a representative and an
+explicit others count; long names shorten while keeping troop type and headcount
+visible. Membership follows saved assignments, including non-commanders and
+people emerging from Archers. The [formation-slot design](docs/04-armies-and-logistics.md#characters-belong-inside-formation-slots)
+defines titles, multiple people, transfers, wounds, headcount and save behavior.
+[Formation membership verification](docs/verification/formation-members.md)
+records the corrected roster, five representative states at both native sizes,
+regression checks and published-browser review.
 
 ### History item inspector
 

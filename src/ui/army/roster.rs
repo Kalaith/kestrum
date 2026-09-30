@@ -10,7 +10,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             return Some(action);
         }
 
-        if let Some(action) = formation_slots(ctx, campaign, army) {
+        if let Some(action) = formation_slots::draw(ctx, campaign, army) {
             return Some(action);
         }
 
@@ -217,108 +217,4 @@ fn army_header(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> Op
     }
 
     None
-}
-
-fn formation_slots(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> Option<UiAction> {
-    for (index, slot) in army.slots.iter().enumerate() {
-        let rect = Rect::new(112.0, 217.0 + index as f32 * 59.0, 552.0, 52.0);
-
-        let selected = slot.is_some() && *slot == ctx.army.selected;
-
-        draw_rectangle(
-            rect.x,
-            rect.y,
-            rect.w,
-            rect.h,
-            if selected {
-                Color::new(0.21, 0.29, 0.25, 1.0)
-            } else {
-                Color::new(0.10, 0.17, 0.16, 1.0)
-            },
-        );
-
-        if selected {
-            draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
-        }
-
-        body(
-            ctx,
-            &format!("{}", index + 1),
-            vec2(rect.x + 12.0, rect.y + 32.0),
-            18.0,
-            MUTED,
-        );
-
-        if let Some(formation) = slot.and_then(|id| formation(campaign, id)) {
-            body(
-                ctx,
-                &format!(
-                    "{} · {}",
-                    ctx.text(troop_key(formation.kind)),
-                    tier_label(ctx, formation.service.tier)
-                ),
-                vec2(rect.x + 46.0, rect.y + 23.0),
-                21.0,
-                CREAM,
-            );
-
-            body(
-                ctx,
-                &format!("{} / {}", formation.headcount, formation.capacity),
-                vec2(rect.x + 390.0, rect.y + 32.0),
-                18.0,
-                CREAM,
-            );
-
-            let remaining = ctx
-                .army
-                .member_remaining
-                .get(&formation.id)
-                .copied()
-                .unwrap_or(0);
-
-            body(
-                ctx,
-                &format!(
-                    "{}: {remaining} · {}: {}",
-                    ctx.text("movement_left"),
-                    ctx.text("movement_spent"),
-                    formation.movement_spent
-                ),
-                vec2(rect.x + 46.0, rect.y + 44.0),
-                16.0,
-                MUTED,
-            );
-
-            if tapped(ctx, rect) {
-                return Some(UiAction::SelectFormation(formation.id));
-            }
-        } else {
-            body(
-                ctx,
-                &ctx.text("empty_slot"),
-                vec2(rect.x + 46.0, rect.y + 32.0),
-                18.0,
-                MUTED,
-            );
-
-            if tapped(ctx, rect) {
-                return Some(UiAction::BeginRecruit(Some(army.id)));
-            }
-        }
-    }
-
-    None
-}
-
-fn tier_label(ctx: &Context<'_>, tier: kestrum::state::evidence::Veterancy) -> String {
-    use kestrum::state::evidence::Veterancy;
-
-    ctx.text(match tier {
-        Veterancy::Ordinary => "tier_ordinary",
-
-        Veterancy::Seasoned => "tier_seasoned",
-
-        Veterancy::Veteran => "tier_veteran",
-    })
 }

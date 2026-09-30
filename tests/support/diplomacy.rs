@@ -108,7 +108,10 @@ pub(super) fn travel(campaign: &mut StrategicCampaign, data: &GameData, path: &[
             finish(campaign, data);
             continue;
         }
-        apply(campaign, data, Actor::Player, command).unwrap();
+        let result = apply(campaign, data, Actor::Player, command).unwrap();
+        if result.battle_pending {
+            apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap();
+        }
         if campaign.diplomacy.has_pending_decision() {
             break;
         }
@@ -306,10 +309,10 @@ pub(super) fn assert_mutual_defeat() {
     }
     campaign.people.clear();
     campaign.legacy_items.clear();
-    for id in [first, second] {
+    for (id, kind) in [(first, TroopKind::Riders), (second, TroopKind::Spearmen)] {
         let formation = campaign.formations.get_mut(&id).unwrap();
-        formation.kind = TroopKind::Warriors;
-        formation.capacity = data.economy.formations[&TroopKind::Warriors].capacity;
+        formation.kind = kind;
+        formation.capacity = data.economy.formations[&kind].capacity;
         formation.headcount = 1;
     }
     for army in campaign.armies.values_mut() {
@@ -332,7 +335,15 @@ pub(super) fn assert_mutual_defeat() {
         .unwrap()
         .controller = Some(FactionId(2));
     campaign.reconcile_region_control();
-    let outcome = apply(&mut campaign, &data, Actor::Player, move_order(&[1, 5])).unwrap();
+    let contact = apply(&mut campaign, &data, Actor::Player, move_order(&[1, 5])).unwrap();
+    assert!(contact.battle_pending);
+    let outcome = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
     assert_eq!(
         campaign.battles[&outcome.battle.unwrap()].outcome,
         kestrum::state::battle::BattleOutcome::MutualDestruction

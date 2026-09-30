@@ -15,7 +15,7 @@
   "capture_damage": 10,
   "capture_occupation": 100,
   "wipe_death_percent": 25,
-  "commander_loss_percent": 20,
+  "commander_loss_percent": 5,
   "commander_wound_percent": 10,
   "wound_recovery_steps": 2
 }

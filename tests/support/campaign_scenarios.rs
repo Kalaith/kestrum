@@ -112,6 +112,7 @@ pub(super) fn run_to_round(
                     campaign.successors
                 );
             }
+            start_player_pending_battle(&mut campaign, data);
             npc_action_times.push(action_started.elapsed());
             action_count += 1;
             assert!(action_count <= 195, "NPC turn failed to reach a boundary");
@@ -216,6 +217,7 @@ pub(super) fn run_to_round(
 
 fn begin_player_round(campaign: &mut StrategicCampaign, data: &GameData) {
     assert!(matches!(campaign.phase, CampaignPhase::PlayerTurn));
+    renew_continuity_truces(campaign, data);
     apply(campaign, data, Actor::Player, Command::EndTurn).unwrap();
 }
 
@@ -225,10 +227,47 @@ fn run_one_round(campaign: &mut StrategicCampaign, data: &GameData) {
     let mut actions = 0;
     while let CampaignPhase::NpcTurn { .. } = campaign.phase {
         engine::advance_npc(campaign, data).unwrap();
+        start_player_pending_battle(campaign, data);
         actions += 1;
         assert!(actions <= 195);
     }
     assert_eq!(campaign.completed_rounds, start_round + 1);
+    campaign.validate(data).unwrap();
+}
+
+fn start_player_pending_battle(campaign: &mut StrategicCampaign, data: &GameData) {
+    let Some(pending) = campaign.pending_battle.as_ref() else {
+        return;
+    };
+    if !pending
+        .report
+        .participant_factions()
+        .any(|faction| faction == campaign.player)
+    {
+        return;
+    }
+    apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap();
+}
+
+fn renew_continuity_truces(campaign: &mut StrategicCampaign, data: &GameData) {
+    let truce_until = campaign
+        .completed_rounds
+        .checked_add(data.diplomacy.truce_rounds)
+        .expect("continuity truce date remains in range");
+    for relation in &campaign.relations {
+        if relation.state != kestrum::data::world::DiplomaticState::Peace {
+            continue;
+        }
+        let pair = campaign
+            .diplomacy
+            .pairs
+            .iter_mut()
+            .find(|pair| pair.factions == relation.factions)
+            .expect("every campaign relation has a diplomacy timer");
+        pair.peace_since = Some(campaign.completed_rounds);
+        pair.truce_until = Some(truce_until);
+        pair.last_offer_round = Some(campaign.completed_rounds);
+    }
     campaign.validate(data).unwrap();
 }
 

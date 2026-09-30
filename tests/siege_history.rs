@@ -128,7 +128,7 @@ fn relief_records_joint_combat_but_only_incoming_route_service() {
     while matches!(campaign.phase, CampaignPhase::NpcTurn { .. }) {
         pass_npc(&mut campaign, &data).unwrap();
     }
-    let result = apply(
+    let contact = apply(
         &mut campaign,
         &data,
         Actor::Player,
@@ -136,6 +136,14 @@ fn relief_records_joint_combat_but_only_incoming_route_service() {
             armies: vec![ArmyId(5)],
             path: vec![SiteId(10), SiteId(9)],
         }),
+    )
+    .unwrap();
+    assert!(contact.battle_pending);
+    let result = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
     )
     .unwrap();
     let report = campaign.battles[&result.battle.unwrap()].clone();

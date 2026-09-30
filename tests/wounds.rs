@@ -199,7 +199,7 @@ fn wounded_wipe_survivors_use_only_encounter_survivors_or_legal_inhabited_refuge
 
 #[test]
 fn commander_wound_uses_one_qualifying_roll_and_lowest_fit_adult_successor() {
-    for first_remaining in [81, 80] {
+    for first_remaining in [96, 95] {
         let (data, mut campaign) = fixture();
         for (id, age) in [(5, 30), (6, 16), (7, 30), (8, 17), (9, 40)] {
             add_person(&mut campaign, id, 1, 2, age);
@@ -224,7 +224,7 @@ fn commander_wound_uses_one_qualifying_roll_and_lowest_fit_adult_successor() {
         campaign.rng.combat = SeededRng::new(44); // 9 wounds at the 10% boundary.
         let before = campaign.clone();
         let events = resolve_person_combat(&mut campaign, &data, &context).unwrap();
-        let expected = if first_remaining == 81 {
+        let expected = if first_remaining == 96 {
             PersonId(5)
         } else {
             PersonId(1)

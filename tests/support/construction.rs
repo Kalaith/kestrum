@@ -123,11 +123,19 @@ pub(super) fn assert_combat(capture: bool) {
     apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
     pass_npc(&mut campaign, &data).unwrap();
     let balance = campaign.factions[&FactionId(1)].resources;
-    apply(
+    let contact = apply(
         &mut campaign,
         &data,
         Actor::Npc(FactionId(3)),
         move_order(3, &[8, 6]),
+    )
+    .unwrap();
+    assert!(contact.battle_pending);
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
     )
     .unwrap();
     if capture {

@@ -202,12 +202,15 @@ impl StrategicCampaign {
                     .flat_map(|army| &army.people)
                     .map(|entry| entry.id)
                     .collect::<BTreeSet<_>>();
-                if formations.into_iter().collect::<Vec<_>>() != receipt.formations
-                    || people.into_iter().collect::<Vec<_>>() != receipt.people
+                // Attached travellers outside field service remain in movement receipts.
+                let travellers = receipt.people.iter().copied().collect::<BTreeSet<_>>();
+                if formations.iter().copied().collect::<Vec<_>>() != receipt.formations
+                    || !people.is_subset(&travellers)
                 {
-                    return Err(
-                        "movement evidence: members differ from encounter participants".into(),
-                    );
+                    return Err(format!(
+                        "movement evidence: battle participants are absent from the movement receipt (battle formations {formations:?}, receipt formations {:?}, battle people {people:?}, receipt people {:?})",
+                        receipt.formations, receipt.people
+                    ));
                 }
                 (receipt, report.attacker.faction)
             }

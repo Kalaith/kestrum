@@ -157,6 +157,14 @@ fn retained_assault_context_validates_after_siege_lifts_and_rejects_forged_effec
         }),
     )
     .unwrap();
+    assert!(outcome.battle_pending);
+    let outcome = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
+    )
+    .unwrap();
     let id = outcome.battle.unwrap();
     assert!(!campaign.sieges.contains_key(&SiteId(5)));
     assert!(matches!(

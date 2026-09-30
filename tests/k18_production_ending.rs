@@ -99,9 +99,27 @@ fn four_faction_production_campaign_reaches_and_keeps_a_real_defeat_ending() {
             CampaignPhase::NpcTurn { .. } => {
                 let before_round = campaign.completed_rounds;
                 let before_sequence = campaign.accepted_sequence;
-                engine::advance_npc(&mut campaign, &data).unwrap();
+                let action = engine::advance_npc(&mut campaign, &data).unwrap();
                 npc_actions += 1;
-                assert_eq!(campaign.accepted_sequence, before_sequence + 1);
+                if action.battle_pending {
+                    apply(
+                        &mut campaign,
+                        &data,
+                        Actor::Player,
+                        Command::StartPendingBattle,
+                    )
+                    .unwrap();
+                }
+                assert_eq!(
+                    campaign.accepted_sequence,
+                    if action.battle_pending {
+                        action.accepted_sequence + 1
+                    } else {
+                        action.accepted_sequence
+                    },
+                    "NPC action began at {before_sequence}, accepted through {}",
+                    action.accepted_sequence
+                );
                 if campaign.completed_rounds > before_round {
                     completed_boundaries += campaign.completed_rounds - before_round;
                 }

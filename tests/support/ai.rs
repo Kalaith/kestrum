@@ -199,6 +199,32 @@ pub(super) fn actual_last_known_attack(data: &GameData) {
         .final_site
         .expect("surviving recorded enemy");
     apply(&mut campaign, data, Actor::Player, Command::EndTurn).unwrap();
+    // Re-form Oak's recovered Archer line so its local force clears the same
+    // authored attack margin after fighting the dated Rose survivors.
+    let formation_id = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let kind = TroopKind::Archers;
+    let tactics = campaign.armies[&ArmyId(2)]
+        .battle_doctrine
+        .and_then(|doctrine| data.battle_tactics.doctrine_for(doctrine, kind))
+        .cloned();
+    campaign.armies.get_mut(&ArmyId(2)).unwrap().slots[3] = Some(formation_id);
+    campaign.formations.insert(
+        formation_id,
+        kestrum::state::military::Formation {
+            battle_leader: None,
+            tactics,
+            tactics_override: Some(false),
+            service: Default::default(),
+            id: formation_id,
+            faction: FactionId(2),
+            kind,
+            headcount: data.economy.formations[&kind].capacity,
+            capacity: data.economy.formations[&kind].capacity,
+            movement_spent: 0,
+            created_round: campaign.completed_rounds,
+        },
+    );
     for formation in campaign
         .formations
         .values_mut()
@@ -230,7 +256,11 @@ pub(super) fn actual_last_known_attack(data: &GameData) {
     let decision = ai::propose(&campaign, data, FactionId(2)).unwrap();
     assert!(
         matches!(decision.command,Command::Move(ref order) if order.path.last()==Some(&target)),
-        "real recorded losses permit a sufficiently stronger attack: {decision:?}"
+        "real recorded losses permit a sufficiently stronger attack: {decision:?}; target={target:?}; attacker={:?}; defender={:?}; npc armies={:?}; losses={:?}",
+        report.attacker.armies,
+        report.defender.armies(),
+        campaign.armies.values().filter(|army| army.faction == FactionId(2)).map(|army| (army.id, army.site, army.slots)).collect::<Vec<_>>(),
+        campaign.diplomacy.losses,
     );
     let mut changed = campaign.clone();
     for formation in changed

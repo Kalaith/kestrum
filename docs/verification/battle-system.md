@@ -310,3 +310,47 @@ Live browser interaction was not re-tested in the existing campaign tab.
 | State | 1920×1080 | 1280×720 |
 | --- | --- | --- |
 | Pending battle with Ranged Support and the saved “Northern Screen” plan selected | [image](ui_battle_campaign_doctrine.png) | [image](ui_battle_campaign_doctrine_minimum.png) |
+
+## B07 — Balance and campaign readiness
+
+**Status:** complete on 2026-09-30. The combat and campaign gates now pass
+together, including production endings, retained receipts, replay and long
+campaign continuity.
+
+Casualty pacing now carries through a full production campaign: the authored
+commander-loss threshold is 5%, and the seeded four-faction victory reaches its
+terminal state at round 198. Saving and reloading that state preserves the exact
+campaign; further player or NPC actions fail without changing it. Rival attack
+objectives persist through the aftermath of their own losses when they still
+have a viable counterattack, instead of surrendering that opportunity to a
+general peace offer.
+
+The encounter harnesses now accept staged battles witnessed by the player and
+commit them through `StartPendingBattle`, including field movement, construction,
+diplomacy, siege history, knowledge and campaign scenarios. The round-400
+four/eight-faction replay runner resolves witnessed encounters before ending an
+NPC phase. Its continuity setup refreshes bilateral truces each player round so
+both faction-count paths can exercise save, replay and retention through 400
+rounds. The production victory path runs without that fixture adjustment.
+
+Movement receipts may include living travelers who were ineligible for a named
+person battle snapshot. Receipt validation now requires every recorded battle
+participant to be among the travelers while retaining exact formation matching.
+The bounded-knowledge regression follows the casualty actually produced by its
+seeded battle, preserving the distinction between a surviving witness and a
+departed identity.
+
+### Behavioral evidence
+
+| Check | Result |
+| --- | --- |
+| `cargo.ps1 test -p kestrum --all-features --no-fail-fast` | Passed all test targets, including the four/eight-faction 400-round replay, production victory and defeat, staged encounters, siege history, knowledge pruning and source-size gate. One release profiling test remains intentionally ignored by default. |
+| `cargo.ps1 test -p kestrum --all-features --test k18_production_battle` | Passed: seeded four-faction production victory at round 198; terminal campaign save/load and post-ending immutability verified. |
+| `cargo fmt --all -- --check` | Passed. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed without warnings. |
+| `cargo.ps1 test -p kestrum --all-features --test code_standards` | Passed; every Rust source file remains within the 800-line limit. |
+| `publish.ps1` with no parameters | Passed Windows and WebGL release builds, packaging, Preview deployment, tracker recording and catalogue synchronization. |
+
+No B07 screen changes were made. The compact inspectors and shared battlefield
+remain documented by the B02–B06 captures at 1920×1080 and 1280×720. The
+existing browser campaign was not interacted with and remains unverified.

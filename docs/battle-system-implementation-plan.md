@@ -367,13 +367,13 @@ before the new resolver and pending-command changes have been measured.
 | B04 Deployment and tactics authoring | Complete; saved per-formation rules, contextual editor and slot swaps | [Battle system verification](verification/battle-system.md#b04--deployment-and-tactics-authoring) |
 | B05 Leaders and support roles | Complete; saved leader selection, bounded class abilities, Medic stabilization and siege roles | [Battle system verification](verification/battle-system.md#b05--leaders-and-support-roles) |
 | B06 Doctrines and rival preparation | Complete; legal doctrine snapshots, campaign-local personal plans and deterministic observed-information rival preparation | [Battle system verification](verification/battle-system.md#b06--doctrines-and-rival-preparation) |
-| B07 Balance and campaign readiness | Not started | — |
+| B07 Balance and campaign readiness | Complete; production victory and defeat paths, staged encounter aftermath, four/eight-faction continuity and the full regression suite verified | [Battle system verification](verification/battle-system.md#b07--balance-and-campaign-readiness) |
 
-The full Kestrum test run currently reaches round 284 before an NPC attempts to
-end its phase while a pending battle remains. The focused battle, campaign,
-movement, recovery, siege, threat and source-size suites pass. This remaining
-long-campaign integration case is tracked for B07; results are recorded in the
-milestone evidence.
+All B01–B07 acceptance gates are complete. The 400-round four/eight-faction
+continuity case now commits witnessed staged encounters and completes both
+replay paths; a seeded production campaign reaches victory at round 198 and
+survives terminal save/load without repeating effects. Full validation and
+publishing evidence is recorded in the milestone verification.
 
 ### B01 Prototype deterministic formation combat
 

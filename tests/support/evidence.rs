@@ -108,7 +108,9 @@ pub(super) fn encounter(
         }),
     )
     .unwrap();
-    campaign.battles[&result.battle.unwrap()].clone()
+    assert!(result.battle_pending);
+    let outcome = apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap();
+    campaign.battles[&outcome.battle.unwrap()].clone()
 }
 
 pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {
@@ -217,7 +219,7 @@ pub(super) fn assert_wiped_people() {
         campaign
             .set_site_control(&data, SiteId(6), Some(FactionId(3)), false)
             .unwrap();
-        apply(
+        let contact = apply(
             &mut campaign,
             &data,
             Actor::Player,
@@ -225,6 +227,14 @@ pub(super) fn assert_wiped_people() {
                 armies: vec![ArmyId(1)],
                 path: vec![SiteId(5), SiteId(6)],
             }),
+        )
+        .unwrap();
+        assert!(contact.battle_pending);
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::StartPendingBattle,
         )
         .unwrap();
         assert_eq!(

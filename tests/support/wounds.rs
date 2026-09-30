@@ -136,7 +136,7 @@ pub(super) fn assert_wipe_probability_boundary() {
 
 pub(super) fn assert_commander_thresholds_and_no_per_hit_rolls() {
     for (remaining, seed, rolls, wounds) in
-        [(81, 44, 0, false), (80, 0, 1, false), (80, 44, 1, true)]
+        [(96, 44, 0, false), (95, 0, 1, false), (95, 44, 1, true)]
     {
         let (data, mut campaign) = fixture();
         add_person(&mut campaign, 5, 1, 1, 30); // surviving ordinary attached people get no roll
@@ -179,6 +179,14 @@ pub(super) fn assert_real_commander_battle() {
             armies: vec![ArmyId(1)],
             path: vec![SiteId(1), SiteId(5)],
         }),
+    )
+    .unwrap();
+    assert!(outcome.battle_pending);
+    let outcome = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::StartPendingBattle,
     )
     .unwrap();
     let report = &campaign.battles[&outcome.battle.unwrap()];

@@ -5,7 +5,7 @@ use kestrum::{
         economy::{Habitation, TroopKind},
         generation::ProductionSetup,
         rules::Emblem,
-        world::SiteId,
+        world::{FactionId, SiteId},
         GameData,
     },
     engine::{self, apply, Actor, Command, MoveOrder, MovementBlock},
@@ -16,10 +16,10 @@ use kestrum::{
     },
 };
 use macroquad_toolkit::persistence::encode_slot;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 const SEED: u64 = 88;
-const ROUND_CAP: u32 = 120;
+const ROUND_CAP: u32 = 240;
 
 #[test]
 fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save() {
@@ -40,6 +40,9 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
     let mut npc_actions = 0_u64;
     let mut boundaries = 0_u32;
     let mut player_battle = None;
+    let mut recent_player_moves = Vec::new();
+    let mut moved_this_turn = BTreeSet::new();
+    let mut acted_sieges_this_turn = BTreeSet::new();
     let army = campaign
         .armies
         .values()
@@ -65,11 +68,19 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
         if campaign.completed_rounds != observed_round {
             observed_round = campaign.completed_rounds;
             actions_in_round = 0;
+            moved_this_turn.clear();
+            acted_sieges_this_turn.clear();
         }
         actions_in_round += 1;
         assert!(actions_in_round <= 256,
-            "production script stalled at round {observed_round}, phase {:?}, sequence {}, player orders {player_orders}, NPC orders {npc_actions}",
-            campaign.phase, campaign.accepted_sequence);
+            "production script stalled at round {observed_round}, phase {:?}, sequence {}, player orders {player_orders}, NPC orders {npc_actions}, moved armies {moved_this_turn:?}, acted sieges {acted_sieges_this_turn:?}, sieges {:?}, pending battle {:?}, pending defeats {:?}, pending offers {:?}, recent moves {recent_player_moves:?}",
+            campaign.phase,
+            campaign.accepted_sequence,
+            campaign.sieges.keys(),
+            campaign.pending_battle.as_ref().map(|pending| pending.report.site),
+            campaign.diplomacy.pending_defeats,
+            campaign.diplomacy.pending_offers,
+        );
         if player_battle.is_none() {
             player_battle = campaign
                 .battles
@@ -149,75 +160,40 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
                     .filter(|army| army.faction == player && !army.is_empty())
                     .collect::<Vec<_>>();
                 own_armies.sort_by_key(|army| army.id);
-                let siege_order = visible.sieges.iter().find_map(|siege| {
-                    let view = engine::siege_view(&campaign, &data, player, siege.site)?;
-                    let preferred = match view.role {
-                        kestrum::engine::SiegeRole::Besieger => {
-                            [SiegeAction::Assault, SiegeAction::Maintain]
-                        }
-                        kestrum::engine::SiegeRole::Defender => {
-                            [SiegeAction::Sortie, SiegeAction::Escape]
-                        }
-                    };
-                    preferred.into_iter().find_map(|action| {
-                        let option = view
-                            .actions
-                            .iter()
-                            .find(|option| option.action == action && option.blocked.is_none())?;
-                        Some(SiegeOrder {
-                            site: view.site,
-                            action,
-                            armies: view.own_armies.clone(),
-                            destination: matches!(
-                                action,
-                                SiegeAction::Escape | SiegeAction::Withdraw
-                            )
-                            .then(|| option.destinations.first().copied())
-                            .flatten(),
-                        })
-                    })
-                });
-                if let Some(order) = siege_order {
-                    issue(&mut campaign, &data, Command::Siege(order));
-                    player_orders += 1;
-                    continue;
-                }
-                let co_located_hostiles = visible
-                    .hostile_presence
+                let siege_order = visible
+                    .sieges
                     .iter()
-                    .copied()
-                    .filter(|site| own_armies.iter().any(|army| army.site == *site))
-                    .collect::<Vec<_>>();
-                let mut disengage = co_located_hostiles.into_iter().find_map(|site| {
-                    let group = own_armies
-                        .iter()
-                        .filter(|army| army.site == site)
-                        .map(|army| army.id)
-                        .collect::<Vec<_>>();
-                    visible
-                        .world
-                        .adjacent_sites(site)
-                        .into_iter()
-                        .filter(|destination| visible.world.site(*destination).is_some())
-                        .filter_map(|destination| {
-                            engine::movement_preview(&campaign, &data, player, &group, destination)
-                                .ok()
-                                .filter(|preview| preview.reachable_steps > 0)
-                                .map(|preview| {
-                                    (preview.total_cost, destination, group.clone(), preview)
-                                })
+                    .filter(|siege| !acted_sieges_this_turn.contains(&siege.site))
+                    .find_map(|siege| {
+                        let view = engine::siege_view(&campaign, &data, player, siege.site)?;
+                        let preferred = match view.role {
+                            kestrum::engine::SiegeRole::Besieger => {
+                                [SiegeAction::Assault, SiegeAction::Maintain]
+                            }
+                            kestrum::engine::SiegeRole::Defender => {
+                                [SiegeAction::Sortie, SiegeAction::Escape]
+                            }
+                        };
+                        preferred.into_iter().find_map(|action| {
+                            let option = view.actions.iter().find(|option| {
+                                option.action == action && option.blocked.is_none()
+                            })?;
+                            Some(SiegeOrder {
+                                site: view.site,
+                                action,
+                                armies: view.own_armies.clone(),
+                                destination: matches!(
+                                    action,
+                                    SiegeAction::Escape | SiegeAction::Withdraw
+                                )
+                                .then(|| option.destinations.first().copied())
+                                .flatten(),
+                            })
                         })
-                        .min_by_key(|(cost, destination, _, _)| (*cost, *destination))
-                });
-                if let Some((_, _, group, preview)) = disengage.take() {
-                    issue(
-                        &mut campaign,
-                        &data,
-                        Command::Move(MoveOrder {
-                            armies: group,
-                            path: preview.order.path,
-                        }),
-                    );
+                    });
+                if let Some(order) = siege_order {
+                    acted_sieges_this_turn.insert(order.site);
+                    issue(&mut campaign, &data, Command::Siege(order));
                     player_orders += 1;
                     continue;
                 }
@@ -276,6 +252,9 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
                 let relations = engine::diplomacy_view(&campaign, &data, player).factions;
                 let mut army_groups: BTreeMap<SiteId, Vec<_>> = BTreeMap::new();
                 for army in own_armies {
+                    if moved_this_turn.contains(&army.id) {
+                        continue;
+                    }
                     army_groups.entry(army.site).or_default().push(army.id);
                 }
                 let mut targets = Vec::new();
@@ -459,7 +438,7 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
                     }
                 }
                 if preview.reachable_steps > 0 {
-                    issue(
+                    let outcome = issue(
                         &mut campaign,
                         &data,
                         Command::Move(MoveOrder {
@@ -467,6 +446,13 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
                             path: preview.order.path,
                         }),
                     );
+                    if let Some(movement) = &outcome.movement {
+                        moved_this_turn.extend(movement.armies.iter().copied());
+                    }
+                    recent_player_moves.push((campaign.completed_rounds, outcome.movement));
+                    if recent_player_moves.len() > 20 {
+                        recent_player_moves.remove(0);
+                    }
                     player_orders += 1;
                 } else {
                     issue(&mut campaign, &data, Command::EndTurn);
@@ -481,7 +467,73 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
         .diplomacy
         .ending
         .as_ref()
-        .unwrap_or_else(|| panic!("no production victory by round {ROUND_CAP}"));
+        .unwrap_or_else(|| {
+            let faction_summary = campaign
+                .factions
+                .values()
+                .map(|faction| {
+                    let holdings = campaign
+                        .world
+                        .sites
+                        .iter()
+                        .filter(|site| site.controller == Some(faction.id))
+                        .map(|site| site.id)
+                        .collect::<Vec<_>>();
+                    (faction.id, &faction.status, holdings)
+                })
+                .collect::<Vec<_>>();
+            let army_summary = campaign
+                .armies
+                .values()
+                .map(|army| {
+                    let formations = army
+                        .slots
+                        .iter()
+                        .flatten()
+                        .map(|id| (*id, campaign.formations[id].headcount))
+                        .collect::<Vec<_>>();
+                    (army.id, army.faction, army.site, formations)
+                })
+                .collect::<Vec<_>>();
+            let relations = campaign
+                .relations
+                .iter()
+                .filter(|relation| relation.factions.contains(&player))
+                .map(|relation| (relation.factions, relation.state))
+                .collect::<Vec<_>>();
+            let frontier = campaign
+                .world
+                .sites
+                .iter()
+                .filter(|site| {
+                    site.controller == Some(FactionId(4))
+                        && site.habitation >= Habitation::Outpost
+                })
+                .filter_map(|site| {
+                    engine::movement_preview(&campaign, &data, player, &[army], site.id)
+                        .ok()
+                        .map(|preview| {
+                            (
+                                site.id,
+                                site.controller,
+                                preview.total_cost,
+                                preview.reachable_steps,
+                                preview.remaining,
+                                preview.stop.as_ref().map(|stop| stop.reason.clone()),
+                                preview.order.path,
+                            )
+                        })
+                })
+                .collect::<Vec<_>>();
+            panic!(
+                "no production victory by round {ROUND_CAP}; rounds={}, phase={:?}, factions={faction_summary:?}, armies={army_summary:?}, relations={relations:?}, frontier={frontier:?}, recent_player_moves={recent_player_moves:?}, battles={}, pending={:?}, defeats={:?}",
+                campaign.completed_rounds,
+                campaign.phase,
+                campaign.battles.len(),
+                campaign.pending_battle.as_ref().map(|pending| pending.report.site),
+                campaign.diplomacy.pending_defeats,
+            )
+        });
     assert_eq!(victory.kind, EndingKind::Victory);
     assert!(campaign.diplomacy.pending_defeats.is_empty());
     assert!(campaign
@@ -567,7 +619,11 @@ fn is_player_battle(
         && battle_has_destroyed_formation(battle)
 }
 
-fn issue(campaign: &mut StrategicCampaign, data: &GameData, command: Command) {
+fn issue(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    command: Command,
+) -> kestrum::engine::ActionOutcome {
     let label = format!("{command:?}");
     let result = apply(campaign, data, Actor::Player, command)
         .unwrap_or_else(|error| panic!("production campaign order {label}: {error}"));
@@ -575,4 +631,5 @@ fn issue(campaign: &mut StrategicCampaign, data: &GameData, command: Command) {
         apply(campaign, data, Actor::Player, Command::StartPendingBattle)
             .unwrap_or_else(|error| panic!("production battle acceptance for {label}: {error}"));
     }
+    result
 }

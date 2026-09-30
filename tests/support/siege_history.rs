@@ -119,7 +119,7 @@ pub(super) fn order(
     action: SiegeAction,
     destination: Option<SiteId>,
 ) -> ActionOutcome {
-    apply(
+    let outcome = apply(
         campaign,
         data,
         Actor::Player,
@@ -130,7 +130,12 @@ pub(super) fn order(
             destination,
         }),
     )
-    .unwrap()
+    .unwrap();
+    if outcome.battle_pending {
+        apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap()
+    } else {
+        outcome
+    }
 }
 
 pub(super) fn finish(campaign: &mut StrategicCampaign, data: &GameData) {

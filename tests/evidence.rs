@@ -96,17 +96,18 @@ fn round_cap_tiers_and_combat_factors_follow_surviving_stable_formations() {
         report.attacker.armies[0].formations[0].veterancy_permille,
         1200
     );
-    let loss = |report: &kestrum::state::battle::BattleReport, id| {
-        report.exchanges[0]
-            .losses
+    let battle_loss = |report: &kestrum::state::battle::BattleReport, id| {
+        report
+            .exchanges
             .iter()
-            .find(|entry| entry.formation == id)
-            .unwrap()
-            .amount
+            .flat_map(|exchange| &exchange.losses)
+            .filter(|entry| entry.formation == id)
+            .map(|entry| entry.amount)
+            .sum::<u32>()
     };
-    assert!(loss(&report, FormationId(1)) < loss(&ordinary_report, FormationId(1)));
+    assert!(battle_loss(&report, FormationId(1)) < battle_loss(&ordinary_report, FormationId(1)));
     let enemy = report.defender.armies()[0].formations[0].id;
-    assert!(loss(&report, enemy) > loss(&ordinary_report, enemy));
+    assert!(battle_loss(&report, enemy) > battle_loss(&ordinary_report, enemy));
     let service = campaign.formations[&FormationId(1)].service.clone();
     apply(
         &mut campaign,

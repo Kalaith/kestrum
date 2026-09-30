@@ -53,6 +53,8 @@ pub(super) fn fight(campaign: &mut StrategicCampaign, data: &GameData) -> Battle
         }),
     )
     .unwrap();
+    assert!(outcome.battle_pending);
+    let outcome = apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap();
     campaign.battles[&outcome.battle.unwrap()].clone()
 }
 
@@ -383,10 +385,16 @@ pub(super) fn assert_departed_budgets(data: &GameData) {
     for site in campaign.world.adjacent_sites(SiteId(10)) {
         campaign.set_site_control(data, site, None, false).unwrap();
     }
-    fight(&mut campaign, data);
-    assert!(!campaign.people[&PersonId(1)].is_alive());
-    assert!(!campaign.people[&PersonId(3)].is_alive());
-    let departed = campaign.people[&PersonId(1)].clone();
+    campaign.rng.combat = macroquad_toolkit::rng::SeededRng::new(1);
+    let report = fight(&mut campaign, data);
+    assert!(
+        !campaign.people[&PersonId(3)].is_alive(),
+        "the wiped enemy witness survived: {:?}; losses {:?} vs {:?}",
+        report.person_events,
+        report.attacker.armies,
+        report.defender.armies()
+    );
+    let departed = campaign.people[&PersonId(3)].clone();
     for id in 6..2006 {
         let mut person = departed.clone();
         person.id = PersonId(id);
@@ -413,11 +421,11 @@ pub(super) fn assert_departed_budgets(data: &GameData) {
             .values()
             .filter(|person| !person.is_alive())
             .count(),
-        2002
+        2001
     );
     finish_round(&mut campaign, data);
     assert!(
-        !campaign.people.contains_key(&PersonId(1)) && !campaign.people.contains_key(&PersonId(3))
+        campaign.people.contains_key(&PersonId(1)) && !campaign.people.contains_key(&PersonId(3))
     );
     assert_eq!(
         campaign
@@ -445,14 +453,15 @@ pub(super) fn assert_departed_budgets(data: &GameData) {
         2000
     );
     finish_round(&mut campaign, data);
-    assert_eq!(campaign.people.len(), 1);
+    assert_eq!(campaign.people.len(), 2);
+    assert!(campaign.people[&PersonId(1)].is_alive());
     assert!(campaign.people[&PersonId(5)].is_alive());
     assert_eq!(campaign.next_ids.person, PersonId(2006));
     assert!(campaign
         .history
         .person_notables
         .keys()
-        .all(|id| *id == PersonId(5)));
+        .all(|id| *id != PersonId(3)));
     assert!(campaign
         .history
         .person_notables

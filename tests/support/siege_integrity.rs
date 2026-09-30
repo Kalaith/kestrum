@@ -36,7 +36,7 @@ fn fixture(fort: bool, weak: bool) -> (GameData, StrategicCampaign) {
         }
     }
     campaign.validate(&data).unwrap();
-    apply(
+    let contact = apply(
         &mut campaign,
         &data,
         Actor::Player,
@@ -46,6 +46,15 @@ fn fixture(fort: bool, weak: bool) -> (GameData, StrategicCampaign) {
         }),
     )
     .unwrap();
+    if contact.battle_pending {
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::StartPendingBattle,
+        )
+        .unwrap();
+    }
     (data, campaign)
 }
 

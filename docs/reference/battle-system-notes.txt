@@ -1,0 +1,520 @@
+Yes. I think the strongest version is to make the battle system primarily about **building the six-unit force and programming how it behaves**, rather than issuing commands every few seconds.
+
+The three inspirations can each contribute something different:
+
+- **Unicorn Overlord:** conditional skills, priorities, formation and automated execution.
+- **Fire Emblem:** unit roles, weapon matchups, positioning, support relationships and dangerous counters.
+- **Suikoden:** the feeling that these aren't six individual people fighting. They represent **actual military units**, sometimes led by heroes.
+
+For your game, I'd build around this structure.
+
+### The core combat unit
+
+Your army enters a clash with up to **6 Units**.
+
+A unit might be:
+
+> **Elian's Spearmen**  
+> Hero: Elian  
+> Troops: 82/100 Spearmen
+
+or simply:
+
+> **Frostmarch Archers**  
+> Troops: 74/80 Archers  
+> No named hero
+
+A hero isn't another body taking a slot. They are effectively the **commander embedded within that unit**, modifying it and potentially adding unique actions.
+
+That gives you a really nice progression path too. A generic unit can survive battles, gain history, eventually produce a noteworthy soldier, and later become something like **Elian's Spearmen**.
+
+---
+
+# The six-slot formation
+
+I'd avoid a literal Fire Emblem grid inside each clash. You've already got strategic movement outside combat.
+
+Instead use something closer to:
+
+```text
+        FRONT
+
+   [1]  [2]  [3]
+
+   [4]  [5]  [6]
+
+        REAR
+```
+
+Position matters heavily.
+
+Front units protect the rear.
+
+Rear units can contain:
+
+- archers
+- mages
+- healers
+- siege crews
+- reserves
+- cavalry waiting to charge
+
+But the formation isn't completely static.
+
+Abilities can:
+
+- advance
+- retreat
+- swap positions
+- break through
+- flank
+- pull another unit forward
+- force an enemy backwards
+
+So you get some of Fire Emblem's positional thinking without turning every battle into a separate tactical map.
+
+---
+
+# The important bit: tactics
+
+Every unit has a **Tactics List**.
+
+Something like:
+
+**Elian's Spearmen**
+
+```text
+1. Brace
+   IF targeted by Cavalry
+
+2. Shield Wall
+   IF ally in same row is below 40% strength
+
+3. Spear Thrust
+   TARGET enemy Cavalry
+
+4. Attack
+   TARGET lowest-strength Front enemy
+```
+
+Combat simply evaluates these from top to bottom.
+
+The first valid action executes.
+
+That's the Unicorn Overlord DNA, and I think it's absolutely the bit worth stealing.
+
+But I would make the condition system substantially simpler than programming logic.
+
+Players should mostly select from little building blocks:
+
+```text
+TARGET:
+Lowest Strength
+Highest Strength
+Front Row
+Rear Row
+Cavalry
+Armoured
+Hero-led
+Exposed
+
+CONDITION:
+Always
+If Strength < 50%
+If Ally < 50%
+If Enemy Cavalry Present
+If Front Row Broken
+If Hero Wounded
+First Action Only
+```
+
+Enough to create strategies, but not enough that the player feels they're writing SQL for medieval warfare. 😄
+
+---
+
+# Heroes add tactics rather than replacing troops
+
+This is where I think your system can become particularly interesting.
+
+A hero doesn't simply give:
+
+> +15% damage
+
+They should usually give the unit **new tactical possibilities**.
+
+For example:
+
+### Elian, Veteran Spearman
+
+Adds:
+
+**Hold the Line**
+
+> When another front-line unit retreats, Elian's unit moves to occupy its position and gains Defence.
+
+And:
+
+**Rally**
+
+> Once per battle, if troop strength falls below 40%, restore Morale.
+
+Compare that with:
+
+### Mara, Cavalry Captain
+
+**Exploit Opening**
+
+> If an enemy front slot becomes empty, charge a rear unit.
+
+Now heroes actually change **how you configure the formation**.
+
+That's much more interesting than heroes merely being stat sticks.
+
+---
+
+# Troops still matter enormously
+
+I'd make every unit track at least:
+
+- **Strength**: surviving troop count
+- **Morale**
+- **Attack**
+- **Defence**
+- **Mobility**
+- **Range**
+- **Armour**
+- perhaps **Discipline**
+
+You don't need every individual soldier simulated.
+
+A unit of:
+
+> 100 Swordsmen
+
+can internally resolve an attack as aggregate damage and visually show perhaps 6-12 representative soldiers.
+
+The player understands that those little figures represent a larger force.
+
+This also works beautifully with your different unit scales:
+
+- 100 infantry
+- 30 cavalry
+- 20 siege engines
+- 1 dragon
+
+Their displayed headcount differs, but they still occupy **one army slot**.
+
+---
+
+# Battle flow
+
+I'd structure a clash into repeated **Combat Rounds**.
+
+### 1. Opening phase
+
+Pre-battle abilities trigger.
+
+Examples:
+
+- scouts reveal enemy information
+- archers volley
+- artillery fires
+- cavalry prepares charges
+- commanders issue buffs
+- assassins attempt something unpleasant
+
+### 2. Initiative
+
+Each surviving unit gets an activation based on Speed/Initiative.
+
+### 3. Execute tactics
+
+When a unit activates:
+
+```text
+Read tactic #1
+→ Can it execute?
+
+No
+↓
+Read tactic #2
+→ Can it execute?
+
+Yes
+→ Execute
+```
+
+### 4. Reactions
+
+The enemy might respond with:
+
+- Guard
+- Counter
+- Intercept
+- Dodge
+- Cover
+- Retaliation
+
+### 5. Morale / formation
+
+At the end of a round:
+
+- badly damaged units may retreat
+- routed units flee
+- gaps appear
+- reserve units may advance
+- heroes may trigger morale abilities
+
+Then another round begins.
+
+---
+
+# Make breaking the formation important
+
+This could be your biggest departure from Unicorn Overlord.
+
+Instead of simply killing everybody, battles revolve around **breaking the enemy formation**.
+
+Imagine:
+
+```text
+ENEMY
+
+[Spear] [Sword] [Spear]
+[Archer][Mage]  [Archer]
+```
+
+You destroy the central swordsmen.
+
+Now:
+
+```text
+[Spear] [     ] [Spear]
+[Archer][Mage]  [Archer]
+```
+
+That gap matters.
+
+Your cavalry has:
+
+> **Breakthrough:** Target a rear-row unit if the front slot protecting it is empty.
+
+Suddenly:
+
+```text
+Cavalry → Mage
+```
+
+Now there's a little positional battle happening entirely through tactics.
+
+That gives the combat a wonderfully readable narrative.
+
+> "We broke their centre, and the cavalry punched through."
+
+Rather than:
+
+> "Attack dealt 437 damage."
+
+---
+
+# Fire Emblem-style counters
+
+I'd keep the matchup system relatively soft.
+
+Not:
+
+```text
+Sword > Axe > Lance > Sword
+```
+
+because that can dominate the entire game.
+
+Instead use battlefield relationships.
+
+For example:
+
+**Spears**
+- strong against charging cavalry
+- good defensive front line
+
+**Swords**
+- strong general infantry
+- good at exploiting exposed units
+
+**Axes**
+- strong against shields/heavy armour
+- lower defence
+
+**Cavalry**
+- enormous charge potential
+- vulnerable to prepared spears
+- excellent at exploiting formation gaps
+
+**Archers**
+- attack rear units
+- vulnerable if engaged directly
+
+**Heavy Infantry**
+- hard to remove
+- slow
+
+**Skirmishers**
+- evade
+- disrupt enemy tactics
+- poor sustained combat
+
+**Siege**
+- devastating opening attack
+- almost helpless if reached
+
+Now unit composition becomes a real puzzle.
+
+---
+
+# Give the player doctrine templates
+
+Once the player has 20+ units, manually configuring every tactic could become exhausting.
+
+So allow tactics to exist at three levels.
+
+### Unit tactics
+
+Specific instructions.
+
+> Elian targets cavalry.
+
+### Formation doctrine
+
+Applied to multiple units.
+
+> Frontline prioritises attackers threatening the rear.
+
+### Saved templates
+
+Something like:
+
+**Defensive Line**
+
+```text
+Infantry:
+Protect weakest ally
+Attack nearest enemy
+
+Archers:
+Target exposed
+Target lowest armour
+
+Cavalry:
+Wait until opening
+Charge rear
+```
+
+Then the player can tweak exceptions.
+
+This preserves depth without turning army management into Spreadsheet Paladin 2026.
+
+---
+
+# An example clash
+
+Your army:
+
+```text
+[Elian Spearmen] [Heavy Infantry] [Squire Militia]
+[Longbows]       [Mara Cavalry]   [Healer]
+```
+
+Enemy:
+
+```text
+[Axemen]    [Heavy Infantry] [Spearmen]
+[Crossbows] [Mage]           [Cavalry]
+```
+
+Your tactics include:
+
+> Longbows → Target Mage if reachable.
+
+> Elian → Brace if Cavalry attacks.
+
+> Mara → Wait until an enemy front position is empty.
+
+The battle starts.
+
+**Round 1**
+
+Longbows shoot the Mage.
+
+Enemy Cavalry charges Elian.
+
+Elian's **Brace** triggers and badly damages the cavalry.
+
+Heavy Infantry exchange blows.
+
+**Round 2**
+
+Your central infantry defeats the enemy Heavy Infantry.
+
+Their formation now has an opening.
+
+Mara evaluates:
+
+```text
+IF enemy rear exposed
+→ Charge
+```
+
+She charges through the centre and hits the Mage.
+
+Enemy morale collapses.
+
+The fight becomes visually understandable even though the player didn't issue a single command once it started.
+
+And that's the sweet spot.
+
+---
+
+# One decision I'd make very early
+
+I'd **not allow the player to freely pause combat and change tactics continuously**.
+
+That risks turning your preparation system into ordinary realtime combat with a programming layer stapled onto it.
+
+Instead:
+
+**Before battle:** full tactical configuration.
+
+**During battle:** mostly watch.
+
+Potentially allow **one limited commander intervention**, perhaps:
+
+- Retreat
+- Rally
+- Change Formation
+- Activate Commander Order
+
+Something expensive enough that pre-battle planning remains important.
+
+That makes the battle feel like watching your plan hit reality.
+
+Sometimes:
+
+> "Excellent. Exactly as intended."
+
+And sometimes:
+
+> "Why is the cavalry charging the dragon?"
+
+And then you open Mara's tactics afterward and discover:
+
+```text
+Attack Lowest Defence
+```
+
+Technically, Mara followed orders. 😆
+
+---
+
+The design I'd prototype first is therefore **6 formation slots + aggregate troop units + optional embedded hero + 3-5 ordered conditional tactics per unit + formation gaps/exposure + automated combat rounds**.
+
+That is small enough to build, but it already contains the heart of all three inspirations. And it fits particularly well with your broader idea of armies made from persistent units that can acquire names, leaders and history over many battles.

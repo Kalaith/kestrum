@@ -6,6 +6,16 @@ Kestrum is a generational strategy game in which connected places create campaig
 
 ## Reading order
 
+For the proposed combat expansion, use the
+[battle system implementation plan](battle-system-implementation-plan.md).
+Prepared on 2026-09-30 from the supplied
+[battle notes](reference/battle-system-notes.txt), it plans formation positioning,
+ordered tactics, automated rounds and visible battlefield playback. Its seven
+milestones are unstarted; current automatic combat remains implemented behavior.
+The subsequent [battlefield mockup](reference/battle-system-mockup.png) establishes
+a shared landscape with opposing troop groups. The battlefield prototype precedes
+the tactics editor, and inspection remains subordinate to the fight.
+
 For implementation, begin with the [implementation plan](implementation-plan.md).
 It turns these design chapters into 18 dependency-ordered work packages with
 explicit contracts, provisional mechanics, acceptance cases, coverage and a
@@ -43,6 +53,7 @@ and the production world belong to later packages.
 | [12 — Delivery and validation](12-delivery-and-validation.md) | Prototype, first release, later scope, acceptance scenarios, template handoff, checks |
 | [13 — Decisions and open questions](13-decisions-and-open-questions.md) | Confirmed decisions, delegated defaults, remaining mechanics and scope questions |
 | [Implementation plan](implementation-plan.md) | Current actionable sequence, precise provisional rules, agent handoff and acceptance ledger |
+| [Battle system implementation plan](battle-system-implementation-plan.md) | Proposed combat expansion, current code boundaries, seven delivery milestones and behavioral acceptance |
 | [Full implementation review](implementation-review.md) | Review of K01–K18 at `96385e4`, prioritized changes, package coverage and remaining release acceptance |
 | [Plan verification](verification/implementation-plan.md) | Documentation checks and limits; no new gameplay implementation or balance validation |
 | [Glossary](glossary.md) | Consistent terminology across chapters |

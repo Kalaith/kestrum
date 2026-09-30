@@ -8,6 +8,32 @@ Combat is primarily automatic. The player prepares composition, character assign
 
 Source factors include troop type and headcount, named characters, class abilities, veterancy, terrain, fortifications, bonds, and army condition. Exact mathematics, targeting, troop counters, rounds, and randomness remain open. Do not present a numerical model in implementation as settled design without recording the choice.
 
+## Proposed formation and tactics expansion
+
+The 2026-09-30 request proposes replacing the current basic exchanges and text
+reports with preparation-led formation combat. The supplied
+[battle notes](reference/battle-system-notes.txt) describe six troop units,
+embedded heroes, three front and three rear slots, ordered conditional tactics,
+automatic activations and reactions, morale and visible formation gaps.
+The subsequent [battlefield mockup](reference/battle-system-mockup.png) establishes
+opposing troop groups fighting in a shared landscape. The default execution view
+prioritizes that scene, with compact condition labels and contextual inspection.
+
+The [battle system implementation plan](battle-system-implementation-plan.md)
+maps this direction onto the current code and seven delivery milestones. Its
+proposed defaults keep six slots per army in grouped encounters, distinguish
+reaction rules such as Brace from activation rules, and separate authoritative
+campaign resolution from battlefield playback. A visible battlefield prototype
+precedes the full tactics editor. The initial content uses the
+existing human troop roster. Continuous tactic edits and commander interventions
+are outside the first playable scope.
+
+This expansion is planned, not implemented. When integrated, it replaces P11's
+non-positional roster and P12's simultaneous rotating-target exchanges and rout
+threshold. Existing retreat, destruction, person consequences, siege contexts,
+threats and participant-only history remain integration requirements. Numerical
+damage and morale tuning are still proposals.
+
 ## Encounter trigger
 
 Opposing armies meeting at the same node trigger combat during sequential faction turns. For example, an enemy moving onto a player-occupied Node A in its turn initiates an encounter then.

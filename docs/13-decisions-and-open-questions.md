@@ -8,6 +8,20 @@ The discussion clarification and direct answers supplied on 2026-09-26 resolve s
 
 Original D and O identifiers are retained so earlier references remain useful. A **working interpretation** or **proposal** is still a suggested implementation choice. In particular, vassalisation as a defeat outcome is a suggestion from the discussion, not a confirmed rule. Approximate values remain tunable. Update the owning chapter when a remaining choice is settled; preserve the founding references unchanged.
 
+## Proposed battle expansion
+
+The 2026-09-30 [battle expansion proposal](battle-system-implementation-plan.md)
+uses the supplied [battle notes](reference/battle-system-notes.txt) to plan a
+formation and tactics resolver. The requested direction is preparation-led,
+automatic combat with visible units and meaningful formation gaps. Its detailed
+reach, morale, reaction, hero, multi-army and pending-encounter rules remain
+proposed implementation choices; they are not added to the confirmed table below.
+The expansion preserves D01's six slots per army and existing person assignments.
+The subsequent mockup and direct request establish game-focused presentation:
+troop groups and their actions dominate a shared battlefield, with compact
+labels and contextual inspection. The delivery plan proves that scene before
+building the full tactics editor.
+
 ## Confirmed decisions
 
 | ID | Confirmed rule | Remaining implementation detail and primary chapter |

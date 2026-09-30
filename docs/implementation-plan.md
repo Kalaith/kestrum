@@ -24,6 +24,15 @@ in [K18 verification](verification/k18-integrated.md).
 
 ## How to use this plan
 
+The [battle system implementation plan](battle-system-implementation-plan.md)
+adds the proposed 2026-09-30 combat expansion after K01–K18. It uses the existing
+campaign as its starting point and replaces the old non-positional P11/P12
+resolver when integrated. Its B01–B07 milestones are unstarted. Preserve this
+document's earlier package and completion records; use the new plan for the
+requested formation, tactics and battlefield work.
+Its updated sequence proves a shared battlefield with visible troop action
+before adding the full tactics editor, following the supplied mockup.
+
 For the current full-release assignment, implement successive numbered packages,
 validate and commit each one, then continue automatically through K18. The user's
 2026-09-26 full-release instruction supersedes the earlier one-package-per-request

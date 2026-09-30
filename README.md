@@ -579,6 +579,39 @@ evidence, performance gains and deferred platform/balance checks.
 
 ## Development
 
+The proposed next combat expansion is documented in the
+[battle system implementation plan](docs/battle-system-implementation-plan.md).
+Its seven milestones are unstarted. The first two prove formation-aware combat
+and a visible battlefield before a substantial editor is built. The next two
+connect campaign encounters and compact tactics authoring; later milestones add
+leader abilities, doctrines and balance acceptance. The supplied
+[battlefield mockup](docs/reference/battle-system-mockup.png) sets the visual
+direction: soldiers fighting in a shared landscape with subordinate interface.
+The current automatic resolver and text reports remain the implemented system.
+
+### Planned battle screen briefs
+
+These briefs describe the proposed screens, not current UI. Normal target is
+1920 × 1080; minimum supported landscape canvas is 1280 × 720.
+
+| Question | Preparation | Execution | Aftermath |
+| --- | --- | --- | --- |
+| Current decision | Arrange troops and choose ordered tactics before committing. | Understand how the prepared plan is performing. | Review survivors and consequences before returning to strategy. |
+| Dominant focus | Troop groups staged in the same battlefield used for execution. | Opposing forces in a shared landscape, with charges, bracing and contested lanes. | Surviving groups and withdrawing troops remain visible on the battlefield. |
+| Primary action | Start Battle, beside known terrain and retreat risk. | Pause/Resume, Step, Speed and Skip to Result control playback. | Continue resumes the strategic continuation once. |
+| Supporting information | One selected group exposes its leader and ordered tactics; known enemy facts only. | Compact labels and condition bars beside groups, brief ability callouts and a contextual selection strip. | A concise result overlay, explanatory moments and strategic consequences. |
+| Deferred information | Full abilities and help appear on selection or disclosure. | Detailed transcript and other unit statistics open on demand. | Existing Forces, People, Factors and History inspection. |
+| Layout and camera | Select one group to edit in a compact strip, retaining the battlefield context. | At least 75% of the default view remains battlefield. Player left and enemy right face inward; multi-army camera focus follows action and holds while paused. | Results supplement the same scene; detailed inspection remains paged. |
+| Input and feedback | Select group and destination; visible Move Up/Move Down reorder tactics. | Group selection, quiet playback controls, visible approaches, impact, defence posture and withdrawal. | Visible Continue and report/history controls; consequences remain retrievable. |
+
+The full tactics table, permanent transcript and terrain-stat panel are deferred
+to inspection; they do not frame the default battle. The inherited minimum-WebGL
+scaling/picking limitation must be
+resolved before minimum-browser battle acceptance. See the plan for validation,
+pending-save behavior and separation of gameplay from cosmetic playback.
+
+### Build and verification commands
+
 Kestrum is a registered member of the real shared Cargo workspace. The toolkit
 path is `../macroquad-toolkit`; Macroquad remains pinned to `=0.4.16`.
 

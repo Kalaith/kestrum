@@ -2,6 +2,7 @@
 
 pub mod ai;
 pub mod battle;
+pub mod battle_plans;
 pub mod campaign;
 pub mod construction;
 pub mod development;
@@ -276,7 +277,11 @@ impl GameState {
             || (self.overlay == Overlay::Battlefield
                 && matches!(
                     &command,
-                    Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+                    Command::SetFormationTactics { .. }
+                        | Command::SetBattleDoctrine { .. }
+                        | Command::SaveBattleTemplate { .. }
+                        | Command::ApplyBattleTemplate { .. }
+                        | Command::SwapFormationSlots { .. }
                 ));
         let military_order = military_order
             || (self.overlay == Overlay::Battlefield

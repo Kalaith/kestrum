@@ -146,6 +146,10 @@ fn validate_army<'a>(
             && !army.name.trim().is_empty()
             && army.leadership_permille > 0
             && army
+                .battle_doctrine
+                .is_none_or(|doctrine| data.battle_tactics.doctrines.contains_key(&doctrine))
+            && (!army.ai_prepared || side.faction != campaign.player)
+            && army
                 .final_site
                 .is_none_or(|site| campaign.world.site(site).is_some())
             && !army.formations.is_empty()
@@ -424,7 +428,9 @@ fn validate_pending(campaign: &StrategicCampaign) -> Result<(), String> {
                 actual.site == report.site
                     && army.formations.len() == actual.formation_ids().count()
                     && army.formations.iter().all(|entry| {
-                        actual.slots.get(entry.slot) == Some(&Some(entry.id))
+                        actual.formation_ids().any(|id| id == entry.id)
+                            && (army.ai_prepared
+                                || actual.slots.get(entry.slot) == Some(&Some(entry.id)))
                             && campaign.formations.get(&entry.id).is_some_and(|formation| {
                                 formation.kind == entry.kind && formation.headcount == entry.start
                             })

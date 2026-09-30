@@ -258,6 +258,8 @@ pub struct StrategicCampaign {
     pub mentorships: BTreeMap<PersonId, super::mentorship::Mentorship>,
     #[serde(default)]
     pub legacy_items: BTreeMap<LegacyItemId, LegacyItem>,
+    #[serde(default)]
+    pub battle_templates: Vec<super::battle_plans::BattlePlanTemplate>,
     pub world: CampaignWorld,
     pub relations: Vec<Relation>,
     pub accepted_sequence: u64,
@@ -360,6 +362,7 @@ impl StrategicCampaign {
             apprentice_last_invited_year: BTreeMap::new(),
             mentorships: BTreeMap::new(),
             legacy_items: BTreeMap::new(),
+            battle_templates: Vec::new(),
             world: CampaignWorld::from_scenario(scenario),
             relations: scenario.relations.clone(),
             accepted_sequence: 0,

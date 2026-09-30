@@ -3,6 +3,7 @@
 use super::super::{MoveOrder, MovementBlock, MovementOutcome, RecruitmentResult};
 use crate::{
     data::{
+        battle_tactics::BattleDoctrine,
         economy::{Resources, TroopKind},
         progression::FormationSpecialization,
         world::{Facility, FactionId, PersonClass, SiteId},
@@ -31,6 +32,18 @@ pub enum Command {
     SetFormationTactics {
         formation: FormationId,
         tactics: crate::data::battle_tactics::TroopTactics,
+    },
+    SetBattleDoctrine {
+        army: ArmyId,
+        doctrine: BattleDoctrine,
+    },
+    SaveBattleTemplate {
+        army: ArmyId,
+        name: String,
+    },
+    ApplyBattleTemplate {
+        army: ArmyId,
+        name: String,
     },
     SetBattleLeader {
         formation: FormationId,

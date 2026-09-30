@@ -16,6 +16,7 @@ use crate::{
 
 pub(super) fn formation(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     owner: FactionId,
     formation: FormationId,
     to_army: ArmyId,
@@ -39,7 +40,7 @@ pub(super) fn formation(
         return Err(RuleError::SlotOccupied);
     }
     let site = target.site;
-    move_formation(campaign, formation, source, to_army, to_slot);
+    move_formation(campaign, data, formation, source, to_army, to_slot);
     Ok(DomainFactKind::FormationTransferred {
         faction: owner,
         formation,
@@ -51,11 +52,13 @@ pub(super) fn formation(
 
 pub(super) fn split(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     owner: FactionId,
     formation: FormationId,
 ) -> Result<(ArmyId, DomainFactKind), RuleError> {
     let source = formation_army(campaign, owner, formation)?;
     let site = campaign.armies[&source].site;
+    let battle_doctrine = campaign.armies[&source].battle_doctrine;
     let id = campaign.next_ids.army;
     let next = ArmyId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "army identifiers",
@@ -69,10 +72,11 @@ pub(super) fn split(
             name: format!("Army {}", id.0),
             slots: [None; 6],
             commander: None,
+            battle_doctrine,
         },
     );
     campaign.next_ids.army = next;
-    move_formation(campaign, formation, source, id, 0);
+    move_formation(campaign, data, formation, source, id, 0);
     Ok((
         id,
         DomainFactKind::FormationTransferred {
@@ -196,6 +200,7 @@ fn formation_army(
 
 fn move_formation(
     campaign: &mut StrategicCampaign,
+    data: &GameData,
     formation: FormationId,
     source: ArmyId,
     target: ArmyId,
@@ -223,6 +228,14 @@ fn move_formation(
     }
     if campaign.armies[&source].is_empty() {
         campaign.armies.remove(&source);
+    }
+    let doctrine = campaign.armies[&target].battle_doctrine;
+    let unit = campaign.formations.get_mut(&formation).expect("moved unit");
+    if !unit.has_explicit_tactics() {
+        unit.tactics = doctrine
+            .and_then(|profile| data.battle_tactics.doctrine_for(profile, unit.kind))
+            .cloned();
+        unit.tactics_override = Some(false);
     }
 }
 

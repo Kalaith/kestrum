@@ -4,6 +4,7 @@ mod actions;
 pub mod ai;
 mod battle_preparation;
 pub mod battle_sim;
+pub mod battle_strategy;
 mod combat;
 pub(crate) mod construction;
 pub(crate) mod development;
@@ -38,6 +39,9 @@ pub use actions::{
     advance_npc, apply, preview, ActionOutcome, ActionPreview, Actor, Command, RuleError,
 };
 pub use battle_sim::resolve_battle;
+pub use battle_strategy::{
+    plan_rival_battle, ObservedTroopPosition, RivalBattlePlan, RivalSlotMove,
+};
 pub use combat::battle_reports;
 pub use construction::{
     construction_options, construction_refund, ConstructionBlock, ConstructionOption,

@@ -46,6 +46,7 @@ impl StrategicCampaign {
         self.validate_ai(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
+        self.validate_battle_templates(data)?;
         self.validate_relationships(data)?;
         self.validate_legacy_items()?;
         self.validate_construction(data)?;
@@ -59,6 +60,53 @@ impl StrategicCampaign {
         self.validate_phase()?;
         self.validate_facts()?;
         self.validate_counters()
+    }
+
+    fn validate_battle_templates(&self, data: &GameData) -> Result<(), String> {
+        use super::battle_plans::{MAX_BATTLE_TEMPLATES, MAX_BATTLE_TEMPLATE_NAME_CHARS};
+
+        require(
+            self.battle_templates.len() <= MAX_BATTLE_TEMPLATES,
+            "battle_templates",
+            "too many saved templates",
+        )?;
+        let mut names = BTreeSet::new();
+        for template in &self.battle_templates {
+            let name = template.name.trim().to_lowercase();
+            require(
+                !name.is_empty()
+                    && template.name.trim() == template.name
+                    && template.name.chars().count() <= MAX_BATTLE_TEMPLATE_NAME_CHARS
+                    && !template.name.chars().any(char::is_control)
+                    && names.insert(name),
+                "battle_templates.name",
+                "invalid or duplicate template name",
+            )?;
+            require(
+                template
+                    .doctrine
+                    .is_none_or(|doctrine| data.battle_tactics.doctrines.contains_key(&doctrine)),
+                "battle_templates.doctrine",
+                "unknown battle doctrine",
+            )?;
+            let mut slots = BTreeSet::new();
+            require(
+                !template.slots.is_empty() && template.slots.len() <= 6,
+                "battle_templates.slots",
+                "a template must contain one to six formation slots",
+            )?;
+            for slot in &template.slots {
+                require(
+                    slot.slot < 6 && slots.insert(slot.slot),
+                    "battle_templates.slots",
+                    "invalid or duplicate deployment slot",
+                )?;
+                data.battle_tactics
+                    .validate_configuration(slot.kind, &slot.tactics)
+                    .map_err(|error| format!("battle_templates.slots: {error}"))?;
+            }
+        }
+        Ok(())
     }
 
     fn validate_factions(&self, data: &GameData) -> Result<(), String> {

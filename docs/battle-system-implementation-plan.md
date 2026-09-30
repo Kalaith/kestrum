@@ -366,7 +366,7 @@ before the new resolver and pending-command changes have been measured.
 | B03 Campaign encounter integration | Complete; deterministic field, threat and siege receipts integrate with campaign consequences | [Battle system verification](verification/battle-system.md#b03--campaign-encounter-integration) |
 | B04 Deployment and tactics authoring | Complete; saved per-formation rules, contextual editor and slot swaps | [Battle system verification](verification/battle-system.md#b04--deployment-and-tactics-authoring) |
 | B05 Leaders and support roles | Complete; saved leader selection, bounded class abilities, Medic stabilization and siege roles | [Battle system verification](verification/battle-system.md#b05--leaders-and-support-roles) |
-| B06 Doctrines and rival preparation | Not started | — |
+| B06 Doctrines and rival preparation | Complete; legal doctrine snapshots, campaign-local personal plans and deterministic observed-information rival preparation | [Battle system verification](verification/battle-system.md#b06--doctrines-and-rival-preparation) |
 | B07 Balance and campaign readiness | Not started | — |
 
 The full Kestrum test run currently reaches round 284 before an NPC attempts to

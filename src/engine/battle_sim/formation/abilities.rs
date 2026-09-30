@@ -320,7 +320,7 @@ impl Runtime {
         if !self.can_damage(target) {
             return;
         }
-        if action == TacticAction::Charge {
+        if matches!(action, TacticAction::Charge | TacticAction::Breakthrough) {
             if let Some(brace_factor) = self.resolve_reaction(target, actor) {
                 multiplier = multiplier.saturating_mul(brace_factor) / 1000;
             }

@@ -156,6 +156,7 @@ fn snapshot(
             .map(|person| BattlePersonReport {id:person.id,starting_formation:match person.assignment {PersonAssignment::Formation {formation} => formation,_ => unreachable!("attached participant")},name:person.name.clone(),class:person.class,
                 starting_status:Some(person.status),status:person.status,assignment:person.assignment}).collect();
         BattleArmyReport {id,name:army.name.clone(),leadership_permille:campaign.army_leadership_permille(id,data).expect("army"),
+            battle_doctrine:army.battle_doctrine,ai_prepared:false,
             commander:army.commander.and_then(|id| campaign.people.get(&id)).map(|person|
                 BattleCommander {id:person.id,name:person.name.clone()}),people,formations,final_site:Some(army.site)}
     }).collect();

@@ -7,12 +7,24 @@ use std::collections::BTreeMap;
 pub const SOURCE: &str = "assets/data/battle_tactics.json";
 pub const DEFAULT_MAX_TACTIC_ROWS: usize = 3;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TacticTrigger {
     Activation,
     IncomingAttack,
     EndOfRound,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BattleDoctrine {
+    DefensiveLine,
+    RangedSupport,
+    Breakthrough,
+}
+
+impl BattleDoctrine {
+    pub const ALL: [Self; 3] = [Self::DefensiveLine, Self::RangedSupport, Self::Breakthrough];
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -123,6 +135,8 @@ pub struct BattleTacticsRules {
     pub siege_engine_close_damage_permille: u32,
     #[serde(deserialize_with = "unique_table")]
     pub defaults: BTreeMap<TroopKind, TroopTactics>,
+    #[serde(deserialize_with = "unique_table")]
+    pub doctrines: BTreeMap<BattleDoctrine, BTreeMap<TroopKind, TroopTactics>>,
 }
 
 impl BattleTacticsRules {
@@ -191,6 +205,21 @@ impl BattleTacticsRules {
             }
             self.validate_configuration(*kind, tactics)?;
         }
+        if self.doctrines.len() != BattleDoctrine::ALL.len()
+            || BattleDoctrine::ALL
+                .iter()
+                .any(|doctrine| !self.doctrines.contains_key(doctrine))
+        {
+            return Err(format!("{SOURCE}: doctrines must define all three presets"));
+        }
+        for (doctrine, tactics) in &self.doctrines {
+            if tactics.keys().any(|kind| !self.defaults.contains_key(kind)) {
+                return Err(format!("{SOURCE}: unknown troop kind in {doctrine:?}"));
+            }
+            for (kind, rules) in tactics {
+                self.validate_configuration(*kind, rules)?;
+            }
+        }
         Ok(())
     }
 
@@ -210,6 +239,15 @@ impl BattleTacticsRules {
 
     pub fn defaults_for(&self, kind: TroopKind) -> Option<&TroopTactics> {
         self.defaults.get(&kind)
+    }
+
+    /// Doctrines replace only their authored role blocks; omitted roles use
+    /// the legal troop defaults and are still snapshotted on application.
+    pub fn doctrine_for(&self, doctrine: BattleDoctrine, kind: TroopKind) -> Option<&TroopTactics> {
+        self.doctrines
+            .get(&doctrine)
+            .and_then(|rules| rules.get(&kind))
+            .or_else(|| self.defaults_for(kind))
     }
 }
 

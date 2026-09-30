@@ -4,8 +4,8 @@ use super::{BattlefieldAction, TacticEdit};
 use crate::ui::{components, Context, UiAction};
 use kestrum::{
     data::battle_tactics::{
-        leader_capabilities, BattleCapability, TacticAction, TacticCondition, TacticTrigger,
-        TargetFilter,
+        leader_capabilities, BattleCapability, BattleDoctrine, TacticAction, TacticCondition,
+        TacticTrigger, TargetFilter,
     },
     state::{battle::simulation::BattleUnitId, military::FormationId, people::PersonAssignment},
 };
@@ -37,6 +37,14 @@ pub(super) fn prepare_text(ctx: &Context<'_>) {
         (11, ctx.text("battle_tactic_needs_officer")),
         (11, ctx.text("battle_tactic_needs_infantry")),
         (11, ctx.text("battle_tactic_leader_unavailable")),
+        (12, ctx.text("battle_doctrine_defensive")),
+        (12, ctx.text("battle_doctrine_ranged")),
+        (12, ctx.text("battle_doctrine_breakthrough")),
+        (12, ctx.text("battle_template_save")),
+        (12, ctx.text("battle_template_update")),
+        (12, ctx.text("battle_template_apply")),
+        (12, ctx.text("battle_template_new")),
+        (11, ctx.text("battle_doctrine_label")),
     ];
     let prepared: Vec<_> = labels
         .iter()
@@ -73,6 +81,10 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
     let rules = formation
         .tactics
         .as_ref()
+        .or_else(|| {
+            army.battle_doctrine
+                .and_then(|doctrine| ctx.battle_tactics.doctrine_for(doctrine, formation.kind))
+        })
         .or_else(|| ctx.battle_tactics.defaults_for(formation.kind))?;
     let (trigger, rows) = if ctx.battlefield.tactic_trigger == TacticTrigger::Activation {
         (TacticTrigger::Activation, &rules.activation)
@@ -80,7 +92,7 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
         (TacticTrigger::IncomingAttack, &rules.reaction)
     };
     let visible_rows = rows.len().min(5);
-    let rect = Rect::new(310.0, 86.0, 660.0, 75.0 + visible_rows as f32 * 18.0);
+    let rect = Rect::new(310.0, 86.0, 660.0, 126.0 + visible_rows as f32 * 18.0);
     draw_rectangle(
         rect.x,
         rect.y,
@@ -143,6 +155,45 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
             )));
         }
     }
+    components::body(
+        ctx,
+        &ctx.text("battle_doctrine_label"),
+        vec2(rect.x + 10.0, rect.y + 42.0),
+        11.0,
+        components::MUTED,
+    );
+    for (doctrine, x, label) in [
+        (
+            BattleDoctrine::DefensiveLine,
+            rect.x + 88.0,
+            ctx.text("battle_doctrine_defensive"),
+        ),
+        (
+            BattleDoctrine::RangedSupport,
+            rect.x + 278.0,
+            ctx.text("battle_doctrine_ranged"),
+        ),
+        (
+            BattleDoctrine::Breakthrough,
+            rect.x + 468.0,
+            ctx.text("battle_doctrine_breakthrough"),
+        ),
+    ] {
+        if components::button(
+            ctx,
+            Rect::new(x, rect.y + 26.0, 174.0, 19.0),
+            &label,
+            true,
+            army.battle_doctrine == Some(doctrine),
+        ) {
+            action = Some(UiAction::Battlefield(
+                BattlefieldAction::SetBattleDoctrine {
+                    army: army.id,
+                    doctrine,
+                },
+            ));
+        }
+    }
     let leaders = eligible_leaders(campaign, formation_id, formation.kind, army.commander, ctx);
     let mut choices = vec![None];
     choices.extend(leaders.into_iter().map(Some));
@@ -164,14 +215,14 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
     components::body(
         ctx,
         &ctx.text("battle_leader"),
-        vec2(rect.x + 12.0, rect.y + 44.0),
+        vec2(rect.x + 12.0, rect.y + 61.0),
         14.0,
         components::MUTED,
     );
     components::body(
         ctx,
         &leader_name,
-        vec2(rect.x + 72.0, rect.y + 44.0),
+        vec2(rect.x + 72.0, rect.y + 61.0),
         14.0,
         components::CREAM,
     );
@@ -183,7 +234,7 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
     for (left, x, step) in [(true, rect.x + 254.0, -1_i32), (false, rect.x + 282.0, 1)] {
         if components::button(
             ctx,
-            Rect::new(x, rect.y + 30.0, 24.0, 18.0),
+            Rect::new(x, rect.y + 48.0, 24.0, 18.0),
             if left { "<" } else { ">" },
             choices.len() > 1,
             false,
@@ -201,13 +252,13 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
         components::body(
             ctx,
             &ctx.text("battle_tactic_fallback"),
-            vec2(rect.x + 330.0, rect.y + 44.0),
+            vec2(rect.x + 330.0, rect.y + 61.0),
             12.0,
             components::MUTED,
         );
     }
     for (index, rule) in rows.iter().take(5).enumerate() {
-        let y = rect.y + 55.0 + index as f32 * 18.0;
+        let y = rect.y + 72.0 + index as f32 * 18.0;
         let move_up = components::button(
             ctx,
             Rect::new(rect.x + 10.0, y, 22.0, 18.0),
@@ -320,7 +371,7 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
     }
     if components::button(
         ctx,
-        Rect::new(rect.x + 10.0, rect.y + rect.h - 18.0, 110.0, 18.0),
+        Rect::new(rect.x + 10.0, rect.y + rect.h - 40.0, 110.0, 18.0),
         &ctx.text("battle_tactic_add"),
         rows.len() < ctx.battle_tactics.max_tactic_rows as usize,
         false,
@@ -329,6 +380,78 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
             formation: formation_id,
             edit: TacticEdit::Add(trigger),
         }));
+    }
+    let template_count = campaign.battle_templates.len();
+    let selected_template = usize::from(ctx.battlefield.template_index).min(template_count);
+    let template_name = campaign
+        .battle_templates
+        .get(selected_template)
+        .map(|template| template.name.as_str())
+        .unwrap_or_else(|| "");
+    let template_label = if selected_template == template_count {
+        ctx.text("battle_template_new")
+    } else {
+        fit_label(ctx, template_name, 210.0)
+    };
+    let total_choices = template_count + 1;
+    let save_label = if selected_template < template_count {
+        ctx.text("battle_template_update")
+    } else {
+        ctx.text("battle_template_save")
+    };
+    if components::button(
+        ctx,
+        Rect::new(rect.x + 10.0, rect.y + rect.h - 19.0, 90.0, 18.0),
+        &save_label,
+        selected_template < template_count || template_count < 12,
+        false,
+    ) {
+        action = Some(UiAction::Battlefield(
+            BattlefieldAction::SaveBattleTemplate { army: army.id },
+        ));
+    }
+    if components::button(
+        ctx,
+        Rect::new(rect.x + 106.0, rect.y + rect.h - 19.0, 24.0, 18.0),
+        "<",
+        total_choices > 1,
+        false,
+    ) {
+        action = Some(UiAction::Battlefield(BattlefieldAction::SetTemplateIndex(
+            ((selected_template + total_choices - 1) % total_choices) as u8,
+        )));
+    }
+    components::body(
+        ctx,
+        &template_label,
+        vec2(rect.x + 140.0, rect.y + rect.h - 6.0),
+        12.0,
+        components::CREAM,
+    );
+    if components::button(
+        ctx,
+        Rect::new(rect.x + 366.0, rect.y + rect.h - 19.0, 24.0, 18.0),
+        ">",
+        total_choices > 1,
+        false,
+    ) {
+        action = Some(UiAction::Battlefield(BattlefieldAction::SetTemplateIndex(
+            ((selected_template + 1) % total_choices) as u8,
+        )));
+    }
+    if components::button(
+        ctx,
+        Rect::new(rect.x + 402.0, rect.y + rect.h - 19.0, 100.0, 18.0),
+        &ctx.text("battle_template_apply"),
+        selected_template < template_count,
+        false,
+    ) {
+        action = Some(UiAction::Battlefield(
+            BattlefieldAction::ApplyBattleTemplate {
+                army: army.id,
+                index: selected_template as u8,
+            },
+        ));
     }
     Some(action)
 }

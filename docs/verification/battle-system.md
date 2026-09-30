@@ -275,3 +275,38 @@ The unavailable state now distinguishes a missing leader from no selection and
 places the row reason inside the inspector. The default fallback label fits at
 both sizes. The existing browser tab retains a local campaign and was left
 unchanged; live browser interaction remains unverified.
+
+## B06 — Doctrines and rival preparation
+
+The six troop roles each receive legal Defensive Line, Ranged Support and
+Breakthrough rule blocks from the authored tactics catalogue. Choosing a
+doctrine snapshots its defaults onto non-customized formations and preserves
+explicit tactics overrides, including legacy saves whose override marker did
+not yet exist. Campaign-local personal plans save role, slot and tactic blocks
+without storing character or formation identities; plans can be selected,
+updated and applied from the pending battle's selected-group inspector.
+
+Faction rivals choose a doctrine and deployment deterministically from their
+visible troop types and observed slot reports. The planner cannot read enemy
+tactics or leader assignments. Rivals can move ranged and support groups behind
+the line, exploit an observed rear gap with Breakthrough and meet a charge with
+the same Spear Brace reaction available to the player. No special combat bonus
+is granted for AI preparation.
+
+### Behavioral evidence
+
+| Check | Result |
+| --- | --- |
+| `cargo.ps1 test -p kestrum --all-features --test battle_doctrines --test battle_formation --test battle_playback --test combat --test movement --test recovery --test siege --test threats --test k18_siege_continuity --test code_standards` | Passed: 60 cases, including six B06 doctrine/template/rival cases, battle action and playback behavior, campaign consequences, sieges, threats and the source-size gate. |
+| `cargo.ps1 test -p kestrum --all-features --test ai` | Four of five cases pass. `private_enemy_changes_do_not_grant_strength_and_empty_hostile_land_is_captured` now chooses `OfferPeace` after its newly doctrine-prepared battle records a recent faction loss; the test expects an attack. This encounter balance and peace pacing regression is carried into B07 without suppressing the assertion. |
+| `cargo fmt --all -- --check` | Passed. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed without warnings. |
+| `publish.ps1` with no parameters | Passed Windows and WebGL release builds, packaging, Preview deployment, tracker recording and catalogue synchronization. |
+
+The expanded B06 controls were inspected in captures at both supported sizes;
+the selected-group inspector remains compact above the shared battlefield.
+Live browser interaction was not re-tested in the existing campaign tab.
+
+| State | 1920×1080 | 1280×720 |
+| --- | --- | --- |
+| Pending battle with Ranged Support and the saved “Northern Screen” plan selected | [image](ui_battle_campaign_doctrine.png) | [image](ui_battle_campaign_doctrine_minimum.png) |

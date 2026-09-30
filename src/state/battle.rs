@@ -156,6 +156,10 @@ pub struct BattleArmyReport {
     pub id: ArmyId,
     pub name: String,
     pub leadership_permille: u32,
+    #[serde(default)]
+    pub battle_doctrine: Option<crate::data::battle_tactics::BattleDoctrine>,
+    #[serde(default)]
+    pub ai_prepared: bool,
     pub commander: Option<BattleCommander>,
     pub people: Vec<BattlePersonReport>,
     pub formations: Vec<BattleFormationReport>,

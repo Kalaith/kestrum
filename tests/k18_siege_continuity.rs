@@ -71,6 +71,7 @@ fn outpost_and_fortified_siege_survive_catalogue_reload_then_resolve_relief_once
             name: "Rose Relief Column".into(),
             slots: [Some(relief_formation), None, None, None, None, None],
             commander: None,
+            battle_doctrine: None,
         },
     );
     campaign.formations.insert(
@@ -78,6 +79,7 @@ fn outpost_and_fortified_siege_survive_catalogue_reload_then_resolve_relief_once
         Formation {
             battle_leader: None,
             tactics: None,
+            tactics_override: Some(false),
             id: relief_formation,
             faction: rose,
             kind: TroopKind::Warriors,

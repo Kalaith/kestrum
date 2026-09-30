@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "rules_revision": "kestrum-battle-2",
+  "rules_revision": "kestrum-battle-3",
   "max_rounds": 8,
   "max_armies_per_side": 4,
   "max_activations_per_round": 48,
@@ -64,6 +64,57 @@
         {"id": "engine-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "any_enemy", "target_priority": "lowest_resistance"}
       ],
       "reaction": []
+    }
+  },
+  "doctrines": {
+    "defensive_line": {
+      "warriors": {
+        "activation": [
+          {"id": "line-hold", "trigger": "activation", "action": "guard", "condition": "always", "target_filter": "none", "target_priority": "own_column_first"}
+        ],
+        "reaction": []
+      },
+      "riders": {
+        "activation": [
+          {"id": "line-wait-cavalry", "trigger": "activation", "action": "wait", "condition": "enemy_cavalry_present", "target_filter": "none", "target_priority": "own_column_first"},
+          {"id": "line-charge-front", "trigger": "activation", "action": "charge", "condition": "always", "target_filter": "enemy_front", "target_priority": "own_column_first"}
+        ],
+        "reaction": []
+      }
+    },
+    "ranged_support": {
+      "spearmen": {
+        "activation": [
+          {"id": "support-spear-hold", "trigger": "activation", "action": "guard", "condition": "always", "target_filter": "none", "target_priority": "own_column_first"}
+        ],
+        "reaction": [
+          {"id": "support-spear-brace", "trigger": "incoming_attack", "action": "brace", "condition": "incoming_cavalry_charge", "target_filter": "none", "target_priority": "own_column_first"}
+        ]
+      },
+      "archers": {
+        "activation": [
+          {"id": "support-cavalry-volley", "trigger": "activation", "action": "volley", "condition": "enemy_cavalry_present", "target_filter": "enemy_cavalry", "target_priority": "lowest_strength"},
+          {"id": "support-rear-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "enemy_rear", "target_priority": "lowest_strength"},
+          {"id": "support-open-volley", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "any_enemy", "target_priority": "lowest_strength"}
+        ],
+        "reaction": []
+      }
+    },
+    "breakthrough": {
+      "warriors": {
+        "activation": [
+          {"id": "breakthrough-charge", "trigger": "activation", "action": "charge", "condition": "always", "target_filter": "enemy_front", "target_priority": "own_column_first"},
+          {"id": "breakthrough-attack", "trigger": "activation", "action": "attack", "condition": "always", "target_filter": "any_enemy", "target_priority": "own_column_first"}
+        ],
+        "reaction": []
+      },
+      "archers": {
+        "activation": [
+          {"id": "breakthrough-volley-front", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "enemy_front", "target_priority": "lowest_strength"},
+          {"id": "breakthrough-volley-all", "trigger": "activation", "action": "volley", "condition": "always", "target_filter": "any_enemy", "target_priority": "lowest_strength"}
+        ],
+        "reaction": []
+      }
     }
   }
 }

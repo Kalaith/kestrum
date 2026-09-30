@@ -18,7 +18,11 @@ pub(in crate::engine) fn validate_command(
     }
     let is_preparation = matches!(
         command,
-        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+        Command::SetFormationTactics { .. }
+            | Command::SetBattleDoctrine { .. }
+            | Command::SaveBattleTemplate { .. }
+            | Command::ApplyBattleTemplate { .. }
+            | Command::SwapFormationSlots { .. }
     ) || (campaign.pending_battle.is_some()
         && matches!(command, Command::SetBattleLeader { .. }));
     if campaign.pending_battle.is_some()
@@ -60,6 +64,9 @@ pub(in crate::engine) fn validate_command(
     match command {
         Command::StartPendingBattle
         | Command::SetFormationTactics { .. }
+        | Command::SetBattleDoctrine { .. }
+        | Command::SaveBattleTemplate { .. }
+        | Command::ApplyBattleTemplate { .. }
         | Command::SwapFormationSlots { .. } => return Err(RuleError::NoPendingBattle),
         Command::RespondPeace { .. } | Command::ResolveDefeat { .. } => {
             if actor != Actor::Player {

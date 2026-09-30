@@ -7,7 +7,7 @@ mod terrain;
 mod troop_sprites;
 
 use kestrum::{
-    data::battle_tactics::TacticTrigger,
+    data::battle_tactics::{BattleDoctrine, TacticTrigger},
     state::{
         battle::simulation::BattleUnitId,
         military::{ArmyId, FormationId},
@@ -34,6 +34,18 @@ pub enum BattlefieldAction {
         formation: FormationId,
         leader: Option<PersonId>,
     },
+    SetBattleDoctrine {
+        army: ArmyId,
+        doctrine: BattleDoctrine,
+    },
+    SaveBattleTemplate {
+        army: ArmyId,
+    },
+    ApplyBattleTemplate {
+        army: ArmyId,
+        index: u8,
+    },
+    SetTemplateIndex(u8),
     SetTacticTrigger(TacticTrigger),
     SwapFormationSlots {
         army: ArmyId,
@@ -60,6 +72,7 @@ pub struct BattlefieldView {
     pub speed: u8,
     pub selected: Option<BattleUnitId>,
     pub tactic_trigger: TacticTrigger,
+    pub template_index: u8,
 }
 
 impl Default for BattlefieldView {
@@ -71,6 +84,7 @@ impl Default for BattlefieldView {
             speed: 1,
             selected: None,
             tactic_trigger: TacticTrigger::Activation,
+            template_index: 0,
         }
     }
 }
@@ -122,9 +136,13 @@ impl BattlefieldView {
                 };
             }
             BattlefieldAction::SetTacticTrigger(trigger) => self.tactic_trigger = trigger,
+            BattlefieldAction::SetTemplateIndex(index) => self.template_index = index,
             BattlefieldAction::EditTactics { .. }
             | BattlefieldAction::SwapFormationSlots { .. }
-            | BattlefieldAction::SetBattleLeader { .. } => {}
+            | BattlefieldAction::SetBattleLeader { .. }
+            | BattlefieldAction::SetBattleDoctrine { .. }
+            | BattlefieldAction::SaveBattleTemplate { .. }
+            | BattlefieldAction::ApplyBattleTemplate { .. } => {}
         }
     }
 

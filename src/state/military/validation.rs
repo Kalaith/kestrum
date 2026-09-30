@@ -22,6 +22,13 @@ impl StrategicCampaign {
                 "unknown physical site",
             )?;
             require(valid_name(&army.name), "armies.name", "invalid army name")?;
+            if let Some(doctrine) = army.battle_doctrine {
+                require(
+                    data.battle_tactics.doctrines.contains_key(&doctrine),
+                    "armies.battle_doctrine",
+                    "unknown battle doctrine",
+                )?;
+            }
             require(
                 !army.is_empty(),
                 "armies.slots",
@@ -98,6 +105,11 @@ impl StrategicCampaign {
                     .validate_configuration(formation.kind, tactics)
                     .map_err(|error| format!("formations.tactics: {error}"))?;
             }
+            require(
+                formation.tactics_override != Some(true) || formation.tactics.is_some(),
+                "formations.tactics_override",
+                "an explicit tactics override needs saved rules",
+            )?;
             if let Some(leader) = formation.battle_leader {
                 require(
                     self.people

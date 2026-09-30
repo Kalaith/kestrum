@@ -8,6 +8,7 @@ mod validation;
 
 use super::people::PersonId;
 use crate::data::{
+    battle_tactics::BattleDoctrine,
     economy::{Resources, TroopKind},
     world::{FactionId, SiteId},
 };
@@ -30,6 +31,8 @@ pub struct Army {
     pub name: String,
     pub slots: [Option<FormationId>; 6],
     pub commander: Option<PersonId>,
+    #[serde(default)]
+    pub battle_doctrine: Option<BattleDoctrine>,
 }
 
 impl Army {
@@ -53,6 +56,10 @@ pub struct Formation {
     pub battle_leader: Option<PersonId>,
     #[serde(default)]
     pub tactics: Option<crate::data::battle_tactics::TroopTactics>,
+    /// Missing in older saves; `None` then preserves any saved tactics as an
+    /// explicit customization during doctrine migration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tactics_override: Option<bool>,
     pub service: super::evidence::FormationService,
     pub id: FormationId,
     pub faction: FactionId,
@@ -64,6 +71,10 @@ pub struct Formation {
 }
 
 impl Formation {
+    pub fn has_explicit_tactics(&self) -> bool {
+        self.tactics_override.unwrap_or(self.tactics.is_some())
+    }
+
     pub fn movement_allowance(&self, data: &crate::data::GameData) -> u32 {
         data.progression
             .specializations

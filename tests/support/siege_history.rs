@@ -187,6 +187,7 @@ pub(super) fn add_relief(campaign: &mut StrategicCampaign) {
             name: "Incoming relief".into(),
             slots: [Some(FormationId(13)), None, None, None, None, None],
             commander: None,
+            battle_doctrine: None,
         },
     );
     campaign.formations.insert(
@@ -194,6 +195,7 @@ pub(super) fn add_relief(campaign: &mut StrategicCampaign) {
         Formation {
             battle_leader: None,
             tactics: None,
+            tactics_override: Some(false),
             id: FormationId(13),
             faction: FactionId(1),
             kind: kestrum::data::economy::TroopKind::Warriors,

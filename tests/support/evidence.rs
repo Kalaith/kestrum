@@ -70,6 +70,7 @@ pub(super) fn encounter(
                 site: SiteId(site),
                 slots: [Some(formation), None, None, None, None, None],
                 commander: None,
+                battle_doctrine: None,
             },
         );
         campaign.formations.insert(
@@ -77,6 +78,7 @@ pub(super) fn encounter(
             Formation {
                 battle_leader: None,
                 tactics: None,
+                tactics_override: Some(false),
                 id: formation,
                 faction: FactionId(3),
                 kind: TroopKind::Warriors,

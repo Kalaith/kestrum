@@ -90,10 +90,15 @@ pub(super) fn recruit(
                 name: format!("Army {}", army.0),
                 slots: [None; 6],
                 commander: None,
+                battle_doctrine: None,
             },
         );
         army
     };
+    let tactics = campaign.armies[&army]
+        .battle_doctrine
+        .and_then(|doctrine| data.battle_tactics.doctrine_for(doctrine, kind))
+        .cloned();
     let receiving = campaign
         .armies
         .get_mut(&army)
@@ -108,7 +113,8 @@ pub(super) fn recruit(
         formation,
         Formation {
             battle_leader: None,
-            tactics: None,
+            tactics,
+            tactics_override: Some(false),
             service: Default::default(),
             id: formation,
             faction: owner,

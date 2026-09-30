@@ -22,6 +22,7 @@ impl Game {
             "battle_campaign_pending"
                 | "battle_campaign_leader"
                 | "battle_campaign_unavailable"
+                | "battle_campaign_doctrine"
                 | "battle_campaign_editor_dense"
                 | "battle_campaign_aftermath"
         ) {
@@ -267,6 +268,32 @@ impl Game {
                 },
             )
             .expect("leader capture edits the pending battle");
+        }
+        if scene == "battle_campaign_doctrine" {
+            let Campaign::Strategic(campaign) = self.state.campaign.as_mut().unwrap() else {
+                unreachable!("campaign capture is strategic")
+            };
+            engine::apply(
+                campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SetBattleDoctrine {
+                    army: ArmyId(1),
+                    doctrine: kestrum::data::battle_tactics::BattleDoctrine::RangedSupport,
+                },
+            )
+            .expect("doctrine capture applies legal snapshots");
+            engine::apply(
+                campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SaveBattleTemplate {
+                    army: ArmyId(1),
+                    name: "Northern Screen".into(),
+                },
+            )
+            .expect("doctrine capture saves a personal template");
+            self.battlefield_view.template_index = 0;
         }
         if scene == "battle_campaign_editor_dense" {
             let mut tactics = self

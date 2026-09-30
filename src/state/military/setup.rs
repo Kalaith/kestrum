@@ -32,6 +32,7 @@ impl StrategicCampaign {
                 name: setup.army_name.clone(),
                 slots: [None; 6],
                 commander: None,
+                battle_doctrine: None,
             };
             let mut founder_formation = None;
             for (slot, kind) in setup.starting_formations.iter().copied().enumerate() {
@@ -43,6 +44,7 @@ impl StrategicCampaign {
                     Formation {
                         battle_leader: None,
                         tactics: None,
+                        tactics_override: Some(false),
                         service: Default::default(),
                         id: formation_id,
                         faction: setup.id,

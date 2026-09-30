@@ -21,7 +21,11 @@ pub fn preview(
 ) -> Result<ActionPreview, RuleError> {
     if matches!(
         command,
-        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+        Command::SetFormationTactics { .. }
+            | Command::SetBattleDoctrine { .. }
+            | Command::SaveBattleTemplate { .. }
+            | Command::ApplyBattleTemplate { .. }
+            | Command::SwapFormationSlots { .. }
     ) || (campaign.pending_battle.is_some()
         && matches!(command, Command::SetBattleLeader { .. }))
     {
@@ -99,7 +103,11 @@ pub fn apply(
 ) -> Result<ActionOutcome, RuleError> {
     if matches!(
         command,
-        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+        Command::SetFormationTactics { .. }
+            | Command::SetBattleDoctrine { .. }
+            | Command::SaveBattleTemplate { .. }
+            | Command::ApplyBattleTemplate { .. }
+            | Command::SwapFormationSlots { .. }
     ) || (campaign.pending_battle.is_some()
         && matches!(command, Command::SetBattleLeader { .. }))
     {
@@ -388,7 +396,11 @@ fn execute(
         Command::StartPendingBattle => {
             super::combat::commit_pending(candidate, data, outcome)?;
         }
-        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. } => {
+        Command::SetFormationTactics { .. }
+        | Command::SetBattleDoctrine { .. }
+        | Command::SaveBattleTemplate { .. }
+        | Command::ApplyBattleTemplate { .. }
+        | Command::SwapFormationSlots { .. } => {
             return Err(RuleError::NoPendingBattle);
         }
         Command::SetBattleLeader { formation, leader } => {
@@ -448,7 +460,7 @@ fn execute(
             to_army,
             to_slot,
         } => {
-            let fact = transfer::formation(candidate, owner, formation, to_army, to_slot)?;
+            let fact = transfer::formation(candidate, data, owner, formation, to_army, to_slot)?;
             record_fact(candidate, outcome, fact)?;
         }
         Command::TransferPerson {
@@ -459,7 +471,7 @@ fn execute(
             record_fact(candidate, outcome, fact)?;
         }
         Command::SplitArmy { formation } => {
-            let (army, fact) = transfer::split(candidate, owner, formation)?;
+            let (army, fact) = transfer::split(candidate, data, owner, formation)?;
             record_fact(candidate, outcome, fact)?;
             outcome.split_army = Some(army);
         }

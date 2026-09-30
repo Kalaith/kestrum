@@ -142,6 +142,7 @@ pub(super) fn add(campaign: &mut StrategicCampaign, data: &GameData, force: Forc
             name: format!("Test army {id}"),
             slots: [Some(FormationId(formation)), None, None, None, None, None],
             commander: None,
+            battle_doctrine: None,
         },
     );
     campaign.formations.insert(
@@ -149,6 +150,7 @@ pub(super) fn add(campaign: &mut StrategicCampaign, data: &GameData, force: Forc
         Formation {
             battle_leader: None,
             tactics: None,
+            tactics_override: Some(false),
             id: FormationId(formation),
             faction: FactionId(owner),
             kind,

@@ -92,6 +92,7 @@ pub(super) fn add_army(
             name: format!("Army {id}"),
             slots: [Some(FormationId(formation)), None, None, None, None, None],
             commander: None,
+            battle_doctrine: None,
         },
     );
     campaign.formations.insert(
@@ -99,6 +100,7 @@ pub(super) fn add_army(
         Formation {
             battle_leader: None,
             tactics: None,
+            tactics_override: Some(false),
             service: Default::default(),
             id: FormationId(formation),
             faction: FactionId(faction),

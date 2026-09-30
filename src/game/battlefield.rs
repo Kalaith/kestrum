@@ -34,6 +34,27 @@ impl Game {
                 self.apply_campaign_command(Command::SetBattleLeader { formation, leader });
                 return;
             }
+            ui::BattlefieldAction::SetBattleDoctrine { army, doctrine } => {
+                self.apply_campaign_command(Command::SetBattleDoctrine { army, doctrine });
+                return;
+            }
+            ui::BattlefieldAction::SaveBattleTemplate { army } => {
+                self.save_battle_template(army);
+                return;
+            }
+            ui::BattlefieldAction::ApplyBattleTemplate { army, index } => {
+                let name = self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .and_then(Campaign::strategic)
+                    .and_then(|campaign| campaign.battle_templates.get(usize::from(index)))
+                    .map(|template| template.name.clone());
+                if let Some(name) = name {
+                    self.apply_campaign_command(Command::ApplyBattleTemplate { army, name });
+                }
+                return;
+            }
             ui::BattlefieldAction::SetTacticTrigger(trigger) => {
                 self.battlefield_view.tactic_trigger = trigger;
                 return;
@@ -246,6 +267,30 @@ impl Game {
             }
         }
         self.apply_campaign_command(Command::SetFormationTactics { formation, tactics });
+    }
+
+    fn save_battle_template(&mut self, army: kestrum::state::military::ArmyId) {
+        let selected = usize::from(self.battlefield_view.template_index);
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        let name = campaign
+            .battle_templates
+            .get(selected)
+            .map(|template| template.name.clone())
+            .or_else(|| {
+                (1..=kestrum::state::battle_plans::MAX_BATTLE_TEMPLATES)
+                    .map(|number| format!("Plan {number}"))
+                    .find(|name| {
+                        !campaign
+                            .battle_templates
+                            .iter()
+                            .any(|template| template.name.eq_ignore_ascii_case(name))
+                    })
+            });
+        if let Some(name) = name {
+            self.apply_campaign_command(Command::SaveBattleTemplate { army, name });
+        }
     }
 }
 

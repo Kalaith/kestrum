@@ -114,6 +114,7 @@ fn prepare(
     if campaign.pending_battle.is_some() {
         return Err(RuleError::BattlePending);
     }
+    super::super::battle_preparation::prepare_rivals(campaign, data, &mut report)?;
     let id = report.id;
     campaign.next_ids.battle = BattleId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "battle identifiers",

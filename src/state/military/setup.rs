@@ -2,7 +2,10 @@
 
 use super::{Army, ArmyId, Formation, FormationId};
 use crate::{
-    data::{world::Scenario, GameData},
+    data::{
+        world::{Scenario, ScenarioKind},
+        GameData,
+    },
     state::{
         people::{
             Disposition, Person, PersonAssignment, PersonCareer, PersonId, PersonStatus, Tendency,
@@ -65,6 +68,7 @@ impl StrategicCampaign {
                 Person {
                     career: PersonCareer {
                         disposition,
+                        founding_lord: scenario.kind == ScenarioKind::Production,
                         ..PersonCareer::default()
                     },
                     evidence: Default::default(),

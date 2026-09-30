@@ -58,6 +58,7 @@ impl WorldLayout {
         setup: &ProductionSetup,
     ) -> Result<GeneratedProduction, String> {
         setup.validate(data)?;
+        data.rules.validate()?;
         self.validate(&data.rules, &data.economy)?;
         let mut rng = SeededRng::new(setup.seed);
         let mut candidates = self.headquarters_candidates.clone();
@@ -113,7 +114,15 @@ impl WorldLayout {
                 data,
             ));
         }
-        for faction in &factions {
+        // A separate stream keeps founding ages from moving geography or threat rolls.
+        let mut founder_rng = SeededRng::new(setup.seed);
+        let founder_rules = &data.rules.founder;
+        for faction in &mut factions {
+            faction.founder.age_years = founder_rules.minimum_age_years
+                + founder_rng.below(
+                    (founder_rules.maximum_age_years - founder_rules.minimum_age_years + 1)
+                        as usize,
+                ) as u32;
             let hq = sites
                 .iter_mut()
                 .find(|site| site.id == faction.headquarters)
@@ -183,7 +192,7 @@ fn founder_setup(
         starting_formations: vec![TroopKind::Warriors, TroopKind::Spearmen, TroopKind::Archers],
         founder: FounderGrant {
             name: founder_name,
-            age_years: 24,
+            age_years: data.rules.founder.minimum_age_years,
             class: FounderClass::Officer,
             attached_to: TroopKind::Warriors,
             commander: true,

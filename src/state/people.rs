@@ -184,14 +184,13 @@ impl StrategicCampaign {
         let commander = army
             .commander
             .and_then(|id| self.people.get(&id))
-            .is_some_and(|person| person.class == FounderClass::Officer && contributes(person));
-        Some(
-            (leadership
-                + if commander {
-                    u64::from(rules.officer_commander_bonus_permille)
-                } else {
-                    0
-                }) as u32,
-        )
+            .filter(|person| contributes(person));
+        let officer_bonus = commander
+            .filter(|person| person.class == FounderClass::Officer)
+            .map_or(0, |_| rules.officer_commander_bonus_permille);
+        let founder_bonus = commander
+            .filter(|person| person.career.founding_lord)
+            .map_or(0, |_| data.rules.founder.commander_bonus_permille);
+        Some((leadership + u64::from(officer_bonus) + u64::from(founder_bonus)) as u32)
     }
 }

@@ -132,11 +132,16 @@ impl Scenario {
         require(
             SOURCE,
             &format!("{field}.founder"),
-            faction.founder.age_years == 24
+            (if self.kind == ScenarioKind::Production {
+                (rules.founder.minimum_age_years..=rules.founder.maximum_age_years)
+                    .contains(&faction.founder.age_years)
+            } else {
+                faction.founder.age_years == 24
+            })
                 && faction.founder.class == PersonClass::Officer
                 && faction.founder.attached_to == TroopKind::Warriors
                 && faction.founder.commander,
-            "P01 grants an age-24 Officer attached to Warriors and appointed commander",
+            "founder must have the scenario's starting age, be an Officer attached to Warriors, and command the army",
         )
     }
 

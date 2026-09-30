@@ -29,11 +29,38 @@ pub(in crate::ui::army) fn draw(
 fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
     body(
         ctx,
-        &format!("{} · {}", class_name(ctx, person.class), person.name),
+        &format!(
+            "{} · {}",
+            class_name(ctx, person.class),
+            person_name(ctx, person)
+        ),
         vec2(112.0, 180.0),
         22.0,
         CREAM,
     );
+    if person.career.founding_lord {
+        let kingdom = campaign
+            .factions
+            .iter()
+            .find(|faction| faction.id == person.faction)
+            .map(|faction| faction.name.as_str())
+            .unwrap_or("?");
+        block(
+            ctx,
+            &ctx.text("person_founding_lord")
+                .replace("{kingdom}", kingdom)
+                .replace(
+                    "{bonus}",
+                    &format!(
+                        "{:.1}",
+                        ctx.rules.founder.commander_bonus_permille as f32 / 10.0
+                    ),
+                ),
+            vec2(112.0, 207.0),
+            1030.0,
+            BRASS,
+        );
+    }
     if let Some(emergence) = &person.career.emergence {
         let place = campaign
             .world

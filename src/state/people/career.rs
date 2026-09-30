@@ -109,6 +109,10 @@ pub struct CompletedApprenticeship {
 #[serde(deny_unknown_fields)]
 pub struct PersonCareer {
     pub disposition: Disposition,
+    /// Founding nobility is independent of profession and later earned recognition.
+    /// Earlier saves retain their existing people without an invented title.
+    #[serde(default)]
+    pub founding_lord: bool,
     #[serde(default)]
     pub notable_sites: BTreeMap<EpithetFact, SiteId>,
     #[serde(default)]

@@ -324,10 +324,31 @@ K18 integrated/platform acceptance remains required.
 | Current decision | Choose a kingdom name and emblem, how many total factions to face, and the world seed. |
 | Dominant focus | One focused setup sheet above the atlas. |
 | Primary action | Create Campaign is enabled for a trimmed name of 1–32 Unicode characters. It uses the displayed seed and normal difficulty. |
-| Supporting information | Faction count includes the player; every start has equal troops/resources and two nearby local threats. The seed randomizer is explicit. |
+| Supporting information | Faction count includes the player; every start has equal troops/resources and two nearby local threats. One named founding lord, aged 18–24, commands the starting army. The seed randomizer is explicit. |
 | Deferred information | Geography and site names appear on the atlas; deeper scenario controls do not appear in production setup. |
 | Layout and camera | At 1280 × 720, choices appear together. Name entry opens the visible touch keyboard on its own step; the atlas remains visible behind the sheet. |
 | Input and feedback | Tap an emblem, − / +, or Randomize Seed. Tap Enter a Name for the touch keyboard. The displayed 4–8 count, selected emblem and seed show each change. |
+
+### Founding lord in the army
+
+| Question | Current answer |
+| --- | --- |
+| Current decision | Inspect the starting army and choose where its founding lord should lead it. |
+| Dominant focus | The existing army roster or selected person's career, opened from the map. |
+| Primary action | Use Orders to move the army; People opens its named commander and Career explains their role. |
+| Supporting information | The commander carries the Lord title. Career shows age, founding kingdom and the five-point command bonus beside identity; ordinary Officer mechanics remain available. |
+| Deferred information | Earned deeds, traits, household and succession choices stay in their existing views. Founding nobility requires no earned recognition. |
+| Layout and camera | Existing landscape sheets at 1920 × 1080 and the 1280 × 720 minimum; dense people lists retain paging. |
+| Input and feedback | Tap Army, Details, Orders, People and Career. The named lord and 98.3% starting leadership confirm the initial grant. |
+
+Each new kingdom starts with exactly one named lord, including rivals under the
+same rules. Names are always generated from the existing human-name data. Ages
+span 18–24 and repeat with the world seed. The founding title is saved separately
+from profession and earned recognition; earlier saves retain their existing
+characters. The extra five leadership points apply while the lord is fit,
+attached to a surviving formation, and appointed commander.
+[Founding lord verification](docs/verification/founding-lord.md) records the
+feature tests, native and browser review, Preview publish and remaining blockers.
 
 ### History item inspector
 

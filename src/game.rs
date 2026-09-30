@@ -8,6 +8,7 @@ mod battle_capture;
 mod campaign;
 mod composition;
 mod development_capture;
+mod founder_capture;
 mod history;
 mod history_capture;
 mod kingdom;
@@ -165,6 +166,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_founder(scene) {
+            return;
+        }
         if self.capture_map_movement(scene) {
             return;
         }

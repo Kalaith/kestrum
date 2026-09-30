@@ -103,7 +103,7 @@ fn four_through_eight_factions_get_connected_separated_starts_and_local_threats(
                 MarkerLocation::Region { .. }
             ));
             assert_eq!(faction.capital, faction.headquarters);
-            assert_eq!(faction.founder.age_years, 24);
+            assert!((18..=24).contains(&faction.founder.age_years));
             assert_eq!(faction.founder.class, PersonClass::Officer);
             assert_eq!(
                 faction.resources.resolve(&data.economy),

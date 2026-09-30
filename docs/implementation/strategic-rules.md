@@ -35,8 +35,10 @@ Reserve accessible expansion sites and material-producing terrain for each start
 Reject a bad layout; do not silently shrink the campaign or retry without a bound.
 
 Each faction begins with one controlled Village headquarters/capital, one army
-containing full Warriors, Spearmen and Archers, and one age-24 Officer founder
-attached to Warriors and appointed commander. These initial troops/person are
+containing full Warriors, Spearmen and Archers, and one named founding lord
+aged 18–24, attached to Warriors and appointed commander with the Officer
+profession. Name and age are seeded; founding nobility is a persistent title,
+independent of earned recognition. These initial troops/person are
 setup grants, not paid recruitment or invented pre-campaign battle credit. Gold,
 Wood and Stone start at 500/200/150 from `economy.json`. HQ has a training ground
 and access to horses; other facilities must be built. Other sites begin neutral

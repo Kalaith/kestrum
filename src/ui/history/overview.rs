@@ -14,7 +14,10 @@ pub(super) fn title(ctx: &Context<'_>) -> String {
         return ctx.text("history");
     };
     match ctx.history.subject {
-        Some(HistorySubject::Person(_)) => ctx.history.person.as_ref().map(|p| p.name().to_owned()),
+        Some(HistorySubject::Person(_)) => ctx.history.person.as_ref().map(|person| match person {
+            PersonKnowledge::CurrentOwn(record) => person_name(ctx, record),
+            PersonKnowledge::LastEncountered { .. } => person.name().to_owned(),
+        }),
         Some(HistorySubject::Site(id)) => view.world.site(id).map(|s| s.name.clone()),
         Some(HistorySubject::Army(id)) => view
             .armies

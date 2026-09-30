@@ -36,7 +36,11 @@ duty, and attached to a participating formation. Count each once. The army-wide
 leadership permille is `500 + floor(1000*n/(n+2))`, where `n` is that count.
 Examples: zero gives 500, one 833, two 1000, four 1166; concentration improves
 strength with diminishing returns. A valid appointed Officer commander adds 100
-permille. No named person is required for legal army operation.
+permille. A fit founding lord appointed commander adds another 50 permille
+(five leadership percentage points), so the production starting army has 983
+permille leadership. The title persists after reassignment, retirement or death,
+but its bonus requires a fit, attached, active commander. Rival founding lords
+use the same rules. No named person is required for legal army operation.
 
 Formation veterancy multiplies attack and resistance by 1000/1100/1200 permille
 for ordinary/seasoned/veteran, earned under P16. An earned specialization adds only

@@ -112,8 +112,10 @@ an already earned class.
 
 Riding practice is an explicit seasonal site assignment at a functional supplied
 Stable with horse access; it supplies riding evidence only, never battle evidence.
-Provisional founders already have Officer as their authored starting role with
-honest “founding officer” background, not fabricated completed battles. One fit
+Production founders are full lords from the beginning, with a generated name,
+a seeded age of 18–24, and Officer as their starting profession. Their title and
+modest command bonus do not require fabricated completed battles or recognition.
+The Rosemarch prototype retains its age-24 Officer setup. One fit
 adult attached person can be appointed commander per army; any such person may
 command, while the Officer class supplies the extra P11 bonus. Commanded victory
 requires that appointment before a real battle. Reassigning after a report earns

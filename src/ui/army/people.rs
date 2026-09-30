@@ -108,7 +108,8 @@ fn person_rows(
 ) -> Option<UiAction> {
     for (index, person) in people.iter().enumerate() {
         let y = 219.0 + index as f32 * 81.0;
-        let name = truncate_text_to_width_ex(&person.name, 400.0, ctx.body_font(), 20.0);
+        let name =
+            truncate_text_to_width_ex(&person_name(ctx, person), 400.0, ctx.body_font(), 20.0);
         body(ctx, &name, vec2(112.0, y), 20.0, CREAM);
         let remaining = ctx
             .army

@@ -53,6 +53,14 @@ pub struct MovementRules {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct FounderRules {
+    pub minimum_age_years: u32,
+    pub maximum_age_years: u32,
+    pub commander_bonus_permille: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CampaignRules {
     pub schema_version: u32,
     pub content_version: u32,
@@ -64,6 +72,7 @@ pub struct CampaignRules {
     pub ai_income_bonus_percent: u32,
     pub leadership: LeadershipRules,
     pub movement: MovementRules,
+    pub founder: FounderRules,
     pub emblems: Vec<EmblemDefinition>,
 }
 
@@ -104,6 +113,16 @@ impl CampaignRules {
                 && (1..=100).contains(&self.leadership.field_min_age_years)
                 && (1..=100).contains(&self.leadership.officer_movement_allowance),
             "invalid contribution or movement rule",
+        )?;
+        require(
+            SOURCE,
+            "founder",
+            self.founder.minimum_age_years >= self.leadership.field_min_age_years
+                && self.founder.minimum_age_years >= 18
+                && self.founder.minimum_age_years <= self.founder.maximum_age_years
+                && self.founder.maximum_age_years <= 24
+                && self.founder.commander_bonus_permille <= 100,
+            "founders must be young adults with at most a ten-point command bonus",
         )?;
         require(
             SOURCE,

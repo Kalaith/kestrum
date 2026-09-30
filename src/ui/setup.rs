@@ -187,6 +187,21 @@ fn draw_choices(ctx: &Context<'_>) -> Option<UiAction> {
         return Some(UiAction::RandomizeSetupSeed);
     }
 
+    body(
+        ctx,
+        &ctx.text("setup_founding_lord")
+            .replace(
+                "{minimum}",
+                &ctx.rules.founder.minimum_age_years.to_string(),
+            )
+            .replace(
+                "{maximum}",
+                &ctx.rules.founder.maximum_age_years.to_string(),
+            ),
+        vec2(120.0, 570.0),
+        17.0,
+        MUTED,
+    );
     if button(
         ctx,
         Rect::new(120.0, 604.0, 230.0, 48.0),

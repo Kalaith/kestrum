@@ -9,6 +9,14 @@ pub const CREAM: Color = Color::new(0.95, 0.90, 0.76, 1.0);
 pub const BRASS: Color = Color::new(0.78, 0.66, 0.40, 1.0);
 pub const MUTED: Color = Color::new(0.65, 0.68, 0.62, 1.0);
 
+pub fn person_name(ctx: &Context<'_>, person: &kestrum::state::people::Person) -> String {
+    if person.career.founding_lord {
+        format!("{} {}", ctx.text("person_title_lord"), person.name)
+    } else {
+        person.name.clone()
+    }
+}
+
 pub fn text(ctx: &Context<'_>, label: &str, at: Vec2, size: f32, color: Color) {
     draw_text_ex(
         label,

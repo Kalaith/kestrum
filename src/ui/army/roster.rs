@@ -147,7 +147,7 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> f
         .and_then(|id| campaign.people.iter().find(|person| person.id == id));
 
     let commander = commander
-        .map(|person| format!("{}: {}", ctx.text("commander"), person.name))
+        .map(|person| format!("{}: {}", ctx.text("commander"), person_name(ctx, person)))
         .unwrap_or_else(|| ctx.text("no_commander"));
 
     let mut y = block(ctx, &commander, vec2(704.0, 327.0), 464.0, CREAM) + 6.0;

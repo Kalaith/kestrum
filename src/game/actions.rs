@@ -13,6 +13,10 @@ impl Game {
 
     fn dispatch(&mut self, action: UiAction) {
         self.army_refresh_pending = true;
+        if let UiAction::Battlefield(action) = action {
+            self.apply_battlefield_action(action);
+            return;
+        }
         if action.is_kingdom() {
             self.apply_kingdom_action(action);
             return;

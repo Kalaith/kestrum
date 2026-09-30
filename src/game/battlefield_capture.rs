@@ -1,0 +1,226 @@
+//! Stable battle showcases use the real resolver and never write campaign saves.
+
+use super::*;
+use kestrum::{
+    data::{economy::TroopKind, GameData},
+    engine,
+    state::{
+        battle::simulation::{
+            BattleArmyInput, BattleEvent, BattleSide, BattleUnitId, FormationBattleInput,
+        },
+        military::{ArmyId, FormationId},
+    },
+};
+
+impl Game {
+    pub(super) fn capture_battlefield(&mut self, requested_scene: &str) -> bool {
+        let scene = requested_scene.trim_end_matches("_minimum");
+        if !matches!(
+            scene,
+            "battle_scene_demo"
+                | "battle_scene_dense"
+                | "battle_scene_gap"
+                | "battle_scene_charge"
+                | "battle_scene_brace"
+                | "battle_scene_volley"
+                | "battle_scene_impact"
+                | "battle_scene_rout"
+                | "battle_scene_aftermath"
+                | "battle_scene_selected"
+        ) {
+            return false;
+        }
+
+        let mut rules = self.data.battle_tactics.clone();
+        if scene == "battle_scene_rout" {
+            rules.rout_morale = 70;
+            rules.morale_loss_per_casualty = 4;
+        }
+        let resolution = engine::resolve_battle(&showcase_input(&self.data), &rules)
+            .expect("battlefield capture fixture resolves");
+        self.state.screen = kestrum::state::Screen::Campaign;
+        self.state.overlay = Overlay::Battlefield;
+        self.battlefield_view = ui::BattlefieldView {
+            is_paused: true,
+            ..Default::default()
+        };
+        match scene {
+            "battle_scene_gap" => {
+                self.battlefield_view.event_cursor = event_after(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::Damage {
+                            target: BattleUnitId::Formation(FormationId(8)),
+                            remaining: 0,
+                            ..
+                        }
+                    )
+                });
+            }
+            "battle_scene_charge" => {
+                self.battlefield_view.event_cursor = event_at(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::Activation {
+                            actor: BattleUnitId::Formation(FormationId(5)),
+                            action: kestrum::data::battle_tactics::TacticAction::Breakthrough,
+                            ..
+                        }
+                    )
+                });
+                self.battlefield_view.event_elapsed = 0.24;
+            }
+            "battle_scene_brace" => {
+                self.battlefield_view.event_cursor = event_at(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::Reaction {
+                            actor: BattleUnitId::Formation(FormationId(1)),
+                            ..
+                        }
+                    )
+                });
+                self.battlefield_view.event_elapsed = 0.29;
+            }
+            "battle_scene_volley" => {
+                self.battlefield_view.event_cursor = event_at(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::Activation {
+                            actor: BattleUnitId::Formation(FormationId(4)),
+                            action: kestrum::data::battle_tactics::TacticAction::Volley,
+                            ..
+                        }
+                    )
+                });
+                self.battlefield_view.event_elapsed = 0.21;
+            }
+            "battle_scene_impact" => {
+                self.battlefield_view.event_cursor = event_at(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::Damage {
+                            target: BattleUnitId::Formation(FormationId(8)),
+                            ..
+                        }
+                    )
+                });
+                self.battlefield_view.event_elapsed = 0.1;
+            }
+            "battle_scene_rout" => {
+                self.battlefield_view.event_cursor = event_after(&resolution, |event| {
+                    matches!(event, BattleEvent::Routed { .. })
+                });
+            }
+            "battle_scene_aftermath" => {
+                self.battlefield_view.event_cursor = resolution.events.len();
+            }
+            "battle_scene_selected" => {
+                self.battlefield_view.selected = Some(BattleUnitId::Formation(FormationId(5)));
+            }
+            _ => {}
+        }
+        self.battlefield = Some(resolution);
+        true
+    }
+}
+
+fn showcase_input(data: &GameData) -> FormationBattleInput {
+    let attacker = army(
+        1,
+        1,
+        "Rosemarch Guard",
+        BattleSide::Attacker,
+        vec![
+            unit(data, 1, TroopKind::Spearmen, 100, 18, None, None),
+            unit(data, 2, TroopKind::Warriors, 100, 30, Some(24), None),
+            unit(data, 3, TroopKind::Warriors, 85, 12, None, None),
+            unit(data, 4, TroopKind::Archers, 68, 17, None, None),
+            unit(data, 5, TroopKind::Riders, 35, 16, None, None),
+            unit(data, 6, TroopKind::Medics, 34, 9, None, None),
+        ],
+    );
+    let defender = army(
+        2,
+        2,
+        "Ironcrest Legion",
+        BattleSide::Defender,
+        vec![
+            unit(data, 7, TroopKind::Riders, 32, 26, None, None),
+            unit(data, 8, TroopKind::Warriors, 20, 13, None, None),
+            unit(data, 9, TroopKind::Spearmen, 90, 10, None, None),
+            unit(data, 10, TroopKind::Archers, 64, 15, None, None),
+            unit(data, 11, TroopKind::Archers, 80, 14, None, None),
+            unit(data, 12, TroopKind::Medics, 40, 8, None, None),
+        ],
+    );
+    FormationBattleInput {
+        terrain_permille: 1100,
+        armies: vec![attacker, defender],
+    }
+}
+
+fn army(
+    id: u32,
+    faction: u32,
+    name: &str,
+    side: BattleSide,
+    groups: Vec<kestrum::state::battle::simulation::BattleUnitInput>,
+) -> BattleArmyInput {
+    let mut slots = std::array::from_fn(|_| None);
+    for (slot, group) in groups.into_iter().enumerate() {
+        slots[slot] = Some(group);
+    }
+    BattleArmyInput {
+        id: ArmyId(id),
+        faction: kestrum::data::world::FactionId(faction),
+        name: name.into(),
+        side,
+        slots,
+    }
+}
+
+fn unit(
+    data: &GameData,
+    id: u32,
+    kind: TroopKind,
+    headcount: u32,
+    initiative: u32,
+    attack: Option<u32>,
+    resistance: Option<u32>,
+) -> kestrum::state::battle::simulation::BattleUnitInput {
+    let stats = &data.troops.formations[&kind];
+    let tactics = data
+        .battle_tactics
+        .defaults_for(kind)
+        .expect("all troop defaults");
+    kestrum::state::battle::simulation::BattleUnitInput {
+        id: BattleUnitId::Formation(FormationId(id)),
+        kind: Some(kind),
+        headcount,
+        capacity: data.economy.formations[&kind].capacity,
+        attack: attack.unwrap_or(stats.attack),
+        resistance: resistance.unwrap_or(stats.resistance),
+        initiative,
+        activation_tactics: tactics.activation.clone(),
+        reaction_tactics: tactics.reaction.clone(),
+    }
+}
+
+fn event_at(
+    resolution: &kestrum::state::battle::simulation::BattleResolution,
+    predicate: impl Fn(&BattleEvent) -> bool,
+) -> usize {
+    resolution
+        .events
+        .iter()
+        .position(predicate)
+        .expect("showcase event exists")
+}
+
+fn event_after(
+    resolution: &kestrum::state::battle::simulation::BattleResolution,
+    predicate: impl Fn(&BattleEvent) -> bool,
+) -> usize {
+    event_at(resolution, predicate) + 1
+}

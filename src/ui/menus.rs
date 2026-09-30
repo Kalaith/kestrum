@@ -145,7 +145,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::Kingdom
         | Overlay::CampaignEnd
         | Overlay::Siege
-        | Overlay::Settlement => return None,
+        | Overlay::Settlement
+        | Overlay::Battlefield => return None,
     };
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
@@ -171,7 +172,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::Kingdom
         | Overlay::CampaignEnd
         | Overlay::Siege
-        | Overlay::Settlement => None,
+        | Overlay::Settlement
+        | Overlay::Battlefield => None,
     };
     if action.is_some() {
         return action;

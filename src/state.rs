@@ -56,6 +56,7 @@ pub enum Overlay {
     MoveGroup,
     MoveReview,
     Battle,
+    Battlefield,
     History,
     Settlement,
     Siege,

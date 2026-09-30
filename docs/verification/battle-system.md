@@ -50,3 +50,66 @@ threat aggregate.
 The B01 implementation commit is recorded in the project history. Detailed
 playback storage, campaign receipts, combat balance and scene presentation remain
 in their later milestones.
+
+## B02 — Battlefield presentation
+
+**Status:** complete on 2026-09-30. The screen is a playback prototype staged
+from the same deterministic fixture used by the resolver. Campaign battles
+continue to use the existing system until B03 adds the committed receipt and
+encounter entry point.
+
+The battlefield now places both six-slot forces across a shared hillside. Side
+identity, army strength, morale, front and rear rows, individual troop kinds,
+headcounts and morale bars stay next to the scene. Troop silhouettes distinguish
+spears, bows, riders, medics and siege engines. Playback shows cavalry movement,
+Brace posture, volleys, damage pulses, opened slots, routed survivors and the
+recorded result. Group selection outlines a battlefield slot and opens a compact
+condition strip. Pause, step, 1×/2×/3× and skip-to-result controls only advance
+the display cursor over an immutable receipt.
+
+The six `tests/battle_playback.rs` cases cover opening/cursor bounds, damage and
+morale projection, Advance positions, guard expiry, routed survivors and receipt
+immutability. The existing ten B01 resolver cases pass unchanged.
+
+### Visual evidence
+
+The capture harness produced these states at 1920×1080 and the minimum 1280×720.
+Every image is stored directly in this directory and can be regenerated with
+`scripts/capture_ui.ps1` using its `battle_scene_*` IDs.
+
+| State | 1920×1080 | 1280×720 |
+| --- | --- | --- |
+| Twelve-group opening scene | [image](ui_battle_scene_dense.png) | [image](ui_battle_scene_dense_minimum.png) |
+| Centre lane cleared | [image](ui_battle_scene_gap.png) | [image](ui_battle_scene_gap_minimum.png) |
+| Cavalry breakthrough | [image](ui_battle_scene_charge.png) | [image](ui_battle_scene_charge_minimum.png) |
+| Spear Brace reaction | [image](ui_battle_scene_brace.png) | [image](ui_battle_scene_brace_minimum.png) |
+| Archer volley | [image](ui_battle_scene_volley.png) | [image](ui_battle_scene_volley_minimum.png) |
+| Impact | [image](ui_battle_scene_impact.png) | [image](ui_battle_scene_impact_minimum.png) |
+| Rout and withdrawal | [image](ui_battle_scene_rout.png) | [image](ui_battle_scene_rout_minimum.png) |
+| Aftermath | [image](ui_battle_scene_aftermath.png) | [image](ui_battle_scene_aftermath_minimum.png) |
+| Selected group | [image](ui_battle_scene_selected.png) | [image](ui_battle_scene_selected_minimum.png) |
+
+The 1920×1080 captures show the landscape filling the scene above a shallow
+control strip. The 1280×720 captures keep all twelve groups, lane labels, group
+labels and playback actions visible. The selection strip, charge trail, center
+gap, reaction posture, volley and rout are distinguishable at both sizes.
+
+The deployed Preview page loads its embedded game and full-screen canvas. Its
+embedded canvas measures 734×414 in the current browser surface, below the
+declared minimum, and offers a visible full-screen control. The full-screen
+browser check displayed the title at 1920×1048. The battle prototype is not yet
+reachable from a live campaign in the browser; B03 will add that route and its
+browser interaction review. Browser battle evidence is therefore pending B03.
+
+### Validation
+
+| Check | Result |
+| --- | --- |
+| `cargo fmt -p kestrum -- --check` | Passed after final formatting. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
+| `cargo.ps1 test -p kestrum --test battle_playback --all-features` | Passed: 6 playback contracts. |
+| `cargo.ps1 test -p kestrum --test battle_formation --all-features` | Passed: 10 resolver cases. |
+| `cargo.ps1 test -p kestrum --test code_standards --all-features` | Passed: every Rust file remains under 800 total lines. |
+| `cargo.ps1 test -p kestrum --all-features` | Stopped at `campaign_scenarios::four_and_eight_faction_campaigns_retain_and_replay_through_four_hundred_rounds`; the campaign ended at round 188. All reported targets before that test, including both battle suites, passed. |
+| `publish.ps1` with no parameters | Passed Windows and WebGL release builds, packaging, Preview deployment, tracker recording and catalogue synchronization. |
+| Browser review | Preview and full-screen title loaded. The battle scene is pending live campaign integration in B03. |

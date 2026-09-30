@@ -4,6 +4,30 @@ Kestrum is a generational strategy game about kingdoms, armies, people shaped by
 
 ## Current milestone
 
+Battle-system milestones B01 (deterministic formation combat) and B02
+(battlefield presentation) are complete. B03 connects encounters to campaign
+consequences and opens the playback scene from witnessed battles. The ordered
+scope and verification state live in the
+[battle-system implementation plan](docs/battle-system-implementation-plan.md).
+
+## Formation battle screen brief
+
+| Phase question | Answer |
+| --- | --- |
+| Current decision | Follow the committed exchange or pause to inspect a group's losses and morale. |
+| Dominant focus | Both armies meet across one illustrated hillside, with front ranks between rear groups and the engagement lane. |
+| Primary action | Play, pause, step, change speed or skip to the recorded result. These controls change only the presentation. |
+| Supporting information | Army identity and strength stay at the top; each group shows troop kind, survivors and morale beside its position. |
+| Deferred information | Selecting a group opens its condition strip. The tactics editor belongs to the preparation phase. |
+| Layout and camera | The landscape is the main area at 1920×1080 and the minimum supported 1280×720 viewport; troop groups remain at a useful size while the lower playback strip stays shallow. |
+| Input and feedback | Visible controls operate playback. Selecting a group outlines its battlefield position and opens the condition strip; charges, reactions, casualties and routs also change the scene. |
+
+The execution screen opens after battle preparation, while the result remains a
+deterministic receipt. Pausing, stepping and changing playback speed project its
+event sequence and cannot change combat outcomes.
+
+### Campaign status
+
 K01–K18 are complete under the user's amended testing scope. The
 [2026-09-28 implementation review](docs/implementation-review.md) maps all 13
 findings to their fixes. Physical-touch testing is waived; further platform,

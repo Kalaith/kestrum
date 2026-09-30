@@ -110,6 +110,7 @@ fn army(
     BattleArmyInput {
         id: ArmyId(id),
         faction: kestrum::data::world::FactionId(faction),
+        name: format!("Host {id}"),
         side,
         slots,
     }

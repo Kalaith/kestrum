@@ -1,5 +1,6 @@
 //! Immutable encounter receipts. Opening or projecting one never replays combat.
 
+pub mod playback;
 pub mod simulation;
 mod validation;
 

@@ -5,6 +5,8 @@ mod actions;
 use crate::ui::{self, UiAction};
 mod battle;
 mod battle_capture;
+mod battlefield;
+mod battlefield_capture;
 mod campaign;
 mod composition;
 mod development_capture;
@@ -68,6 +70,8 @@ pub struct Game {
     army_refresh_pending: bool,
     movement: ui::MoveView,
     battle: ui::BattleView,
+    battlefield: Option<kestrum::state::battle::simulation::BattleResolution>,
+    battlefield_view: ui::BattlefieldView,
     history: ui::HistoryView,
     settlement: ui::SettlementView,
     siege: ui::SiegePanel,
@@ -118,6 +122,8 @@ impl Game {
             army_refresh_pending: true,
             movement: ui::MoveView::default(),
             battle: ui::BattleView::default(),
+            battlefield: None,
+            battlefield_view: ui::BattlefieldView::default(),
             history: ui::HistoryView::default(),
             settlement: ui::SettlementView::default(),
             siege: ui::SiegePanel::default(),
@@ -166,6 +172,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_battlefield(scene) {
+            return;
+        }
         if self.capture_founder(scene) {
             return;
         }
@@ -357,6 +366,8 @@ impl Game {
         self.ending_saved = false;
         self.movement = ui::MoveView::default();
         self.battle = ui::BattleView::default();
+        self.battlefield = None;
+        self.battlefield_view = ui::BattlefieldView::default();
         self.reset_history();
         self.invalidate_projection();
         self.army = ui::ArmyView::default();
@@ -367,6 +378,7 @@ impl Game {
     pub fn frame(&mut self, dt: f32) {
         self.poll_storage();
         self.progress_npcs(dt);
+        self.advance_battlefield(dt);
         if self.state.overlay == Overlay::Saves {
             if let Some(error) = self.error.take() {
                 self.saves.status = error;
@@ -409,6 +421,8 @@ impl Game {
             army: &self.army,
             movement: &self.movement,
             battle: &self.battle,
+            battlefield: &self.battlefield_view,
+            battle_resolution: self.battlefield.as_ref(),
             help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,

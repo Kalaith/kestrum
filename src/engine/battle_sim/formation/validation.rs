@@ -28,6 +28,9 @@ pub(super) fn canonical_input(
         if !army_ids.insert(army.id) {
             return Err(format!("Duplicate battle army {:?}.", army.id));
         }
+        if army.name.trim().is_empty() || army.name.len() > 120 {
+            return Err(format!("Invalid battle army name for {:?}.", army.id));
+        }
         let index = usize::from(army.side == BattleSide::Defender);
         side_armies[index] += 1;
         factions[index].insert(army.faction);

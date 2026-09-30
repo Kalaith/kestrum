@@ -51,6 +51,7 @@ pub struct FormationBattleInput {
 pub struct BattleArmyInput {
     pub id: ArmyId,
     pub faction: FactionId,
+    pub name: String,
     pub side: BattleSide,
     pub slots: [Option<BattleUnitInput>; 6],
 }

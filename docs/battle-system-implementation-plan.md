@@ -362,7 +362,7 @@ before the new resolver and pending-command changes have been measured.
 | Milestone | Status | Verification record |
 | --- | --- | --- |
 | B01 Deterministic formation combat | Complete; headless resolver and authored rules | [Battle system verification](verification/battle-system.md#b01--deterministic-formation-combat) |
-| B02 Battlefield presentation | Not started | — |
+| B02 Battlefield presentation | Complete; deterministic fixture, event projection and playback view | [Battle system verification](verification/battle-system.md#b02--battlefield-presentation) |
 | B03 Campaign encounter integration | Not started | — |
 | B04 Deployment and tactics authoring | Not started | — |
 | B05 Leaders and support roles | Not started | — |

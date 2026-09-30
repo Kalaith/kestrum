@@ -3,6 +3,7 @@
 mod army;
 mod atlas;
 mod battle;
+mod battlefield;
 mod campaign_end;
 mod components;
 mod history;
@@ -42,6 +43,7 @@ pub use army::{
 };
 pub use atlas::map_controls_contain;
 pub use battle::{BattleTab, BattleView};
+pub use battlefield::{BattlefieldAction, BattlefieldView};
 pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
 pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
 pub use menus::HELP_PAGE_COUNT;
@@ -128,6 +130,7 @@ pub enum UiAction {
     BattleReport(i32),
     BattlePage(i32),
     SetBattleTab(BattleTab),
+    Battlefield(BattlefieldAction),
     ArmyOrders,
     ArmyPeople,
     ArmyPeoplePage(i32),
@@ -331,6 +334,8 @@ pub struct Context<'a> {
     pub army: &'a ArmyView,
     pub movement: &'a MoveView,
     pub battle: &'a BattleView,
+    pub battlefield: &'a BattlefieldView,
+    pub battle_resolution: Option<&'a kestrum::state::battle::simulation::BattleResolution>,
     pub help_page: usize,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
@@ -361,6 +366,9 @@ impl Context<'_> {
 }
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
+    if ctx.state.overlay == Overlay::Battlefield {
+        return battlefield::draw(ctx);
+    }
     atlas::draw_landscape(ctx);
     let action = if ctx.state.screen == Screen::Title {
         menus::title(ctx)

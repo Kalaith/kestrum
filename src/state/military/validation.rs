@@ -93,6 +93,11 @@ impl StrategicCampaign {
                 "formations.created_round",
                 "future creation date",
             )?;
+            if let Some(tactics) = &formation.tactics {
+                data.battle_tactics
+                    .validate_configuration(formation.kind, tactics)
+                    .map_err(|error| format!("formations.tactics: {error}"))?;
+            }
         }
         self.validate_people(data)?;
         self.validate_economy_statements(data)?;

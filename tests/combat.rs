@@ -2,6 +2,9 @@
 
 use kestrum::{
     data::{
+        battle_tactics::{
+            TacticAction, TacticCondition, TacticRule, TacticTrigger, TargetFilter, TargetPriority,
+        },
         economy::TroopKind,
         world::{FactionId, Geography, MilitaryLayer, SiteId},
         GameData,
@@ -20,6 +23,8 @@ use kestrum::{
     },
 };
 
+#[path = "support/combat_preparation.rs"]
+mod preparation;
 #[path = "support/combat.rs"]
 mod support;
 use support::*;

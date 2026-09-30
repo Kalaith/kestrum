@@ -87,7 +87,7 @@ impl Game {
                 }
                 if outcome.battle_pending {
                     self.battle_return = None;
-                    self.open_pending_battlefield();
+                    self.refresh_pending_battlefield();
                 }
                 if outcome.round_completed
                     && self

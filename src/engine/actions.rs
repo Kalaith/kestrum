@@ -19,6 +19,16 @@ pub fn preview(
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    if matches!(
+        command,
+        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+    ) {
+        super::battle_preparation::validate(campaign, data, actor, &command)?;
+        return Ok(ActionPreview {
+            active_faction_after: campaign.active_faction(),
+            round_completed: false,
+        });
+    }
     if command == Command::StepNpc {
         let mut candidate = campaign.clone();
         let outcome = step_npc(&mut candidate, data, actor)?;
@@ -85,6 +95,12 @@ pub fn apply(
     actor: Actor,
     command: Command,
 ) -> Result<ActionOutcome, RuleError> {
+    if matches!(
+        command,
+        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+    ) {
+        return super::battle_preparation::apply(campaign, data, actor, command);
+    }
     if command == Command::StepNpc {
         return step_npc(campaign, data, actor);
     }
@@ -362,6 +378,9 @@ fn execute(
         }
         Command::StartPendingBattle => {
             super::combat::commit_pending(candidate, data, outcome)?;
+        }
+        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. } => {
+            return Err(RuleError::NoPendingBattle);
         }
         command @ (Command::Resettle { .. }
         | Command::RenameSite { .. }

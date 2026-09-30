@@ -76,6 +76,7 @@ fn outpost_and_fortified_siege_survive_catalogue_reload_then_resolve_relief_once
     campaign.formations.insert(
         relief_formation,
         Formation {
+            tactics: None,
             id: relief_formation,
             faction: rose,
             kind: TroopKind::Warriors,

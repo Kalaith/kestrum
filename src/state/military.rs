@@ -49,6 +49,8 @@ impl Army {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Formation {
+    #[serde(default)]
+    pub tactics: Option<crate::data::battle_tactics::TroopTactics>,
     pub service: super::evidence::FormationService,
     pub id: FormationId,
     pub faction: FactionId,

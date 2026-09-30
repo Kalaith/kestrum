@@ -75,6 +75,7 @@ pub(super) fn encounter(
         campaign.formations.insert(
             formation,
             Formation {
+                tactics: None,
                 id: formation,
                 faction: FactionId(3),
                 kind: TroopKind::Warriors,

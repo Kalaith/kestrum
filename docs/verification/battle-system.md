@@ -97,9 +97,9 @@ gap, reaction posture, volley and rout are distinguishable at both sizes.
 The deployed Preview page loads its embedded game and full-screen canvas. Its
 embedded canvas measures 734×414 in the current browser surface, below the
 declared minimum, and offers a visible full-screen control. The full-screen
-browser check displayed the title at 1920×1048. The battle prototype is not yet
-reachable from a live campaign in the browser; B03 will add that route and its
-browser interaction review. Browser battle evidence is therefore pending B03.
+browser check displayed the title at 1920×1048. B03 integrated battle into the
+live campaign flow; browser battle interaction remains unverified because the
+open campaign contains unsaved orders and its replacement prompt was cancelled.
 
 ### Validation
 
@@ -116,7 +116,7 @@ browser interaction review. Browser battle evidence is therefore pending B03.
 
 ## B03 — Campaign encounter integration
 
-**Status:** in progress. Field, threat and siege contacts now prepare a saved
+**Status:** complete on 2026-09-30. Field, threat and siege contacts prepare a saved
 pending battle using the deterministic resolver. The current player accepts it
 from the battlefield scene; the committed receipt applies formation and threat
 losses, retreats, person events, site consequences and one battle fact. A pending
@@ -158,7 +158,10 @@ path as the campaign. Capture processes exited after completion.
 
 The focused campaign, movement, relief/assault and threat suites pass. The
 Rosemarch medic progression outcome and the 120-round production victory fixture
-remain for B07's casualty pacing and campaign balance work. `publish.ps1` built
+remain for B07's casualty pacing and campaign balance work. The full test run
+reaches round 284 of the four/eight-faction continuity case before an NPC
+`EndTurn` is rejected because its pending battle remains; B07 owns this case.
+`publish.ps1` built
 Windows and WebGL releases and deployed the Preview target. The browser preview
 loaded the updated title screen and fullscreen presentation. Its existing
 Continue entry indicated a local campaign; the New Game confirmation warned that
@@ -166,3 +169,46 @@ unsaved orders would be left behind, so it was cancelled to preserve that state.
 The pending and aftermath campaign visuals therefore rely on the real campaign
 capture harness at both supported review sizes; browser battle interaction has
 not yet been exercised.
+
+## B04 — Deployment and tactics authoring
+
+**Status:** complete on 2026-09-30. Each formation can save validated activation
+and reaction rules. The pending battlefield exposes a compact editor for the
+selected friendly group, including row order, legal action/condition/target
+cycles, explicit resolver fallback, and swaps with adjacent slots. The editor
+rebuilds the pending receipt deterministically without consuming random state or
+replaying the accepted movement edge. Existing saves without a tactics field use
+the authored troop defaults.
+
+The Rider default waits while enemy cavalry remains, then uses Breakthrough when
+an enemy rear becomes exposed. The resolver test proves both rounds and confirms
+the ordered authored rules affect its action.
+
+### Behavioral evidence
+
+| Check | Result |
+| --- | --- |
+| `cargo.ps1 test -p kestrum --all-features --test battle_formation --test battle_playback --test combat --test movement --test recovery --test ai --test siege --test threats --test k18_siege_continuity --test code_standards` | Passed: 55 cases covering combat, immutable playback, preparation authorization, save/reload, slot identity, strategic integration and source size. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
+| `cargo fmt --all -- --check` | Passed. |
+| `cargo.ps1 test -p kestrum --all-features` | Stopped at the four/eight-faction 400-round continuity case: an NPC `EndTurn` met an unresolved pending battle at round 284. Tracked for B07. |
+| `publish.ps1` with no parameters | Passed Windows and WebGL release builds, packaging, Preview deployment, tracker recording and catalogue synchronization. |
+
+### Visual evidence
+
+The campaign capture harness stages movement contact, pending preparation and
+committed aftermath. The selected-group editor includes a dense five-row state
+with long army names. Capture processes exited after completion.
+
+| State | 1920×1080 | 1280×720 |
+| --- | --- | --- |
+| Pending battle and selected-group editor | [image](ui_battle_campaign_pending.png) | [image](ui_battle_campaign_pending_minimum.png) |
+| Five-row editor and long army names | [image](ui_battle_campaign_editor_dense.png) | [image](ui_battle_campaign_editor_dense_minimum.png) |
+| Committed campaign aftermath and long names | [image](ui_battle_campaign_aftermath.png) | [image](ui_battle_campaign_aftermath_minimum.png) |
+
+The minimum-size dense capture keeps all five rows, the fallback, group labels
+and playback or confirmation controls visible. Both sizes preserve the
+battlefield as the dominant area. The open browser contains a local campaign;
+starting a new one warned that unsaved orders would be left behind, so that
+action was cancelled to preserve the existing save. Live browser battle input
+remains unverified.

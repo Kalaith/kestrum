@@ -17,7 +17,9 @@ impl Game {
         let scene = requested_scene.trim_end_matches("_minimum");
         if matches!(
             scene,
-            "battle_campaign_pending" | "battle_campaign_aftermath"
+            "battle_campaign_pending"
+                | "battle_campaign_editor_dense"
+                | "battle_campaign_aftermath"
         ) {
             return self.capture_campaign_battle(scene);
         }
@@ -135,6 +137,15 @@ impl Game {
             kestrum::state::StrategicCampaign::new(&self.data).expect("campaign capture fixture");
         campaign.armies.get_mut(&ArmyId(1)).unwrap().site = kestrum::data::world::SiteId(8);
         campaign.armies.get_mut(&ArmyId(3)).unwrap().site = kestrum::data::world::SiteId(10);
+        if matches!(
+            scene,
+            "battle_campaign_editor_dense" | "battle_campaign_aftermath"
+        ) {
+            campaign.armies.get_mut(&ArmyId(1)).unwrap().name =
+                "Rose Ward of the Northern Lantern March beyond the River".into();
+            campaign.armies.get_mut(&ArmyId(3)).unwrap().name =
+                "Hawthorn Host of the Fallen Pass and Eastern Meadowland".into();
+        }
         campaign.tutorial.dismiss();
         self.state
             .load_campaign(Campaign::Strategic(Box::new(campaign)), &self.data)
@@ -154,6 +165,56 @@ impl Game {
             .expect("live battle capture reaches the opposing army");
         assert!(contact.battle_pending);
         self.battle_return = None;
+        if scene == "battle_campaign_editor_dense" {
+            let mut tactics = self
+                .data
+                .battle_tactics
+                .defaults_for(TroopKind::Warriors)
+                .expect("warrior defaults")
+                .clone();
+            let mut rows = Vec::new();
+            for (index, action) in [
+                kestrum::data::battle_tactics::TacticAction::Attack,
+                kestrum::data::battle_tactics::TacticAction::Wait,
+                kestrum::data::battle_tactics::TacticAction::Guard,
+                kestrum::data::battle_tactics::TacticAction::Advance,
+                kestrum::data::battle_tactics::TacticAction::Attack,
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                use kestrum::data::battle_tactics::{
+                    TacticCondition, TacticRule, TacticTrigger, TargetFilter, TargetPriority,
+                };
+                let attack = matches!(action, kestrum::data::battle_tactics::TacticAction::Attack);
+                rows.push(TacticRule {
+                    id: format!("capture_activation_{index}"),
+                    trigger: TacticTrigger::Activation,
+                    action,
+                    condition: TacticCondition::Always,
+                    target_filter: if attack {
+                        TargetFilter::AnyEnemy
+                    } else {
+                        TargetFilter::None
+                    },
+                    target_priority: TargetPriority::OwnColumnFirst,
+                });
+            }
+            tactics.activation = rows;
+            let Campaign::Strategic(campaign) = self.state.campaign.as_mut().unwrap() else {
+                unreachable!("campaign capture is strategic")
+            };
+            engine::apply(
+                campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SetFormationTactics {
+                    formation: FormationId(1),
+                    tactics,
+                },
+            )
+            .expect("dense tactics capture edits the pending battle");
+        }
         if scene == "battle_campaign_aftermath" {
             let resolved = self
                 .state
@@ -167,6 +228,7 @@ impl Game {
         } else {
             self.open_pending_battlefield();
             self.battlefield_view.event_cursor = 0;
+            self.battlefield_view.selected = Some(BattleUnitId::Formation(FormationId(1)));
         }
         self.battlefield_view.is_paused = true;
         true

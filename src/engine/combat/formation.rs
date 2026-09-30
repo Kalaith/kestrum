@@ -177,9 +177,10 @@ fn battle_input(
                         .ok_or(RuleError::UnknownFormation {
                             formation: formation.id,
                         })?;
-                let tactics = data
-                    .battle_tactics
-                    .defaults_for(formation.kind)
+                let tactics = actual
+                    .tactics
+                    .as_ref()
+                    .or_else(|| data.battle_tactics.defaults_for(formation.kind))
                     .ok_or_else(|| RuleError::InvalidState("Missing troop tactics.".into()))?;
                 let stats = &data.troops.formations[&formation.kind];
                 let attack = u128::from(stats.attack)
@@ -261,6 +262,40 @@ fn battle_input(
         terrain_permille: report.terrain_permille,
         armies,
     })
+}
+
+pub(in crate::engine) fn refresh_pending(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<(), RuleError> {
+    let mut report = campaign
+        .pending_battle
+        .as_ref()
+        .ok_or(RuleError::NoPendingBattle)?
+        .report
+        .clone();
+    let applied_wall = assault_wall(campaign, data, &report);
+    let input = battle_input(campaign, data, &report)?;
+    let resolution = crate::engine::resolve_battle(&input, &data.battle_tactics)
+        .map_err(RuleError::InvalidState)?;
+    report.outcome = resolution.outcome;
+    report.reason = match resolution.reason {
+        crate::state::battle::simulation::BattleResolutionReason::Annihilation => {
+            BattleEndReason::Annihilation
+        }
+        crate::state::battle::simulation::BattleResolutionReason::Rout => BattleEndReason::Rout,
+        crate::state::battle::simulation::BattleResolutionReason::RoundLimit => {
+            BattleEndReason::ExchangeLimit
+        }
+    };
+    report.exchanges = resolution_exchanges(&report, &resolution, applied_wall);
+    report.simulation = Some(resolution);
+    campaign
+        .pending_battle
+        .as_mut()
+        .expect("pending report was just read")
+        .report = report;
+    Ok(())
 }
 
 fn assault_wall(campaign: &StrategicCampaign, data: &GameData, report: &BattleReport) -> u32 {

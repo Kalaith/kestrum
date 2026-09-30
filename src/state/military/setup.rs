@@ -41,6 +41,7 @@ impl StrategicCampaign {
                 self.formations.insert(
                     formation_id,
                     Formation {
+                        tactics: None,
                         service: Default::default(),
                         id: formation_id,
                         faction: setup.id,

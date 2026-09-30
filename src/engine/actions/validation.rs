@@ -16,7 +16,14 @@ pub(in crate::engine) fn validate_command(
             "This campaign has ended. Its records and saves remain available.".into(),
         ));
     }
-    if campaign.pending_battle.is_some() && *command != Command::StartPendingBattle {
+    let is_preparation = matches!(
+        command,
+        Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+    );
+    if campaign.pending_battle.is_some()
+        && *command != Command::StartPendingBattle
+        && !is_preparation
+    {
         return Err(RuleError::BattlePending);
     }
     if *command == Command::StartPendingBattle {
@@ -25,6 +32,15 @@ pub(in crate::engine) fn validate_command(
         }
         if campaign.pending_battle.is_none() {
             return Err(RuleError::NoPendingBattle);
+        }
+        return Ok(());
+    }
+    if is_preparation {
+        if campaign.pending_battle.is_none() {
+            return Err(RuleError::NoPendingBattle);
+        }
+        if !campaign.is_independent(faction) {
+            return Err(RuleError::UnknownActor);
         }
         return Ok(());
     }
@@ -41,7 +57,9 @@ pub(in crate::engine) fn validate_command(
         return Err(RuleError::UnknownActor);
     }
     match command {
-        Command::StartPendingBattle => return Err(RuleError::NoPendingBattle),
+        Command::StartPendingBattle
+        | Command::SetFormationTactics { .. }
+        | Command::SwapFormationSlots { .. } => return Err(RuleError::NoPendingBattle),
         Command::RespondPeace { .. } | Command::ResolveDefeat { .. } => {
             if actor != Actor::Player {
                 return Err(RuleError::WrongActor);

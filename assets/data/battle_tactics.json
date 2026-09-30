@@ -42,6 +42,7 @@
     "riders": {
       "activation": [
         {"id": "rider-breakthrough", "trigger": "activation", "action": "breakthrough", "condition": "enemy_rear_exposed", "target_filter": "exposed_enemy_rear", "target_priority": "lowest_strength"},
+        {"id": "rider-wait-for-opening", "trigger": "activation", "action": "wait", "condition": "enemy_cavalry_present", "target_filter": "none", "target_priority": "own_column_first"},
         {"id": "rider-charge", "trigger": "activation", "action": "charge", "condition": "always", "target_filter": "enemy_front", "target_priority": "own_column_first"}
       ],
       "reaction": []

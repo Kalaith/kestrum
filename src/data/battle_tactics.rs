@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 pub const SOURCE: &str = "assets/data/battle_tactics.json";
+pub const DEFAULT_MAX_TACTIC_ROWS: usize = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -104,8 +105,6 @@ pub struct BattleTacticsRules {
 
 impl BattleTacticsRules {
     pub fn validate(&self) -> Result<(), String> {
-        use TacticAction::*;
-        use TacticTrigger::*;
         use TroopKind::*;
 
         if self.schema_version != 1
@@ -153,48 +152,75 @@ impl BattleTacticsRules {
         }
         for (kind, tactics) in &self.defaults {
             if tactics.activation.is_empty()
-                || tactics.activation.len() > self.max_tactic_rows as usize
-                || tactics.reaction.len() > self.max_tactic_rows as usize
+                || tactics.activation.len() > DEFAULT_MAX_TACTIC_ROWS
+                || tactics.reaction.len() > DEFAULT_MAX_TACTIC_ROWS
             {
                 return Err(format!("{SOURCE}: invalid tactic count for {kind:?}"));
             }
-            for (rows, expected) in [
-                (&tactics.activation, Activation),
-                (&tactics.reaction, IncomingAttack),
-            ] {
-                for tactic in rows {
-                    let trigger_matches = tactic.trigger == expected;
-                    let action_matches = match (expected, tactic.action) {
-                        (Activation, _) => tactic.action != Brace,
-                        (IncomingAttack, Brace | Guard) => true,
-                        _ => false,
-                    };
-                    let target_matches = match tactic.action {
-                        Attack | Volley | Charge | Breakthrough => {
-                            tactic.target_filter != TargetFilter::None
-                        }
-                        Brace | Guard | Wait | Advance => {
-                            tactic.target_filter == TargetFilter::None
-                        }
-                    };
-                    if tactic.id.trim().is_empty()
-                        || tactic.id.len() > 64
-                        || !trigger_matches
-                        || !action_matches
-                        || !target_matches
-                    {
-                        return Err(format!(
-                            "{SOURCE}: invalid tactic {:?} for {kind:?}",
-                            tactic.id
-                        ));
-                    }
-                }
-            }
+            self.validate_configuration(*kind, tactics)?;
         }
         Ok(())
+    }
+
+    pub fn validate_configuration(
+        &self,
+        kind: TroopKind,
+        tactics: &TroopTactics,
+    ) -> Result<(), String> {
+        if tactics.activation.len() > self.max_tactic_rows as usize
+            || tactics.reaction.len() > self.max_tactic_rows as usize
+        {
+            return Err(format!("{SOURCE}: too many tactic rows for {kind:?}"));
+        }
+        validate_rows(kind, &tactics.activation, TacticTrigger::Activation)?;
+        validate_rows(kind, &tactics.reaction, TacticTrigger::IncomingAttack)
     }
 
     pub fn defaults_for(&self, kind: TroopKind) -> Option<&TroopTactics> {
         self.defaults.get(&kind)
     }
+}
+
+fn validate_rows(
+    kind: TroopKind,
+    rows: &[TacticRule],
+    expected: TacticTrigger,
+) -> Result<(), String> {
+    use TacticAction::*;
+    use TacticTrigger::*;
+    let mut ids = std::collections::BTreeSet::new();
+    for tactic in rows {
+        let action_matches = match (expected, tactic.action) {
+            (Activation, Brace) | (IncomingAttack, Attack | Volley | Charge | Breakthrough) => {
+                false
+            }
+            (Activation, _) | (IncomingAttack, Brace | Guard) => true,
+            _ => false,
+        };
+        let target_matches = match tactic.action {
+            Attack | Volley | Charge | Breakthrough => tactic.target_filter != TargetFilter::None,
+            Brace | Guard | Wait | Advance => tactic.target_filter == TargetFilter::None,
+        };
+        if tactic.id.trim().is_empty()
+            || tactic.id.len() > 64
+            || !ids.insert(tactic.id.as_str())
+            || tactic.trigger != expected
+            || !action_matches
+            || !target_matches
+            || (expected == Activation
+                && tactic.condition == TacticCondition::IncomingCavalryCharge)
+            || (expected == IncomingAttack
+                && !matches!(
+                    tactic.condition,
+                    TacticCondition::Always | TacticCondition::IncomingCavalryCharge
+                ))
+            || (tactic.action == Breakthrough && tactic.target_filter == TargetFilter::EnemyFront)
+        {
+            return Err(format!(
+                "{SOURCE}: invalid tactic {:?} for {kind:?}",
+                tactic.id
+            ));
+        }
+    }
+    Ok(())
 }

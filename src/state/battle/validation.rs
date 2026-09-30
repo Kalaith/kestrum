@@ -418,12 +418,43 @@ fn validate_pending(campaign: &StrategicCampaign) -> Result<(), String> {
         "invalid pending formation resolution",
     )?;
     for army in report.faction_sides().flat_map(|side| &side.armies) {
+        let actual = campaign.armies.get(&army.id);
         ensure(
-            campaign
-                .armies
-                .get(&army.id)
-                .is_some_and(|actual| actual.site == report.site),
-            "pending participants left the encounter site",
+            actual.is_some_and(|actual| {
+                actual.site == report.site
+                    && army.formations.len() == actual.formation_ids().count()
+                    && army.formations.iter().all(|entry| {
+                        actual.slots.get(entry.slot) == Some(&Some(entry.id))
+                            && campaign.formations.get(&entry.id).is_some_and(|formation| {
+                                formation.kind == entry.kind && formation.headcount == entry.start
+                            })
+                    })
+            }),
+            "pending participant roster or formation slots changed",
+        )?;
+    }
+    for army in &simulation.opening.armies {
+        if army.id.0 == u32::MAX {
+            continue;
+        }
+        let witnessed = report
+            .faction_sides()
+            .flat_map(|side| &side.armies)
+            .find(|entry| entry.id == army.id);
+        ensure(
+            witnessed.is_some_and(|entry| {
+                army.slots.iter().enumerate().all(|(slot, unit)| {
+                    let Some(unit) = unit else { return true };
+                    entry.formations.iter().any(|formation| {
+                        formation.slot == slot
+                            && unit.id
+                                == crate::state::battle::simulation::BattleUnitId::Formation(
+                                    formation.id,
+                                )
+                    })
+                })
+            }),
+            "pending resolution slots disagree with the participant roster",
         )?;
     }
     Ok(())

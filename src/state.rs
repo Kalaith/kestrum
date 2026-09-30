@@ -267,6 +267,12 @@ impl GameState {
         let military_order = military_order
             || (self.overlay == Overlay::History
                 && matches!(&command, Command::TransferLegacyItem { .. }));
+        let military_order = military_order
+            || (self.overlay == Overlay::Battlefield
+                && matches!(
+                    &command,
+                    Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
+                ));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }

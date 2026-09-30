@@ -2,6 +2,7 @@
 
 mod actions;
 pub mod ai;
+mod battle_preparation;
 pub mod battle_sim;
 mod combat;
 pub(crate) mod construction;

@@ -2,10 +2,17 @@
 
 mod projection;
 mod render;
+mod tactics;
 mod terrain;
 mod troop_sprites;
 
-use kestrum::state::battle::simulation::BattleUnitId;
+use kestrum::{
+    data::battle_tactics::TacticTrigger,
+    state::{
+        battle::simulation::BattleUnitId,
+        military::{ArmyId, FormationId},
+    },
+};
 
 const EVENT_SECONDS: f32 = 0.42;
 
@@ -18,6 +25,26 @@ pub enum BattlefieldAction {
     SetSpeed(u8),
     SkipToResult,
     Select(Option<BattleUnitId>),
+    EditTactics {
+        formation: FormationId,
+        edit: TacticEdit,
+    },
+    SetTacticTrigger(TacticTrigger),
+    SwapFormationSlots {
+        army: ArmyId,
+        first: u8,
+        second: u8,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TacticEdit {
+    Add(TacticTrigger),
+    Remove(TacticTrigger, usize),
+    Move(TacticTrigger, usize, bool),
+    CycleAction(TacticTrigger, usize),
+    CycleCondition(TacticTrigger, usize),
+    CycleTarget(TacticTrigger, usize),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -27,6 +54,7 @@ pub struct BattlefieldView {
     pub is_paused: bool,
     pub speed: u8,
     pub selected: Option<BattleUnitId>,
+    pub tactic_trigger: TacticTrigger,
 }
 
 impl Default for BattlefieldView {
@@ -37,6 +65,7 @@ impl Default for BattlefieldView {
             is_paused: false,
             speed: 1,
             selected: None,
+            tactic_trigger: TacticTrigger::Activation,
         }
     }
 }
@@ -87,6 +116,9 @@ impl BattlefieldView {
                     selected
                 };
             }
+            BattlefieldAction::SetTacticTrigger(trigger) => self.tactic_trigger = trigger,
+            BattlefieldAction::EditTactics { .. }
+            | BattlefieldAction::SwapFormationSlots { .. } => {}
         }
     }
 

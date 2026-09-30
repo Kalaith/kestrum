@@ -97,6 +97,7 @@ pub(super) fn add_army(
     campaign.formations.insert(
         FormationId(formation),
         Formation {
+            tactics: None,
             service: Default::default(),
             id: FormationId(formation),
             faction: FactionId(faction),

@@ -363,15 +363,17 @@ before the new resolver and pending-command changes have been measured.
 | --- | --- | --- |
 | B01 Deterministic formation combat | Complete; headless resolver and authored rules | [Battle system verification](verification/battle-system.md#b01--deterministic-formation-combat) |
 | B02 Battlefield presentation | Complete; deterministic fixture, event projection and playback view | [Battle system verification](verification/battle-system.md#b02--battlefield-presentation) |
-| B03 Campaign encounter integration | In progress; encounter transaction and focused combat suite checkpointed | [Battle system verification](verification/battle-system.md#b03--campaign-encounter-integration) |
-| B04 Deployment and tactics authoring | Not started | — |
+| B03 Campaign encounter integration | Complete; deterministic field, threat and siege receipts integrate with campaign consequences | [Battle system verification](verification/battle-system.md#b03--campaign-encounter-integration) |
+| B04 Deployment and tactics authoring | Complete; saved per-formation rules, contextual editor and slot swaps | [Battle system verification](verification/battle-system.md#b04--deployment-and-tactics-authoring) |
 | B05 Leaders and support roles | Not started | — |
 | B06 Doctrines and rival preparation | Not started | — |
 | B07 Balance and campaign readiness | Not started | — |
 
-The full Kestrum test run currently stops at the documented long-campaign
-continuity regression; its result and the successful B01 checks are recorded
-with the milestone evidence. The focused B01 resolver acceptance suite passes.
+The full Kestrum test run currently reaches round 284 before an NPC attempts to
+end its phase while a pending battle remains. The focused battle, campaign,
+movement, recovery, siege, threat and source-size suites pass. This remaining
+long-campaign integration case is tracked for B07; results are recorded in the
+milestone evidence.
 
 ### B01 Prototype deterministic formation combat
 

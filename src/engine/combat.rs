@@ -3,7 +3,7 @@
 mod arithmetic;
 mod context;
 mod formation;
-pub(super) use formation::{commit_pending, prepare_encounter, prepare_threat};
+pub(super) use formation::{commit_pending, prepare_encounter, prepare_threat, refresh_pending};
 
 use super::{resolve_person_combat, retreat, PersonCombatContext, PersonCombatSide, RuleError};
 use crate::{

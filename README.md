@@ -603,36 +603,36 @@ evidence, performance gains and deferred platform/balance checks.
 
 ## Development
 
-The proposed next combat expansion is documented in the
+The combat expansion is tracked in the
 [battle system implementation plan](docs/battle-system-implementation-plan.md).
-Its seven milestones are unstarted. The first two prove formation-aware combat
-and a visible battlefield before a substantial editor is built. The next two
-connect campaign encounters and compact tactics authoring; later milestones add
-leader abilities, doctrines and balance acceptance. The supplied
+B01–B04 establish deterministic formation combat, its battlefield, campaign
+encounter transactions and the selected-formation preparation editor. Leader
+abilities, doctrines and balance acceptance follow in B05–B07. The supplied
 [battlefield mockup](docs/reference/battle-system-mockup.png) sets the visual
 direction: soldiers fighting in a shared landscape with subordinate interface.
-The current automatic resolver and text reports remain the implemented system.
+The same resolved groups and campaign receipts drive preparation, playback and
+aftermath.
 
-### Planned battle screen briefs
+### Battle screen decision brief
 
-These briefs describe the proposed screens, not current UI. Normal target is
+These briefs describe the current battle screens. Normal target is
 1920 × 1080; minimum supported landscape canvas is 1280 × 720.
 
 | Question | Preparation | Execution | Aftermath |
 | --- | --- | --- | --- |
-| Current decision | Arrange troops and choose ordered tactics before committing. | Understand how the prepared plan is performing. | Review survivors and consequences before returning to strategy. |
-| Dominant focus | Troop groups staged in the same battlefield used for execution. | Opposing forces in a shared landscape, with charges, bracing and contested lanes. | Surviving groups and withdrawing troops remain visible on the battlefield. |
-| Primary action | Start Battle, beside known terrain and retreat risk. | Pause/Resume, Step, Speed and Skip to Result control playback. | Continue resumes the strategic continuation once. |
-| Supporting information | One selected group exposes its leader and ordered tactics; known enemy facts only. | Compact labels and condition bars beside groups, brief ability callouts and a contextual selection strip. | A concise result overlay, explanatory moments and strategic consequences. |
-| Deferred information | Full abilities and help appear on selection or disclosure. | Detailed transcript and other unit statistics open on demand. | Existing Forces, People, Factors and History inspection. |
-| Layout and camera | Select one group to edit in a compact strip, retaining the battlefield context. | At least 75% of the default view remains battlefield. Player left and enemy right face inward; multi-army camera focus follows action and holds while paused. | Results supplement the same scene; detailed inspection remains paged. |
-| Input and feedback | Select group and destination; visible Move Up/Move Down reorder tactics. | Group selection, quiet playback controls, visible approaches, impact, defence posture and withdrawal. | Visible Continue and report/history controls; consequences remain retrievable. |
+| Current decision | Arrange troop slots and ordered tactics before starting the saved encounter. | Follow the prepared plan as groups charge, brace, fire, create gaps and rout. | Review the committed result before continuing the campaign. |
+| Dominant focus | Opposing troop groups in the shared landscape. | Opposing forces in the shared landscape. | Survivors and withdrawing groups in the same landscape. |
+| Primary action | Start Battle applies the current plan once. | Pause or resume, step, change playback speed, or skip to result. | Continue returns to campaign play. |
+| Supporting information | Selecting one friendly group opens its ordered activation or reaction rules, slot controls and fallback behavior. | Troop count and morale stay beside their groups; brief event captions explain tactical actions. | Outcome, remaining troops and round are visible; detailed reports remain available. |
+| Deferred information | Enemy tactics remain hidden. Full formation rules stay with the selected group. | Rules and extra statistics stay closed during playback. | Detailed Forces, People, Factors and History inspection stays paged. |
+| Layout and camera | The editor is a temporary strip above the selected group; it shows up to five rows without adding a formation dashboard. | The battlefield remains dominant, with players on the left and enemies on the right. | Results supplement the same battlefield scene. |
+| Input and feedback | Select a group, exchange it with a neighboring slot, reorder rows, and cycle through legal action, condition and target blocks. | Select groups and use the lower playback controls; movement, impact, defence posture and withdrawal are visible in the scene. | Continue commits the strategic continuation once; the battle record remains retrievable. |
 
-The full tactics table, permanent transcript and terrain-stat panel are deferred
-to inspection; they do not frame the default battle. The inherited minimum-WebGL
-scaling/picking limitation must be
-resolved before minimum-browser battle acceptance. See the plan for validation,
-pending-save behavior and separation of gameplay from cosmetic playback.
+The default preparation shows the current group's compact rule list; long names
+and the five-row limit have dedicated minimum-size captures. The default playback
+keeps those editing controls closed. See the plan and
+[battle system verification](docs/verification/battle-system.md) for pending-save
+behavior, input review, validation results and visual evidence.
 
 ### Build and verification commands
 

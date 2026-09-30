@@ -296,9 +296,17 @@ fn cut_supply_deficit_and_destroyed_formations_cannot_recover() {
 #[test]
 fn recovery_preserves_formation_identity_metadata_and_replays_through_saves() {
     let (data, mut campaign) = budget_fixture(100);
+    let mut tactics = data
+        .battle_tactics
+        .defaults_for(TroopKind::Warriors)
+        .unwrap()
+        .clone();
+    tactics.activation[0].action = kestrum::data::battle_tactics::TacticAction::Wait;
+    tactics.activation[0].target_filter = kestrum::data::battle_tactics::TargetFilter::None;
     let formation = campaign.formations.get_mut(&FormationId(1)).unwrap();
     formation.headcount = 21;
     formation.movement_spent = 4;
+    formation.tactics = Some(tactics.clone());
     let mut expected = formation.clone();
     expected.headcount = 41;
     expected.movement_spent = 0; // The seasonal boundary independently resets movement.
@@ -316,6 +324,7 @@ fn recovery_preserves_formation_identity_metadata_and_replays_through_saves() {
     }
     assert_eq!(campaign, resumed);
     assert_eq!(campaign.formations[&FormationId(1)], expected);
+    assert_eq!(campaign.formations[&FormationId(1)].tactics, Some(tactics));
     assert_eq!(campaign.armies, before.armies);
     let mut boundary_people = campaign.people.clone();
     let mut before_people = before.people.clone();

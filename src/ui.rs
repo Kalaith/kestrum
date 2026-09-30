@@ -43,7 +43,7 @@ pub use army::{
 };
 pub use atlas::map_controls_contain;
 pub use battle::{BattleTab, BattleView};
-pub use battlefield::{BattlefieldAction, BattlefieldView};
+pub use battlefield::{BattlefieldAction, BattlefieldView, TacticEdit};
 pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
 pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
 pub use menus::HELP_PAGE_COUNT;
@@ -326,6 +326,7 @@ pub struct Context<'a> {
     pub siege: &'a SiegePanel,
     pub settlement: &'a SettlementView,
     pub data: &'a PresentationData,
+    pub battle_tactics: &'a kestrum::data::battle_tactics::BattleTacticsRules,
     pub economy: &'a Economy,
     pub rules: &'a kestrum::data::rules::CampaignRules,
     pub household_rules: &'a kestrum::data::households::HouseholdRules,

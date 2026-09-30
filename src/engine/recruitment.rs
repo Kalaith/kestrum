@@ -107,6 +107,7 @@ pub(super) fn recruit(
     campaign.formations.insert(
         formation,
         Formation {
+            tactics: None,
             service: Default::default(),
             id: formation,
             faction: owner,

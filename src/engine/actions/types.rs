@@ -28,6 +28,15 @@ pub enum Actor {
 pub enum Command {
     /// Player acceptance commits the saved pending encounter exactly once.
     StartPendingBattle,
+    SetFormationTactics {
+        formation: FormationId,
+        tactics: crate::data::battle_tactics::TroopTactics,
+    },
+    SwapFormationSlots {
+        army: ArmyId,
+        first: u8,
+        second: u8,
+    },
     DeclareWar {
         faction: FactionId,
     },

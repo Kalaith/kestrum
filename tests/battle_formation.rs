@@ -289,6 +289,54 @@ fn cavalry_breakthrough_uses_a_lane_after_its_front_guard_falls() {
 }
 
 #[test]
+fn cavalry_waits_for_an_exposed_rear_then_uses_its_first_rule() {
+    let mut rules = rules();
+    rules.max_rounds = 2;
+    let rider_rules = rules.defaults[&TroopKind::Riders].activation.clone();
+    let mut rider = formation(2, TroopKind::Riders, rider_rules, 60);
+    let mut warrior = formation(1, TroopKind::Warriors, vec![], 40);
+    warrior.attack = 1000;
+    let mut enemy_guard = formation(3, TroopKind::Warriors, vec![wait_rule("hold")], 10);
+    enemy_guard.headcount = 1;
+    enemy_guard.capacity = 1;
+    enemy_guard.resistance = 1;
+    let enemy_cavalry = formation(4, TroopKind::Riders, vec![wait_rule("wait")], 20);
+    rider.headcount = 30;
+    let battle = input(vec![
+        army(1, 1, BattleSide::Attacker, vec![(0, warrior), (3, rider)]),
+        army(
+            2,
+            2,
+            BattleSide::Defender,
+            vec![(0, enemy_guard), (3, enemy_cavalry)],
+        ),
+    ]);
+
+    let result = resolve_battle(&battle, &rules).unwrap();
+    let mut round = 0;
+    let rider_actions: Vec<_> = result
+        .events
+        .iter()
+        .filter_map(|event| match event {
+            BattleEvent::RoundStarted { round: current } => {
+                round = *current;
+                None
+            }
+            BattleEvent::Activation {
+                actor: BattleUnitId::Formation(FormationId(2)),
+                action,
+                ..
+            } => Some((round, *action)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        rider_actions,
+        [(1, TacticAction::Wait), (2, TacticAction::Breakthrough)]
+    );
+}
+
+#[test]
 fn an_unavailable_higher_row_falls_through_to_the_first_legal_charge() {
     let mut rules = rules();
     rules.max_rounds = 1;

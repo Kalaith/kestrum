@@ -83,6 +83,7 @@ pub(super) fn prepare_text(ctx: &Context<'_>) {
             .collect();
         macroquad_toolkit::ui::prepare_font_text(font, &titles);
     }
+    super::tactics::prepare_text(ctx);
 }
 
 pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
@@ -161,6 +162,8 @@ fn draw_header(ctx: &Context<'_>, resolution: &BattleResolution, frame: &BattleP
     let right_name = defenders
         .first()
         .map_or_else(|| ctx.text("battle_defender"), |army| army.name.clone());
+    let left_name = fit_name(ctx, &left_name, 452.0);
+    let right_name = fit_name(ctx, &right_name, 452.0);
     draw_pennant(34.0, 49.0, 1.0, BattleSide::Attacker);
     draw_pennant(1246.0, 49.0, -1.0, BattleSide::Defender);
     components::text(ctx, &left_name, vec2(62.0, 36.0), 22.0, components::CREAM);
@@ -189,6 +192,23 @@ fn draw_header(ctx: &Context<'_>, resolution: &BattleResolution, frame: &BattleP
         components::MUTED,
     );
     draw_round_plaque(ctx, frame.round);
+}
+
+fn fit_name(ctx: &Context<'_>, name: &str, max_width: f32) -> String {
+    if measure_text(name, ctx.font(), 22, 1.0).width <= max_width {
+        return name.to_owned();
+    }
+    let mut fitted = String::new();
+    for character in name.chars() {
+        let mut candidate = fitted.clone();
+        candidate.push(character);
+        candidate.push_str("...");
+        if measure_text(&candidate, ctx.font(), 22, 1.0).width > max_width {
+            break;
+        }
+        fitted.push(character);
+    }
+    format!("{fitted}...")
 }
 
 fn side_summary(ctx: &Context<'_>, groups: &[BattlePresentationGroup], side: BattleSide) -> String {
@@ -408,6 +428,11 @@ fn draw_selection_inspector(
 ) -> Option<UiAction> {
     let id = ctx.battlefield.selected?;
     let group = frame.groups.iter().find(|group| group.id == id)?;
+    if ctx.pending_battle {
+        if let Some(action) = super::tactics::draw_pending_editor(ctx, id) {
+            return action;
+        }
+    }
     let rect = Rect::new(470.0, 91.0, 340.0, 56.0);
     draw_rectangle(
         rect.x,

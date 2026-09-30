@@ -417,6 +417,7 @@ impl Game {
             battle_tactics: &self.data.battle_tactics,
             economy: &self.data.economy,
             rules: &self.data.rules,
+            lifecycle: &self.data.lifecycle,
             household_rules: &self.data.households,
             progression: &self.data.progression,
             history: &self.history,

@@ -605,9 +605,9 @@ evidence, performance gains and deferred platform/balance checks.
 
 The combat expansion is tracked in the
 [battle system implementation plan](docs/battle-system-implementation-plan.md).
-B01–B04 establish deterministic formation combat, its battlefield, campaign
-encounter transactions and the selected-formation preparation editor. Leader
-abilities, doctrines and balance acceptance follow in B05–B07. The supplied
+B01–B05 establish deterministic formation combat, its battlefield, campaign
+encounter transactions, selected-formation preparation, saved battle leaders
+and bounded support abilities. Doctrines and balance acceptance follow in B06–B07. The supplied
 [battlefield mockup](docs/reference/battle-system-mockup.png) sets the visual
 direction: soldiers fighting in a shared landscape with subordinate interface.
 The same resolved groups and campaign receipts drive preparation, playback and

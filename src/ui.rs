@@ -329,6 +329,7 @@ pub struct Context<'a> {
     pub battle_tactics: &'a kestrum::data::battle_tactics::BattleTacticsRules,
     pub economy: &'a Economy,
     pub rules: &'a kestrum::data::rules::CampaignRules,
+    pub lifecycle: &'a kestrum::data::lifecycle::LifecycleRules,
     pub household_rules: &'a kestrum::data::households::HouseholdRules,
     pub progression: &'a kestrum::data::progression::ProgressionRules,
     pub history: &'a HistoryView,

@@ -22,7 +22,9 @@ pub fn preview(
     if matches!(
         command,
         Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
-    ) {
+    ) || (campaign.pending_battle.is_some()
+        && matches!(command, Command::SetBattleLeader { .. }))
+    {
         super::battle_preparation::validate(campaign, data, actor, &command)?;
         return Ok(ActionPreview {
             active_faction_after: campaign.active_faction(),
@@ -98,7 +100,9 @@ pub fn apply(
     if matches!(
         command,
         Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
-    ) {
+    ) || (campaign.pending_battle.is_some()
+        && matches!(command, Command::SetBattleLeader { .. }))
+    {
         return super::battle_preparation::apply(campaign, data, actor, command);
     }
     if command == Command::StepNpc {
@@ -254,6 +258,11 @@ fn prepare(
         anniversary_reminders: Vec::new(),
     };
     super::exploration::observe(&mut candidate);
+    if let Command::SetBattleLeader { formation, leader } = &command {
+        super::battle_preparation::validate_leader_assignment(
+            campaign, data, owner, *formation, *leader,
+        )?;
+    }
     execute(&mut candidate, campaign, data, owner, command, &mut outcome)?;
     finish(&mut candidate, campaign, data, &mut outcome)?;
     Ok((candidate, outcome))
@@ -381,6 +390,13 @@ fn execute(
         }
         Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. } => {
             return Err(RuleError::NoPendingBattle);
+        }
+        Command::SetBattleLeader { formation, leader } => {
+            candidate
+                .formations
+                .get_mut(&formation)
+                .expect("validated battle leader formation")
+                .battle_leader = leader;
         }
         command @ (Command::Resettle { .. }
         | Command::RenameSite { .. }

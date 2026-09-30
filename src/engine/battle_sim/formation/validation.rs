@@ -51,6 +51,26 @@ pub(super) fn canonical_input(
             {
                 return Err(format!("Invalid battle unit {:?} in slot {slot}.", unit.id));
             }
+            let capabilities = match (unit.id, unit.kind) {
+                (crate::state::battle::simulation::BattleUnitId::Formation(_), Some(kind)) => {
+                    let class = unit
+                        .leader
+                        .as_ref()
+                        .filter(|leader| leader.active)
+                        .map(|leader| leader.class);
+                    if unit.leader.as_ref().is_some_and(|leader| {
+                        leader.id.0 == 0 || leader.name.trim().is_empty() || leader.name.len() > 120
+                    }) {
+                        return Err(format!("Invalid leader snapshot for {:?}.", unit.id));
+                    }
+                    crate::data::battle_tactics::leader_capabilities(kind, class)
+                }
+                (crate::state::battle::simulation::BattleUnitId::Threat(_), None) => Vec::new(),
+                _ => return Err(format!("Invalid battle role for {:?}.", unit.id)),
+            };
+            if unit.capabilities != capabilities {
+                return Err(format!("Invalid battle capabilities for {:?}.", unit.id));
+            }
             validate_tactics(&unit.activation_tactics, TacticTrigger::Activation)?;
             validate_tactics(&unit.reaction_tactics, TacticTrigger::IncomingAttack)?;
             total += 1;
@@ -97,13 +117,19 @@ fn validate_tactics(rows: &[TacticRule], trigger: TacticTrigger) -> Result<(), S
             ),
             TacticTrigger::EndOfRound => false,
         };
+        let support = rule.action == TacticAction::Stabilize;
         if rule.trigger != trigger
             || rule.id.trim().is_empty()
             || !ids.insert(rule.id.as_str())
             || !action_allowed
             || !condition_allowed
-            || (attack && rule.target_filter == TargetFilter::None)
-            || (!attack && rule.target_filter != TargetFilter::None)
+            || (attack
+                && matches!(
+                    rule.target_filter,
+                    TargetFilter::None | TargetFilter::AllyLowestMorale
+                ))
+            || (support && rule.target_filter != TargetFilter::AllyLowestMorale)
+            || (!attack && !support && rule.target_filter != TargetFilter::None)
         {
             return Err(format!("Invalid {trigger:?} tactic {:?}.", rule.id));
         }

@@ -10,11 +10,12 @@ use crate::{
     },
     state::{
         battle::simulation::{
-            BattleArmyInput, BattleEvent, BattleSide, BattleUnitId, BattleUnitInput,
-            FormationBattleInput,
+            BattleArmyInput, BattleEvent, BattleLeaderSnapshot, BattleSide, BattleUnitId,
+            BattleUnitInput, FormationBattleInput,
         },
         campaign::DomainFactKind,
         evidence::MovementService,
+        people::PersonAssignment,
         siege::SiegeChange,
         threat::{ThreatId, ThreatStatus},
     },
@@ -201,6 +202,26 @@ fn battle_input(
                     resistance = (u128::from(resistance) * u128::from(assault_wall) / 1000)
                         .clamp(1, u128::from(u32::MAX)) as u32;
                 }
+                let leader = actual.battle_leader.and_then(|id| {
+                    campaign.people.get(&id).map(|person| BattleLeaderSnapshot {
+                        id,
+                        name: person.name.clone(),
+                        class: person.class,
+                        active: person.faction == actual.faction
+                            && person.assignment
+                                == (PersonAssignment::Formation {
+                                    formation: actual.id,
+                                })
+                            && !person.career.retired
+                            && person.is_fit_for_field(
+                                campaign.completed_rounds,
+                                data.rules.leadership.field_min_age_years,
+                            )
+                            && (person.age_years(campaign.completed_rounds)
+                                < data.lifecycle.elder_age_years
+                                || source.commander == Some(id)),
+                    })
+                });
                 slots[formation.slot] = Some(BattleUnitInput {
                     id: BattleUnitId::Formation(formation.id),
                     kind: Some(formation.kind),
@@ -209,6 +230,14 @@ fn battle_input(
                     attack: attack.clamp(1, u128::from(u32::MAX)) as u32,
                     resistance,
                     initiative: initiative(formation.kind),
+                    capabilities: crate::data::battle_tactics::leader_capabilities(
+                        formation.kind,
+                        leader
+                            .as_ref()
+                            .filter(|leader| leader.active)
+                            .map(|leader| leader.class),
+                    ),
+                    leader,
                     activation_tactics: tactics.activation.clone(),
                     reaction_tactics: tactics.reaction.clone(),
                 });
@@ -233,6 +262,8 @@ fn battle_input(
             attack: threat.attack,
             resistance: threat.resistance,
             initiative: initiative_for_threat(),
+            leader: None,
+            capabilities: Vec::new(),
             activation_tactics: vec![TacticRule {
                 id: "threat_attack".into(),
                 trigger: TacticTrigger::Activation,

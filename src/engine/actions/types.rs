@@ -32,6 +32,10 @@ pub enum Command {
         formation: FormationId,
         tactics: crate::data::battle_tactics::TroopTactics,
     },
+    SetBattleLeader {
+        formation: FormationId,
+        leader: Option<PersonId>,
+    },
     SwapFormationSlots {
         army: ArmyId,
         first: u8,

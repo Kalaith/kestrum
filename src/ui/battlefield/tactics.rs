@@ -3,8 +3,11 @@
 use super::{BattlefieldAction, TacticEdit};
 use crate::ui::{components, Context, UiAction};
 use kestrum::{
-    data::battle_tactics::{TacticAction, TacticCondition, TacticTrigger, TargetFilter},
-    state::{battle::simulation::BattleUnitId, military::FormationId},
+    data::battle_tactics::{
+        leader_capabilities, BattleCapability, TacticAction, TacticCondition, TacticTrigger,
+        TargetFilter,
+    },
+    state::{battle::simulation::BattleUnitId, military::FormationId, people::PersonAssignment},
 };
 use macroquad::prelude::*;
 
@@ -20,12 +23,20 @@ pub(super) fn prepare_text(ctx: &Context<'_>) {
         (12, ctx.text("battle_tactic_first_activation")),
         (12, ctx.text("battle_tactic_self_hurt")),
         (12, ctx.text("battle_tactic_ally_hurt")),
+        (12, ctx.text("battle_tactic_self_morale")),
+        (12, ctx.text("battle_tactic_ally_morale")),
         (12, ctx.text("battle_tactic_cavalry_charge")),
         (12, ctx.text("battle_tactic_any_enemy")),
         (12, ctx.text("battle_tactic_front")),
         (12, ctx.text("battle_tactic_rear")),
         (12, ctx.text("battle_tactic_exposed_rear")),
         (12, ctx.text("battle_tactic_no_target")),
+        (15, ctx.text("battle_leader")),
+        (15, ctx.text("battle_leader_none")),
+        (15, ctx.text("battle_leader_unavailable")),
+        (11, ctx.text("battle_tactic_needs_officer")),
+        (11, ctx.text("battle_tactic_needs_infantry")),
+        (11, ctx.text("battle_tactic_leader_unavailable")),
     ];
     let prepared: Vec<_> = labels
         .iter()
@@ -69,7 +80,7 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
         (TacticTrigger::IncomingAttack, &rules.reaction)
     };
     let visible_rows = rows.len().min(5);
-    let rect = Rect::new(310.0, 86.0, 660.0, 57.0 + visible_rows as f32 * 18.0);
+    let rect = Rect::new(310.0, 86.0, 660.0, 75.0 + visible_rows as f32 * 18.0);
     draw_rectangle(
         rect.x,
         rect.y,
@@ -132,17 +143,71 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
             )));
         }
     }
+    let leaders = eligible_leaders(campaign, formation_id, formation.kind, army.commander, ctx);
+    let mut choices = vec![None];
+    choices.extend(leaders.into_iter().map(Some));
+    let current = formation.battle_leader;
+    let current_available = current.is_some_and(|id| choices.contains(&Some(id)));
+    let current_index = choices.iter().position(|choice| *choice == current);
+    let leader_name = current
+        .filter(|_| current_available)
+        .and_then(|id| campaign.people.get(&id))
+        .map(|person| person.name.as_str())
+        .map(|name| fit_label(ctx, name, 172.0))
+        .unwrap_or_else(|| {
+            if current.is_some() {
+                ctx.text("battle_leader_unavailable")
+            } else {
+                ctx.text("battle_leader_none")
+            }
+        });
+    components::body(
+        ctx,
+        &ctx.text("battle_leader"),
+        vec2(rect.x + 12.0, rect.y + 44.0),
+        14.0,
+        components::MUTED,
+    );
+    components::body(
+        ctx,
+        &leader_name,
+        vec2(rect.x + 72.0, rect.y + 44.0),
+        14.0,
+        components::CREAM,
+    );
+    let selected_leader_class = current
+        .filter(|_| current_available)
+        .and_then(|id| campaign.people.get(&id))
+        .map(|person| person.class);
+    let capabilities = leader_capabilities(formation.kind, selected_leader_class);
+    for (left, x, step) in [(true, rect.x + 254.0, -1_i32), (false, rect.x + 282.0, 1)] {
+        if components::button(
+            ctx,
+            Rect::new(x, rect.y + 30.0, 24.0, 18.0),
+            if left { "<" } else { ">" },
+            choices.len() > 1,
+            false,
+        ) {
+            let next = current_index
+                .map(|index| (index as i32 + step).rem_euclid(choices.len() as i32) as usize)
+                .unwrap_or(usize::from(!left));
+            action = Some(UiAction::Battlefield(BattlefieldAction::SetBattleLeader {
+                formation: formation_id,
+                leader: choices[next],
+            }));
+        }
+    }
     if trigger == TacticTrigger::Activation {
         components::body(
             ctx,
             &ctx.text("battle_tactic_fallback"),
-            vec2(rect.x + 12.0, rect.y + 30.0),
+            vec2(rect.x + 330.0, rect.y + 44.0),
             12.0,
             components::MUTED,
         );
     }
     for (index, rule) in rows.iter().take(5).enumerate() {
-        let y = rect.y + 37.0 + index as f32 * 18.0;
+        let y = rect.y + 55.0 + index as f32 * 18.0;
         let move_up = components::button(
             ctx,
             Rect::new(rect.x + 10.0, y, 22.0, 18.0),
@@ -195,7 +260,7 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
             ctx,
             Rect::new(rect.x + 306.0, y, 122.0, 18.0),
             &target_label(ctx, rule.target_filter),
-            is_attack(rule.action),
+            needs_target(rule.action),
             false,
         ) {
             action = Some(edit_tactics(
@@ -224,6 +289,34 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
             12.0,
             components::MUTED,
         );
+        let unavailable_reason = match rule.action {
+            TacticAction::Rally if !capabilities.contains(&BattleCapability::OfficerRally) => {
+                Some(if current.is_some() && !current_available {
+                    "battle_tactic_leader_unavailable"
+                } else {
+                    "battle_tactic_needs_officer"
+                })
+            }
+            TacticAction::HoldTheLine
+                if !capabilities.contains(&BattleCapability::InfantryHoldTheLine) =>
+            {
+                Some(if current.is_some() && !current_available {
+                    "battle_tactic_leader_unavailable"
+                } else {
+                    "battle_tactic_needs_infantry"
+                })
+            }
+            _ => None,
+        };
+        if let Some(reason) = unavailable_reason {
+            components::body(
+                ctx,
+                &ctx.text(reason),
+                vec2(rect.x + 500.0, y + 13.0),
+                11.0,
+                components::MUTED,
+            );
+        }
     }
     if components::button(
         ctx,
@@ -238,6 +331,50 @@ pub(super) fn draw_pending_editor(ctx: &Context<'_>, id: BattleUnitId) -> Option
         }));
     }
     Some(action)
+}
+
+fn eligible_leaders(
+    campaign: &kestrum::state::StrategicCampaign,
+    formation: FormationId,
+    kind: kestrum::data::economy::TroopKind,
+    commander: Option<kestrum::state::people::PersonId>,
+    ctx: &Context<'_>,
+) -> Vec<kestrum::state::people::PersonId> {
+    let baseline = leader_capabilities(kind, None);
+    campaign
+        .people
+        .values()
+        .filter(|person| {
+            person.faction == campaign.player
+                && person.assignment == (PersonAssignment::Formation { formation })
+                && !person.career.retired
+                && person.is_fit_for_field(
+                    campaign.completed_rounds,
+                    ctx.rules.leadership.field_min_age_years,
+                )
+                && (person.age_years(campaign.completed_rounds) < ctx.lifecycle.elder_age_years
+                    || commander == Some(person.id))
+                && leader_capabilities(kind, Some(person.class)).len() > baseline.len()
+        })
+        .map(|person| person.id)
+        .collect()
+}
+
+fn fit_label(ctx: &Context<'_>, label: &str, max_width: f32) -> String {
+    if measure_text(label, ctx.body_font(), 14, 1.0).width <= max_width {
+        return label.to_owned();
+    }
+    let mut fitted = String::new();
+    for character in label.chars() {
+        let mut candidate = fitted.clone();
+        candidate.push(character);
+        candidate.push('…');
+        if measure_text(&candidate, ctx.body_font(), 14, 1.0).width > max_width {
+            break;
+        }
+        fitted.push(character);
+    }
+    format!("{fitted}…")
 }
 
 #[derive(Clone, Copy)]
@@ -271,6 +408,9 @@ fn action_label(ctx: &Context<'_>, action: TacticAction) -> String {
         TacticAction::Brace => ctx.text("battle_play_brace"),
         TacticAction::Wait => ctx.text("battle_play_wait"),
         TacticAction::Advance => ctx.text("battle_play_advance"),
+        TacticAction::Rally => ctx.text("battle_play_rally"),
+        TacticAction::HoldTheLine => ctx.text("battle_play_hold_line"),
+        TacticAction::Stabilize => ctx.text("battle_play_stabilize"),
     }
 }
 
@@ -283,6 +423,8 @@ fn condition_label(ctx: &Context<'_>, condition: TacticCondition) -> String {
         TacticCondition::SelfBelowHalf => "battle_tactic_self_hurt",
         TacticCondition::AllyInSameRowBelowHalf => "battle_tactic_ally_hurt",
         TacticCondition::IncomingCavalryCharge => "battle_tactic_cavalry_charge",
+        TacticCondition::SelfBelowHalfMorale => "battle_tactic_self_morale",
+        TacticCondition::AllyBelowHalfMorale => "battle_tactic_ally_morale",
     };
     ctx.text(key)
 }
@@ -295,6 +437,7 @@ fn target_label(ctx: &Context<'_>, target: TargetFilter) -> String {
         TargetFilter::EnemyRear => "battle_tactic_rear",
         TargetFilter::EnemyCavalry => "battle_tactic_enemy_cavalry",
         TargetFilter::ExposedEnemyRear => "battle_tactic_exposed_rear",
+        TargetFilter::AllyLowestMorale => "battle_tactic_ally_lowest_morale",
     };
     ctx.text(key)
 }
@@ -319,4 +462,8 @@ fn is_attack(action: TacticAction) -> bool {
             | TacticAction::Charge
             | TacticAction::Breakthrough
     )
+}
+
+fn needs_target(action: TacticAction) -> bool {
+    is_attack(action) || action == TacticAction::Stabilize
 }

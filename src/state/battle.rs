@@ -186,6 +186,8 @@ pub struct BattlePersonReport {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattleFormationReport {
+    #[serde(default)]
+    pub battle_leader: Option<PersonId>,
     #[serde(default = "ordinary_factor")]
     pub veterancy_permille: u32,
     pub id: FormationId,

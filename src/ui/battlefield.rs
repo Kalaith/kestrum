@@ -11,6 +11,7 @@ use kestrum::{
     state::{
         battle::simulation::BattleUnitId,
         military::{ArmyId, FormationId},
+        people::PersonId,
     },
 };
 
@@ -28,6 +29,10 @@ pub enum BattlefieldAction {
     EditTactics {
         formation: FormationId,
         edit: TacticEdit,
+    },
+    SetBattleLeader {
+        formation: FormationId,
+        leader: Option<PersonId>,
     },
     SetTacticTrigger(TacticTrigger),
     SwapFormationSlots {
@@ -118,7 +123,8 @@ impl BattlefieldView {
             }
             BattlefieldAction::SetTacticTrigger(trigger) => self.tactic_trigger = trigger,
             BattlefieldAction::EditTactics { .. }
-            | BattlefieldAction::SwapFormationSlots { .. } => {}
+            | BattlefieldAction::SwapFormationSlots { .. }
+            | BattlefieldAction::SetBattleLeader { .. } => {}
         }
     }
 

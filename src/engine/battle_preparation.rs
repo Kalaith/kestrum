@@ -2,9 +2,63 @@
 
 use super::{actions::validate_command, combat, ActionOutcome, Actor, Command, RuleError};
 use crate::{
-    data::GameData,
-    state::{battle::BattleSideReport, military::ArmyId, StrategicCampaign},
+    data::{battle_tactics::leader_capabilities, world::PersonClass, GameData},
+    state::{
+        battle::BattleSideReport,
+        military::{ArmyId, FormationId},
+        people::{PersonAssignment, PersonId},
+        StrategicCampaign,
+    },
 };
+
+pub(super) fn validate_leader_assignment(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: crate::data::world::FactionId,
+    formation: FormationId,
+    leader: Option<PersonId>,
+) -> Result<(), RuleError> {
+    let unit = campaign
+        .formations
+        .get(&formation)
+        .filter(|unit| unit.faction == owner)
+        .ok_or(RuleError::FormationNotOwned { formation })?;
+    let Some(id) = leader else {
+        return Ok(());
+    };
+    let person = campaign
+        .people
+        .get(&id)
+        .filter(|person| person.faction == owner)
+        .ok_or(RuleError::UnknownPerson { person: id })?;
+    let army = campaign
+        .armies
+        .values()
+        .find(|army| army.formation_ids().any(|entry| entry == formation))
+        .expect("validated formation army");
+    let leader_grants = leader_capabilities(unit.kind, Some(person.class));
+    let troop_grants = leader_capabilities(unit.kind, None);
+    let class_can_lead = leader_grants.len() > troop_grants.len()
+        && matches!(
+            person.class,
+            PersonClass::Officer | PersonClass::Infantry | PersonClass::Cavalry
+        );
+    if person.assignment != (PersonAssignment::Formation { formation })
+        || person.career.retired
+        || !person.is_fit_for_field(
+            campaign.completed_rounds,
+            data.rules.leadership.field_min_age_years,
+        )
+        || (person.age_years(campaign.completed_rounds) >= data.lifecycle.elder_age_years
+            && army.commander != Some(id))
+        || !class_can_lead
+    {
+        return Err(RuleError::Progression(
+            "Choose a fit attached Officer, Infantry or Cavalry leader for this troop role.".into(),
+        ));
+    }
+    Ok(())
+}
 
 pub(super) fn validate(
     campaign: &StrategicCampaign,
@@ -40,6 +94,18 @@ pub(super) fn validate(
                     tactics,
                 )
                 .map_err(RuleError::InvalidState)?;
+            if !pending
+                .report
+                .faction_sides()
+                .filter(|side| side.faction == owner)
+                .flat_map(|side| &side.armies)
+                .any(|army| army.formations.iter().any(|entry| entry.id == *formation))
+            {
+                return Err(RuleError::BattlePending);
+            }
+        }
+        Command::SetBattleLeader { formation, leader } => {
+            validate_leader_assignment(campaign, data, owner, *formation, *leader)?;
             if !pending
                 .report
                 .faction_sides()
@@ -105,6 +171,13 @@ pub(super) fn apply(
                 .get_mut(&formation)
                 .expect("validated")
                 .tactics = Some(tactics);
+        }
+        Command::SetBattleLeader { formation, leader } => {
+            candidate
+                .formations
+                .get_mut(&formation)
+                .expect("validated")
+                .battle_leader = leader;
         }
         Command::SwapFormationSlots {
             army,

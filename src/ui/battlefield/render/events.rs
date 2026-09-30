@@ -4,7 +4,10 @@ use super::super::projection;
 use super::group_label;
 use crate::ui::{components, Context};
 use kestrum::{
-    data::{battle_tactics::TacticAction, economy::TroopKind},
+    data::{
+        battle_tactics::{BattleCapability, TacticAction},
+        economy::TroopKind,
+    },
     state::battle::{
         playback::{BattlePresentationFrame, BattlePresentationGroup},
         simulation::{BattleEvent, BattleResolution, BattleUnitId},
@@ -31,6 +34,42 @@ pub(super) fn draw(
     let caption = caption(ctx, event, resolution);
     components::centered(ctx, &caption, vec2(640.0, 213.0), 21.0, components::CREAM);
     match event {
+        BattleEvent::OpeningAction {
+            actor,
+            ability: BattleCapability::CavalryExploitOpening,
+            target,
+        } => draw_charge_trail(frame, resolution, *actor, *target, progress),
+        BattleEvent::OpeningAction {
+            actor,
+            ability: BattleCapability::SiegeBombardment,
+            target,
+        } => draw_projectile(frame, resolution, *actor, *target, progress),
+        BattleEvent::AbilityUsed {
+            actor,
+            target: Some(target),
+            ..
+        } => {
+            let from = find_center(frame, resolution, *actor);
+            let to = find_center(frame, resolution, *target);
+            draw_line(
+                from.x,
+                from.y - 28.0,
+                to.x,
+                to.y - 28.0,
+                2.2,
+                Color::new(0.62, 0.87, 0.70, 0.70),
+            );
+        }
+        BattleEvent::AbilityUsed { actor, .. } => {
+            let center = find_center(frame, resolution, *actor);
+            draw_circle_lines(
+                center.x,
+                center.y,
+                38.0 + progress * 12.0,
+                2.0,
+                Color::new(0.91, 0.79, 0.54, 0.65 * (1.0 - progress)),
+            );
+        }
         BattleEvent::Activation {
             actor,
             target: Some(target),
@@ -110,6 +149,11 @@ pub(super) fn animated_center(
             action: TacticAction::Charge | TacticAction::Breakthrough,
             ..
         }) => Some((*actor, *target, 0.32 * progress.clamp(0.0, 1.0))),
+        Some(BattleEvent::OpeningAction {
+            actor,
+            target,
+            ability: BattleCapability::CavalryExploitOpening,
+        }) => Some((*actor, *target, 0.32 * progress.clamp(0.0, 1.0))),
         Some(BattleEvent::Reaction { against, actor, .. })
             if follows_charge(resolution, frame.completed_events, *against, *actor) =>
         {
@@ -184,8 +228,25 @@ pub(super) fn caption(
                 TacticAction::Brace => "battle_play_brace",
                 TacticAction::Wait => "battle_play_wait",
                 TacticAction::Advance => "battle_play_advance",
+                TacticAction::Rally => "battle_play_rally",
+                TacticAction::HoldTheLine => "battle_play_hold_line",
+                TacticAction::Stabilize => "battle_play_stabilize",
             };
             format!("{kind} · {}", ctx.text(label))
+        }
+        BattleEvent::OpeningAction { actor, ability, .. } => {
+            let kind = unit_kind(resolution, *actor).map_or_else(
+                || ctx.text("battle_play_group"),
+                |kind| group_label(ctx, Some(kind)),
+            );
+            format!("{kind} · {}", ctx.text(capability_label(*ability)))
+        }
+        BattleEvent::AbilityUsed { actor, ability, .. } => {
+            let kind = unit_kind(resolution, *actor).map_or_else(
+                || ctx.text("battle_play_group"),
+                |kind| group_label(ctx, Some(kind)),
+            );
+            format!("{kind} · {}", ctx.text(capability_label(*ability)))
         }
         BattleEvent::Reaction { actor, .. } => {
             let kind = unit_kind(resolution, *actor).map_or_else(
@@ -200,6 +261,16 @@ pub(super) fn caption(
         BattleEvent::PositionChanged { .. } => ctx.text("battle_play_advance"),
         BattleEvent::Routed { .. } => ctx.text("battle_play_routed"),
         BattleEvent::BattleEnded { outcome, .. } => outcome_label(ctx, *outcome),
+    }
+}
+
+fn capability_label(capability: BattleCapability) -> &'static str {
+    match capability {
+        BattleCapability::OfficerRally => "battle_play_rally",
+        BattleCapability::InfantryHoldTheLine => "battle_play_hold_line",
+        BattleCapability::CavalryExploitOpening => "battle_play_exploit",
+        BattleCapability::MedicStabilization => "battle_play_stabilize",
+        BattleCapability::SiegeBombardment => "battle_play_bombardment",
     }
 }
 

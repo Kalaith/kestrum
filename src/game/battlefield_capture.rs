@@ -2,13 +2,15 @@
 
 use super::*;
 use kestrum::{
-    data::{economy::TroopKind, GameData},
+    data::{economy::TroopKind, world::PersonClass, GameData},
     engine,
     state::{
         battle::simulation::{
-            BattleArmyInput, BattleEvent, BattleSide, BattleUnitId, FormationBattleInput,
+            BattleArmyInput, BattleEvent, BattleLeaderSnapshot, BattleSide, BattleUnitId,
+            FormationBattleInput,
         },
         military::{ArmyId, FormationId},
+        people::PersonId,
     },
 };
 
@@ -18,6 +20,8 @@ impl Game {
         if matches!(
             scene,
             "battle_campaign_pending"
+                | "battle_campaign_leader"
+                | "battle_campaign_unavailable"
                 | "battle_campaign_editor_dense"
                 | "battle_campaign_aftermath"
         ) {
@@ -35,6 +39,7 @@ impl Game {
                 | "battle_scene_rout"
                 | "battle_scene_aftermath"
                 | "battle_scene_selected"
+                | "battle_scene_leader"
         ) {
             return false;
         }
@@ -44,8 +49,23 @@ impl Game {
             rules.rout_morale = 70;
             rules.morale_loss_per_casualty = 4;
         }
-        let resolution = engine::resolve_battle(&showcase_input(&self.data), &rules)
-            .expect("battlefield capture fixture resolves");
+        let mut input = showcase_input(&self.data);
+        if scene == "battle_scene_leader" {
+            let rider = input.armies[0].slots[4].as_mut().expect("showcase rider");
+            rider.leader = Some(BattleLeaderSnapshot {
+                id: PersonId(5),
+                name: "Mara of the Western Crossing".into(),
+                class: PersonClass::Cavalry,
+                active: true,
+            });
+            rider.capabilities = kestrum::data::battle_tactics::leader_capabilities(
+                TroopKind::Riders,
+                Some(PersonClass::Cavalry),
+            );
+            input.armies[1].slots[0] = None;
+        }
+        let resolution =
+            engine::resolve_battle(&input, &rules).expect("battlefield capture fixture resolves");
         self.state.screen = kestrum::state::Screen::Campaign;
         self.state.overlay = Overlay::Battlefield;
         self.battlefield_view = ui::BattlefieldView {
@@ -126,6 +146,18 @@ impl Game {
             "battle_scene_selected" => {
                 self.battlefield_view.selected = Some(BattleUnitId::Formation(FormationId(5)));
             }
+            "battle_scene_leader" => {
+                self.battlefield_view.event_cursor = event_at(&resolution, |event| {
+                    matches!(
+                        event,
+                        BattleEvent::OpeningAction {
+                            actor: BattleUnitId::Formation(FormationId(5)),
+                            ..
+                        }
+                    )
+                });
+                self.battlefield_view.event_elapsed = 0.21;
+            }
             _ => {}
         }
         self.battlefield = Some(resolution);
@@ -146,6 +178,27 @@ impl Game {
             campaign.armies.get_mut(&ArmyId(3)).unwrap().name =
                 "Hawthorn Host of the Fallen Pass and Eastern Meadowland".into();
         }
+        if scene == "battle_campaign_unavailable" {
+            let commander = campaign.armies[&ArmyId(1)]
+                .commander
+                .expect("founding commander is present");
+            engine::apply(
+                &mut campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SetBattleLeader {
+                    formation: FormationId(1),
+                    leader: Some(commander),
+                },
+            )
+            .expect("capture selects the fit founding leader");
+            campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = None;
+            campaign.people.get_mut(&commander).unwrap().status =
+                kestrum::state::people::PersonStatus::Wounded {
+                    since_round: 0,
+                    remaining_steps: 2,
+                };
+        }
         campaign.tutorial.dismiss();
         self.state
             .load_campaign(Campaign::Strategic(Box::new(campaign)), &self.data)
@@ -165,6 +218,56 @@ impl Game {
             .expect("live battle capture reaches the opposing army");
         assert!(contact.battle_pending);
         self.battle_return = None;
+        if scene == "battle_campaign_unavailable" {
+            let mut tactics = self
+                .data
+                .battle_tactics
+                .defaults_for(TroopKind::Warriors)
+                .expect("warrior defaults")
+                .clone();
+            tactics.activation.insert(
+                0,
+                kestrum::data::battle_tactics::TacticRule {
+                    id: "capture_unavailable_rally".into(),
+                    trigger: kestrum::data::battle_tactics::TacticTrigger::Activation,
+                    action: kestrum::data::battle_tactics::TacticAction::Rally,
+                    condition: kestrum::data::battle_tactics::TacticCondition::Always,
+                    target_filter: kestrum::data::battle_tactics::TargetFilter::None,
+                    target_priority: kestrum::data::battle_tactics::TargetPriority::OwnColumnFirst,
+                },
+            );
+            let Campaign::Strategic(campaign) = self.state.campaign.as_mut().unwrap() else {
+                unreachable!("campaign capture is strategic")
+            };
+            engine::apply(
+                campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SetFormationTactics {
+                    formation: FormationId(1),
+                    tactics,
+                },
+            )
+            .expect("capture records the now-unavailable tactic");
+        }
+        if scene == "battle_campaign_leader" {
+            let Campaign::Strategic(campaign) = self.state.campaign.as_mut().unwrap() else {
+                unreachable!("campaign capture is strategic")
+            };
+            let leader = campaign.armies[&ArmyId(1)]
+                .commander
+                .expect("starting commander is eligible for the lead formation");
+            engine::apply(
+                campaign,
+                &self.data,
+                engine::Actor::Player,
+                engine::Command::SetBattleLeader {
+                    formation: FormationId(1),
+                    leader: Some(leader),
+                },
+            )
+            .expect("leader capture edits the pending battle");
+        }
         if scene == "battle_campaign_editor_dense" {
             let mut tactics = self
                 .data
@@ -312,6 +415,8 @@ fn unit(
         attack: attack.unwrap_or(stats.attack),
         resistance: resistance.unwrap_or(stats.resistance),
         initiative,
+        leader: None,
+        capabilities: kestrum::data::battle_tactics::leader_capabilities(kind, None),
         activation_tactics: tactics.activation.clone(),
         reaction_tactics: tactics.reaction.clone(),
     }

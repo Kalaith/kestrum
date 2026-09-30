@@ -209,6 +209,11 @@ impl GameState {
         data: &GameData,
         command: Command,
     ) -> Result<ActionOutcome, RuleError> {
+        let pending_battle = self
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .is_some_and(|campaign| campaign.pending_battle.is_some());
         let military_order = self.overlay == Overlay::Armies
             && matches!(
                 &command,
@@ -273,6 +278,10 @@ impl GameState {
                     &command,
                     Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
                 ));
+        let military_order = military_order
+            || (self.overlay == Overlay::Battlefield
+                && pending_battle
+                && matches!(&command, Command::SetBattleLeader { .. }));
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }

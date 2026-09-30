@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "rules_revision": "kestrum-battle-1",
+  "rules_revision": "kestrum-battle-2",
   "max_rounds": 8,
   "max_armies_per_side": 4,
   "max_activations_per_round": 48,
@@ -17,6 +17,11 @@
   "brace_damage_permille": 500,
   "brace_retaliation_permille": 350,
   "guard_damage_permille": 750,
+  "rally_morale_restore": 30,
+  "medic_morale_restore": 20,
+  "cavalry_opening_damage_permille": 1500,
+  "opening_bombardment_damage_permille": 1250,
+  "siege_engine_close_damage_permille": 1500,
   "defaults": {
     "warriors": {
       "activation": [
@@ -49,6 +54,7 @@
     },
     "medics": {
       "activation": [
+        {"id": "medic-stabilize", "trigger": "activation", "action": "stabilize", "condition": "ally_below_half_morale", "target_filter": "ally_lowest_morale", "target_priority": "lowest_morale"},
         {"id": "medic-defend-self", "trigger": "activation", "action": "attack", "condition": "always", "target_filter": "any_enemy", "target_priority": "own_column_first"}
       ],
       "reaction": []

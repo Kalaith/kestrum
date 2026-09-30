@@ -50,6 +50,8 @@ impl Army {
 #[serde(deny_unknown_fields)]
 pub struct Formation {
     #[serde(default)]
+    pub battle_leader: Option<PersonId>,
+    #[serde(default)]
     pub tactics: Option<crate::data::battle_tactics::TroopTactics>,
     pub service: super::evidence::FormationService,
     pub id: FormationId,

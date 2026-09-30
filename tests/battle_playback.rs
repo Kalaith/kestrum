@@ -52,6 +52,8 @@ fn unit(
         attack,
         resistance,
         initiative: 20,
+        leader: None,
+        capabilities: kestrum::data::battle_tactics::leader_capabilities(kind, None),
         activation_tactics: vec![rule("action", action)],
         reaction_tactics: Vec::new(),
     }

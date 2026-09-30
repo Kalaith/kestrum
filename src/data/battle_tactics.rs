@@ -1,6 +1,6 @@
 //! Authored rules for deterministic formation battles and their legal tactic blocks.
 
-use super::{economy::unique_table, economy::TroopKind};
+use super::{economy::unique_table, economy::TroopKind, world::PersonClass};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -26,6 +26,19 @@ pub enum TacticAction {
     Brace,
     Wait,
     Advance,
+    Rally,
+    HoldTheLine,
+    Stabilize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BattleCapability {
+    OfficerRally,
+    InfantryHoldTheLine,
+    CavalryExploitOpening,
+    MedicStabilization,
+    SiegeBombardment,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,6 +51,8 @@ pub enum TacticCondition {
     SelfBelowHalf,
     AllyInSameRowBelowHalf,
     IncomingCavalryCharge,
+    AllyBelowHalfMorale,
+    SelfBelowHalfMorale,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -49,6 +64,7 @@ pub enum TargetFilter {
     EnemyRear,
     EnemyCavalry,
     ExposedEnemyRear,
+    AllyLowestMorale,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -58,6 +74,7 @@ pub enum TargetPriority {
     LowestStrength,
     HighestStrength,
     LowestResistance,
+    LowestMorale,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -99,6 +116,11 @@ pub struct BattleTacticsRules {
     pub brace_damage_permille: u32,
     pub brace_retaliation_permille: u32,
     pub guard_damage_permille: u32,
+    pub rally_morale_restore: u32,
+    pub medic_morale_restore: u32,
+    pub cavalry_opening_damage_permille: u32,
+    pub opening_bombardment_damage_permille: u32,
+    pub siege_engine_close_damage_permille: u32,
     #[serde(deserialize_with = "unique_table")]
     pub defaults: BTreeMap<TroopKind, TroopTactics>,
 }
@@ -121,12 +143,19 @@ impl BattleTacticsRules {
             || self.rout_morale >= self.initial_morale
             || self.morale_loss_per_casualty > 100
             || self.ally_rout_morale_loss > self.initial_morale
+            || self.rally_morale_restore == 0
+            || self.rally_morale_restore > 100
+            || self.medic_morale_restore == 0
+            || self.medic_morale_restore > 100
             || [
                 self.charge_damage_permille,
                 self.breakthrough_damage_permille,
                 self.brace_damage_permille,
                 self.brace_retaliation_permille,
                 self.guard_damage_permille,
+                self.cavalry_opening_damage_permille,
+                self.opening_bombardment_damage_permille,
+                self.siege_engine_close_damage_permille,
             ]
             .iter()
             .any(|factor| *factor > 3000)
@@ -136,6 +165,9 @@ impl BattleTacticsRules {
                 self.brace_damage_permille,
                 self.brace_retaliation_permille,
                 self.guard_damage_permille,
+                self.cavalry_opening_damage_permille,
+                self.opening_bombardment_damage_permille,
+                self.siege_engine_close_damage_permille,
             ]
             .contains(&0)
         {
@@ -198,8 +230,14 @@ fn validate_rows(
             _ => false,
         };
         let target_matches = match tactic.action {
-            Attack | Volley | Charge | Breakthrough => tactic.target_filter != TargetFilter::None,
-            Brace | Guard | Wait | Advance => tactic.target_filter == TargetFilter::None,
+            Attack | Volley | Charge | Breakthrough => {
+                tactic.target_filter != TargetFilter::None
+                    && tactic.target_filter != TargetFilter::AllyLowestMorale
+            }
+            Stabilize => tactic.target_filter == TargetFilter::AllyLowestMorale,
+            Brace | Guard | Wait | Advance | Rally | HoldTheLine => {
+                tactic.target_filter == TargetFilter::None
+            }
         };
         if tactic.id.trim().is_empty()
             || tactic.id.len() > 64
@@ -215,6 +253,9 @@ fn validate_rows(
                     TacticCondition::Always | TacticCondition::IncomingCavalryCharge
                 ))
             || (tactic.action == Breakthrough && tactic.target_filter == TargetFilter::EnemyFront)
+            || (tactic.action == Stabilize && kind != TroopKind::Medics)
+            || (tactic.action == HoldTheLine
+                && !matches!(kind, TroopKind::Warriors | TroopKind::Spearmen))
         {
             return Err(format!(
                 "{SOURCE}: invalid tactic {:?} for {kind:?}",
@@ -223,4 +264,24 @@ fn validate_rows(
         }
     }
     Ok(())
+}
+
+/// Leader classes grant one bounded ability to a compatible troop role.
+pub fn leader_capabilities(kind: TroopKind, class: Option<PersonClass>) -> Vec<BattleCapability> {
+    use BattleCapability::*;
+    let mut capabilities = Vec::new();
+    match (kind, class) {
+        (_, Some(PersonClass::Officer)) => capabilities.push(OfficerRally),
+        (TroopKind::Warriors | TroopKind::Spearmen, Some(PersonClass::Infantry)) => {
+            capabilities.push(InfantryHoldTheLine)
+        }
+        (TroopKind::Riders, Some(PersonClass::Cavalry)) => capabilities.push(CavalryExploitOpening),
+        _ => {}
+    }
+    match kind {
+        TroopKind::Medics => capabilities.push(MedicStabilization),
+        TroopKind::SiegeEngines => capabilities.push(SiegeBombardment),
+        _ => {}
+    }
+    capabilities
 }

@@ -107,6 +107,7 @@ pub(super) fn recruit(
     campaign.formations.insert(
         formation,
         Formation {
+            battle_leader: None,
             tactics: None,
             service: Default::default(),
             id: formation,

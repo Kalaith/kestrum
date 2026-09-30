@@ -2,6 +2,7 @@
 
 use super::StrategicCampaign;
 use serde::de::Error as _;
+mod battle;
 mod construction;
 mod course_payments;
 mod development;
@@ -16,6 +17,7 @@ impl StrategicCampaign {
         mut value: serde_json::Value,
     ) -> Result<Self, serde_json::Error> {
         let earlier_exploration = value.pointer("/knowledge/explored").is_none();
+        let earlier_battle_leaders = battle::missing_leader_fields(&value);
         initialize_earlier_military(&mut value);
         initialize_earlier_battles(&mut value);
         let earlier_evidence = evidence::initialize(&mut value)?;
@@ -54,6 +56,7 @@ impl StrategicCampaign {
                 true
             });
         let mut campaign: Self = serde_json::from_value(value)?;
+        battle::initialize_earlier_leaders(&mut campaign, &earlier_battle_leaders);
         if legacy_migration.era_dates_missing {
             legacy::restore_era_dates(&mut campaign);
         }

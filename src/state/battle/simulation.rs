@@ -1,9 +1,14 @@
 //! Serializable opening snapshots, runtime deltas and outcomes for battle playback.
 
 use crate::{
-    data::{battle_tactics::TacticAction, economy::TroopKind, world::FactionId},
+    data::{
+        battle_tactics::{BattleCapability, TacticAction},
+        economy::TroopKind,
+        world::{FactionId, PersonClass},
+    },
     state::{
         military::{ArmyId, FormationId},
+        people::PersonId,
         threat::ThreatId,
     },
 };
@@ -66,8 +71,24 @@ pub struct BattleUnitInput {
     pub attack: u32,
     pub resistance: u32,
     pub initiative: u32,
+    #[serde(default)]
+    pub leader: Option<BattleLeaderSnapshot>,
+    #[serde(default)]
+    pub capabilities: Vec<BattleCapability>,
+    #[serde(default)]
     pub activation_tactics: Vec<crate::data::battle_tactics::TacticRule>,
+    #[serde(default)]
     pub reaction_tactics: Vec<crate::data::battle_tactics::TacticRule>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BattleLeaderSnapshot {
+    pub id: PersonId,
+    pub name: String,
+    pub class: PersonClass,
+    #[serde(default)]
+    pub active: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -124,6 +145,16 @@ pub enum BattleEvent {
         rule_id: String,
         damage_reduction_permille: u32,
         retaliation: u32,
+    },
+    OpeningAction {
+        actor: BattleUnitId,
+        ability: BattleCapability,
+        target: BattleUnitId,
+    },
+    AbilityUsed {
+        actor: BattleUnitId,
+        ability: BattleCapability,
+        target: Option<BattleUnitId>,
     },
     Damage {
         source: BattleUnitId,

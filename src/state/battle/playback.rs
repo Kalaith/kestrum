@@ -124,6 +124,8 @@ fn apply_event(frame: &mut BattlePresentationFrame, event: &BattleEvent) {
         }
         BattleEvent::Activation { .. }
         | BattleEvent::Reaction { .. }
+        | BattleEvent::OpeningAction { .. }
+        | BattleEvent::AbilityUsed { .. }
         | BattleEvent::BattleEnded { .. } => {}
     }
 }

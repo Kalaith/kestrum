@@ -30,6 +30,10 @@ impl Game {
                 self.edit_battle_tactics(formation, edit);
                 return;
             }
+            ui::BattlefieldAction::SetBattleLeader { formation, leader } => {
+                self.apply_campaign_command(Command::SetBattleLeader { formation, leader });
+                return;
+            }
             ui::BattlefieldAction::SetTacticTrigger(trigger) => {
                 self.battlefield_view.tactic_trigger = trigger;
                 return;
@@ -200,11 +204,14 @@ impl Game {
                 if let Some(rule) = rows.get_mut(index) {
                     let actions = legal_actions(kind, trigger);
                     rule.action = next_value(&actions, rule.action);
-                    rule.target_filter = if is_attack(rule.action) {
-                        TargetFilter::AnyEnemy
-                    } else {
-                        TargetFilter::None
+                    rule.target_filter = match rule.action {
+                        TacticAction::Stabilize => TargetFilter::AllyLowestMorale,
+                        action if is_attack(action) => TargetFilter::AnyEnemy,
+                        _ => TargetFilter::None,
                     };
+                    if rule.action == TacticAction::Stabilize {
+                        rule.target_priority = TargetPriority::LowestMorale;
+                    }
                 }
             }
             ui::TacticEdit::CycleCondition(_, index) => {
@@ -213,20 +220,27 @@ impl Game {
                 }
             }
             ui::TacticEdit::CycleTarget(_, index) => {
-                if let Some(rule) = rows.get_mut(index).filter(|rule| is_attack(rule.action)) {
-                    let filters: Vec<_> = [
-                        TargetFilter::AnyEnemy,
-                        TargetFilter::EnemyFront,
-                        TargetFilter::EnemyRear,
-                        TargetFilter::EnemyCavalry,
-                        TargetFilter::ExposedEnemyRear,
-                    ]
-                    .into_iter()
-                    .filter(|filter| {
-                        rule.action != TacticAction::Breakthrough
-                            || *filter != TargetFilter::EnemyFront
-                    })
-                    .collect();
+                if let Some(rule) = rows
+                    .get_mut(index)
+                    .filter(|rule| is_attack(rule.action) || rule.action == TacticAction::Stabilize)
+                {
+                    let filters: Vec<_> = if rule.action == TacticAction::Stabilize {
+                        vec![TargetFilter::AllyLowestMorale]
+                    } else {
+                        [
+                            TargetFilter::AnyEnemy,
+                            TargetFilter::EnemyFront,
+                            TargetFilter::EnemyRear,
+                            TargetFilter::EnemyCavalry,
+                            TargetFilter::ExposedEnemyRear,
+                        ]
+                        .into_iter()
+                        .filter(|filter| {
+                            rule.action != TacticAction::Breakthrough
+                                || *filter != TargetFilter::EnemyFront
+                        })
+                        .collect()
+                    };
                     rule.target_filter = next_value(&filters, rule.target_filter);
                 }
             }
@@ -254,6 +268,13 @@ fn legal_actions(kind: TroopKind, trigger: TacticTrigger) -> Vec<TacticAction> {
     if kind == TroopKind::Riders {
         actions.extend([TacticAction::Charge, TacticAction::Breakthrough]);
     }
+    actions.push(TacticAction::Rally);
+    if matches!(kind, TroopKind::Warriors | TroopKind::Spearmen) {
+        actions.push(TacticAction::HoldTheLine);
+    }
+    if kind == TroopKind::Medics {
+        actions.push(TacticAction::Stabilize);
+    }
     actions.extend([
         TacticAction::Guard,
         TacticAction::Advance,
@@ -276,6 +297,8 @@ fn legal_conditions(trigger: TacticTrigger) -> Vec<TacticCondition> {
             TacticCondition::FirstActivation,
             TacticCondition::SelfBelowHalf,
             TacticCondition::AllyInSameRowBelowHalf,
+            TacticCondition::SelfBelowHalfMorale,
+            TacticCondition::AllyBelowHalfMorale,
         ]
     }
 }

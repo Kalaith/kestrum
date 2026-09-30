@@ -212,3 +212,66 @@ battlefield as the dominant area. The open browser contains a local campaign;
 starting a new one warned that unsaved orders would be left behind, so that
 action was cancelled to preserve the existing save. Live browser battle input
 remains unverified.
+
+## B05 — Leaders and support roles
+
+**Status:** complete on 2026-09-30. Formations can save a selected battle leader
+without moving other attached people or replacing the army commander. Eligibility
+requires the selected person to be fit, attached to the formation, unretired,
+old enough for field service and compatible with the troop role. Older campaign
+saves that omit the new field inherit an eligible attached army commander for
+that formation; an explicit `null` remains unassigned. Pending edits rebuild the
+receipt deterministically, and the immutable opening snapshot records leader
+identity, class, active status and granted capabilities.
+
+An Officer can use Rally once per battle to restore morale; the deterministic
+regression case triggers it below half morale. An Infantry leader can Hold the
+Line once by moving into the paired open front slot and guarding through that
+round. A Cavalry leader can charge an exposed enemy rear before ordinary
+activations. Medics stabilize the most shaken living ally's morale without
+restoring headcount. Siege Engines bombard once at the opening and take increased
+close-combat damage; the existing siege-wall interaction still contributes to
+the battle's recorded resistance.
+
+If a selected leader becomes wounded, retires or transfers to another formation,
+the stored selection remains visible as unavailable. Rally and Hold the Line
+rows identify the missing leader prerequisite, resolve as unavailable and fall
+through to the visible basic attack-or-wait behavior. Older receipts without a
+leader snapshot remain readable.
+
+### Behavioral evidence
+
+| Check | Result |
+| --- | --- |
+| `cargo.ps1 test -p kestrum --all-features --test battle_formation --test battle_playback --test combat --test movement --test recovery --test ai --test siege --test threats --test k18_siege_continuity --test code_standards` | Passed: 64 cases covering Rally bounds, infantry movement/guard, exposed-rear cavalry opening, Medic morale support, siege bombardment and weakness, leader selection, old-save migration, invalid prerequisites, immutable playback, campaign consequences and source size. |
+| `cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings` | Passed. |
+| `cargo fmt --all -- --check` | Passed. |
+| Source-size gate (`cargo.ps1 test -p kestrum --all-features --test code_standards`) | Passed; every Rust file remains within the 800-total-line limit. |
+| `publish.ps1` with no parameters | Passed Windows and WebGL release builds and packaging, Preview deployment, tracker recording and catalogue synchronization. |
+
+The full all-features campaign suite remains scheduled for B07. The B05 run
+stopped at the four/eight-faction continuity scenario at round 284: NPC faction
+4 could not end its phase while a pending battle remained. B07 also owns the
+Rosemarch medic progression casualty route and the 120-round production victory
+fixture.
+
+### Visual evidence
+
+The campaign capture harness stages selected, unavailable, dense and aftermath
+states. A separate deterministic battlefield capture shows the Cavalry leader's
+opening charge into an exposed rear. Each capture below was inspected at both
+supported sizes, and each capture process exited after completion.
+
+| State | 1920×1080 | 1280×720 |
+| --- | --- | --- |
+| Cavalry Exploit Opening in the shared battlefield | [image](ui_battle_scene_leader.png) | [image](ui_battle_scene_leader_minimum.png) |
+| Selected active battle leader | [image](ui_battle_campaign_leader.png) | [image](ui_battle_campaign_leader_minimum.png) |
+| Wounded leader and unavailable Rally row | [image](ui_battle_campaign_unavailable.png) | [image](ui_battle_campaign_unavailable_minimum.png) |
+| Pending preparation | [image](ui_battle_campaign_pending.png) | [image](ui_battle_campaign_pending_minimum.png) |
+| Five-row tactics editor with long army names | [image](ui_battle_campaign_editor_dense.png) | [image](ui_battle_campaign_editor_dense_minimum.png) |
+| Committed campaign aftermath | [image](ui_battle_campaign_aftermath.png) | [image](ui_battle_campaign_aftermath_minimum.png) |
+
+The unavailable state now distinguishes a missing leader from no selection and
+places the row reason inside the inspector. The default fallback label fits at
+both sizes. The existing browser tab retains a local campaign and was left
+unchanged; live browser interaction remains unverified.

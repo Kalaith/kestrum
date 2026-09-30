@@ -98,6 +98,15 @@ impl StrategicCampaign {
                     .validate_configuration(formation.kind, tactics)
                     .map_err(|error| format!("formations.tactics: {error}"))?;
             }
+            if let Some(leader) = formation.battle_leader {
+                require(
+                    self.people
+                        .get(&leader)
+                        .is_some_and(|person| person.faction == formation.faction),
+                    "formations.battle_leader",
+                    "unknown or foreign person",
+                )?;
+            }
         }
         self.validate_people(data)?;
         self.validate_economy_statements(data)?;

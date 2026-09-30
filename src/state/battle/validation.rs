@@ -527,6 +527,10 @@ fn validate_simulation(
                         && unit.headcount == formation.start,
                     "formation opening disagrees with witnessed roster",
                 )?;
+                ensure(
+                    unit.leader.as_ref().map(|leader| leader.id) == formation.battle_leader,
+                    "formation leader snapshot disagrees with witnessed roster",
+                )?;
             }
         }
     }

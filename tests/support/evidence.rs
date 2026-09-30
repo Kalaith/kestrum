@@ -75,6 +75,7 @@ pub(super) fn encounter(
         campaign.formations.insert(
             formation,
             Formation {
+                battle_leader: None,
                 tactics: None,
                 id: formation,
                 faction: FactionId(3),

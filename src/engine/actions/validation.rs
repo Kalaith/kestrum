@@ -19,7 +19,8 @@ pub(in crate::engine) fn validate_command(
     let is_preparation = matches!(
         command,
         Command::SetFormationTactics { .. } | Command::SwapFormationSlots { .. }
-    );
+    ) || (campaign.pending_battle.is_some()
+        && matches!(command, Command::SetBattleLeader { .. }));
     if campaign.pending_battle.is_some()
         && *command != Command::StartPendingBattle
         && !is_preparation
@@ -82,6 +83,7 @@ pub(in crate::engine) fn validate_command(
         | Command::ReassignBuilder { .. }
         | Command::SetFocus { .. }
         | Command::SetCommander { .. }
+        | Command::SetBattleLeader { .. }
         | Command::TrainPerson { .. }
         | Command::PracticeRiding { .. }
         | Command::RecoverPersonAtSite { .. }

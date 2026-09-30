@@ -204,6 +204,248 @@ fn player_and_npc_preparation_commands_can_edit_only_their_own_battle_side() {
 }
 
 #[test]
+fn battle_leaders_are_compatible_campaign_people_and_refresh_pending_snapshots() {
+    let (data, mut campaign) = fixture(80, 80);
+    person(&mut campaign, 1, 1, 1);
+    person(&mut campaign, 2, 1, 1);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(2));
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::SetBattleLeader {
+            formation: FormationId(1),
+            leader: Some(PersonId(1)),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        campaign.formations[&FormationId(1)].battle_leader,
+        Some(PersonId(1))
+    );
+    assert_eq!(campaign.armies[&ArmyId(1)].commander, Some(PersonId(2)));
+    assert_eq!(
+        campaign.people[&PersonId(2)].assignment,
+        PersonAssignment::Formation {
+            formation: FormationId(1)
+        }
+    );
+    let saved = serde_json::to_string(&Campaign::Strategic(Box::new(campaign.clone()))).unwrap();
+    let loaded: Campaign = serde_json::from_str(&saved).unwrap();
+    assert_eq!(loaded.strategic().unwrap(), &campaign);
+
+    apply(&mut campaign, &data, Actor::Player, order(&[1], &[8, 10])).unwrap();
+    let before_sequence = campaign.pending_battle.as_ref().unwrap().report.sequence;
+    let opening_leader = campaign
+        .pending_battle
+        .as_ref()
+        .unwrap()
+        .report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .opening
+        .armies
+        .iter()
+        .find(|army| army.id == ArmyId(1))
+        .unwrap()
+        .slots[0]
+        .as_ref()
+        .unwrap()
+        .leader
+        .clone();
+    assert!(opening_leader
+        .as_ref()
+        .is_some_and(|leader| leader.id == PersonId(1) && leader.active));
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::SetBattleLeader {
+            formation: FormationId(1),
+            leader: None,
+        },
+    )
+    .unwrap();
+    assert!(campaign.pending_battle.as_ref().unwrap().report.sequence > before_sequence);
+    assert!(campaign
+        .pending_battle
+        .as_ref()
+        .unwrap()
+        .report
+        .simulation
+        .as_ref()
+        .unwrap()
+        .opening
+        .armies
+        .iter()
+        .find(|army| army.id == ArmyId(1))
+        .unwrap()
+        .slots[0]
+        .as_ref()
+        .unwrap()
+        .leader
+        .is_none());
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::SetBattleLeader {
+            formation: FormationId(1),
+            leader: Some(PersonId(1)),
+        },
+    )
+    .unwrap();
+    campaign.validate(&data).unwrap();
+}
+
+#[test]
+fn saves_predating_leader_selection_initialize_only_an_eligible_army_commander() {
+    let (data, mut campaign) = fixture(80, 80);
+    person(&mut campaign, 1, 1, 1);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
+    let mut saved = serde_json::to_value(Campaign::Strategic(Box::new(campaign))).unwrap();
+    for formation in saved["formations"].as_object_mut().unwrap().values_mut() {
+        formation.as_object_mut().unwrap().remove("battle_leader");
+    }
+
+    let loaded: Campaign = serde_json::from_value(saved).unwrap();
+    let migrated = loaded.strategic().unwrap();
+    assert_eq!(
+        migrated.formations[&FormationId(1)].battle_leader,
+        Some(PersonId(1))
+    );
+    assert_eq!(migrated.formations[&FormationId(7)].battle_leader, None);
+    assert_eq!(migrated.armies[&ArmyId(1)].commander, Some(PersonId(1)));
+    migrated.validate(&data).unwrap();
+}
+
+#[test]
+fn selected_unfit_or_retired_leaders_are_witnessed_but_grant_no_capability() {
+    for state in ["wounded", "retired", "transferred"] {
+        let (data, mut campaign) = fixture(80, 80);
+        if state == "transferred" {
+            let mut second = campaign.formations[&FormationId(1)].clone();
+            second.id = FormationId(2);
+            second.battle_leader = None;
+            second.tactics = None;
+            campaign.formations.insert(FormationId(2), second);
+            campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(FormationId(2));
+        }
+        person(&mut campaign, 1, 1, 1);
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::SetBattleLeader {
+                formation: FormationId(1),
+                leader: Some(PersonId(1)),
+            },
+        )
+        .unwrap();
+        match state {
+            "wounded" => {
+                campaign.people.get_mut(&PersonId(1)).unwrap().status =
+                    kestrum::state::people::PersonStatus::Wounded {
+                        since_round: 0,
+                        remaining_steps: 2,
+                    };
+            }
+            "retired" => {
+                let person = campaign.people.get_mut(&PersonId(1)).unwrap();
+                person.career.retired = true;
+                person.assignment = PersonAssignment::Site { site: SiteId(8) };
+            }
+            "transferred" => {
+                apply(
+                    &mut campaign,
+                    &data,
+                    Actor::Player,
+                    Command::TransferPerson {
+                        person: PersonId(1),
+                        to_formation: FormationId(2),
+                    },
+                )
+                .unwrap();
+            }
+            _ => unreachable!(),
+        }
+        campaign.validate(&data).unwrap();
+        apply(&mut campaign, &data, Actor::Player, order(&[1], &[8, 10])).unwrap();
+        let pending = campaign.pending_battle.as_ref().unwrap();
+        let leader = pending
+            .report
+            .simulation
+            .as_ref()
+            .unwrap()
+            .opening
+            .armies
+            .iter()
+            .find(|army| army.id == ArmyId(1))
+            .unwrap()
+            .slots[0]
+            .as_ref()
+            .unwrap();
+        assert!(leader
+            .leader
+            .as_ref()
+            .is_some_and(|snapshot| snapshot.id == PersonId(1) && !snapshot.active));
+        assert!(leader.capabilities.is_empty());
+        campaign.validate(&data).unwrap();
+    }
+}
+
+#[test]
+fn unfit_retired_transferred_and_incompatible_people_cannot_lead_a_formation() {
+    for invalid in ["wounded", "retired", "transferred", "incompatible"] {
+        let (data, mut campaign) = fixture(80, 80);
+        person(&mut campaign, 1, 1, 1);
+        match invalid {
+            "wounded" => {
+                campaign.people.get_mut(&PersonId(1)).unwrap().status =
+                    kestrum::state::people::PersonStatus::Wounded {
+                        since_round: 0,
+                        remaining_steps: 2,
+                    };
+            }
+            "retired" => {
+                let person = campaign.people.get_mut(&PersonId(1)).unwrap();
+                person.career.retired = true;
+                person.assignment = PersonAssignment::Site { site: SiteId(8) };
+            }
+            "transferred" => {
+                let person = campaign.people.get_mut(&PersonId(1)).unwrap();
+                person.faction = FactionId(3);
+                person.assignment = PersonAssignment::Formation {
+                    formation: FormationId(7),
+                };
+            }
+            "incompatible" => {
+                campaign.people.get_mut(&PersonId(1)).unwrap().class =
+                    kestrum::data::world::FounderClass::Medic;
+            }
+            _ => unreachable!(),
+        }
+        campaign.validate(&data).unwrap();
+        let before = campaign.clone();
+        assert!(
+            apply(
+                &mut campaign,
+                &data,
+                Actor::Player,
+                Command::SetBattleLeader {
+                    formation: FormationId(1),
+                    leader: Some(PersonId(1)),
+                },
+            )
+            .is_err(),
+            "{invalid} leader was accepted"
+        );
+        assert_eq!(campaign, before, "{invalid} assignment was not atomic");
+    }
+}
+
+#[test]
 fn invalid_custom_rows_are_atomic_and_saves_without_tactics_still_load() {
     let (data, mut campaign) = fixture(80, 80);
     apply(&mut campaign, &data, Actor::Player, order(&[1], &[8, 10])).unwrap();
@@ -238,6 +480,7 @@ fn invalid_custom_rows_are_atomic_and_saves_without_tactics_still_load() {
     let mut legacy = serde_json::to_value(Campaign::Strategic(Box::new(campaign))).unwrap();
     for formation in legacy["formations"].as_object_mut().unwrap().values_mut() {
         formation.as_object_mut().unwrap().remove("tactics");
+        formation.as_object_mut().unwrap().remove("battle_leader");
     }
     let migrated: Campaign = serde_json::from_value(legacy).unwrap();
     assert!(migrated
@@ -246,5 +489,11 @@ fn invalid_custom_rows_are_atomic_and_saves_without_tactics_still_load() {
         .formations
         .values()
         .all(|formation| formation.tactics.is_none()));
+    assert!(migrated
+        .strategic()
+        .unwrap()
+        .formations
+        .values()
+        .all(|formation| formation.battle_leader.is_none()));
     migrated.validate(&data).unwrap();
 }

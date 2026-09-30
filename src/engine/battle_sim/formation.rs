@@ -1,12 +1,13 @@
 //! Ordered activations, legal reach, bounded reactions and deterministic outcomes.
 
+mod abilities;
 mod validation;
 
 use crate::{
     data::{
         battle_tactics::{
-            BattleTacticsRules, TacticAction, TacticCondition, TacticTrigger, TargetFilter,
-            TargetPriority,
+            BattleCapability, BattleTacticsRules, TacticAction, TacticCondition, TacticTrigger,
+            TargetFilter, TargetPriority,
         },
         economy::TroopKind,
     },
@@ -18,7 +19,7 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 use validation::canonical_input;
 
-const RESOLVER_VERSION: u32 = 1;
+const RESOLVER_VERSION: u32 = 2;
 const SLOTS_PER_ARMY: usize = 6;
 
 #[derive(Debug, Clone)]
@@ -38,6 +39,7 @@ struct RuntimeUnit {
     guard_expires_round: Option<u32>,
     reaction_used: bool,
     activation_count: u32,
+    used_abilities: BTreeSet<BattleCapability>,
 }
 
 struct Runtime {
@@ -60,8 +62,14 @@ pub fn resolve_battle(
 
     for round in 1..=rules.max_rounds {
         runtime.begin_round(round);
+        if round == 1 {
+            ending = runtime.resolve_opening_actions();
+        }
         let mut activated = BTreeSet::new();
         for id in runtime.initiative_order(round) {
+            if ending.is_some() {
+                break;
+            }
             if !runtime.can_activate(id) || !activated.insert(id) {
                 continue;
             }
@@ -128,6 +136,7 @@ impl Runtime {
                             guard_expires_round: None,
                             reaction_used: false,
                             activation_count: 0,
+                            used_abilities: BTreeSet::new(),
                         },
                     );
                 }
@@ -195,147 +204,6 @@ impl Runtime {
             .is_some_and(|unit| unit.position.is_some() && unit.headcount > 0 && !unit.routed)
     }
 
-    fn activate(&mut self, id: BattleUnitId) {
-        let Some(position) = self.units.get(&id).and_then(|unit| unit.position) else {
-            return;
-        };
-        let rules = self.units[&id].input.activation_tactics.clone();
-        let mut skipped = Vec::new();
-        let mut chosen = None;
-        for rule in rules {
-            if !self.condition_holds(id, rule.condition) {
-                skipped.push(SkippedTactic {
-                    rule_id: rule.id,
-                    reason: TacticSkipReason::ConditionFalse,
-                });
-                continue;
-            }
-            if !self.action_available(id, rule.action) {
-                skipped.push(SkippedTactic {
-                    rule_id: rule.id,
-                    reason: TacticSkipReason::ActionUnavailable,
-                });
-                continue;
-            }
-            let target = if is_attack(rule.action) {
-                self.select_target(id, rule.action, rule.target_filter, rule.target_priority)
-            } else {
-                None
-            };
-            if is_attack(rule.action) && target.is_none() {
-                skipped.push(SkippedTactic {
-                    rule_id: rule.id,
-                    reason: TacticSkipReason::NoLegalTarget,
-                });
-                continue;
-            }
-            chosen = Some((rule.id, rule.action, target));
-            break;
-        }
-        let (rule_id, action, target) = chosen.unwrap_or_else(|| {
-            let target = self.select_target(
-                id,
-                TacticAction::Attack,
-                TargetFilter::AnyEnemy,
-                TargetPriority::OwnColumnFirst,
-            );
-            (
-                String::new(),
-                target.map_or(TacticAction::Wait, |_| TacticAction::Attack),
-                target,
-            )
-        });
-        let rule_id = (!rule_id.is_empty()).then_some(rule_id);
-        self.events.push(BattleEvent::Activation {
-            actor: id,
-            action,
-            rule_id,
-            target,
-            skipped,
-        });
-        self.units
-            .get_mut(&id)
-            .expect("validated actor")
-            .activation_count += 1;
-
-        match action {
-            TacticAction::Attack
-            | TacticAction::Volley
-            | TacticAction::Charge
-            | TacticAction::Breakthrough => {
-                if let Some(target) = target {
-                    self.resolve_attack(id, target, action);
-                }
-            }
-            TacticAction::Guard => {
-                self.raise_guard(id, self.round);
-            }
-            TacticAction::Advance => self.advance(id, position),
-            TacticAction::Brace | TacticAction::Wait => {}
-        }
-    }
-
-    fn action_available(&self, id: BattleUnitId, action: TacticAction) -> bool {
-        let unit = &self.units[&id];
-        match action {
-            TacticAction::Brace => false,
-            TacticAction::Volley => matches!(
-                unit.input.kind,
-                Some(TroopKind::Archers | TroopKind::SiegeEngines)
-            ),
-            TacticAction::Charge | TacticAction::Breakthrough => {
-                unit.input.kind == Some(TroopKind::Riders)
-            }
-            TacticAction::Advance => unit.position.is_some_and(|position| {
-                let slot = usize::from(position.slot);
-                slot >= 3 && self.armies[&position.army].slots[slot - 3].is_none()
-            }),
-            TacticAction::Attack | TacticAction::Guard | TacticAction::Wait => true,
-        }
-    }
-
-    fn condition_holds(&self, id: BattleUnitId, condition: TacticCondition) -> bool {
-        let unit = &self.units[&id];
-        match condition {
-            TacticCondition::Always => true,
-            TacticCondition::EnemyRearExposed => self.units.values().any(|enemy| {
-                enemy.position.is_some_and(|position| {
-                    self.armies[&position.army].side
-                        == self.armies[&unit.opening.army].side.opposing()
-                        && usize::from(position.slot) >= 3
-                        && self.is_exposed(position)
-                })
-            }),
-            TacticCondition::EnemyCavalryPresent => self.units.values().any(|enemy| {
-                enemy.input.kind == Some(TroopKind::Riders)
-                    && enemy.position.is_some_and(|position| {
-                        self.armies[&position.army].side
-                            == self.armies[&unit.opening.army].side.opposing()
-                    })
-            }),
-            TacticCondition::FirstActivation => unit.activation_count == 0,
-            TacticCondition::SelfBelowHalf => {
-                unit.headcount.saturating_mul(2) < unit.input.capacity
-            }
-            TacticCondition::AllyInSameRowBelowHalf => {
-                let Some(position) = unit.position else {
-                    return false;
-                };
-                let army = &self.armies[&position.army];
-                let rear = position.slot >= 3;
-                army.slots.iter().enumerate().any(|(slot, ally)| {
-                    ally.is_some_and(|ally| {
-                        ally != id
-                            && (slot >= 3) == rear
-                            && self.units[&ally].headcount.saturating_mul(2)
-                                < self.units[&ally].input.capacity
-                    })
-                })
-            }
-            TacticCondition::IncomingCavalryCharge => false,
-        }
-    }
-
     fn select_target(
         &self,
         actor: BattleUnitId,
@@ -353,10 +221,17 @@ impl Runtime {
             .filter_map(|(id, unit)| {
                 let position = unit.position?;
                 let army = &self.armies[&position.army];
+                let eligible_side = if action == TacticAction::Stabilize {
+                    position.army == origin.army
+                        && *id != actor
+                        && unit.morale < self.rules.initial_morale
+                } else {
+                    army.side == actor_army.side.opposing()
+                };
                 (unit.headcount > 0
                     && !unit.routed
-                    && army.side == actor_army.side.opposing()
-                    && self.matches_filter(*id, position, filter)
+                    && eligible_side
+                    && self.matches_filter(actor, *id, position, filter)
                     && self.in_reach(action, position))
                 .then_some((*id, position))
             })
@@ -375,6 +250,7 @@ impl Runtime {
                 TargetPriority::LowestResistance => {
                     left.input.resistance.cmp(&right.input.resistance)
                 }
+                TargetPriority::LowestMorale => left.morale.cmp(&right.morale),
             };
             preference
                 .then_with(|| left_position.army.cmp(&right_position.army))
@@ -386,6 +262,7 @@ impl Runtime {
 
     fn matches_filter(
         &self,
+        actor: BattleUnitId,
         id: BattleUnitId,
         position: BattlePosition,
         filter: TargetFilter,
@@ -397,6 +274,13 @@ impl Runtime {
             TargetFilter::EnemyRear => position.slot >= 3,
             TargetFilter::EnemyCavalry => self.units[&id].input.kind == Some(TroopKind::Riders),
             TargetFilter::ExposedEnemyRear => position.slot >= 3 && self.is_exposed(position),
+            TargetFilter::AllyLowestMorale => {
+                self.units[&actor]
+                    .position
+                    .is_some_and(|actor_position| actor_position.army == position.army)
+                    && actor != id
+                    && self.units[&id].morale < self.rules.initial_morale
+            }
         }
     }
 
@@ -406,6 +290,7 @@ impl Runtime {
             TacticAction::Volley => true,
             TacticAction::Charge => target.slot < 3,
             TacticAction::Breakthrough => target.slot >= 3 && self.is_exposed(target),
+            TacticAction::Stabilize => true,
             _ => false,
         }
     }
@@ -419,33 +304,6 @@ impl Runtime {
     fn is_exposed(&self, position: BattlePosition) -> bool {
         let slot = usize::from(position.slot);
         slot >= 3 && self.armies[&position.army].slots[slot - 3].is_none()
-    }
-
-    fn resolve_attack(&mut self, actor: BattleUnitId, target: BattleUnitId, action: TacticAction) {
-        if !self.can_damage(target) {
-            return;
-        }
-        let mut multiplier = match action {
-            TacticAction::Charge => self.rules.charge_damage_permille,
-            TacticAction::Breakthrough => self.rules.breakthrough_damage_permille,
-            _ => 1000,
-        };
-        if action == TacticAction::Charge {
-            if let Some(brace_factor) = self.resolve_reaction(target, actor) {
-                multiplier = multiplier.saturating_mul(brace_factor) / 1000;
-            }
-        }
-        if !self.can_damage(target) {
-            return;
-        }
-        if self.units[&target]
-            .guard_expires_round
-            .is_some_and(|expires| expires >= self.round)
-        {
-            multiplier = multiplier.saturating_mul(self.rules.guard_damage_permille) / 1000;
-        }
-        let damage = self.damage_amount(actor, target, multiplier);
-        self.apply_damage(actor, target, damage);
     }
 
     fn resolve_reaction(&mut self, defender: BattleUnitId, attacker: BattleUnitId) -> Option<u32> {
@@ -585,44 +443,6 @@ impl Runtime {
             .push(BattleEvent::PositionChanged { unit: id, from, to });
     }
 
-    fn resolve_routs(&mut self) {
-        let ids: Vec<_> = self.units.keys().copied().collect();
-        for id in ids {
-            let Some(position) = self.units[&id].position else {
-                continue;
-            };
-            if self.units[&id].headcount == 0 || self.units[&id].morale > self.rules.rout_morale {
-                continue;
-            }
-            let side = self.armies[&position.army].side;
-            let survivors = self.units[&id].headcount;
-            self.armies
-                .get_mut(&position.army)
-                .expect("routing army")
-                .slots[usize::from(position.slot)] = None;
-            let unit = self.units.get_mut(&id).expect("routing unit");
-            unit.position = None;
-            unit.routed = true;
-            self.events.push(BattleEvent::Routed {
-                unit: id,
-                position,
-                survivors,
-            });
-            let allies: Vec<_> = self
-                .units
-                .iter()
-                .filter_map(|(ally_id, ally)| {
-                    let ally_position = ally.position?;
-                    (self.armies[&ally_position.army].side == side && ally.headcount > 0)
-                        .then_some(*ally_id)
-                })
-                .collect();
-            for ally in allies {
-                self.change_morale(ally, self.rules.ally_rout_morale_loss);
-            }
-        }
-    }
-
     fn change_morale(&mut self, id: BattleUnitId, amount: u32) {
         let unit = self.units.get_mut(&id).expect("allied unit");
         let before = unit.morale;
@@ -731,16 +551,6 @@ impl Runtime {
         final_units.sort_by_key(|unit| (unit.army, unit.opening_slot, unit.id));
         final_units
     }
-}
-
-fn is_attack(action: TacticAction) -> bool {
-    matches!(
-        action,
-        TacticAction::Attack
-            | TacticAction::Volley
-            | TacticAction::Charge
-            | TacticAction::Breakthrough
-    )
 }
 
 fn side_priority(side: BattleSide, round: u32) -> u8 {

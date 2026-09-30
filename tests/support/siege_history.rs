@@ -192,6 +192,7 @@ pub(super) fn add_relief(campaign: &mut StrategicCampaign) {
     campaign.formations.insert(
         FormationId(13),
         Formation {
+            battle_leader: None,
             tactics: None,
             id: FormationId(13),
             faction: FactionId(1),

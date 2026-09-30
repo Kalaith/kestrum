@@ -3,19 +3,24 @@
 use kestrum::{
     data::{
         battle_tactics::{
-            BattleTacticsRules, TacticAction, TacticCondition, TacticRule, TacticTrigger,
-            TargetFilter, TargetPriority,
+            BattleCapability, BattleTacticsRules, TacticAction, TacticCondition, TacticRule,
+            TacticTrigger, TargetFilter, TargetPriority,
         },
         economy::TroopKind,
+        world::PersonClass,
         GameData,
     },
     engine::resolve_battle,
     state::{
         battle::{simulation::*, BattleOutcome},
         military::{ArmyId, FormationId},
+        people::PersonId,
         threat::ThreatId,
     },
 };
+
+#[path = "support/battle_abilities.rs"]
+mod abilities;
 
 fn rules() -> BattleTacticsRules {
     GameData::load().unwrap().battle_tactics
@@ -72,6 +77,10 @@ fn unit(
         attack: profile.attack,
         resistance: profile.resistance,
         initiative: profile.initiative,
+        leader: None,
+        capabilities: profile.kind.map_or_else(Vec::new, |kind| {
+            kestrum::data::battle_tactics::leader_capabilities(kind, None)
+        }),
         activation_tactics,
         reaction_tactics,
     }
@@ -95,6 +104,18 @@ fn formation(
         tactics,
         Vec::new(),
     )
+}
+
+fn with_leader(mut unit: BattleUnitInput, class: PersonClass) -> BattleUnitInput {
+    let kind = unit.kind.expect("formation leader requires a troop role");
+    unit.leader = Some(BattleLeaderSnapshot {
+        id: PersonId(1),
+        name: "Captain Test".into(),
+        class,
+        active: true,
+    });
+    unit.capabilities = kestrum::data::battle_tactics::leader_capabilities(kind, Some(class));
+    unit
 }
 
 fn army(

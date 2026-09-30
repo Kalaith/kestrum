@@ -147,6 +147,7 @@ pub(super) fn add(campaign: &mut StrategicCampaign, data: &GameData, force: Forc
     campaign.formations.insert(
         FormationId(formation),
         Formation {
+            battle_leader: None,
             tactics: None,
             id: FormationId(formation),
             faction: FactionId(owner),

@@ -44,11 +44,11 @@ generator is tracked in `examples/prepare_midgame.rs`.
 | --- | --- |
 | Current decision | Choose where to expand or defend an established kingdom along its rival borders. |
 | Dominant focus | The discovered realm and its routes fill the atlas, showing multiple holdings at once. |
-| Primary action | Tap Army, choose a destination, then Confirm Move after reviewing movement, supply and encounter risks. |
+| Primary action | Tap Army, choose a destination, then Confirm Move after reviewing movement, supply and encounter risks. Long orders use available movement and save their remaining route. |
 | Supporting information | Season, active faction, settlement ownership and nearby army banners remain visible. Discovered terrain clears to the unknown frontier and map edges; outgoing roads fade into fog to show possible exploration directions. |
 | Deferred information | Place details open on selection; named careers and biographies live in Menu > Records. |
 | Layout and camera | The resume camera fits discovered markers at 1920×1080 and the minimum 1280×720 viewport; regional inspection and Recenter retain their local framing. |
-| Input and feedback | Visible map, zoom, region, selection and Records controls work by tap/click; completed moves update the army position and remaining movement. |
+| Input and feedback | Visible controls work by tap/click. Moves update position and remaining movement; saved destinations show Cancel Route and continue when the next faction turn refreshes movement. |
 
 The [map fog review](docs/verification/map-fog.md) records northern-edge clearing,
 outgoing connection hints, visual evidence and validation.
@@ -104,6 +104,15 @@ those discoveries. [Map movement and exploration verification](docs/verification
 records regression coverage, normal/minimum captures and the published browser check.
 [Home-region tutorial verification](docs/verification/home-region-tutorial.md)
 records the follow-up that makes regional navigation available at the start.
+
+Long orders move as far as the group's remaining allowance permits, retain the
+physical route, and continue automatically when movement refreshes after End
+Turn. Orders can also be saved with no movement left. Cancel Route stops the
+plan; confirming another destination replaces it. Peaceful foreign territory
+rejects the whole order, including borders beyond this turn's reach. Continued
+travel rechecks access and pauses at encounters. Plans and automatic arrivals
+survive catalogue saves and reloads. [Movement-plan verification](docs/verification/movement-plans.md)
+records the tests, supported-size captures and browser check.
 
 The map fills the entire logical canvas. Ordinary play keeps only the map name,
 season/round, active faction, Menu, zoom/recenter controls, compass, and End Turn

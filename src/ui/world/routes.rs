@@ -112,6 +112,8 @@ fn selected_route(ctx: &Context<'_>, route: &Route, points: &[Vec2]) {
     };
     let color = if index < preview.reachable_steps {
         CREAM
+    } else if preview.blocked.is_none() {
+        BRASS
     } else {
         Color::new(0.86, 0.51, 0.39, 1.0)
     };

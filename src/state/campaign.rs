@@ -246,6 +246,8 @@ pub struct StrategicCampaign {
     pub acted: BTreeSet<FactionId>,
     pub factions: BTreeMap<FactionId, Faction>,
     pub armies: BTreeMap<ArmyId, Army>,
+    #[serde(default)]
+    pub movement_plans: Vec<super::movement::MovementPlan>,
     pub formations: BTreeMap<FormationId, Formation>,
     pub people: BTreeMap<PersonId, Person>,
     #[serde(default)]
@@ -266,6 +268,9 @@ pub struct StrategicCampaign {
     pub relations: Vec<Relation>,
     pub accepted_sequence: u64,
     pub consumed_sequence: u64,
+    /// Completed boundary plus its automatic travel; later player actions invalidate it.
+    #[serde(default)]
+    pub round_checkpoint_sequence: Option<u64>,
     pub pending_facts: Vec<DomainFact>,
 }
 
@@ -357,6 +362,7 @@ impl StrategicCampaign {
             acted: BTreeSet::new(),
             factions,
             armies: BTreeMap::new(),
+            movement_plans: Vec::new(),
             formations: BTreeMap::new(),
             people: BTreeMap::new(),
             households: BTreeMap::new(),
@@ -370,6 +376,7 @@ impl StrategicCampaign {
             relations: scenario.relations.clone(),
             accepted_sequence: 0,
             consumed_sequence: 0,
+            round_checkpoint_sequence: None,
             pending_facts: Vec::new(),
         };
         for relation in &mut campaign.relations {

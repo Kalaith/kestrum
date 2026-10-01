@@ -187,15 +187,23 @@ impl Planner<'_> {
         {
             return None;
         }
-        if self.candidate_allowed(&command).is_err()
-            || preview(
-                self.campaign,
-                self.data,
-                Actor::Npc(self.owner),
-                command.clone(),
-            )
-            .is_err()
-        {
+        // The planner issues one edge at a time. Saving an unaffordable edge
+        // repeatedly would spend its entire command budget without travelling.
+        let can_act = self.candidate_allowed(&command).is_ok()
+            && match &command {
+                Command::Move(order) => {
+                    super::movement::preview_order(self.campaign, self.data, self.owner, order)
+                        .is_ok_and(|route| route.can_confirm() && route.reachable_steps > 0)
+                }
+                _ => preview(
+                    self.campaign,
+                    self.data,
+                    Actor::Npc(self.owner),
+                    command.clone(),
+                )
+                .is_ok(),
+            };
+        if !can_act {
             self.rejected_candidates.borrow_mut().push(command);
             return None;
         }

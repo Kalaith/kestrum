@@ -13,6 +13,7 @@ pub mod knowledge;
 pub mod legacy;
 pub mod mentorship;
 pub mod military;
+pub mod movement;
 pub mod people;
 pub mod persistence;
 pub mod relationships;

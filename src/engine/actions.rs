@@ -76,8 +76,11 @@ pub fn preview(
         };
         validate_command(campaign, actor, &command)?;
         let result = movement::preview_order(campaign, data, observer, order)?;
-        if result.reachable_steps == 0 {
-            let stop = result.stop.ok_or(RuleError::InvalidRoute)?;
+        if !result.can_confirm() {
+            let stop = result
+                .blocked
+                .or(result.stop)
+                .ok_or(RuleError::InvalidRoute)?;
             return Err(RuleError::MovementBlocked {
                 site: stop.site,
                 reason: stop.reason,
@@ -170,7 +173,10 @@ pub fn advance_npc(
     Ok(outcome)
 }
 
-fn merge_outcome(target: &mut ActionOutcome, mut later: ActionOutcome) {
+pub(super) fn merge_outcome(target: &mut ActionOutcome, mut later: ActionOutcome) {
+    target
+        .continued_movements
+        .append(&mut later.continued_movements);
     target.life_events.append(&mut later.life_events);
     target
         .automatic_retirements
@@ -247,6 +253,7 @@ fn prepare(
                 field: "accepted action sequence",
             })?;
     let mut outcome = ActionOutcome {
+        continued_movements: Vec::new(),
         life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,
@@ -319,6 +326,7 @@ fn finish(
             outcome,
         )?;
     }
+    candidate.reconcile_movement_plans();
     candidate.reconcile_region_control();
     super::mentorship::reconcile(candidate, data);
     super::lifecycle::reconcile_roles(candidate);
@@ -371,7 +379,24 @@ fn finish(
     outcome.battle_pending = candidate.pending_battle.is_some();
     super::exploration::observe(candidate);
     candidate.validate(data).map_err(RuleError::InvalidState)?;
+    if !candidate.movement_plans.is_empty()
+        && (outcome.round_completed
+            || candidate.active_faction() != before.active_faction()
+            || (before.pending_battle.is_some() && candidate.pending_battle.is_none())
+            || (matches!(before.phase, CampaignPhase::NpcTurn { paused: true, .. })
+                && matches!(
+                    candidate.phase,
+                    CampaignPhase::NpcTurn { paused: false, .. }
+                )))
+    {
+        movement::resume_plans(candidate, data, outcome)?;
+    }
+    if outcome.round_completed {
+        candidate.round_checkpoint_sequence = Some(candidate.accepted_sequence);
+    }
+    outcome.battle_pending = candidate.pending_battle.is_some();
     outcome.active_faction = candidate.active_faction();
+    outcome.accepted_sequence = candidate.accepted_sequence;
     Ok(())
 }
 
@@ -455,6 +480,7 @@ fn execute(
         Command::Move(order) => {
             execute_move(candidate, before, data, owner, order, outcome)?;
         }
+        Command::CancelMovementPlan { army } => movement::cancel_plan(candidate, owner, army)?,
         Command::TransferFormation {
             formation,
             to_army,
@@ -518,7 +544,7 @@ fn execute_move(
     let fact = if let Some(pending) = candidate.pending_battle.as_mut() {
         pending.movement = Some(receipt);
         None
-    } else {
+    } else if moved.spent > 0 {
         Some(DomainFactKind::ArmiesMoved {
             faction: owner,
             armies: moved.armies.clone(),
@@ -526,11 +552,13 @@ fn execute_move(
             spent: moved.spent,
             movement: Some(receipt),
         })
+    } else {
+        None
     };
     if let Some(fact) = fact {
         record_fact(candidate, outcome, fact)?;
     }
-    outcome.battle = moved.battle;
+    outcome.battle = moved.battle.or(outcome.battle);
     outcome.movement = Some(moved);
     Ok(())
 }

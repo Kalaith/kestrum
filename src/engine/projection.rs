@@ -37,6 +37,7 @@ pub struct VisibleFaction {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VisibleCampaign {
+    pub movement_plans: Vec<crate::state::movement::MovementPlan>,
     pub threats: Vec<super::threats::VisibleThreat>,
     pub sieges: Vec<VisibleSiege>,
     pub construction: Vec<crate::state::construction::ConstructionOrder>,
@@ -86,6 +87,17 @@ pub fn project(
         .get(&active_faction)
         .ok_or(RuleError::UnknownActor)?;
     Ok(VisibleCampaign {
+        movement_plans: campaign
+            .movement_plans
+            .iter()
+            .filter(|plan| {
+                plan.armies
+                    .first()
+                    .and_then(|id| campaign.armies.get(id))
+                    .is_some_and(|army| army.faction == observer)
+            })
+            .cloned()
+            .collect(),
         threats: super::threats::visible_threats(campaign, observer),
         sieges: visible_sieges(campaign, observer),
         construction: campaign

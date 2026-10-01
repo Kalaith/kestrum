@@ -25,6 +25,12 @@ impl Game {
             stage: ui::MoveStage::Map,
             site: Some(force.site),
             armies: vec![army],
+            planned_destination: campaign
+                .movement_plans
+                .iter()
+                .find(|plan| plan.armies.contains(&army))
+                .and_then(|plan| plan.path.last())
+                .copied(),
             remaining: campaign
                 .armies
                 .values()
@@ -63,6 +69,23 @@ impl Game {
         }
         self.movement.preview = None;
         self.movement.status.clear();
+        self.movement.planned_destination = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .and_then(|campaign| {
+                campaign
+                    .movement_plans
+                    .iter()
+                    .find(|plan| {
+                        plan.armies
+                            .iter()
+                            .any(|army| self.movement.armies.contains(army))
+                    })
+                    .and_then(|plan| plan.path.last())
+            })
+            .copied();
     }
 
     pub(super) fn choose_move_destination(&mut self) {
@@ -107,6 +130,16 @@ impl Game {
             self.navigation.clear_selection();
         }
         self.movement.site = site;
+        self.movement.planned_destination = campaign
+            .movement_plans
+            .iter()
+            .find(|plan| {
+                plan.armies
+                    .iter()
+                    .any(|army| self.movement.armies.contains(army))
+            })
+            .and_then(|plan| plan.path.last())
+            .copied();
         self.movement.remaining = campaign
             .armies
             .values()
@@ -263,7 +296,12 @@ impl Game {
                 }
                 if let Some(movement) = outcome.movement {
                     let selected = movement.armies.first().copied();
-                    let message = if let Some(stop) = movement.stop {
+                    let message = if movement.planned_destination.is_some() {
+                        self.data
+                            .presentation
+                            .text("move_planned_notice")
+                            .to_string()
+                    } else if let Some(stop) = movement.stop {
                         format!("Movement interrupted: {}", stop.reason)
                     } else {
                         format!(

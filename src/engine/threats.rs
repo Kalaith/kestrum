@@ -97,6 +97,7 @@ pub(crate) fn execute(
     let mut armies = armies.to_vec();
     armies.sort();
     let moved = MovementOutcome {
+        planned_destination: None,
         battle: None,
         armies,
         path: vec![origin, site],

@@ -12,9 +12,16 @@ pub(crate) fn execute(
 ) -> Result<MovementOutcome, RuleError> {
     let owner = campaign.active_faction();
     let (origin, mut remaining) = validate_order(campaign, data, owner, order)?;
+    if let Some(stop) = peace_boundary(campaign, owner, order) {
+        return Err(RuleError::MovementBlocked {
+            site: stop.site,
+            reason: stop.reason,
+        });
+    }
     let mut armies = order.armies.clone();
     armies.sort();
     let mut outcome = MovementOutcome {
+        planned_destination: None,
         battle: None,
         armies,
         path: vec![origin],
@@ -40,7 +47,9 @@ pub(crate) fn execute(
         };
         let reason = step_block(campaign, owner, to, cost, remaining, &contact);
         if let Some(reason) = reason {
-            if outcome.path.len() == 1 {
+            if outcome.path.len() == 1
+                && !matches!(reason, MovementBlock::InsufficientMovement { .. })
+            {
                 return Err(RuleError::MovementBlocked { site: to, reason });
             }
             outcome.stop = Some(MovementStop { site: to, reason });
@@ -87,6 +96,7 @@ pub(crate) fn execute(
             combat::capture(campaign, data, to, owner);
         }
     }
+    plans::save_remainder(campaign, order, &mut outcome);
     Ok(outcome)
 }
 

@@ -582,6 +582,68 @@ fn resumed_phases_and_branched_rounds_preserve_rng_without_reapplying_boundaries
 }
 
 #[test]
+fn automatic_travel_is_saved_at_the_boundary_without_replaying_its_next_turn_facts() {
+    use kestrum::{
+        data::world::SiteId,
+        engine::{army_remaining, MoveOrder},
+        state::{military::ArmyId, StrategicCampaign},
+    };
+    let mut data = GameData::load().unwrap();
+    data.threats.initial.clear();
+    let mut store = MemoryStore::default();
+    let mut library = SaveLibrary::open(&mut store, &data).unwrap();
+    let mut strategic = StrategicCampaign::new(&data).unwrap();
+    strategic.campaign_id = library.allocate_campaign_id(&mut store).unwrap();
+    apply(
+        &mut strategic,
+        &data,
+        Actor::Player,
+        Command::Move(MoveOrder {
+            armies: vec![ArmyId(1)],
+            path: [1, 5, 6, 7, 14].map(SiteId).to_vec(),
+        }),
+    )
+    .unwrap();
+    let mut campaign = Campaign::Strategic(Box::new(strategic));
+    round(&mut campaign, &data);
+    let boundary = campaign.strategic().unwrap();
+    assert_eq!(boundary.armies[&ArmyId(1)].site, SiteId(14));
+    assert_eq!(army_remaining(boundary, &data, ArmyId(1)).unwrap(), 3);
+    assert!(!boundary.pending_facts.is_empty());
+    assert_eq!(
+        boundary.round_checkpoint_sequence,
+        Some(boundary.accepted_sequence)
+    );
+    let request = library
+        .prepare_checkpoint(&mut store, &data, &campaign)
+        .unwrap();
+    let id = library.write(&mut store, &data, &request).unwrap().id;
+    let mut loaded = library.load(&mut store, &data, id).unwrap();
+    assert_eq!(loaded, campaign);
+    let mut invalidated = loaded.clone();
+    let Campaign::Strategic(invalidated_state) = &mut invalidated else {
+        unreachable!()
+    };
+    apply(
+        invalidated_state,
+        &data,
+        Actor::Player,
+        Command::CancelMovementPlan { army: ArmyId(1) },
+    )
+    .unwrap();
+    assert!(library
+        .prepare_checkpoint(&mut store, &data, &invalidated)
+        .is_err());
+    round(&mut loaded, &data);
+    round(&mut campaign, &data);
+    assert_eq!(loaded, campaign);
+    let after = loaded.strategic().unwrap();
+    assert_eq!(after.armies[&ArmyId(1)].site, SiteId(14));
+    assert_eq!(army_remaining(after, &data, ArmyId(1)).unwrap(), 6);
+    assert!(after.pending_facts.is_empty());
+}
+
+#[test]
 fn terminal_midround_checkpoint_and_manual_save_restore_readonly_outcome() {
     use kestrum::{
         data::world::FactionId,

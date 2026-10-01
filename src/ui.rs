@@ -166,6 +166,7 @@ pub enum UiAction {
     ReviewMove,
     MoveRoutePage(i32),
     ConfirmMove,
+    CancelMovementPlan(ArmyId),
     CancelMove,
     BeginTransferFormation(FormationId),
     BeginTransferPerson(PersonId),

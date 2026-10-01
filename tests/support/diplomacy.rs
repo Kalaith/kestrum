@@ -109,7 +109,14 @@ pub(super) fn travel(campaign: &mut StrategicCampaign, data: &GameData, path: &[
             continue;
         }
         let result = apply(campaign, data, Actor::Player, command).unwrap();
-        if result.battle_pending {
+        if result
+            .movement
+            .as_ref()
+            .is_some_and(|moved| moved.planned_destination.is_some())
+        {
+            finish(campaign, data);
+        }
+        if campaign.pending_battle.is_some() {
             apply(campaign, data, Actor::Player, Command::StartPendingBattle).unwrap();
         }
         if campaign.diplomacy.has_pending_decision() {

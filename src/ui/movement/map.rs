@@ -21,7 +21,10 @@ pub fn panel_bounds(
     let left = position.is_none_or(|position| view.project_normalized(position).x >= 640.0);
     let choosing_region = matches!(navigation.selection(), Some(kestrum::navigation::MapSelection::Marker(id))
         if world.physical_site(id).is_none());
-    let height = if movement.preview.is_some() || choosing_region {
+    let height = if movement.preview.is_some()
+        || movement.planned_destination.is_some()
+        || choosing_region
+    {
         480.0
     } else {
         350.0
@@ -160,7 +163,7 @@ fn draw_route_preview(
         ctx,
         Rect::new(x, 426.0, width, 48.0),
         &ctx.text(primary.map_or("confirm_move", |(key, _)| key)),
-        active && campaign.player_turn && (preview.reachable_steps > 0 || primary.is_some()),
+        active && campaign.player_turn && (preview.can_confirm() || primary.is_some()),
         true,
     ) {
         return Some(primary.map_or(UiAction::ConfirmMove, |(_, action)| action));
@@ -220,7 +223,14 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     let width = rect.w - 32.0;
     let active = ctx.state.overlay == Overlay::None;
     let remaining = movement_remaining(ctx);
-    let label = if ctx.movement.status.is_empty() {
+    let label = if let Some(destination) = ctx.movement.planned_destination {
+        let name = campaign
+            .world
+            .site(destination)
+            .map(|site| site.name.as_str())
+            .unwrap_or_default();
+        ctx.text("move_planned_destination").replace("{site}", name)
+    } else if ctx.movement.status.is_empty() {
         ctx.text(if remaining == 0 {
             "map_move_exhausted"
         } else {
@@ -230,6 +240,28 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
         ctx.movement.status.clone()
     };
     lines(ctx, &label, vec2(x, 265.0), width, 5, CREAM);
+    if ctx.movement.planned_destination.is_some() {
+        if button(
+            ctx,
+            Rect::new(x, 426.0, width, 48.0),
+            &ctx.text("cancel_movement_plan"),
+            active && campaign.player_turn,
+            false,
+        ) {
+            return campaign
+                .movement_plans
+                .iter()
+                .find(|plan| {
+                    plan.armies
+                        .iter()
+                        .any(|army| ctx.movement.armies.contains(army))
+                })
+                .and_then(|plan| plan.armies.first())
+                .copied()
+                .map(UiAction::CancelMovementPlan);
+        }
+        return None;
+    }
     if let Some(kestrum::navigation::MapSelection::Marker(id)) = ctx.navigation.selection() {
         if campaign.world.physical_site(id).is_none()
             && button(

@@ -127,25 +127,17 @@ fn later_budget_or_blocked_edges_keep_the_legal_prefix_without_revealing_hidden_
             remaining: 0
         }
     ));
-    rejected(&mut campaign, &data, order(&[1], &[7, 14]));
+    let waiting = apply(&mut campaign, &data, Actor::Player, order(&[1], &[7, 14])).unwrap();
+    assert_eq!(waiting.movement.unwrap().spent, 0);
+    assert_eq!(campaign.movement_plans[0].path, [7, 14].map(SiteId));
 
     let mut changed = initial.clone();
     let route = movement_preview(&changed, &data, changed.player, &[ArmyId(1)], SiteId(7)).unwrap();
     changed
         .set_site_control(&data, SiteId(7), Some(FactionId(2)), false)
         .unwrap();
-    let result = apply(
-        &mut changed,
-        &data,
-        Actor::Player,
-        Command::Move(route.order),
-    )
-    .unwrap()
-    .movement
-    .unwrap();
-    assert_eq!(result.path, [1, 5, 6].map(SiteId));
-    assert_eq!(result.spent, 4);
-    assert_eq!(result.stop.unwrap().reason, MovementBlock::PeaceBoundary);
+    rejected(&mut changed, &data, Command::Move(route.order));
+    assert_eq!(changed.armies[&ArmyId(1)].site, SiteId(1));
     assert_eq!(
         changed.world.site(SiteId(7)).unwrap().controller,
         Some(FactionId(2))

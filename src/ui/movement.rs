@@ -31,6 +31,7 @@ pub struct MoveView {
     pub page: usize,
     pub route_page: usize,
     pub destination: Option<SiteId>,
+    pub planned_destination: Option<SiteId>,
     pub preview: Option<MovementPreview>,
     pub remaining: BTreeMap<ArmyId, u32>,
     pub nearby: BTreeMap<SiteId, u32>,
@@ -69,13 +70,22 @@ fn cost_summary(ctx: &Context<'_>, preview: &MovementPreview) -> String {
 }
 
 fn route_consequence(ctx: &Context<'_>, preview: &MovementPreview) -> String {
-    if let Some(stop) = &preview.stop {
+    if let Some(blocked) = &preview.blocked {
+        blocked.reason.to_string()
+    } else if let Some(stop) = &preview.stop {
         let end = ctx
             .campaign_view
             .and_then(|campaign| campaign.world.site(preview.reachable_site))
             .map(|site| site.name.as_str())
             .unwrap_or_default();
-        format!("{}: {end}. {}", ctx.text("move_stops_at"), stop.reason)
+        if matches!(
+            stop.reason,
+            kestrum::engine::MovementBlock::InsufficientMovement { .. }
+        ) {
+            ctx.text("move_planned_preview").replace("{site}", end)
+        } else {
+            format!("{}: {end}. {}", ctx.text("move_stops_at"), stop.reason)
+        }
     } else if let Some(encounter) = &preview.encounter {
         ctx.text(match encounter {
             kestrum::engine::MovementEncounter::EstablishSiege => "move_possible_siege",

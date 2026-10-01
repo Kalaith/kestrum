@@ -115,6 +115,9 @@ pub enum Command {
         formation: FormationId,
     },
     Move(MoveOrder),
+    CancelMovementPlan {
+        army: ArmyId,
+    },
     TransferFormation {
         formation: FormationId,
         to_army: ArmyId,
@@ -451,6 +454,7 @@ impl std::error::Error for RuleError {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActionOutcome {
+    pub continued_movements: Vec<MovementOutcome>,
     pub life_events: Vec<crate::state::history::HistoryId>,
     pub automatic_retirements: Vec<crate::state::people::PersonId>,
     pub battle: Option<BattleId>,

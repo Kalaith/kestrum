@@ -331,6 +331,7 @@ pub(super) fn apply(
     combat::refresh_pending(&mut candidate, data)?;
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     let outcome = ActionOutcome {
+        continued_movements: Vec::new(),
         life_events: Vec::new(),
         automatic_retirements: Vec::new(),
         battle: None,

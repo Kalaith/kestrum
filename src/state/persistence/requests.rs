@@ -136,7 +136,8 @@ pub(super) fn require_checkpoint(campaign: &StrategicCampaign) -> Result<(), Str
     if campaign.completed_rounds == 0
         || campaign.phase != CampaignPhase::PlayerTurn
         || !campaign.acted.is_empty()
-        || !campaign.pending_facts.is_empty()
+        || (!campaign.pending_facts.is_empty()
+            && campaign.round_checkpoint_sequence != Some(campaign.accepted_sequence))
     {
         return Err("Round checkpoints require a fully completed seasonal boundary.".into());
     }

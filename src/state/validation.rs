@@ -46,6 +46,7 @@ impl StrategicCampaign {
         self.validate_ai(data)?;
         self.validate_world(data)?;
         self.validate_military(data)?;
+        self.validate_movement_plans()?;
         self.validate_battle_templates(data)?;
         self.validate_relationships(data)?;
         self.validate_legacy_items()?;
@@ -216,6 +217,12 @@ impl StrategicCampaign {
     }
 
     fn validate_facts(&self) -> Result<(), String> {
+        require(
+            self.round_checkpoint_sequence
+                .is_none_or(|sequence| sequence <= self.accepted_sequence),
+            "round_checkpoint_sequence",
+            "checkpoint is ahead of accepted actions",
+        )?;
         require(
             self.consumed_sequence <= self.accepted_sequence,
             "consumed_sequence",

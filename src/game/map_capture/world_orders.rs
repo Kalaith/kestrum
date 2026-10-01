@@ -2,7 +2,7 @@
 
 use super::*;
 use kestrum::{
-    data::world::{MarkerId, SiteId},
+    data::world::{FactionId, MarkerId, SiteId},
     navigation::MapScope,
 };
 
@@ -14,6 +14,9 @@ impl Game {
             "world_move_exit"
                 | "world_move_entry"
                 | "world_move_partial"
+                | "world_move_queued"
+                | "world_move_continued"
+                | "world_move_peace"
                 | "world_move_stack"
                 | "world_army_details"
                 | "world_move_review"
@@ -39,11 +42,46 @@ impl Game {
         );
         if scene == "world_move_review" {
             self.apply(UiAction::ReviewMove);
-        } else if scene == "world_move_partial" {
+        } else if matches!(
+            scene,
+            "world_move_partial" | "world_move_queued" | "world_move_continued"
+        ) {
             self.apply(UiAction::ConfirmMove);
             assert_eq!(self.movement.site, Some(SiteId(5)));
             assert_eq!(self.navigation.scope(), MapScope::World);
-            self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
+            assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
+            match scene {
+                "world_move_partial" => {
+                    self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
+                    assert!(self.movement.preview.as_ref().unwrap().can_confirm());
+                    assert_eq!(self.movement.preview.as_ref().unwrap().reachable_steps, 0);
+                }
+                "world_move_queued" => {
+                    self.apply(UiAction::CancelMovementPlan(ArmyId(1)));
+                    assert_eq!(self.movement.planned_destination, None);
+                    self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
+                    self.apply(UiAction::ConfirmMove);
+                    assert_eq!(self.movement.site, Some(SiteId(5)));
+                    assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
+                }
+                "world_move_continued" => {
+                    self.apply(UiAction::CancelMove);
+                    self.apply(UiAction::EndTurn);
+                    for _ in 0..3 {
+                        let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
+                            panic!("world movement capture needs a campaign");
+                        };
+                        let actor = engine::Actor::Npc(campaign.active_faction());
+                        let outcome = engine::apply(campaign, &self.data, actor, Command::EndTurn);
+                        self.handle_campaign_result(outcome);
+                    }
+                    self.refresh_projection();
+                    self.begin_move(ArmyId(1));
+                    assert_eq!(self.movement.site, Some(SiteId(1)));
+                    assert_eq!(self.movement.planned_destination, None);
+                }
+                _ => {}
+            }
         }
         true
     }
@@ -65,7 +103,20 @@ impl Game {
                 )
                 .expect("real travel into the region");
         }
-        if scene != "world_move_partial" {
+        if scene == "world_move_peace" {
+            if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+                campaign
+                    .set_site_control(&self.data, SiteId(5), Some(FactionId(2)), false)
+                    .expect("peaceful foreign gate");
+            }
+        }
+        if !matches!(
+            scene,
+            "world_move_partial"
+                | "world_move_queued"
+                | "world_move_continued"
+                | "world_move_review"
+        ) {
             if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
                 for formation in campaign.formations.values_mut() {
                     formation.movement_spent = 0;

@@ -2,6 +2,7 @@
 
 mod execute;
 mod path;
+mod plans;
 mod service;
 mod world;
 pub use world::world_movement_preview;
@@ -22,6 +23,7 @@ use crate::{
 use std::{collections::BTreeSet, fmt};
 
 pub(super) use execute::{execute, spend_edge};
+pub(super) use plans::{cancel_plan, resume_plans};
 pub(super) use service::service_snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,6 +86,8 @@ pub struct MovementStop {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MovementPreview {
+    /// Public rule violations anywhere on the route prevent confirming it.
+    pub blocked: Option<MovementStop>,
     pub encounter: Option<MovementEncounter>,
     pub order: MoveOrder,
     pub steps: Vec<RouteStep>,
@@ -107,11 +111,22 @@ pub enum MovementEncounter {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MovementOutcome {
+    pub planned_destination: Option<SiteId>,
     pub battle: Option<BattleId>,
     pub armies: Vec<ArmyId>,
     pub path: Vec<SiteId>,
     pub spent: u32,
     pub stop: Option<MovementStop>,
+}
+
+impl MovementPreview {
+    pub fn can_confirm(&self) -> bool {
+        self.blocked.is_none()
+            && (self.reachable_steps > 0
+                || self.stop.as_ref().is_some_and(|stop| {
+                    matches!(stop.reason, MovementBlock::InsufficientMovement { .. })
+                }))
+    }
 }
 
 pub fn army_remaining(
@@ -289,6 +304,7 @@ pub(super) fn preview_order(
         }
     }
     Ok(MovementPreview {
+        blocked: peace_boundary(campaign, observer, order),
         encounter: order
             .path
             .iter()
@@ -405,14 +421,14 @@ pub(super) fn public_block(
 ) -> Option<MovementBlock> {
     let site = campaign.world.site(site)?;
     if let Some(foreign) = site.controller.filter(|id| *id != owner) {
-        let peace = campaign
+        let at_war = campaign
             .relations
             .iter()
             .find(|relation| {
                 relation.factions.contains(&owner) && relation.factions.contains(&foreign)
             })
-            .is_some_and(|relation| relation.state == DiplomaticState::Peace);
-        if peace {
+            .is_some_and(|relation| relation.state == DiplomaticState::War);
+        if !at_war {
             return Some(MovementBlock::PeaceBoundary);
         }
     }
@@ -421,6 +437,23 @@ pub(super) fn public_block(
     }
 
     None
+}
+
+fn peace_boundary(
+    campaign: &StrategicCampaign,
+    owner: FactionId,
+    order: &MoveOrder,
+) -> Option<MovementStop> {
+    order.path.iter().skip(1).find_map(|site| {
+        matches!(
+            public_block(campaign, owner, *site),
+            Some(MovementBlock::PeaceBoundary)
+        )
+        .then_some(MovementStop {
+            site: *site,
+            reason: MovementBlock::PeaceBoundary,
+        })
+    })
 }
 
 fn encounter(

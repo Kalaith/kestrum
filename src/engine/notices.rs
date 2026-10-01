@@ -14,6 +14,46 @@ pub fn action_notices(
     outcome: &ActionOutcome,
 ) -> Vec<String> {
     let mut messages = Vec::new();
+    for moved in &outcome.continued_movements {
+        let names = moved
+            .armies
+            .iter()
+            .filter_map(|id| campaign.armies.get(id))
+            .filter(|army| army.faction == observer)
+            .map(|army| army.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if names.is_empty() {
+            continue;
+        }
+        let message = if let Some(stop) = moved.stop.as_ref().filter(|stop| {
+            !matches!(
+                stop.reason,
+                super::MovementBlock::InsufficientMovement { .. }
+            )
+        }) {
+            data.presentation
+                .text("move_plan_blocked_notice")
+                .replace("{reason}", &stop.reason.to_string())
+        } else if moved.planned_destination.is_some() {
+            data.presentation.text("move_planned_notice").to_string()
+        } else if moved.path.last().is_some_and(|site| {
+            campaign.sieges.contains_key(site)
+                || campaign
+                    .pending_battle
+                    .as_ref()
+                    .is_some_and(|pending| pending.report.site == *site)
+        }) {
+            data.presentation
+                .text("move_plan_encounter_notice")
+                .to_string()
+        } else {
+            data.presentation
+                .text("move_plan_arrived_notice")
+                .to_string()
+        };
+        messages.push(format!("{names}: {message}"));
+    }
     for (ids, key) in [
         (
             &outcome.automatic_retirements,

@@ -77,6 +77,7 @@ impl Game {
             | UiAction::ReviewMove
             | UiAction::MoveRoutePage(_)
             | UiAction::ConfirmMove
+            | UiAction::CancelMovementPlan(_)
             | UiAction::CancelMove
             | UiAction::BeginTransferFormation(_)
             | UiAction::BeginTransferPerson(_)
@@ -264,6 +265,11 @@ impl Game {
                     .saturating_add_signed(delta as isize)
             }
             UiAction::ConfirmMove => self.confirm_move(),
+            UiAction::CancelMovementPlan(army) => {
+                self.notice = None;
+                self.apply_campaign_command(Command::CancelMovementPlan { army });
+                self.refresh_movement();
+            }
             UiAction::CancelMove => self.cancel_move(),
             UiAction::BeginTransferFormation(formation) => {
                 self.begin_transfer(ui::TransferSubject::Formation(formation))

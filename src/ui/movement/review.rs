@@ -124,7 +124,7 @@ fn review_controls(
         ctx,
         Rect::new(860.0, 626.0, 308.0, 48.0),
         &ctx.text("confirm_move"),
-        preview.reachable_steps > 0,
+        preview.can_confirm(),
         true,
     ) {
         return Some(UiAction::ConfirmMove);

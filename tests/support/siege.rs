@@ -448,10 +448,18 @@ pub(super) fn assert_admission() {
         armies: vec![ArmyId(5)],
         path: vec![SiteId(7), SiteId(14), SiteId(9)],
     });
-    let result = apply(&mut campaign, &data, Actor::Npc(FactionId(2)), command).unwrap();
+    assert_rejected(&mut campaign, &data, Actor::Npc(FactionId(2)), command);
+    assert_eq!(campaign.armies[&ArmyId(5)].site, SiteId(7));
+    let result = apply(
+        &mut campaign,
+        &data,
+        Actor::Npc(FactionId(2)),
+        enter(&[5], 7, 14),
+    )
+    .unwrap();
     let moved = result.movement.unwrap();
     assert_eq!(moved.path, vec![SiteId(7), SiteId(14)]);
-    assert_eq!(moved.stop.unwrap().site, SiteId(9));
+    assert!(moved.stop.is_none());
     assert_eq!(campaign.armies[&ArmyId(5)].site, SiteId(14));
     assert_eq!(
         campaign.world.site(SiteId(14)).unwrap().controller,

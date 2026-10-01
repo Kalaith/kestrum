@@ -56,6 +56,7 @@ impl StrategicCampaign {
                 army.commander = None;
             }
         }
+        candidate.reconcile_movement_plans();
         *self = candidate;
         Ok(())
     }

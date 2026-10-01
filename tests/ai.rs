@@ -189,6 +189,21 @@ fn failed_intents_are_bounded_and_phase_budget_ends_without_retry_loops() {
     );
     advance_npc(&mut limited, &data).unwrap();
     assert_ne!(limited.active_faction(), FactionId(2));
+
+    let (data, mut exhausted_edge) = fixture();
+    no_resources(&mut exhausted_edge);
+    for formation in exhausted_edge
+        .formations
+        .values_mut()
+        .filter(|formation| formation.faction == FactionId(2))
+    {
+        formation.movement_spent = formation.movement_allowance(&data) - 1;
+    }
+    let decision = ai::propose(&exhausted_edge, &data, FactionId(2)).unwrap();
+    assert_eq!(decision.command, Command::EndTurn);
+    advance_npc(&mut exhausted_edge, &data).unwrap();
+    assert_ne!(exhausted_edge.active_faction(), FactionId(2));
+    assert!(exhausted_edge.movement_plans.is_empty());
 }
 
 #[test]

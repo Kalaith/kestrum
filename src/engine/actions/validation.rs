@@ -85,6 +85,7 @@ pub(in crate::engine) fn validate_command(
         | Command::Recruit { .. }
         | Command::Disband { .. }
         | Command::Move(_)
+        | Command::CancelMovementPlan { .. }
         | Command::StartConstruction { .. }
         | Command::CancelConstruction { .. }
         | Command::ReassignBuilder { .. }

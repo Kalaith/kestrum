@@ -1,12 +1,19 @@
 # Provisional people, places and continuity rules
 
-[Plan](../implementation-plan.md) · [Work packages](work-packages.md)
+[Plan](../implementation-plan.md) · [Active map playability plan](../map-playability-plan.md) · [Work packages](work-packages.md)
 
 **P16–P23 are provisional implementation defaults**, not claims that the founding
 drafts specified these thresholds. Sources: chapters
 [06](../06-character-development.md), [07](../07-living-places.md),
 [08](../08-generations-and-succession.md), [09](../09-history-and-content.md).
 O10's actual-participation requirement and O16's preserved veterancy always apply.
+
+**Status reconciled 2026-10-01:** K13–K16 and their review fixes are delivered.
+These rules are baseline simulation reference, not a backlog of absent systems
+or an approval gate for delegated defaults. The active map plan changes how
+existing people/place consequences are communicated and encountered in play.
+Preserve earned history and saved identities; balance remains subject to actual
+playtesting rather than the historical Done labels.
 
 ## P16 — Participation, service and formation veterancy
 

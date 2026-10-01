@@ -4,6 +4,21 @@
 [Acceptance ledger](implementation/acceptance.md) ·
 [K18 evidence](verification/k18-integrated.md)
 
+## Current disposition — 2026-10-01
+
+R01–R13 below are resolved delivery findings, retained with their original
+evidence and acceptance rationale. They are not current defects or tasks for the
+map redesign. K01–K18 and B01–B07 are delivered; the
+[map playability plan](map-playability-plan.md) owns next work.
+
+The original 120-round victory deadline and pre-fix performance figures below
+are historical. B07 later passed its suite, but subsequent combat reaction/rout
+corrections leave the unchanged production victory script failing at 240 rounds.
+The [battle review](verification/battle-review.md) records that current balance
+blocker and separate battlefield UI gaps. Remaining platform/performance
+acceptance was deferred at K18 closeout, and physical touch was waived. No new
+runtime validation is claimed by this documentation reconciliation.
+
 ## Closeout — 2026-09-28
 
 R01–R13 have been implemented. The user then explicitly waived the physical
@@ -24,8 +39,8 @@ deferred; this is not full platform acceptance or a claim of settled balance.
 Planner work in `f854c17` reduced measured eight-faction phase p95 to 114.63 ms
 in a serial 400-round release run. The subsequent full test run failed the
 seed-88 scripted victory deadline at round 120 and stopped before later test
-binaries. That assertion remains intact and its cause remains uninvestigated;
-there is no current full-suite pass. See [performance](verification/k18-performance.md)
+binaries. This was the K18 closeout result; later B07 and battle-review results
+are summarized above. See [performance](verification/k18-performance.md)
 and [K18 closeout](verification/k18-integrated.md) for the exact evidence and
 remaining browser/performance limitations.
 
@@ -38,13 +53,12 @@ it does **not yet satisfy the whole implementation plan**. In addition to the
 known K18 platform and performance checks, the review found missing behavior
 in AI, training, continuity, notifications and history, plus presentation gaps.
 
-The earlier K01–K17 delivery commits remain valid historical records. Their
-Done labels must not be read as evidence that the findings below are resolved.
-Close these follow-ups through K18, or record an explicit accepted amendment,
-before declaring full release acceptance. No gameplay fixes or rule changes
-were made by this review.
+At the time of this original review, earlier package passes did not establish
+that its new findings were resolved. The closeout above now records their fixes.
+The original review itself changed documentation only; implementation followed
+in the listed delivery commits.
 
-## Review method and limits
+## Original review method and limits — 2026-09-28
 
 - Compared every package's outputs and acceptance cases with its rule packets,
   implementation entry points, tests and existing verification record. Traced
@@ -65,10 +79,11 @@ were made by this review.
   branch or audited every source line. Physical touch/pinch, exact minimum WebGL
   canvas gameplay and browser frame timings remain unverified.
 
-## Package coverage
+## Original package coverage — before the recorded fixes
 
-“Present” means the implementation and relevant regression suites were located;
-it does not close the follow-ups or outstanding platform acceptance.
+This table preserves the assessment at `96385e4`, before R01–R13 were fixed.
+Its “needs,” “incomplete” and “in progress” entries describe that reviewed state,
+not the current checkout. Use the closeout and current disposition above for status.
 
 | Package / rules | Implementation and evidence reviewed | Assessment / follow-up |
 | --- | --- | --- |
@@ -91,7 +106,11 @@ it does not close the follow-ups or outstanding platform acceptance.
 | K17 — production world; P01/C07 | `world_layout.json`, generation/setup, generation tests, K17 captures | Present: 80 markers, 152 sites, 191 routes and seeded 4–8 starts. Atlas placement and production-facing text need R09/R12. |
 | K18 — integrated acceptance | campaign scenarios, production battle/ending, isolation/siege/people/place suites, K18 verification | In progress. Existing end-to-end proofs are useful; R01–R13 and A01–A04 below remain follow-ups. |
 
-## Required implementation changes
+## Resolved implementation findings
+
+The R01–R13 evidence, requested changes and acceptance cases below are historical.
+All are mapped to delivered fixes in the closeout table. Consult their regression
+contracts when changing related behavior; do not repeat them as new work.
 
 Priority P1 means a core advertised behavior is bypassed or leaks information;
 P2 means a required behavior is missing or incorrect; P3 is lower-impact plan or
@@ -384,7 +403,11 @@ restoration, civil war, multiplayer, naval travel, detailed disease/starvation a
 portrait canvases below 1280×720 remain later scope. This review does not turn
 those into release blockers.
 
-## Suggested delivery order
+## Historical delivery order — completed follow-ups
+
+This was the order suggested before the closeout fixes. R01–R13 are now resolved;
+A02 was waived and remaining A01/A03/A04 checks were deferred. Current work follows
+the map playability plan and retains the disclosed limitations above.
 
 1. Close the notification leak and personal chronology regression (R01/R05), with
    focused regressions through the real application/command boundaries.
@@ -398,9 +421,10 @@ those into release blockers.
    publishing from this checkout, with its own reviewable commit. Apply R13's
    cohesive function splits alongside the affected fixes.
 
-## Validation of this review
+## Original validation of this review — 2026-09-28
 
-This section records fresh checks separately from the historical K18 baseline.
+These checks were fresh for the 2026-09-28 review. They are historical results,
+not checks run on the current 2026-10-01 documentation update.
 
 - `cargo fmt -p kestrum -- --check` passed on the actual checkout.
 - Source inventory: 290 Rust files, none over 800 physical lines; largest is

@@ -1,8 +1,8 @@
 # Acceptance, coverage and implementation record
 
-[Plan](../implementation-plan.md) · [Packages](work-packages.md)
+[Plan](../implementation-plan.md) · [Active map playability plan](../map-playability-plan.md) · [Packages](work-packages.md)
 
-## Current review follow-ups — 2026-09-28
+## Current status — 2026-10-01
 
 The [full implementation review](../implementation-review.md) compares every
 package with the code, tests and evidence at `96385e4`. It identifies 13 required
@@ -13,9 +13,14 @@ function-size compliance.
 
 R01–R13 are implemented; the review's closeout maps each to its delivery and
 evidence. K18 is Done under the user's 2026-09-28 scope amendment below: physical
-touch is waived and further testing is deferred. The latest full suite's seed-88
-victory deadline failure remains unresolved. Historical package passes do not
-establish a current full-suite pass or replace the disclosed platform limits.
+touch is waived and further testing is deferred. B01–B07 was subsequently
+delivered. Its initial suite passed, but the later corrected resolver leaves the
+unchanged seed-88 victory script failing at its 240-round cap. The
+[battle review](../verification/battle-review.md) records the current balance
+blocker and battlefield presentation gaps. The
+[map playability plan](../map-playability-plan.md) owns next work. Historical
+package passes do not establish a current full-suite pass or replace disclosed
+platform limits and the new requirement for a readable strategic experience.
 
 ## Definition of done for every package
 
@@ -30,7 +35,7 @@ establish a current full-suite pass or replace the disclosed platform limits.
    than deleting tests to reach five. No new tests/test helpers under `src/`.
 4. Changed player flows have visible tap controls, disabled reasons, Help and
    feedback. Update the screen brief; review normal/minimum and relevant dense,
-   failure and urgent states. Do not defer all UI to K18.
+   failure and urgent states. Include this review in each changed player flow.
 5. Required checks run in the real checkout, followed by the no-argument publisher
    for meaningful game changes. A blocked command is reported with its actual
    failing dependency/path; no copied project, dummy crate or alternate manifest.
@@ -53,7 +58,7 @@ git status --short
 
 Extend the existing capture harness with each implemented scene and pass those
 scene names explicitly when reviewing it; the three minimum scenes above cover
-only the current shell. Use the shared wrapper's hidden default, wait for completion
+only those baseline screens. Use the shared wrapper's hidden default, wait for completion
 and verify its launched game exits. Save screenshots directly in
 `docs/verification/`, overwriting equivalent scene names. No scratch captures,
 backup folders, ad hoc logs or temporary source copies.
@@ -66,8 +71,10 @@ present historical runtime results as a fresh validation run.
 
 Rule packets: [strategic P01–P10](strategic-rules.md),
 [combat P11–P15](combat-rules.md), [people/place P16–P23](people-and-places.md).
-Every row must have evidence before final acceptance. An earlier prototype may
-leave a later row planned; it cannot silently delete or relabel it as future scope.
+This table traces the delivered K01–K18 systems. Original package evidence remains
+dated below; later amendments and the active map plan govern changed behavior.
+Do not convert completed rows back to planned or call an unexecuted acceptance
+case passed merely because its owning package was delivered.
 
 | Required behavior / source decisions | Rule or contract | Owning packages | Acceptance evidence |
 | --- | --- | --- | --- |
@@ -227,6 +234,12 @@ were changed to obtain this status.
 
 ## Completion record
 
+The rows below preserve each package's delivery-time checks and limitations.
+Phrases such as “remain K18 checks” describe that earlier checkpoint; the scope
+amendment above governs their final disposition. The K18 120-round failure is
+historical. Current resolver balance uses the 240-round failure in the battle
+review; neither is a fresh test result from this documentation update.
+
 Replace Planned only with In progress, Blocked (specific reason), or Done (commit
 and evidence). A dependency package must be Done before its consumers start.
 “Done with limitation” must name the limitation and cannot close a required
@@ -251,12 +264,13 @@ acceptance criterion without explicit scope acceptance.
 | K15 | Done | Sparse households, youth service entry, deterministic family progression and qualified succession; nine focused regressions and 160 total tests, strict Clippy, source-size gate, normal/minimum native captures and Windows/WebGL Preview publish pass. Browser interaction, physical touch and minimum-WebGL scaling remain K18 checks; [evidence](../verification/k15-succession.md). |
 | K16 | Done | `Kestrum's heirs carry a sword and its story forward (K16 heirlooms and eras)`; ten focused K16 cases and all 170 locked all-target/all-feature tests pass. Format, check, strict Clippy and the source-size gate pass. Eight inventory/item/deed/filter captures were reviewed at 1920×1080 and 1280×720. No-argument publishing built and deployed Windows/WebGL Preview and Project Roost recorded the publish. Browser interaction, minimum-WebGL campaign scaling and physical touch remain K18 checks; [evidence](../verification/k16-heirlooms.md). |
 | K17 | Done | Authored 80-marker/152-site world, seeded 4–8 faction setup and normal New Game integration; five generation/content regressions and 175 total tests. Formatting, check, strict Clippy, source-size gate, ten normal/minimum setup/keyboard/map captures and Windows/WebGL Preview publishing pass. [Evidence](../verification/k17-production.md). Browser end-to-end production play and minimum-WebGL scaling remain K18 checks. |
-| K18 | Done (amended scope) | R01–R13 implemented; [review disposition](../implementation-review.md) and [fix evidence](../verification/k18-review-fixes.md). Four/eight-faction 400-round replay passes; eight-faction phase p95 is 114.63 ms. The latest full suite fails the seed-88 scripted victory deadline at round 120 and stops there; that result remains unresolved. On 2026-09-28 the user waived physical-touch testing and ended further testing while gameplay is still changing. Remaining minimum-browser, rendered performance and multi-seed balance checks are deferred. The final Armies-panel personnel guard correction receives no new runtime test after that stop. [Current closeout and publication](../verification/k18-integrated.md) records the host Menu/Done overlap and all evidence limits. |
+| K18 | Done (amended scope) | R01–R13 implemented; [review disposition](../implementation-review.md) and [fix evidence](../verification/k18-review-fixes.md). At closeout, four/eight-faction 400-round replay passed and eight-faction phase p95 was 114.63 ms; the then-current suite stopped at the round-120 seed-88 victory deadline. Later B07 and battle-review results supersede that test status; the current 240-round balance blocker is summarized above. On 2026-09-28 the user waived physical-touch testing and ended further testing while gameplay was changing. Remaining minimum-browser, rendered performance and multi-seed balance checks were deferred. The final Armies-panel personnel guard correction received no new runtime test after that stop. [K18 closeout and publication](../verification/k18-integrated.md) records the host Menu/Done overlap and evidence limits at that date. |
 
 ## Plan review priorities
 
-The most consequential provisional choices to review in play are P08's narrow
-vassal defeat outcome, P11–P14's combat/retreat/siege mathematics, P17's emergence
+The most consequential delegated choices to review in play are P08's narrow
+vassal defeat outcome, the current formation resolver and P13–P14's campaign
+retreat/siege consequences, P17's emergence
 frequency, P19's growth/population pace and P20–P22's aging/household defaults.
 Their provisional status does not authorize an implementation agent to replace
 them silently. Review actual scenarios, record an amended rule and data values,

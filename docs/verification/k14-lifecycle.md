@@ -3,7 +3,7 @@
 K14 implements the documented P20–P21 life-cycle rules across saved people,
 campaign boundaries, combat, movement, transfer, development, player choices and
 rival planning. The implementation decision and exact delegated choices are in
-[I13](../13-decisions-and-open-questions.md#i13--aging-local-recovery-and-mentorship).
+[I13](../08-generations-and-succession.md).
 
 ## Behavioral coverage
 

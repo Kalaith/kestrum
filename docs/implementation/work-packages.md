@@ -3,20 +3,22 @@
 [Plan and handoff prompt](../implementation-plan.md) · [Contracts](contracts.md) ·
 [Verification and coverage](acceptance.md)
 
-K01–K17 are **Done**; K18 is the next eligible task. See the completion record in
-[acceptance](acceptance.md#completion-record). Numbered rule links
-refer to the provisional packets; D/O identifiers refer to chapter 13. A package
-is a reviewable feature, not permission for one oversized Rust file or commit.
-If split for size, preserve the same acceptance contract and commit each useful
-part before proceeding. Do not skip tests/UI/save integration to finish a label.
+**Status reconciled 2026-10-01:** K01–K18 are delivered; K18 closed under the
+user's amended testing scope. B01–B07 formation combat is also delivered. The
+[map playability plan](../map-playability-plan.md) owns next work. These packages
+retain historical implementation contracts and regression intent; their imperative
+wording does not make completed features outstanding tasks. See the completion
+record in [acceptance](acceptance.md#completion-record).
 
 Every package inherits C01–C07 and the common completion checklist. Paths below are
 relative to the project and are intended edit locations, not existing-file claims.
 Keep normal player screens honest while a prerequisite feature is unavailable.
 
-The [2026-09-28 review](../implementation-review.md) qualifies those historical
-Done labels with R01–R13 corrective follow-ups. Include them in K18 closure;
-passing an earlier package's tests does not close a newly identified gap.
+R01–R13 in the [2026-09-28 review](../implementation-review.md) were corrected
+before K18 closeout. The [battle review](../verification/battle-review.md) retains
+the current 240-round production victory blocker and battlefield presentation
+findings. Existing browser/performance limits remain disclosed; completed
+historical fixes must not be rescheduled as map redesign work.
 
 ## K01 — Typed content and a durable strategic scenario
 
@@ -149,6 +151,12 @@ full-formation upkeep with exact shortfall/block/recovery clearing policy;
 
 ## K06 — Movement, composition and connected recovery
 
+**Later amendment:** the delivered map now executes legal destination taps
+immediately, preserves longer routes across End Turn and offers Review Route /
+Cancel Route. The preview/confirm flow below describes K06's original delivery,
+not a requirement to restore an extra confirmation to ordinary map travel.
+See [movement-plan verification](../verification/movement-plans.md).
+
 **Depends on:** K05. **Read:** chapter 04; O02/O03/O09/O16;
 [P04–P05](strategic-rules.md#p04--armies-movement-and-transfers).
 **Files:** `src/engine/movement.rs`, army action handlers, supply/economy services,
@@ -175,6 +183,11 @@ specialization preservation across losses/recovery/save. These are two distinct
 major features, not ten tests for one trivial responsibility.
 
 ## K07 — Automatic battles, retreat and explainable reports
+
+**Later amendment:** B01–B07 replaces the original exchange arithmetic with
+formation combat and integrates pending preparation and immutable playback.
+Use the [battle plan](../battle-system-implementation-plan.md) for that current
+resolver; retain this package's campaign consequences and regression intent.
 
 **Depends on:** K06. **Read:** chapter 05; O05/O06;
 [P11–P13](combat-rules.md#p11--participation-and-strength), P15 damage.

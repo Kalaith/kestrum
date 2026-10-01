@@ -6,12 +6,12 @@
 
 Combat is primarily automatic. The player prepares composition, character assignments, geography, logistics, and the decision to attack, wait, retreat, or relieve a siege. They do not manually command individual soldiers during the resolution.
 
-Source factors include troop type and headcount, named characters, class abilities, veterancy, terrain, fortifications, bonds, and army condition. Exact mathematics, targeting, troop counters, rounds, and randomness remain open. Do not present a numerical model in implementation as settled design without recording the choice.
+Formation combat implements troop type and headcount, attached people and abilities, veterancy, terrain, fortifications, tactics, morale, targeting, activations and reactions. Values are adjustable defaults in [combat_rules.json](../assets/data/combat_rules.json) and [battle_tactics.json](../assets/data/battle_tactics.json). The resolver and its deterministic receipt are the current baseline; richer bond effects remain future content.
 
-## Proposed formation and tactics expansion
+## Implemented formation and tactics expansion
 
-The 2026-09-30 request proposes replacing the current basic exchanges and text
-reports with preparation-led formation combat. The supplied
+The 2026-09-30 request led to preparation-led formation combat, now implemented
+through milestones B01–B07. The supplied
 [battle notes](reference/battle-system-notes.txt) describe six troop units,
 embedded heroes, three front and three rear slots, ordered conditional tactics,
 automatic activations and reactions, morale and visible formation gaps.
@@ -20,38 +20,39 @@ opposing troop groups fighting in a shared landscape. The default execution view
 prioritizes that scene, with compact condition labels and contextual inspection.
 
 The [battle system implementation plan](battle-system-implementation-plan.md)
-maps this direction onto the current code and seven delivery milestones. Its
-proposed defaults keep six slots per army in grouped encounters, distinguish
-reaction rules such as Brace from activation rules, and separate authoritative
-campaign resolution from battlefield playback. A visible battlefield prototype
-precedes the full tactics editor. The initial content uses the
-existing human troop roster. Continuous tactic edits and commander interventions
-are outside the first playable scope.
+records the seven delivery milestones and their verification. The implementation
+keeps six slots per army in grouped encounters, distinguishes reaction rules such
+as Brace from activation rules, and separates authoritative campaign resolution
+from battlefield playback. Preparation includes positioning and ordered tactics;
+the illustrated battlefield projects the saved encounter sequence. Content uses
+the existing human troop roster. Continuous tactic edits during execution and
+commander interventions remain outside the implemented scope.
 
-This expansion is planned, not implemented. When integrated, it replaces P11's
-non-positional roster and P12's simultaneous rotating-target exchanges and rout
-threshold. Existing retreat, destruction, person consequences, siege contexts,
-threats and participant-only history remain integration requirements. Numerical
-damage and morale tuning are still proposals.
+This expansion supersedes P11's non-positional roster and P12's simultaneous
+rotating-target exchanges. Retreat, destruction, person consequences, sieges,
+threats and participant-only history are integrated. Damage and morale values
+remain tunable. The [fresh battle review](verification/battle-review.md) and
+[implementation README](../README.md) record later fixes and the remaining
+production-victory balance failure; earlier milestone passes are historical.
 
 ## Encounter trigger
 
 Opposing armies meeting at the same node trigger combat during sequential faction turns. For example, an enemy moving onto a player-occupied Node A in its turn initiates an encounter then.
 
-**Working interpretation:** “opposing” means hostile under the current diplomatic rules. Friendly stacks do not fight. Neutral access and trespass rules are open. Fortified encounters can enter a siege state instead of resolving an immediate ordinary field battle.
+**Implemented rule:** “opposing” means hostile under current diplomacy. Friendly stacks do not fight, and peaceful foreign borders block ordinary hostile movement. Fortified encounters can enter a siege instead of an immediate field battle. Encounter validation, rather than a visual map overlap, determines participation.
 
-**Proposal — encounter contract:** identify participants, validate diplomacy and positions, determine terrain and siege context, resolve one encounter, apply results once, then continue the active turn. A movement order must not keep executing while its army is awaiting an unresolved encounter.
+**Encounter contract:** identify participants, validate diplomacy and positions, determine terrain and siege context, resolve one encounter, apply results once, then continue the active turn. A movement order cannot continue through an unresolved encounter. Playback controls project the receipt and never repeat or alter campaign consequences.
 
-## Proposed resolution stages
+## Resolution stages
 
 1. **Snapshot:** take participating armies, formations, characters, relevant conditions, terrain, and information available to each faction.
 2. **Prepare:** derive combat roles and effective strength from data-defined rules. Preserve actual headcounts separately from computed effectiveness.
-3. **Resolve:** advance bounded automatic exchanges or another chosen resolver, with explicit termination and deterministic random draws where used.
+3. **Resolve:** advance bounded automatic formation rounds, ordered tactics, activations, reactions and morale through the deterministic resolver.
 4. **Conclude:** determine victory, defeat, withdrawal, rout, or stalemate. Each outcome needs a defined control effect.
 5. **Apply:** update casualties, surviving formations, character consequences, locations, node damage, and control atomically.
 6. **Record:** issue battle events for experience, recognition, intelligence, and history. Avoid duplicate credit when reopening a report or loading a save.
 
-This is an integration proposal, not a required combat formula. A first resolver should be explainable before it becomes elaborate.
+These stages summarize the implemented integration. The recorded event sequence supports playback, inspection and history without recomputing an outcome.
 
 ## Casualties and character survival
 
@@ -59,21 +60,21 @@ Formation losses persist between battles; zero headcount destroys the formation.
 
 V1 avoids per-hit death checks for named people. If their containing formation survives, they generally survive. If it is wiped out, they may die. This is a simple initial rule, not immunity from all later illness, old age, or major events.
 
-Wounds, captures, heroic escapes, and rare exceptional deaths are later combat extensions. The concept also needs a “commander wounded / assumed command” experience to prove emergent leadership. **Working interpretation:** a limited wound event can be prototyped for that purpose without claiming a complete injury or captivity simulation.
+Wounds, recovery and “commander wounded / assumed command” consequences are implemented. Formation destruction can kill the attached person or leave a wounded survivor in an available surviving formation or legal refuge. No refuge is an explicit lethal outcome. Captivity and a broader injury/disease simulation remain future scope.
 
-**Open:** probabilities and outcomes after formation destruction, treatment of multiple attached people, and the survival of a character whose host army retreats must be decided. Meaningful careers take priority over constant arbitrary replacement.
+Probabilities, wound duration and commander-loss thresholds are current combat data. [Person combat](../src/engine/person_combat.rs) applies them once after casualties and retreat. Each formation has at most one attached named person; old multiple-person examples are superseded by that roster rule. Meaningful careers remain a balance criterion.
 
 ## Retreat and rout
 
 A surviving army can retreat to a connected node. This preserves experienced forces, recurring enemies, and accumulated relationships. Defenders under siege may attempt escape, which can succeed or fail.
 
-**Proposal:** compute legal retreat destinations from the current graph and control state. Preserve survivors and reduce their remaining action capacity according to a documented rule. A no-route outcome must be explicit; neither teleportation nor an infinite retreat loop is acceptable. Preview known retreat risks before a voluntary attack when the player could reasonably know them.
+**Implemented retreat:** destinations are adjacent, uncontested, free of active threats/sieges and hostile armies, and either uncontrolled or held by the retreating faction. The resolver prefers its eligible preferred destination, then supplied sites, then stable ID. Battle consequences consume participants' movement. A no-route outcome is explicit. [Retreat rules](../src/engine/retreat.rs) are shared with person refuges and siege contexts.
 
-**Open:** who chooses the destination, whether retreat can be ordered before combat, retreat costs, pursuit losses, destination conflicts, and surrender/capture at encirclement.
+Planned map feedback should show the battle/retreat location, changed force state and relevant control consequence after returning from playback. Additional voluntary field-withdrawal or captivity systems are future scope, not prerequisites for the map plan.
 
 ## Persistent siege
 
-**Agreed direction (O13):** attacking a fortified location can establish a persistent siege. Defenders begin with a strong defensive advantage that gradually weakens as the siege continues. Sorties, escape attempts, incoming reinforcements, and relief attacks are established options; their formulas and interaction rules remain open.
+**Implemented direction (O13):** attacking a fortified location can establish a persistent siege. Defensive advantage weakens with seasonal progress. Assault, sortie, escape, withdrawal and joint relief use current siege commands and [siege_rules.json](../assets/data/siege_rules.json). Their balance is adjustable without reopening their implementation as an approval question.
 
 The illustrative sequence is:
 
@@ -94,13 +95,13 @@ This sequence illustrates direction, not a fixed five-turn capture timer. Under 
 | Wait for defenses to weaken | Attempt escape |
 | Withdraw | Receive reinforcements or coordinate relief |
 
-Later siege depth can involve disease, detailed supply consumption, civilian suffering, fort damage, and negotiation. Disease and negotiation need their own scope decisions. Relief is already part of the agreed light siege direction.
+Fort damage and local consequences already persist. Disease, detailed consumable supplies and narrative negotiation remain future depth. Relief is part of the implemented light siege system.
 
-## Proposed siege state contract
+## Siege state contract
 
 A siege refers to the fortified node, participating factions and armies, start date, accumulated progress, current defensive advantage, and relevant damage. It remains identifiable between turns and saves.
 
-Suggested transitions:
+Implemented transition outline:
 
 ```text
 Hostile arrival -> Siege established -> Maintain across seasons
@@ -116,7 +117,7 @@ Revalidate participants after every battle, move, elimination, or diplomatic cha
 
 A relief force can attack the besieger from outside while defenders may break out. This supports multi-army siege situations without a separate tactical siege game.
 
-**Open:** whether relief and breakout are one joint encounter or ordered encounters, which friendly stacks participate, how slots from multiple armies are represented, casualty allocation, and retreat priority. Preserve each participating army's identity and supply state. Select a single documented rule before accepting a battle resolver.
+Joint relief combines eligible relieving and breakout forces in the defined encounter context. Participating armies keep their identities and six-slot formations, and results apply casualties and retreat per participant. [Siege commands](../src/engine/siege/commands.rs) and [combat context](../src/engine/combat/context.rs) define eligibility; preserve those contracts when displaying region-level siege warnings.
 
 ## Local threats and peace-time combat
 
@@ -129,15 +130,15 @@ Source examples, including deferred fantasy content:
 - A destroyed monster nest can expose a rare resource site.
 - Defeating bandits in a ruined fort can permit reclamation.
 
-These are possible event chains, not guaranteed loot rewards. **Proposal:** store the actual threat, resolution, and reward so that repeated visits cannot grant the same clearance event. Respawning threats, if added, should be new documented events with limits that prevent effortless recognition farming.
+These are source event chains, including future fantasy examples. Current ordinary threats keep persistent identities, active/cleared state and recorded outcomes; reopening a result cannot repeat rewards. Threat progression uses the implemented conditions and tuning in [threats.json](../assets/data/threats.json).
 
 ## Damage beyond the battle
 
 War may burn farms and fields, damage settlements, sabotage roads, destroy outposts, and weaken fortifications. Population losses, refugees, supply disruption, and unrest feed [living places](07-living-places.md). A contested border should visibly diverge from peaceful heartland.
 
-The casualty report should separate military losses from lasting local effects. Whether the player can deliberately raid or scorch territory is a command-design decision; the source establishes destructibility but not a complete order list.
+The casualty report should separate military losses from lasting local effects. Map smoke, damage and occupation cues are planned representations of actual state, not evidence that a new raid or scorched-earth command exists. Adding such commands is outside this presentation plan.
 
-## Reports and proposed acceptance criteria
+## Reports and acceptance criteria
 
 A battle report should explain the result with known contributing factors, surviving headcounts, destroyed formations, character consequences, retreat destination, control change, and noteworthy experiences. Keep full calculation detail optional. Record sufficient facts for later biographies.
 

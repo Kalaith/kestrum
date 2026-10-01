@@ -2,9 +2,16 @@
 
 [Documentation index](README.md)
 
-This ledger accounts for every heading in the three founding drafts. The line spans partition each archived source in order; subheadings inherit the owning topic unless noted by the destination. The destination is the primary consolidated chapter, with additional integration and unresolved choices in [the decision register](13-decisions-and-open-questions.md).
+**Provenance ledger.** This page records the preserved founding drafts, not the
+current implementation status or next work. Source headings and examples can
+describe superseded assumptions or future scope. Use the [documentation
+index](README.md) for current authority and the [verification
+index](verification/README.md) for dated evidence. Keep the manifest and source
+spans intact when updating active design documents.
 
-The permanent files in `docs/reference/` retain every source byte, including examples, diagrams, qualifications, and conflicting directions. The topical chapters add organization, clearly labelled proposals, and the discussion clarifications recorded in chapter 13. The root-level drafts are not needed to read this set. Archive preservation guarantees completeness even where original wording is more detailed, superseded by a confirmed decision, or remains future scope.
+This ledger accounts for every heading in the three founding drafts. The line spans partition each archived source in order; subheadings inherit the owning topic unless noted by the destination. The destination is the primary consolidated chapter; current constraints and defaults are in [the decision register](13-decisions-and-open-questions.md).
+
+The permanent files in `docs/reference/` retain every source byte, including examples, diagrams, qualifications, and conflicting directions. The topical chapters describe current design and explicitly planned changes. The root-level drafts are not needed to read this set. Archive preservation guarantees completeness even where original wording is more detailed, superseded by a confirmed decision, or remains future scope.
 
 Checksums below refer to the exact supplied files. `.gitattributes` disables newline conversion for reference Markdown so those bytes survive Git storage. The original template README is also preserved as a historical reference; its relative links and commands describe its original location and are not maintained Kestrum instructions.
 

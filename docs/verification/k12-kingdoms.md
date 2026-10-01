@@ -30,7 +30,7 @@ simulation commands. Old saves receive diplomacy/AI defaults only when the whole
 new group is absent; partially missing or forged state is rejected atomically.
 
 Delegated choices and bounds are recorded in
-[I11](../13-decisions-and-open-questions.md#i11--bounded-sovereign-decisions-and-lasting-outcomes).
+[I11](../03-kingdoms-and-economy.md).
 
 ## Behavioral checks
 

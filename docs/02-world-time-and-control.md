@@ -14,7 +14,7 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
                   River Settlement
 ```
 
-**Confirmed decision (O01):** the world map has 80 nodes. The implementation interpretation counts major world-level nodes; regional internal sites are additional. Their density remains a generation detail, with roughly 8–12 sites as the existing prototype region target. Major nodes and internal subnodes are generated at world creation and remain fixed while their contents change.
+**Confirmed decision (O01):** the world map has 80 major nodes; regional internal sites are additional. The current authored production layout has 72 simple locations and eight regions of ten physical sites each, for 152 physical sites and 191 routes. Seeded setup assigns campaign contents to this geography. Each campaign preserves its graph and stable IDs while site contents change.
 
 **Confirmed decision (D06):** a new settlement develops on an existing site, and a new road improves an existing connection. Visual density can increase substantially without changing graph topology. Persistent node and route identities support this rule.
 
@@ -22,7 +22,7 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
 
 The player begins from a headquarters or equivalent core territory. It initially supplies recruits, military units, supplies, promotions, training, and command structure. Expansion follows connected routes, creating additional safe settlements and logistical positions.
 
-Headquarters is a functional role. The starting capital can later lose importance or be replaced as the seat of government. Losing a capital is not yet specified as instant defeat; [elimination rules](13-decisions-and-open-questions.md) require a decision.
+Headquarters is a functional role. The capital is a separate, relocatable seat of government. Capital capture alone does not cause defeat: the implemented defeat check considers surviving settled holdings and military strength. See [kingdom outcomes](03-kingdoms-and-economy.md#victory-defeat-and-continuity).
 
 ## Nested regions
 
@@ -51,11 +51,29 @@ Rosemarch is simultaneously one major world location and an internal campaign. I
 
 Each external route can connect to a specific internal node. Arrival from the north may use North Gate; arrival from the west uses West Gate; arrival from the south uses South Pass. Geography changes the invasion, even when the regional destination is the same.
 
-**Proposal — boundary contract:** each traversable regional boundary records its external route and internal endpoint. Movement validates that mapping in both directions. An army has exactly one physical location at a time. The world map aggregates its regional presence; it does not create a second copy of the army. Movement cost across scales must be previewed as one route cost, with no free jump through the interior.
+**Implemented boundary contract:** each traversable regional boundary records its external route and internal endpoint. Movement validates that mapping in both directions. An army has exactly one physical location at a time. The world map aggregates its regional presence; it does not create a second copy of the army. World orders include internal travel to the departure gate, resolve a known accessible entrance and preserve each member's movement budget. Entering a regional view changes inspection scope, not army location.
 
 ### Prototype region
 
-The original concept calls for roughly 8–12 internal nodes, two entrances, one regional capital, one fortress, and several minor locations. Additional simple world nodes connect player and enemy headquarters. Use a small authored region to prove the rules before pursuing a large generated world.
+Rosemarch is the retained small authored scenario used by regression tests and captures. New Game uses the production world. The original 8–12-site regional sketch describes scale; it is not a requirement to repeat one local layout throughout the world.
+
+### Planned geographic variety
+
+All eight current production regions use the same ten-site chain, two entrances
+and anchor pattern, with repeated local coordinates. Geography types and
+development caps vary, but their route choices repeat. The
+[map playability plan](map-playability-plan.md) replaces that repetition with
+authored regional identities: branching approaches, defensible crossings,
+resource concentrations and different relationships between an objective and
+its supply route. Each region must present a distinct decision, not merely a new
+name or terrain cost.
+
+This is planned content and presentation work. Keep the confirmed 80-major-node
+scale, fixed graph during a campaign, valid physical entrances and deterministic
+movement. New geography needs revision-selected topology validation before
+content changes; a layout-revision bump alone is insufficient. Existing saves
+retain their established graph, routes and locations. The current world/region views reuse the
+continental background; meaningful local terrain and roads remain plan work.
 
 ## Occupancy, control, and ownership
 
@@ -82,7 +100,7 @@ Regions can define important control requirements rather than demand every minor
 
 Sufficient anchor control can transfer political ownership while isolated hostile forces remain. This supports surrounded armies, pockets of resistance, guerrilla activity, counterattacks, and negotiated withdrawal. Rich guerrilla and negotiation systems remain later extensions of the basic partial-control rule.
 
-**Proposal:** define anchor requirements as data with explicit all-of and any-of conditions. Reevaluate them after a resolved control or route change. A contested anchor does not count as securely held. Losing an anchor should expose contested status immediately; whether it instantly reverses political ownership or requires sustained control is open.
+**Implemented rule:** anchor requirements are data with explicit all-of and any-of conditions, reevaluated after relevant control, conflict or headquarters changes. A contested or blocked anchor is not securely held. A qualifying claimant receives political ownership; when nobody qualifies, the previous claim remains and the region is contested. A political claim never captures the other physical sites automatically.
 
 ## Fronts and multiple wars
 
@@ -114,7 +132,7 @@ Player -> Faction 1 -> Faction 2 -> ... -> round resolution
 
 Typical campaigns target 20–50 years. Longer histories of 60–100 years should be supported without making hundreds of years necessary. Starting characters need time to become meaningful before the campaign outlives them.
 
-Movement, combat, and control resolve as immediate action consequences. Economy, recovery, construction progress, siege aging, settlement pressure, and biological time resolve at the end of the full round, followed by an automatic save. The [simulation chapter](11-simulation-and-data.md) proposes the internal order; the end-of-round boundary is settled.
+Movement, combat, and control resolve as action consequences. Economy, recovery, construction progress, siege aging, settlement pressure, and biological time resolve at the end of the full round, followed by an automatic save. The order is implemented in [round.rs](../src/engine/round.rs); the [simulation chapter](11-simulation-and-data.md) describes its contract. Map presentation must not add a second timer or repeat these consequences.
 
 ## Seasonal rhythm
 
@@ -125,9 +143,9 @@ Movement, combat, and control resolve as immediate action consequences. Economy,
 | Autumn | Harvest, strong logistics, preparations for winter |
 | Winter | Slower movement, harsher sieges, attrition, fewer major offensives |
 
-These are possible light modifiers, not a requirement for a weather simulator. The calendar and age tracking can ship before seasonal modifiers. Winter attrition is future tuning and must not silently replace the initial supply rule of blocked normal recovery.
+These are future possibilities, not current seasonal modifiers or a requirement for a weather simulator. The calendar and age tracking are implemented. Winter attrition must not silently replace the current supply rule of blocked normal recovery.
 
-## Proposed invariants and feedback
+## Invariants and planned feedback
 
 - A move must follow a connected, currently traversable route; preview cost and known danger.
 - A regional entrance must resolve to a valid internal node and preserve the army's identity.
@@ -136,7 +154,9 @@ These are possible light modifiers, not a requirement for a weather simulator. T
 - Advancing one full round changes time exactly once, including after faction elimination.
 - History uses the same calendar for ages, wars, sieges, construction, and biographies.
 - Routes remain legible at both map scales; unknown territory does not reveal hidden enemy details.
+- Planned territorial overlays must distinguish secure control, partial regional claims and visible conflict; a kingdom's boundary cannot imply ownership of hidden or hostile sites.
+- Planned world markers aggregate known regional threats, sieges and orders without revealing enemy rosters.
 
-## Open decisions
+## Current defaults and future scope
 
-Regional site density, generation constraints, route directionality, terrain costs, naval travel, movement budgets, control reversal timing, and the internal order of round-end effects require prototyping. The 80-node world, fixed graph, and full-round resolution boundary are settled. See [remaining mechanics](13-decisions-and-open-questions.md).
+Routes are bidirectional, authored terrain costs and road adjustments determine travel, and member-owned movement budgets prevent transfer exploits. Regional control and round ordering are implemented defaults, not pending approvals. Naval travel and seasonal weather remain future scope. Regional variety and geographic readability follow the map plan; tune and test those changes without reopening settled campaign contracts.

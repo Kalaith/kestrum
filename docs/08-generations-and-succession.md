@@ -4,7 +4,7 @@
 
 ## Careers across a changing world
 
-**Agreed direction (O17):** typical campaigns span roughly 20–50 years, with aging careers, changing roles, and retirement. Characters have biological age and career age. A squire in Year 3 may become a knight in Year 10, a commander in Year 20, and a retired governor in Year 35, if they survive. Exact seasonal aging events, illness and death probabilities, and physical modifiers remain tuning and implementation questions.
+**Agreed direction (O17):** typical campaigns target roughly 20–50 years, with aging careers, changing roles and retirement. Biological age, service dates, birthday mortality, local wound recovery, retirement and governors are implemented. [lifecycle.json](../assets/data/lifecycle.json) holds current age thresholds and probabilities; campaign duration and mortality remain balance targets, not established acceptance results. The source's squire-to-knight-to-governor story is illustrative; the current ordinary roster uses Recruit, Infantry, Archer, Scout, Cavalry, Medic and Officer.
 
 A longer example follows a character from squire at seventeen, knight at twenty-two, captain at twenty-nine, named commander at thirty-eight, marshal at forty-nine, and governor and mentor at fifty-six. These are illustrative milestones, not required ages for promotions.
 
@@ -25,35 +25,39 @@ The initial roster is human; other species and their age ranges are later conten
 
 Older characters may lose endurance, recovery, and mobility while gaining command, judgment, mentorship, political influence, reputation, and training ability. A blanket “Age 45: -2 Strength” does not express the intended design.
 
-Younger people may have more access to demanding physical classes, apprenticeships, and long training paths. Older people can transition toward commander, strategist, priest, mentor, or governor. Exact modifiers, eligibility, and species variation remain open.
+Current age and fitness checks affect movement, field participation, apprenticeship, command and automatic retirement. Adults can take governor or qualified mentor roles. Strategists, priests, diplomats and nonhuman age curves are future content, not implied active professions. Source life-stage labels explain the intended arc; concrete thresholds come from current lifecycle and household data.
 
-**Proposal:** present what the person can now contribute and which assignments fit them. Give the player time to prepare a successor and move the veteran into a useful role. Aging must not turn a cherished person into an unexplained liability at a fixed birthday.
+**Presentation requirement:** explain what the person can now contribute and which assignments fit them. Give the player time to prepare a successor and move the veteran into a useful role. Existing age rules need understandable opportunities and warnings; the map plan must not imply new abilities or disable current roles silently.
 
 ## Injury, retirement, and death
 
 A severe or long-term injury can change a career. A knight with a serious leg injury may become a commander, trainer, governor, or tactician. The injury can create a new path rather than simply remove all value.
 
-Retirement can follow age, injury, personal choice, political appointment, religious calling, or family obligations. Retired people can remain governors, trainers, advisers, mentors, or diplomats. Those roles require actual supporting systems before numerical benefits are claimed.
+Current retirement can be ordered explicitly or follow the automatic age threshold. Governor assignment and qualified mentorship preserve useful roles for older people. Religious calling, family-driven retirement events, advisers and diplomats are source possibilities for future systems; do not award benefits for roles that are not implemented.
 
-Death can come from combat, illness, age, or major events. Its frequency must leave room for attachment and meaningful careers. Initial combat uses the limited [formation-destruction survival rule](05-battles-and-sieges.md). The full aging, illness, and injury model is part of later generational development.
+Combat death, wounds, recovery and birthday mortality are implemented. Death frequency must leave room for attachment and meaningful careers. The [person-combat rules](05-battles-and-sieges.md#casualties-and-character-survival) govern encounter outcomes; a broader illness, permanent-injury or captivity simulation remains future scope.
 
-**Proposal — lifecycle states:** active, recovering, reassigned, retired, and dead distinguish duty from life status; capture can be added when supported. A permanent death creates a historical record, releases current assignments once, and triggers only the succession systems actually implemented. Avoid returning a dead character to service through a stale transfer or training order.
+**Implemented lifecycle contract:** person status, current assignment, retirement and site role are separate facts. Death clears active roles and invokes existing succession and custody handling once. Current validation prevents a dead person returning through stale transfer or training orders. Capture has no implied implementation.
 
 ## Households and relationships
 
-**Agreed direction (O20):** families, children, mentorship, and several kinds of heirs support continuity; legacy does not require children. Important people can form households through proximity, relationships, shared service, social compatibility, politics, and player encouragement. The player may influence a pairing without controlling every relationship. Household transitions, succession eligibility, property rules, and mentorship duration/capacity remain open.
+**Implemented direction (O20):** households, children, wards, apprentices, mentorship and several successor links support continuity; legacy does not require children. Household commands validate age, local presence, shared service and existing relationships. Formation/end-of-household actions, optional childraising, adoption, trainee assignment and entry into service are implemented through [household data](../assets/data/household_rules.json) and [succession commands](../src/engine/succession/commands.rs).
 
 Limited encouraged or arranged partnerships may support alliances, continuity, succession, and stability. The intended question is what the relationship means for those people and the faction. It should not become a roster of breeding statistics.
 
-**Open:** relationship initiation, acceptance, household membership, player agency, marriage events, and whether the first generational version needs formal partnerships at all. Political marriage mechanics remain future diplomacy even if local family context is recorded sooner.
+The household workflow already supplies player agency and current eligibility explanations. Political marriage, diplomatic alliances and a full social-compatibility simulation remain future scope; they do not block using or improving existing family and succession controls.
 
 ## Children and inherited context
 
-Children can inherit surname, social standing, reputation, mentor access, political obligations, property, and cultural background. Mild aptitude tendencies are possible, but experience still determines identity.
+The source envisions children inheriting surname, social context, reputation,
+mentor access, political obligations, property and cultural background. Current
+family identity, training opportunities, successor links and mundane heirlooms
+cover part of that goal. Heritable aptitude, broad property rights and political
+obligations remain future possibilities; experience still determines capability.
 
 Two famous cavalry officers' child may have horses, mentors, prestige, and expectations, yet become a priest, infantry commander, merchant, mage, or politician. Family provides opportunity without fixing a class.
 
-**Proposal:** retain sparse family records until a person matters. “Child of Serai and Tomas, age eight” can later become eligible for training at fifteen and, on entering service, become “Elara, Page.” This source illustration is one possible family, not a mandatory canonical relationship or a requirement to simulate every child from birth.
+**Implemented baseline:** dependents and trainees have sparse persistent person/family records, age-valid assignments and contextual service entry. Current defaults allow local training from thirteen and service from seventeen. “Child of Serai and Tomas” remains a source illustration, not a mandatory relationship or a requirement to simulate every abstract civilian.
 
 ## Five routes to succession
 
@@ -67,13 +71,13 @@ Two famous cavalry officers' child may have horses, mentors, prestige, and expec
 
 Siblings, apprentices, trusted officers, and other successors also support continuity. Every significant character can leave a legacy without reproduction. A blood heir should not automatically become equally skilled or qualified for command.
 
-**Proposal:** distinguish inheriting an item, title, command, household role, and institutional relationship. Eligibility and appointment rules may differ. Multiple claims, civil war, and political disputes are preserved future possibilities; the initial version should not create a large succession simulator by accident.
+**Implemented contract:** successor designations distinguish legacy categories and relationship links; eligibility and appointment validate actual identity, age, role and local circumstances. Mundane item custody also persists separately. Inheritance never copies a predecessor's class or guarantees a command appointment. Multiple claims, civil war and political disputes remain future possibilities.
 
 ## Mentorship between generations
 
 Older heroes can pass techniques, class access, traditions, doctrine, reputation, and relationships to juniors. This makes veterans and retirees strategically useful.
 
-**Proposal:** a mentorship records teacher, learner, relevant discipline, period of contact, and available opportunity. Progress requires a feasible assignment; an unavailable or dead mentor cannot silently train a remote pupil. Capacity, distance, duration, interruptions, and whether shared army service is sufficient are open.
+**Implemented mentorship:** records identify teacher, learner, discipline, progress and pause reasons. The current default requires a qualified mentor aged at least twenty-six with four relevant service seasons, permits one learner, and requires four apprenticeship seasons. Both people need valid local contact, fitness, an owned supplied site and the discipline's usable facility; Riding also requires horse access. Separation, wounds or lost opportunity pause progress. [Qualification rules](../src/engine/mentorship/qualification.rs) and lifecycle data are authoritative; proximity alone is insufficient.
 
 Mentorship should be at least as valuable a legacy route as family. A founder's former squire can carry an army's traditions even if no descendant enters service.
 
@@ -89,7 +93,7 @@ Used at Hawthorn Gate
 Passed to Tomas in Year 22
 ```
 
-Later generations may treat the spear as an heirloom, relic, or symbol of command. **Proposal:** track an item's stable identity and dated custody history before adding special combat effects. A title or inherited weapon does not duplicate the previous owner's class or skill.
+Current mundane heirlooms already have stable IDs, person or site-estate custody and dated transfer history. Founders receive a Muster Sword; Serai's Spear remains a source example. Custody and succession do not grant magical effects or duplicate the previous owner's class or skill. Additional named equipment is content work.
 
 Families can become linked to places: House Hawthorn, founded by Tomas of Hawthorn, has its seat at Hawthorn Keep. The house can rise with the settlement or become displaced when it falls. Refugees, exiles, and claimants are possible personal outcomes; restoration or claimant factions remain future scope.
 
@@ -99,12 +103,20 @@ Later recruits should reflect military families, temples, settlements, apprentic
 
 Most people remain abstract population. Deeper simulation is reserved for relevance through lineage, military service, mentorship, recognition, politics, or exceptional events. Sparse dependents, tracked juniors, active recognized figures, and historical figures need distinct treatment.
 
-**Confirmed direction (O23):** historical memory may be bounded and forgotten, including stories about famous dead people. Keep living people's state and facts required by current relationships, succession, and progression; prune unneeded narrative records under the [history policy](09-history-and-content.md#bounded-history-and-forgetting). Narrative retention and the soft emergence curve are separate controls. The approximately 20–30-person emergence range and precise active-roster definition still require tuning.
+**Confirmed direction (O23):** historical memory may be bounded and forgotten, including stories about famous dead people. Keep living people's state and facts required by current relationships, succession, and progression; prune unneeded narrative records under the [history policy](09-history-and-content.md#bounded-history-and-forgetting). Narrative retention and the emergence curve are separate implemented controls. The emergence count uses living, non-retired adults aged at least eighteen; its soft 20–30-person target remains tuning rather than a hard cap.
 
-## Proposed generational acceptance cases
+## Generational acceptance cases
 
 1. A founder ages into a useful non-frontline role while a trained junior can take responsibility.
 2. A child, apprentice, or adopted ward can enter service with valid dates and contextual opportunities.
 3. Death or retirement removes active assignments once while preserving relationships and history.
 4. A legacy can continue through mentorship with no children or family requirement.
 5. A multi-decade campaign maintains a manageable active roster and bounded, searchable retained history without breaking current relationships or progression.
+
+## Connection to the map plan
+
+The [map playability plan](map-playability-plan.md) keeps these systems intact.
+Show a relevant vacancy, retirement, successor opportunity or lost local
+facility where it changes an army or settlement decision. Detailed households
+and legacy records stay available on selection. More permanent family panels
+would not resolve the current map's missing territorial and military information.

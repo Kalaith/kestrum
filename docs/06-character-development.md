@@ -2,6 +2,16 @@
 
 [Documentation index](README.md) · [Generations](08-generations-and-succession.md) · [History](09-history-and-content.md)
 
+## Current baseline
+
+Emergence, evidence-based recognition and traits, ordinary careers, formation
+specialization, training, qualified mentorship and rival progression are
+implemented. [progression.json](../assets/data/progression.json) and the
+[progression engine](../src/engine/progression.rs) define their working rules.
+This chapter preserves broader source examples as future possibilities; dragons,
+magical classes and a detailed disease system are outside the current scope.
+Earlier provisional defaults are implemented tuning choices, not pending approval.
+
 ## Identity through experience
 
 Characters become recognizable through what happens to them. The player initially sees limited information, such as “Tomas — Squire — served two campaigns,” rather than a recruitment card exposing aggression, learning rate, courage, and loyalty as precise scores.
@@ -22,13 +32,13 @@ The same event need not produce the same person. Context, prior history, and dis
 
 **Confirmed decision (D02):** ordinary troop members begin abstractly. Someone who distinguishes themselves becomes a visible character attached to the formation, with a plausible recent history generated when needed. This does not require tracking every soldier from birth. Sparse juniors, heirs, and trainees may still be tracked when relevant to the generational design.
 
-**Proposal — representation:** distinguish levels of simulation and prominence:
+**Implemented representation:** distinguish levels of simulation and prominence:
 
 1. **Abstract population or troop member:** represented by population and formation headcount, with shared formation history.
 2. **Tracked person:** a junior, trainee, emerging soldier, heir, or other relevant individual with a persistent ID and age.
 3. **Recognized figure:** a tracked person whose meaningful deeds justify greater historical and political prominence.
 
-An ordinary personal name is not the same as recognized status. Tomas can be named in a roster before becoming “Tomas of Hawthorn.” Emergence from abstraction and formal recognition may coincide, but need not. The agreed design lets named characters strengthen armies and later move into leadership. Exact appointment eligibility and contribution formulas still need implementation rules; this representation does not impose an additional confirmed recognition gate.
+An ordinary personal name is not the same as recognized status. Tomas can be named in a roster before becoming “Tomas of Hawthorn.” Emergence from abstraction and formal recognition are separate recorded facts. Named people can strengthen armies and later move into leadership through implemented fitness, assignment and appointment checks; recognition does not create an extra formation slot.
 
 ## Emergence from formations
 
@@ -44,9 +54,9 @@ overflow follow [the formation-slot contract](04-armies-and-logistics.md#charact
 
 **Agreed direction (O14):** emergence is semi-rare, easier when the faction has few named heroes, and progressively rarer toward roughly 20–30. Veteran formations have a higher chance, and meaningful experiences influence who emerges. Source illustrations suggest a few meaningful fights with one hero, less frequent emergence around ten, and possibly a major war around twenty. Those are qualitative examples, not probability thresholds or a hard cap.
 
-**Remaining mechanics (D07/O14):** define which named roles count toward the faction's roster, how retirees are treated, and the exact probability curve. Historical dead figures should not prevent later generations from emerging.
+**Implemented roster measure (D07/O14):** the emergence curve counts living, non-retired faction members aged at least eighteen. Dead people and retirees do not suppress the next generation. A season's eligible surviving formation is selected from actual recent service; the people RNG and data-defined roster curve, veterancy and exceptional-service factors determine emergence.
 
-**Proposal:** use meaningful eligible events and a state-owned random process. Repeated low-risk farming should not have the same weight as surviving a major campaign. The exact probability curve and significance weights are tuning work.
+The probability curve and significance weights remain tunable in progression data. Repeated low-risk service should not outweigh a major campaign merely through repetition; adjust against observed campaigns while preserving actual evidence and deterministic state-owned randomness.
 
 ## Retrospective grounding
 
@@ -54,13 +64,13 @@ An emerging person can receive a plausible background from formation history, re
 
 Example: Elian is nineteen. His Frostmarch formation was recruited three years ago and fought at Redplain and Hawthorn. A plausible biography says that he joined in Year 22, fought at Redplain in Year 23, and distinguished himself at Hawthorn. The timeline must support his birth, service, and presence; it cannot claim a battle fifty years before his birth.
 
-Generated family context may also connect to known history. If Thomas founded Frostmarch and ages and records permit, Elian might be his son. This is optional and conservative. **Proposal:** prefer leaving a relationship unknown over contradicting established parents, locations, ages, or death records. Distinguish an inferred background from a directly witnessed event internally so later narrative cannot overstate evidence.
+A future retrospective family narrative may connect to known history when dates and recorded relationships permit. It must not automatically assign an emerging person as a founder's child. Current households and family records have their own commands and chronology checks. Prefer unknown context over contradicting parents, locations, ages or deaths.
 
 ## Evidence-based traits
 
 Repeated actions can justify traits. Tomas holds against superior forces, volunteers for a counterattack, takes command after an officer is wounded, and protects a retreat. The game may recognize Bold, Protective, and Natural Commander.
 
-**Proposal:** retain event evidence behind each trait and expose a short “Known for” explanation. Thresholds, evidence decay, contradictions, and whether a major event can outweigh repeated behavior are open. The player should understand why the trait exists without seeing every hidden inclination.
+**Implemented baseline:** compact evidence and data-defined thresholds support earned traits and career explanations. Narrative retention is separate from lasting earned capability. The player should understand why a trait exists without seeing every hidden inclination. More elaborate contradictory traits or evidence decay are future extensions, not missing prerequisites for the current ordinary careers.
 
 ## Recognition
 
@@ -75,15 +85,15 @@ Meaningful recognition can come from:
 
 Recognized figures may gain distinctive portrait treatment, a biography, command ability, relationships, rivalries, epithets, political importance, event involvement, battlefield influence, and historical records. Their capture or death carries greater strategic and emotional weight.
 
-**Proposal:** recognition records the achievement and its importance rather than treating all combat events as interchangeable points. Formal recognition should announce the name, deeds, and newly available role. Exact thresholds and benefits remain open.
+**Implemented baseline:** recognition uses actual evidence, notable service and progression thresholds, and records its result once. The presentation should name the deed and any available role. Rich portrait treatment, additional political benefits and captivity remain future possibilities rather than automatic consequences of recognition.
 
 ## Class eligibility and opportunities
 
-**Agreed direction (O15):** experience and opportunity create class eligibility, supported by resources and infrastructure in the world. Meeting history requirements makes a path eligible; it does not guarantee every resource or opportunity exists. Dragon training requires appropriate dragon infrastructure. Training duration, exact prerequisite expressions, class acceptance, mutually exclusive paths, and retraining remain open.
+**Implemented direction (O15):** experience and opportunity create class eligibility, supported by resources and infrastructure in the world. The current ordinary career rules define prerequisites, costs, courses and class changes; mentorship has separate seasonal progress. Meeting history requirements does not supply missing facilities or resources. Future dragon training would require its own relevant infrastructure and content rules.
 
 **Confirmed decision (O10):** eligibility uses the experiences and encounter types the unit actually participated in. Generic experience points cannot replace a missing encounter: a unit that has never seen a dragon cannot unlock dragon flying. A formation member can draw on events during their service in that formation, not battles before they joined or events experienced only by a remote ally. Compact participation facts survive narrative-history pruning under O23.
 
-**Initial scope (O24):** humans and ordinary classes only. Use Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer as the provisional roster. Dragon Knight, Plague Cleric, magical specialists, and other races remain later content. The examples below preserve that future design without adding it to the first release.
+**Implemented scope (O24):** humans and the ordinary classes Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer. Dragon Knight, Plague Cleric, magical specialists, and other races remain later content. The examples below preserve that future design without adding it to the current campaign or map plan.
 
 Resources create possibilities:
 
@@ -108,7 +118,7 @@ Source eligibility example:
 - **At least one:** survived a dragon attack, defeated a dragonkin officer, or bonded with a drake.
 - **Opportunity examples:** drake access, Dragon Knight mentor, specialist stable.
 
-The kingdom draft additionally requires suitable named status and dragon infrastructure such as a Dragon Hatchery. **Open:** which opportunities are alternatives, which are all required, and how an egg, drake, hatchery, stable, and mentor relate. Preserve the possibilities until the content rule is explicitly selected.
+The kingdom draft additionally suggests suitable named status and dragon infrastructure such as a Dragon Hatchery. Exact combinations of egg, drake, hatchery, stable and mentor are deferred with this fantasy content. They do not block current implementation or imply a required approval step.
 
 ### Plague Cleric: Mira — future content
 
@@ -118,7 +128,7 @@ Mira begins as a temple neophyte in a conquered city suffering disease. Treating
 Temple Neophyte -> Field Cleric -> Plague Cleric
 ```
 
-The campaign creates the specialist. Medical service may also have emotional consequences. A minimal prototype can record treatment experiences before modeling a full disease system.
+The campaign creates the specialist. Current Medic progression already records actual treatment experience; the wider disease and magical career narrative remains a future example.
 
 ## Player nurturing and occasional direction
 
@@ -141,10 +151,19 @@ If the player destroys his company and he survives, he may gain survivor experie
 | Diseased region | Triage, herbalism, plague expertise, emotional consequences |
 | Encirclement | Survival, loyalty, desperation, leadership, trauma, reputation |
 
-## Prototype event vocabulary
+## Participation vocabulary
 
 **Implementation baseline for O10:** record participation in battle, victory, defeat, survival while outnumbered, commander wounded, assumed command, treated wounded, fought an enemy type, defended a strategic node, captured a strategic node, training, and non-combat encounters. Tag the relevant troop/creature type, terrain, role, and activity. Additional event kinds can be added as content needs them.
 
-Store only facts supported by actual participation or a valid retrospective service history. Seeing a dragon can satisfy an encounter prerequisite but does not by itself grant flying, riding skill, a mount, or infrastructure. V1 uses ordinary human training and service tags; dragon tags illustrate the rule for future content. Recognition thresholds and class expressions remain O14/O15.
+Store only facts supported by actual participation or a valid retrospective service history. Seeing a dragon could satisfy a future encounter prerequisite but would not grant flying, riding skill, a mount or infrastructure. Current content uses ordinary human training and service tags; its recognition thresholds and class expressions are implemented in progression data.
 
-**Proposed invariants:** every experience has valid participants and a date; recognition is applied once; retrospective history fits age and presence; class eligibility can explain missing requirements; identity survives transfers and save/load; enemies follow the same development constraints.
+**Invariants:** every experience has valid participants and a date; recognition is applied once; retrospective history fits age and presence; class eligibility can explain missing requirements; identity survives transfers and save/load; enemies follow the same development constraints.
+
+## Planned map connection
+
+The [map playability plan](map-playability-plan.md) should make an army's relevant
+leader and assignment identifiable where that army acts, and make sites with
+useful training facilities recognizable. Surface an earned opportunity or loss
+where it affects the next decision; keep biographies, household detail and full
+course lists in contextual inspection. This connects existing people to their
+places and campaigns without adding another permanent character dashboard.

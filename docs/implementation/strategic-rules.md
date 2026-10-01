@@ -1,10 +1,12 @@
 # Provisional strategic rules
 
-[Plan](../implementation-plan.md) · [Contracts](contracts.md)
+[Plan](../implementation-plan.md) · [Active map playability plan](../map-playability-plan.md) · [Contracts](contracts.md)
 
-All **P01–P10** choices below are provisional defaults for review and implementation.
-Confirmed constraints are cited by their chapter 13 IDs. Values belong in JSON,
-not Rust constants. The owning GDD chapters remain the source of design intent.
+**P01–P10** records the delivered strategic defaults and later amendments.
+Status reconciled 2026-10-01. Their delegated status is not an approval gate.
+Confirmed constraints are cited by chapter 13 IDs; values belong in JSON.
+Use the [map playability plan](../map-playability-plan.md) for next work, including
+any deliberate geography/content revision and its save-compatibility decision.
 
 ## P01 — Setup and the fixed world
 
@@ -16,13 +18,18 @@ factions including the player**, default 4. Start with one normal difficulty and
 no hidden AI income bonus. Starting year comes from existing presentation data.
 Use a displayed seed; randomizing it is an explicit setup action before creation.
 
-The production layout contains exactly 80 major locations. Eight are region hubs
+The delivered production layout contains exactly 80 major locations. Eight are region hubs
 with ten internal sites apiece; the other 72 are physical single sites. Thus the
 initial production traversal graph has 152 physical sites, not 160 or 80. Assign
 stable IDs during creation, store the instantiated graph, and never add/delete
 sites/routes later. Generate initial contents and faction assignment from the
 seed against authored geographic layout data. This initial generator does not
 need unconstrained procedural terrain or arbitrary image recognition.
+
+These counts and the original regional templates describe current content and
+validation, not a requirement that every future region look or play identically.
+The active map plan may change authored geography; update content validation,
+tests and save compatibility together rather than silently changing saved worlds.
 
 Author normalized atlas positions and explicitly traversable land connections in
 `world_layout.json`. Review that markers and lines fit the actual atlas. Do not
@@ -70,7 +77,9 @@ Sources: D03/O04 and [round resolution](../11-simulation-and-data.md#round-end-r
 Player first, then active independent NPC factions in stable ID order. Snapshot
 the round's faction order and persist its acted set. Eliminated or subordinate
 vassal factions have no independent turn; skip them without replaying/skipping
-another faction. Commands and battles resolve immediately. `End Turn` ends only
+another faction. Accepted strategic commands apply immediately; a witnessed
+encounter pauses at saved preparation, and Start Battle commits its resolution.
+`End Turn` ends only
 the active faction's phase. NPC work advances one atomic command at a time with
 visible progress and the C03 pause/transfer control.
 
@@ -108,8 +117,9 @@ Sources: D06 and [control/anchors](../02-world-time-and-control.md).
 
 Every external connection names both physical endpoints. For a region endpoint
 this is a particular entrance site. Crossing pays that edge once; moving within
-the region requires its internal edges. A collapsed world route preview expands
-to the real physical route before confirmation. A world marker is never a free
+the region requires its internal edges. A world-map order expands to the real
+physical route before execution. Review Route can inspect those steps; ordinary
+destination taps execute immediately. A world marker is never a free
 shortcut between gates.
 
 Unopposed legal arrival captures an unfortified neutral/hostile site immediately;
@@ -171,9 +181,13 @@ in the initial content. No zero-cost edges or naval traversal.
 
 Use minimum-total-cost pathfinding with site-ID tie breaks. Show legal cost from
 known state, remaining movement, and uncertain enemy contact; no exact enemy
-strength forecast. Follow the confirmed route edge by edge. Insufficient movement
-rejects that next step without spending it. Hostile contact interrupts travel and
-resolves combat/siege; participating forces become exhausted for the round.
+strength forecast. Tapping a legal map destination follows its physical route
+edge by edge, using the available allowance and saving the remainder. End Turn
+continues the plan when movement refreshes; Cancel Route stops it and another
+destination replaces it. Orders may be saved with no movement left. Reject
+known peaceful borders across the whole order and recheck access on continuation.
+Hostile contact pauses travel for the encounter; pending player battles open
+preparation before commitment. Participating forces become exhausted for the round.
 Defending does not require unused movement. A retreat costs all remaining movement
 and follows P13. Transfer is free and has no safe-site or supply requirement.
 

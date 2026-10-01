@@ -2,6 +2,15 @@
 
 [Documentation index](README.md) · [Characters](06-character-development.md) · [Generations](08-generations-and-succession.md)
 
+## Current baseline
+
+Bounded event records, place/army/person histories, dated enemy observations,
+career evidence, family and heirloom links, eras and factual anniversaries are
+implemented. The examples below preserve the founding experience goals; they
+are not scripts or a list of features still awaiting implementation. The
+[map playability plan](map-playability-plan.md) now connects important changes to
+their visible places and forces while retaining detailed records on demand.
+
 ## Purpose of campaign memory
 
 History should help the player understand why a person or place matters. Biographies and chronicles arise from actual gameplay events. Contextual summaries keep that history present without flooding ordinary play with logs.
@@ -12,7 +21,7 @@ People age, places evolve, and wars leave history behind. The world should never
 
 **Confirmed decision (O23):** retaining every old story is unnecessary. The world may forget that a ruin was once the city where Alexander was slain and simply know it as a ruin. Current geography, condition, ownership, and living people's capabilities remain valid even when their older narrative context is gone.
 
-**Provisional retention policy, chosen under the delegated discretion:**
+**Implemented retention defaults, chosen under delegated discretion:**
 
 - Keep detailed narrative events for at most 40 rounds (ten years), capped at the newest 10,000 events per campaign. Expire by age or count, whichever applies first, with stable event IDs breaking date ties.
 - Keep up to twelve short notable-history entries per extant place, army, or person, each for at most 80 rounds (twenty years). Old names, deaths, and battlefield stories can leave these summaries too. A destroyed formation loses its own history immediately under D05.
@@ -20,27 +29,27 @@ People age, places evolve, and wars leave history behind. The world should never
 - Keep compact gameplay facts separately: experience totals, encounter types actually participated in, earned traits/classes, dates and links required by current relationships, current state, and already-applied order outcomes. Pruning a battle story must not remove an earned skill, invent an encounter, revive someone, or let a reward apply twice.
 - Prune once at round end before autosaving. Resolve narrative references to an extant entity or retained event label; if detail is gone, show that older history is unavailable. Do not fabricate replacement stories or allow dangling links to break a save.
 
-These are starting budgets to tune after measuring the 80-node campaign. Retained event pages should query bounded selections rather than scan the entire campaign each frame. Permanent archives, full biographies of everyone who ever lived, and preservation of every old place name are not requirements.
+These budgets are implemented in [history_rules.json](../assets/data/history_rules.json) and remain adjustable against measured campaigns. Retained event pages query bounded selections. Permanent archives, full biographies of everyone who ever lived, and preservation of every old place name are not requirements.
 
-## Proposed event record
+## Event record
 
-Each significant occurrence should have a stable event ID, date, kind, participants, place, causal references where available, outcome facts, and knowledge visibility. This is a design contract, not an implemented schema.
+The implemented [HistoryRecord schema](../src/state/history.rs) stores a stable event ID, completed-round date, kind, labeled subjects, optional source fact, related event links and observer visibility. It supports place, army, person, formation and item subjects. Authoritative outcomes and compact evidence remain separate from prunable narrative records.
 
 Useful event families include:
 
-| Domain | Candidate narrative events, subject to retention |
+| Domain | Current event coverage, subject to retention |
 | --- | --- |
 | Military | Recruitment, formation specialization, battle, retreat, siege, relief, army or formation destruction |
 | Character | Emergence, training, recognition, trait evidence, class change, wound, command, retirement, death |
 | Places | Founding, development, fortification, occupation, sack, ruination, reclamation, renaming, capital relocation |
 | Continuity | Mentorship, household ties, entry into service, inheritance, item transfer, institutional legacy |
-| Kingdoms | Founding, war, peace, territorial transfer, elimination; vassalage when implemented |
+| Kingdoms | Founding context, war, peace, territorial transfer, annexation and submission |
 
 Record facts once and derive different summaries from them. A battle can appear in an army record, a character biography, and a place chronology without awarding its experience three times. Under confirmed decision D05, a formation's own history is gone when it is destroyed. The world can still retain battle facts involving it; this event model does not require a separate destroyed-formation service archive.
 
 ## Historical integrity
 
-**Proposal — narrative rules:**
+**Narrative integrity rules:**
 
 - Events cannot predate a person's birth or relevant service unless the statement concerns inherited context.
 - Direct participation needs evidence of presence or a valid retrospective grounding rule.
@@ -88,7 +97,7 @@ An enemy counterattack reaches Milltown. Tomas holds the node after his commande
 
 Several campaigns later, Tomas is a recognized knight, Mira is developing toward Plague Cleric, and the escaped officer is a major rival. Rosemarch can remain partly contested. Those outcomes demonstrate the interaction of map, opportunities, medical experience, survival, and recognition.
 
-The small company in this original example predates the six-formation army model. A modern prototype can preserve the same event chain with people attached to formations and forces assigned across multiple armies. It must not silently turn six troop slots back into six individual soldiers.
+The small company in this original example predates the implemented six-formation army model. Preserve its experience goal using people attached to distinct formations and forces assigned across multiple armies. It must not turn six troop slots back into six individual soldiers. Plague Cleric remains future content; current Medic careers provide the ordinary medical path.
 
 ## Wars across generations
 
@@ -120,7 +129,7 @@ Occasional source examples of contextual reminders:
 - “The children born during the First Siege are now reaching military age.”
 - “Few living soldiers remember when Redplain was only an outpost.”
 
-**Proposal:** generate reminders at meaningful anniversaries and suppress repetition. “Few living soldiers” requires actual supporting information; otherwise use a statement the simulation can substantiate. Era naming should preserve uncertainty when a conflict is still unfolding.
+Current reminders track supported service and place anniversaries and suppress repeated milestones; era summaries use recorded campaign facts. [History legacy rules](../src/engine/history/legacy.rs) define the implemented behavior. The quoted source reminders are illustrative: “Few living soldiers” requires supporting information and must not be invented from atmosphere alone. Lost historical detail stays explicitly unavailable.
 
 ## Contextual presentation
 
@@ -128,13 +137,26 @@ A selected place can show retained founding, siege, and capture facts. A selecte
 
 Notifications emphasize changed circumstances: a leader's retirement, a new class opportunity, or a key route lost. Persistent state remains inspectable after a toast ends. The UI should not repeat the same commander in every banner and panel.
 
-## Content authoring guidance — proposal
+**Planned map feedback:** a new settlement, completed fort, damaged place,
+retreat or changed border should update the relevant visible object. Temporary
+feedback identifies the change; the new state and a contextual history action
+remain available afterward. Important known regional events must reach the
+world overview, rather than requiring the player to open every region. This is
+planned presentation work and must use existing observer-filtered facts.
+
+## Content authoring guidance
 
 Author reusable conditions and consequences rather than fixed protagonists. Each event definition should specify trigger context, eligible participants, chronological requirements, state changes, evidence tags, possible text, and who can know it. Separate a template's prose from the factual record.
 
-**Confirmed initial scope (O24):** humans and ordinary classes; advanced classes and other races are later additions. The provisional character roster is Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer. Initial formations are Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines, with placeholder capacities and costs in [economy.json](../assets/data/economy.json). Bandits and ordinary wildlife provide early threats.
+**Confirmed current scope (O24):** humans and ordinary classes; advanced classes and other races are later additions. The implemented character roster is Recruit, Infantry, Archer, Scout, Cavalry, Medic, and Officer. Base formations are Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines, with tunable capacities and costs in [economy.json](../assets/data/economy.json). Shield Guard, Pikemen and Light Cavalry are supported specializations. Bandits and ordinary wildlife provide local threats.
 
-Start with a small human naming pool, basic traits, mentor disciplines, participation/encounter tags, terrain and route types, fortifications, and development focuses. Exact names, art, and audio are content-authoring tasks. Dragon Knight and Plague Cleric remain future reference paths, not launch requirements.
+Human naming pools, traits, mentor disciplines, participation tags, geography,
+fortifications and development focuses already exist. Improve content against
+the actual data and rules. For the map plan, author places with recognizable
+purpose and regional networks with different strategic choices; repeated names,
+rotated terrain costs and identical chains are insufficient variety. Art and
+labels must agree with legal routes and site capabilities. Dragon Knight and
+Plague Cleric remain future reference paths, not map-plan requirements.
 
 Names from the sources—Serai, Edrin, Tomas, Mira, Dratanus, Teresa, Elian, Elara, Thomas of Frostmarch, Rosemarch, Hawthorn, Redplain, Ashford, and Frostmarch—are examples. Thomas and Tomas must not be silently assumed to be the same person. Likewise High Fort, Hawthorn Fort, and Hawthorn Gate appear in separate map examples; content authors must assign explicit IDs instead of assuming those labels are interchangeable.
 

@@ -1,13 +1,23 @@
 # Provisional combat and siege rules
 
-[Plan](../implementation-plan.md) · [Strategic rules](strategic-rules.md)
+[Plan](../implementation-plan.md) · [Active map playability plan](../map-playability-plan.md) · [Strategic rules](strategic-rules.md)
 
-**P11–P15 are provisional**, deliberately small explainable models. The source
-does not prescribe this mathematics. Implement and test it first; tune it through
-recorded playtesting. Sources: [armies](../04-armies-and-logistics.md),
+**Status reconciled 2026-10-01:** B01–B07 is implemented. Its
+[formation combat contract](../battle-system-implementation-plan.md) supersedes
+P11's non-positional roster and P12's simultaneous rotating-target arithmetic.
+Those sections remain historical reference for older reports and tests; do not
+restore them or schedule tactical combat as absent work. P13–P15's campaign
+consequences remain baseline, subject to recorded later amendments. The
+[battle review](../verification/battle-review.md) owns current correctness,
+balance and battlefield presentation caveats.
+
+**P11–P15** were delegated defaults for the original small resolver. Sources:
+[armies](../04-armies-and-logistics.md),
 [battles and sieges](../05-battles-and-sieges.md), D01/D05/O05/O06/O13.
 
 ## P11 — Participation and strength
+
+Historical resolver section; see the supersession notice above.
 
 An ordinary encounter has two hostile factions. The moving army attacks; other
 armies at its origin do not teleport into the encounter. An explicit group move
@@ -50,6 +60,9 @@ specified in P14, used only when walls protect that side. No numerical bond or
 hidden aptitude bonus in this first resolver.
 
 ## P12 — Bounded automatic exchanges
+
+Historical resolver section; current battles use ordered formation activations,
+reactions, exposure and morale with a versioned immutable event receipt.
 
 Resolve up to eight exchanges. Snapshot living rosters at each exchange start;
 calculate all attacks from that snapshot and apply both sides' casualties

@@ -1,11 +1,13 @@
 # Implementation contracts
 
-[Plan](../implementation-plan.md) · [Work packages](work-packages.md)
+[Plan](../implementation-plan.md) · [Active map playability plan](../map-playability-plan.md) · [Work packages](work-packages.md)
 
-These are **P: provisional engineering contracts** implementing the behavior in
-[chapter 11](../11-simulation-and-data.md). Concrete modules are introduced only
-when a package consumes them. They are recommended boundaries, not a demand to
-create every file at once.
+These contracts describe the delivered campaign's engineering boundaries, with
+recommended module shapes from the original K01–K18 plan. **P** records delegated
+defaults, not outstanding approval. Status reconciled 2026-10-01: the
+[active map plan](../map-playability-plan.md) owns next work. Preserve these
+ownership, observer, determinism and persistence boundaries during that work.
+Concrete existing modules take precedence over illustrative filenames below.
 
 ## C01 — Ownership and module boundaries
 
@@ -85,9 +87,16 @@ profile before replacing it. Rejection preserves resources, IDs, RNG and events.
 
 Multi-edge movement commits one legal edge/encounter at a time. A changed or
 blocked later edge stops at the last committed site and produces an interrupted
-order result, not a rollback of earlier travel. A battle including all consequences
-is one atomic action. Round-end effects commit as one boundary. Persist only stable
-boundaries; never save half a battle or half a round.
+order result, not a rollback of earlier travel. Map orders persist their remaining
+route and continue after movement refreshes; ordinary destination taps execute
+the legal affordable part immediately. Preview is a read-only engine boundary,
+not a mandatory confirmation screen for every move.
+
+B03 added a serializable pending battle preparation boundary. Starting a pending
+battle commits its resolution and campaign consequences atomically; playback
+reads the committed receipt. Round-end effects commit as one boundary. Save only
+stable boundaries, including complete pending preparation; never half a battle
+commit or half a round.
 
 Ordinary commands require the actor's faction turn. Transfers are the confirmed
 exception: allow the owning faction to transfer between co-located armies at any

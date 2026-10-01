@@ -1,15 +1,23 @@
 # Battle system implementation plan
 
-[Design index](README.md) · [Battle design](05-battles-and-sieges.md) · [Current implementation](../README.md)
+[Design index](README.md) · [Active map playability plan](map-playability-plan.md) · [Battle design](05-battles-and-sieges.md) · [Current implementation](../README.md)
 
 Prepared 2026-09-30 against `f49be5a` on `master`. This plan turns the supplied
 [battle system notes](reference/battle-system-notes.txt) and the subsequent
 [battlefield mockup](reference/battle-system-mockup.png) into an implementation
-sequence for Kestrum. The mockup and the user's request for game-focused
-presentation govern the visual direction. This plan proposes gameplay and
-engineering choices; it does not claim they are implemented or approved balance
-values. The source is preserved
-byte for byte. The original K01–K18 plan remains the record of the earlier release.
+sequence for Kestrum. **Status reconciled 2026-10-01:** B01–B07 has been delivered.
+This document retains its design contracts and historical sequence; proposed
+sections below are the design that guided delivery, not unstarted work. The
+[map playability plan](map-playability-plan.md) owns next implementation.
+The source notes remain preserved byte for byte. The original K01–K18 plan
+records the earlier release.
+
+The [fresh battle review](verification/battle-review.md) supersedes B07's original
+validation claims where later fixes changed outcomes. Its current 240-round
+production victory failure remains a balance blocker. Multi-army clipping,
+target-priority authoring, small touch targets and aggregate morale presentation
+remain separate recorded findings. Delivered does not mean all presentation,
+platform or balance acceptance has passed.
 
 The target experience is to **prepare an army, program its tactics, then watch
 that plan meet an opposing formation on a visible battlefield**. Soldiers and
@@ -58,7 +66,10 @@ units; define a weighted morale summary explicitly rather than copying the
 example's percentages. The selected-unit stat labels must distinguish troop
 strength from attack, morale and resistance.
 
-## Starting point and integration boundaries
+## Historical starting point and integration boundaries
+
+This table describes the pre-B01 implementation and the changes delivered by
+B01–B07. It is retained for rationale, not as a list of missing capabilities.
 
 | Existing system | Required change |
 | --- | --- |
@@ -75,8 +86,8 @@ strength from attack, morale and resistance.
 Relevant dependencies include [P11–P15](implementation/combat-rules.md), movement,
 siege relief, ordinary threats, person wounds, formation specialization,
 participation evidence and save compatibility. P11's lack of tactical positioning
-and P12's rotating targets are the old model. The proposed expansion replaces
-those parts when its campaign integration ships. P13–P15's campaign consequences
+and P12's rotating targets are the old model. B03 replaced those parts in the
+live campaign. P13–P15's campaign consequences
 remain the baseline unless a milestone explicitly records an amendment.
 
 ## Proposed first playable scope
@@ -93,7 +104,7 @@ Combat has an opening, one activation per eligible unit per round, bounded
 reactions, then morale and formation updates. The battlefield stages representative
 soldier groups in a shared landscape, with troop counts, morale, actions and open
 lanes integrated into the scene.
-Named leaders later add tactical abilities grounded in their existing careers.
+Named leaders add the B05 tactical abilities grounded in their existing careers.
 
 The initial implementation excludes freely editing tactics during execution,
 individual soldier simulation, a separate tactical movement map, persistent
@@ -275,35 +286,35 @@ within a documented recent-report budget. Older or pruned reports retain their
 summary and explicitly offer no detailed replay. Never fabricate events from
 legacy exchange totals.
 
-## Proposed architecture and persistence
+## Implemented architecture and persistence
 
-| Responsibility | Suggested existing extension or new module |
+| Responsibility | Current implementation |
 | --- | --- |
-| Typed ability, condition, priority and doctrine definitions | Extend `src/data/combat.rs`; introduce `src/data/battle_tactics.rs` and authored `assets/data/battle_tactics.json`. Load through toolkit JSON APIs and validate all IDs, references, limits and action/target compatibility. |
-| Persistent formation configuration | Extend `src/state/military.rs` with a cohesive configuration type, defined in `src/state/tactics.rs`. Tactics follow `FormationId` through transfer, replenishment and army splitting. |
-| Pending encounter and runtime snapshot | Extend `src/state/battle.rs` through named children such as `pending.rs`, `runtime.rs` and `events.rs`. Separate permanent deployment from temporary combat positions. |
-| Pure simulation | Extend `src/engine/combat.rs` through `formation.rs`, `tactics.rs`, `rounds.rs`, `reactions.rs` and `resolution.rs`. Replace obsolete arithmetic when integrated; retain shared consequence handling. |
-| Transactional editing and encounter commands | Extend `src/engine/actions/types.rs`, command validation, movement/siege/threat entry points and NPC continuation. Suggested intents: SetFormationTactics, SetBattleLeader, SetDeployment, PrepareEncounter and StartBattle. |
-| Battlefield staging and contextual inspection | Add named modules under `src/ui/battle/` for terrain, troop groups, actor/target feedback and inspection, with playback orchestration under `src/game/battle/`. The renderer maps logical positions into a shared scene, reads projected state and returns `UiAction`; cosmetic animation never mutates campaign state. |
-| Compatible saves and reports | Extend `src/state/campaign/compatibility.rs` through a battle-specific child and battle validation. Preserve the persistence catalogue and recovery workflow. |
-| Behavioral regression coverage | Add focused `tests/battle_*.rs`; extend existing combat, siege, threat, progression and persistence regressions. Keep test helpers under `tests/support/`. |
+| Typed ability, condition, priority and doctrine definitions | `src/data/combat.rs`, `src/data/battle_tactics.rs`, `assets/data/combat_rules.json` and `assets/data/battle_tactics.json`; toolkit loading and semantic validation. |
+| Persistent formation configuration | `src/state/military.rs` stores tactics and selected leaders; `src/state/battle_plans.rs` stores campaign templates. Tactics follow `FormationId` through transfer, replenishment and splitting. |
+| Pending encounter and runtime snapshot | `src/state/battle.rs` owns pending preparation and reports; `src/state/battle/simulation.rs` owns snapshots and typed resolution events. |
+| Pure simulation | `src/engine/battle_sim/formation.rs` and its named children resolve activations, reactions, morale and events. `src/engine/combat.rs` and its context/formation modules integrate lasting consequences. |
+| Transactional editing and encounter commands | `src/engine/battle_preparation.rs`, its rival preparation child and `src/engine/actions/types.rs` provide SetFormationTactics, SetBattleLeader, SwapFormationSlots, doctrine/template commands and StartPendingBattle. |
+| Battlefield staging and contextual inspection | `src/ui/battlefield.rs` and children render terrain, troops, events and tactics; `src/game/battlefield.rs` coordinates actions and playback. Rendering returns intents and never changes campaign state. |
+| Compatible saves and reports | `src/state/campaign/compatibility/battle.rs`, battle validation and versioned report fields preserve earlier data through the existing catalogue/recovery workflow. |
+| Behavioral regression coverage | `tests/battle_formation.rs`, `tests/battle_playback.rs`, `tests/battle_doctrines.rs` and campaign combat/siege/threat/persistence regressions; helpers remain under `tests/support/`. |
 
 Persist tactics, explicit leader selection and army deployment. Initialize older
 formations with type-appropriate legal defaults and preserve their saved slot
 indices. For an older save, its eligible army commander can initialize the battle
 leader of their containing formation; other formations default to no selected
-leader. Do not detach other people or manufacture recognition. Multiple attached
-people continue to contribute under existing leadership rules, while only the
-selected leader unlocks that formation's hero actions.
+leader. Do not manufacture recognition or duplicate people. Current formation
+slots contain at most one named person alongside their troops; aggregate army
+leadership and the selected formation leader retain their separate roles.
 
 Validate leader eligibility at snapshot time. Transferring, retiring or losing
 that person must leave the saved configuration understandable: show unavailable
 ability rows and their reason, skip them safely, and retain a basic fallback.
 Structural errors and unknown IDs remain save/data errors; ordinary loss of an
 ability prerequisite is not corrupted data. Old reports still deserialize and
-render their original text. Pending encounters require an explicit serializable
-schema upgrade; missing legacy fields can receive defaults, malformed present
-fields must not be repaired silently.
+render their original text. Pending preparation is already serializable. Future
+schema changes must keep compatibility explicit: missing legacy fields may receive
+defined defaults, but malformed present fields must not be repaired silently.
 
 Follow the shared Rust/toolkit standards. Consider generic selection, reorder,
 viewport or playback helpers as toolkit candidates before writing local copies;
@@ -349,13 +360,12 @@ fighting. Pause freezes camera focus for inspection. Disclose enemy information
 only to the extent the encounter and existing knowledge rules permit; a prepared
 replay payload must be filtered too.
 
-## Delivery sequence and acceptance gates
+## Completed delivery sequence and original acceptance gates
 
-Complete, validate and commit each useful milestone before beginning the next.
-B01–B02 prove the combat and its visible battlefield before a substantial
-management interface is built. B01–B04 form the first complete campaign
-version; B05–B07 complete the intended system. No calendar estimate is asserted
-before the new resolver and pending-command changes have been measured.
+The sequence below records how delivery established the resolver, visible
+battlefield and campaign transaction before the full editor and leader systems.
+Retain these regression contracts when changing related behavior; do not repeat
+completed milestones instead of the active map work.
 
 ### Implementation status — 2026-09-30
 
@@ -367,13 +377,15 @@ before the new resolver and pending-command changes have been measured.
 | B04 Deployment and tactics authoring | Complete; saved per-formation rules, contextual editor and slot swaps | [Battle system verification](verification/battle-system.md#b04--deployment-and-tactics-authoring) |
 | B05 Leaders and support roles | Complete; saved leader selection, bounded class abilities, Medic stabilization and siege roles | [Battle system verification](verification/battle-system.md#b05--leaders-and-support-roles) |
 | B06 Doctrines and rival preparation | Complete; legal doctrine snapshots, campaign-local personal plans and deterministic observed-information rival preparation | [Battle system verification](verification/battle-system.md#b06--doctrines-and-rival-preparation) |
-| B07 Balance and campaign readiness | Complete; production victory and defeat paths, staged encounter aftermath, four/eight-faction continuity and the full regression suite verified | [Battle system verification](verification/battle-system.md#b07--balance-and-campaign-readiness) |
+| B07 Balance and campaign readiness | Delivered; original production victory/defeat and continuity gates passed. Later resolver fixes leave the 240-round victory script failing. | [Original verification](verification/battle-system.md#b07--balance-and-campaign-readiness), [current battle review](verification/battle-review.md) |
 
-All B01–B07 acceptance gates are complete. The 400-round four/eight-faction
-continuity case now commits witnessed staged encounters and completes both
-replay paths; a seeded production campaign reaches victory at round 198 and
-survives terminal save/load without repeating effects. Full validation and
-publishing evidence is recorded in the milestone verification.
+At B07 delivery, the 400-round four/eight-faction continuity case committed
+witnessed staged encounters and completed both replay paths; the seeded
+production script reached victory at round 198 and survived terminal save/load.
+These are historical results. After the subsequent reaction/rout corrections,
+that script fails its unchanged 240-round cap. The battle review records focused
+passing regressions and publication, not a restored full-suite pass. The milestone
+completion label must not conceal this balance blocker or the presentation gaps.
 
 ### B01 Prototype deterministic formation combat
 
@@ -521,6 +533,11 @@ force an exact round-two kill into the production balance to reproduce the
 illustrative story from the notes.
 
 ## Verification and known limitations
+
+The commands and scene requirements below remain the validation contract for
+future battle changes, not evidence of checks run during the 2026-10-01
+documentation reconciliation. The current known failures and unverified platform
+cases are recorded in the battle review and K18 acceptance ledger.
 
 Each major feature targets five meaningful behavioral cases in `tests/`, plus
 existing regressions for affected campaign systems. Use the actual checkout and

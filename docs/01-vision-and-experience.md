@@ -2,6 +2,20 @@
 
 [Documentation index](README.md) · [Next: world, time, and control](02-world-time-and-control.md)
 
+## Current direction — 2026-10-01
+
+The production campaign and formation combat are implemented. The current
+priority is the [map playability plan](map-playability-plan.md): make the kingdom,
+its important places, current pressures, orders and consequences understandable
+through the map. The existing feature count and completed implementation
+milestones do not establish that this player experience has been achieved.
+Territorial overlays, richer place representation and distinct regional route
+networks in that plan are planned work, not existing capabilities.
+
+Current rules below use the implemented baseline and delegated tuning defaults.
+Founding examples remain useful experience goals; their unresolved details do
+not require new approval before improving the existing human campaign.
+
 ## High concept
 
 Kestrum is a node-based war simulation about emergent campaigns and characters across generations. The player guides a new kingdom from a headquarters into a world of other growing powers. Armies travel through connected cities, forts, settlements, bridges, passes, ports, shrines, and wilderness. Important regions contain their own connected locations, so taking a province can require several engagements and a sustained supply route.
@@ -12,7 +26,7 @@ Over those decades, an outpost may become a capital; a fortress may become a rui
 
 ## Player role and priorities
 
-**Working interpretation:** the player controls the continuing kingdom, rather than embodying one mortal ruler. Characters can age or die while the campaign continues. The exact fiction of sovereign succession remains open; a dynasty is one possible source of continuity.
+**Implemented baseline:** the player controls the continuing kingdom. Characters can age or die while the campaign continues. Family, mentorship and succession support continuity; a mandatory ruling dynasty is outside the current scope.
 
 The guiding hierarchy is:
 
@@ -29,6 +43,11 @@ The player chooses where to commit forces, how to compose armies, what condition
 ### Connected space creates strategy
 
 Routes, chokepoints, ownership, reinforcement paths, and supply determine where armies can act. Armies occupy actual nodes. Committing all experienced people to an eastern offensive leaves the western border exposed.
+
+The map must communicate those decisions. A player should be able to find their
+territory, capital, important settlements, visible dangers and active army orders
+without opening a succession of management screens. Place selection supplies
+the next useful action and its cost; detailed records remain available on demand.
 
 ### Important places become campaigns
 
@@ -62,7 +81,7 @@ Offensives, stalemates, winter pauses, rebuilding, border raids, political inter
 
 | Inspiration | Relevant influence |
 | --- | --- |
-| Stellaris | A broad world of competing powers growing from small starts; major regions as strategic hubs |
+| Stellaris | A map that communicates territory, strategically distinct places, force positions and orders; competing powers growing from small starts |
 | Total War: Warhammer | Sequential faction turns, distinct armies, and a light persistent siege model |
 | Suikoden | Important characters as figureheads within larger military forces |
 | Unicorn Overlord | Composition and preparation followed by automatic combat resolution |
@@ -110,11 +129,11 @@ Source examples include Roseguard, Blackthorn Company, Laurel Captain, Hawthorn 
 
 **Initial scope (O24):** humans and ordinary classes. The wider fantasy examples remain future possibilities; other races and advanced classes can be added after the core campaign works.
 
-**Proposal:** botanical symbols should identify cultures and institutions consistently. They should not require every common noun or message to become a floral metaphor. Initial species scope is settled; human naming vocabularies, visual art, audio, and later cultural variety remain content-authoring work.
+**Presentation direction:** botanical symbols identify cultures and institutions consistently. They should not require every common noun or message to become a floral metaphor. Human naming content and botanical emblems already exist; improving their visual expression and expanding cultural variety are content work.
 
 ## Intended player experience
 
-The prototype should produce observations such as:
+The campaign should produce observations such as:
 
 - “I'm keeping this squire with Serai because he's turning into a good cavalry officer.”
 - “Don't send Mira there. I need her dealing with the outbreak in Rosemarch.”
@@ -123,8 +142,8 @@ The prototype should produce observations such as:
 
 Later, the player should recognize that a capital was once empty plains, a ruin guarded the frontier for twenty years, a commander learned from a founder, and a region's current importance follows decisions made decades earlier.
 
-**Proposal — evaluation:** ask players to explain one remembered person, one place, and one strategic reversal using events that actually occurred. If they can only describe numerical upgrades, the history and presentation systems need work.
+**Experience acceptance:** ask players to explain one remembered person, one place, and one strategic reversal using events that actually occurred. They must also be able to explain their next map decision, the risk and the visible result. If they can only describe numerical upgrades or navigate menus, the campaign still needs work.
 
 ## Source basis
 
-This chapter combines the concept draft's high concept, pillars, botanical identity, prototype success criteria, and core identity; the kingdom draft's direction, inspirations, pressures, tensions, and hierarchy; and the generational draft's purpose, pillars, constraints, loops, and core fantasy. Complete wording is preserved in the [source references](README.md#complete-source-preservation).
+This chapter combines the concept draft's high concept, pillars, botanical identity, prototype success criteria, and core identity; the kingdom draft's direction, inspirations, pressures, tensions, and hierarchy; and the generational draft's purpose, pillars, constraints, loops, and core fantasy. Complete wording is preserved in the [source references](README.md#completed-delivery-and-provenance).

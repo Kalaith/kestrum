@@ -32,7 +32,7 @@ Current forecast uncertainty is explicit; actual seasonal simulation still uses
 physical conditions. Construction regressions now account for natural population
 growth separately from conserved founding transfers.
 
-Delegated choices are recorded in [I10](../13-decisions-and-open-questions.md#i10--conserved-population-and-local-threats).
+Delegated choices are recorded in [I10](../07-living-places.md).
 
 ## Validation
 

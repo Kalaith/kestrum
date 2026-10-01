@@ -1,398 +1,157 @@
-# 10 — Interface and accessibility
+# 10 Interface and accessibility
 
-## Named characters within the army roster
-
-The six formation slots remain the composition focus. Each occupied row shows
-its living attached named character plus its troop type, with current/capacity
-headcount aligned separately. Starting Warriors read `Lord Name + Warriors`;
-an emerged archer reads `Name + Archers` and a formally recognized one reads
-`Hero Name + Archers`. No character occupies a seventh slot. Tier and movement
-share the supporting line. The army Commander summary describes the separate
-appointment rather than substituting for formation membership.
-
-Each slot permits one named character plus troops, or troops alone. Transfers
-into a staffed formation are blocked with an explanation. Shorten long names
-while preserving troop type and headcount;
-Orders > People keeps full identities and individual Career, History and Transfer
-actions in its existing paged view. Tapping a formation continues to select it
-for training and orders; Back, Orders and recruitment retain their visible
-controls. Review new-game, recognized archer, distributed-members, long-name and
-transferred-member states at normal and 1280 × 720 sizes. Full membership and
-display rules are in [Armies and logistics](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
-
-## K13 career decisions
-
-The current decision is whether a named person's documented service opens a new
-class or command role, and whether a formation's record justifies conversion. The
-Army People list remains the route back to a subject; Career shows its provenance,
-traits, recognition, relationships, course progress and six ordinary class gates.
-Each class row keeps the relevant evidence count, Gold price, local facility and
-enabled action or short disabled reason together. Riding practice and commander
-appointment remain separate actions. Formation Training shows the current type,
-specialization, evidence, price, duration and battlefield effect before conversion.
-
-Course progress and cancellation/refund state stay visible while a course is active.
-Help explains movement, wounds, facility loss and eligible seasons. Back returns to
-the roster; the map remains the default play area. All actions use visible targets
-at least 48 logical pixels at 1280 × 720 and 1920 × 1080. Review the available and
-in-progress person screens and the formation conversion screen at both sizes. The
-native review confirms readable layouts and tap-sized controls; it does not verify
-physical-device touch or the inherited minimum-WebGL scaling issue, which remain
-K18 checks.
-
-## K14 aging, recovery and mentorship decisions
-
-Career keeps the named person, age, service chronology, wound state, earned traits
-and recognition together. An age-56 elder sees the available command, mentorship,
-governance and retirement choices while any existing command remains in force
-until reassignment. A local wounded person can move to a supplied, unbesieged site
-and recover there. Mentor opens a separate focused sheet for qualified teachers,
-their discipline and service, or the current link's active/paused reason. Resume
-and End stay visible for paused lessons; teacher lists page through touch controls.
-
-The map remains the normal play area. Career and mentorship actions use visible
-targets of at least 48 logical pixels; the normal and 1280 × 720 native captures
-review lifecycle, available lessons, a wounded pause and both Help pages. Screens
-show age and recovery status at both sizes. These captures verify native layout
-and pointer-ready targets; physical-touch use and the inherited minimum-WebGL
-scaling issue remain K18 checks.
-
-## K12 kingdom decisions
-
-The current decision is whether to declare war, propose or answer peace, or resolve a defeated rival. Menu > Kingdom opens a dismissible sheet; a foreign place also links to its controller. A paged list of public relations supports one selected kingdom and one confirmation. Enemy strength and negotiation calculations stay hidden. Pending decisions interrupt orders and remain reachable through Kingdom Decision after dismissal.
-
-The saved kingdom ending replaces ordinary play with its result and date. Records, Save, Menu and New Game remain available; no post-ending turns run. This is presented as the kingdom milestone. Existing map space and camera remain unchanged. Both sheets use 48-pixel controls and bounded text at 1280×720 and 1920×1080; at most four representative real-command states per size cover relations, a pending decision and terminal save restoration.
-
-## K11 local decisions
-
-Manage keeps construction and adds Local Actions for renaming, resettlement and moving the capital or headquarters. The selected place and the intervention's cost, conditions and single confirmation are the focus; the world remains the default play view. The overview explains population, pressure, causes, occupation, damage and blocked growth. Rename uses the existing touch keyboard. Resettle pages known eligible destinations.
-
-A visible local threat offers Clear Threat. Its own adjacent armies and route cost are reviewed before the ordinary combat command; enemy headcounts appear only in the actual report. The reward is an authored offer and is paid once on victory. Existing paged group and report geometry keeps targets at least 48 logical pixels at 1280×720 and 1920×1080. Four representative native scenes per size cover changed decisions; broader presentation review is deferred to integrated acceptance.
-
-
-## K10 siege screen brief
-
-The current decision is whether to maintain the siege, commit selected armies to
-combat, or leave through a legal exit. A selected participating site exposes Siege;
-the focused sheet shows elapsed seasons, lasting fort damage and wall resistance.
-Five owned armies per page retain their names, supply and remaining movement.
-Enemy roster details stay unknown until a witnessed battle report records them.
-
-Choose Siege Order presents the side's real choices, with consequences and blocked
-reasons. Withdraw and Escape select an explicit adjacent destination. Confirmation
-keeps the selected group, destination and casualty risk together. Back returns to
-the group or map without issuing an order. Relief uses the existing group and map
-route flow, so the sheet never obscures route selection. Battle reports distinguish
-assault, sortie, escape, relief and a challenge to the besiegers, and retain actual
-final positions and damage.
-
-All controls are at least 48 logical pixels. Verify 1920 × 1080 and 1280 × 720,
-both sides, spent movement, no legal exit, long names, paged armies, relief routes,
-reported fallbacks and lasting damage. Capture progress and combat through actual
-commands rather than editing outcomes.
-
-## K09 construction screen brief
-
-The current decision is which local investment to fund and which army can place
-or sustain it. Manage opens a dismissible settlement sheet from an owned physical
-site. Overview keeps that site's condition, population, existing facilities and
-own orders together; Build, Roads and Focus defer their choices until requested.
-The map remains the normal play area outside this focused decision.
-
-Construction review shows the exact prepaid cost, eligible seasonal boundaries,
-current effect, builder and missing requirement beside Confirm Build. Builder
-selection pages through local owned armies, with unavailable choices explaining
-their constraint. Active and paused orders retain progress, reason and replacement
-controls. Cancel Order opens the exact refund before confirmation. Focus replaces
-one stored choice. Its current income, growth, repair or training-price effect
-is shown before confirmation; training focus discounts local courses by 25%. Foreign sites expose public facts through their inspector,
-without another faction's order costs, progress or builder.
-
-Controls use at least 48 logical pixels with visible Back and page actions. Review
-at 1920 × 1080 and 1280 × 720 covers inhabited and unsettled sites, missing supply,
-builder departure and replacement, roads, facilities, insufficient resources,
-started and unstarted refunds, long names and paged orders. Progress captures use
-real commands and completed seasonal boundaries.
-
-## K08 service and knowledge screen brief
-
-The current decision is to understand a force's earned service or a person's
-recorded experience before choosing its next assignment. The selected subject and
-dated evidence dominate a dismissible History sheet. Overview shows owned current
-service or a clearly dated enemy encounter snapshot; Events shows readable pages;
-Filters opens only when requested. Formation tiers appear beside their roster
-names, while detailed XP and evidence stay in Service. The map remains the normal
-play area and gains only nearby hostile-presence cues.
-
-Records provides a visible route back to battle reports and known subjects.
-Selected physical sites, armies, formations and people can open their contextual
-history. Page navigation, season-range controls, filters and Back use visible
-48-pixel targets. Long histories fetch bounded batches and display five rows per
-screen at both normal and minimum sizes. Forgotten records show missing-history
-text; unknown enemy links never open a live biography.
-
-## K07 battle report screen brief
-
-The current decision after an automatic encounter is to understand losses,
-withdrawal and control before giving another order. The report occupies the main
-canvas. Its first page prioritizes the result, place, participants and surviving
-locations; paged details explain headcounts, leadership, counters, terrain and
-person consequences. It reads a saved observation of the encounter. Reopening it
-does not resolve combat or grant evidence again. Battle Reports in Menu provides
-the return path. Back/Close and all page controls remain visible touch targets.
-Orders/People show wounds and the two supplied recovery steps beside affected
-people. Movement preview describes hostile contact and known retreat constraints
-without disclosing unobserved enemy composition. Normal and minimum review must
-include multiple armies, destruction, stalemate, long names and wounded commanders.
-
-## K06 movement and composition screen brief
-
-The army's Orders screen leads to movement, formation transfer and a paged People
-list. Group movement chooses among co-located armies, then returns to the map for
-a physical destination. Region markers open their sites. The selected destination
-shows cost, remaining allowance, the reachable stop and public supply consequences;
-Review Route pages through every physical edge before confirmation. The connected
-map remains the dominant focus while choosing the destination.
-
-Composition chooses a whole formation or named person, a co-located recipient,
-then an empty slot or surviving formation. Split into New Army creates another
-roster at the same site. Movement already spent remains visible and unchanged.
-Opening Armies pauses rival progression between commands; off-turn transfers are
-available while movement/recruitment wait for the owner's turn. Back and Cancel
-are visible at every step.
-
-Recovery appears beside the selected formation, with the cap, predicted affordable
-replacement count and Gold cost or blocker. It follows post-upkeep finances at
-the seasonal boundary. Actual recovery has a separate last-round receipt. Lists
-and routes page with touch controls, retaining the 1280 × 720 logical layout and
-48-pixel targets. Minimum, dense stack, cut-off, interrupted-route, exhausted and
-long-name reviews belong to K06 evidence before package completion.
-
-[Documentation index](README.md) · [Shared UI authority](../UI_STYLE.md) · [Validation](12-delivery-and-validation.md)
+[Documentation index](README.md) · [Shared UI authority](../UI_STYLE.md) ·
+[Active map plan](map-playability-plan.md)
 
 ## Status and goals
 
-This chapter describes the implemented production interface and its remaining
-platform acceptance. New Game configures a kingdom name, emblem, four to eight
-factions and a seed on the 80-location atlas. The current
-[screen brief](../README.md#screen-brief) describes the decision hierarchy.
-Historical package captures establish their recorded native layouts; K18 tracks
-fresh browser, touch, performance and integrated-play acceptance.
+This chapter owns the target interface for the map improvements. The
+[project README](../README.md#map-controls) describes the implemented controls.
+The redesign is planned. Earlier K/B captures establish only their recorded
+scenes and interactions; the current [evidence index](verification/README.md)
+records remaining limitations.
 
-### Current faction-phase controls
-
-Season, year, round and current faction appear along the top edge. End Turn
-finishes the player's orders. During rival phases, Pause/Resume and Step control
-progress between legal NPC orders. Rivals recruit, train, expand, build and fight.
-Menu and Help suspend automatic progression; returning continues from the same
-boundary. Saved legacy atlas-only campaigns remain read-only. Current strategic
-campaigns support named saves and separate seasonal checkpoints. Required controls
-retain a 48-pixel minimum height at the 1280 by 720 logical canvas.
-
-The strategic map and current decision dominate ordinary play. Give no more than two or three areas strong visual emphasis. A selected object's short inspector can support the map; quiet navigation leads to kingdom, roster, history, and settings views as needed.
+The player needs to recognize a strategic situation, act on a place or force,
+and understand the consequence. Keep the world dominant, with one contextual
+inspector and quiet supporting information. The current sparse HUD hides useful
+state; reducing visible information further is not the objective.
 
 ## Viewport targets
 
-**Confirmed targets (O25), expressed as usable canvas dimensions:**
+Normal target is a usable 1920×1080 canvas. Minimum supported landscape canvas
+is 1280×720. Check native and embedded/full-screen WebGL separately; a virtual
+resolution does not establish browser usability. Smaller portrait support is
+outside current scope.
 
-- Primary desktop: full-screen 1920 × 1080.
-- WebGL: 1280 × 720 (720p), used as the initial minimum supported landscape canvas.
-
-These are implementation targets, not claims of existing support. Earlier 800 × 450 and 360 × 640 proposals are outside initial support. Review the actual native/browser canvas, including browser chrome and embedded play; offer a visible Full Screen control to reach the supported area. At 720p, reflow secondary content into dismissible sheets or detail views while preserving the map, readable text, and touch controls. Long collections scroll within deliberate bounds. Full-screen entry must be available through a visible user action.
-
-Proposed minimum tap target is 44 × 44 logical pixels after effective scaling; the actual device review determines whether more space is needed. Long names and dense army stacks must remain selectable without relying on precision clicking.
+Use visible touch controls, with ordinary primary controls at least 48 logical
+pixels high at the minimum canvas. Reflow or collapse secondary information
+before shrinking text or targets. Dense battlefield tactic controls currently
+fall short of this target and remain a recorded issue. Physical-device touch
+testing is waived under the existing scope; mouse-equivalent checks must be
+reported as such.
 
 ## Screen briefs
 
-### Recruitment and army composition (K05)
-
-- **Current decision:** recruit a formation into a free slot or a new army, or
-  disband a selected formation to reduce recurring upkeep.
-- **Dominant focus:** an on-demand roster of six slots at the selected owned site.
-  The map stays behind this focused view and receives no input through it.
-- **Primary action:** Recruit opens six troop choices with costs, capacities,
-  upkeep and missing requirements; Confirm Recruit applies the selected order.
-- **Supporting information:** own resources, supply, leader contribution and the
-  last seasonal income/upkeep statement. Disband confirms the loss and no refund.
-- **Deferred information:** movement, transfers and battle reports have their own focused screens. Foreign army composition is never exposed here.
-- **Layout and camera:** one focused sheet at the 1280 × 720 logical minimum;
-  roster and recruiting are separate modes. Previous/Next page through any number
-  of local armies. New Army remains available when the site has no formations.
-- **Input and feedback:** tap a slot or recruit type, read the reason beside an
-  unavailable choice, then confirm. Back returns to the roster; Close returns to
-  the map. All required controls remain at least 48 logical pixels high.
-
-### Selectable geography (K04)
-
-- **Current decision:** inspect a marked place, its controller and its connections,
-  or enter a named region to inspect the ten physical sites behind its claim.
-- **Dominant focus:** the connected map. World markers summarize the same saved
-  physical sites; region gates identify their external connections.
-- **Primary action:** Enter Region on a regional selection; World Map returns to
-  the previous world camera. Close dismisses the inspector.
-- **Supporting information:** local controller, contested state, regional claim,
-  anchor requirements and the player's supplied entrances. Ownership does not
-  imply control of every internal site.
-- **Deferred information:** army rosters and orders open from the selected place.
-  Save management stays in Menu, leaving the geography visible during inspection.
-- **Layout and camera:** one 358-pixel inspector sits opposite the selected target
-  on the 1280 × 720 logical canvas. The 1920 × 1080 fullscreen view scales the same
-  composition. Each regional camera and the world camera retain their positions.
-- **Input and feedback:** 48-pixel map targets and actions, common draw/pick
-  coordinates, a visible breadcrumb, and drag/pinch release suppression. Long
-  names wrap in the inspector; labels remain bounded on the map.
-
-### Saved campaigns (K03)
-
-- **Current decision:** choose a saved moment to restore, keep a new named copy,
-  or explicitly replace/delete a selected entry.
-- **Dominant focus:** one list with five readable rows per page. Each row shows
-  the name, kind and campaign date; Previous/Next reach every entry without a cap.
-- **Primary action:** Load the selected entry, or Create Save while naming a copy.
-  Overwrite and Delete require a separate confirmation with the selected name.
-- **Supporting information:** saving is available during the player's orders;
-  storage errors and another window's writer lock have a visible Retry route.
-- **Deferred information:** the entire catalogue opens from Menu or title. Naming
-  replaces the list with a text field and shared touch keyboard. Normal play
-  keeps the full atlas and its existing phase controls.
-- **Layout and camera:** a 1064 × 632 sheet at the 1280 × 720 logical minimum;
-  the native 1920 × 1080 view scales the same composition. The map stays dimmed
-  behind the sheet and receives no gestures while it is open.
-- **Input and feedback:** 48-pixel actions, 62-pixel selectable rows, visible
-  keyboard pages and editing keys. Failed automatic saves hold the resolved
-  round and offer Retry or Continue Unsaved; retry uses the same saved snapshot.
-
-
-### New campaign
-
-- **Current decision:** name and identify the new kingdom and choose the campaign's faction count.
-- **Dominant focus:** compact setup form and emblem preview.
-- **Primary action:** Start Campaign, beside any invalid setup explanation.
-- **Supporting information:** single-player scope, 80 world nodes, and 4–8 total factions including the player.
-- **Deferred information:** future culture, origin, and difficulty details until supported.
-- **Layout and camera:** form fills the useful area; no map camera needed.
-- **Input and feedback:** visible text input, emblem controls, and count adjustment; validate and acknowledge campaign creation.
-
 ### World and region map
 
-- **Current decision:** where to commit a force or develop a place this turn.
-- **Dominant focus:** connected strategic map, readable army markers, and selected route or front.
-- **Primary action:** context action such as Move or Establish Outpost; End Turn remains visible and distinct from object orders.
-- **Supporting information:** selected force condition, known supply, movement allowance, current season, relevant cost, urgent threats.
-- **Deferred information:** full kingdom accounts, genealogy, biography, detailed battle math, and save management.
-- **Layout and camera:** map gets most space; desktop selection inspector can sit beside it, while compact layouts use a dismissible sheet. Enter Region and World Map preserve orientation.
-- **Input and feedback:** tap army, tap destination, inspect preview, tap Move; drag map or use visible pan controls; visible Zoom In, Zoom Out, Reset View, and Close controls. Selection and resulting movement remain clear after animation ends.
+| Question | Planned behavior |
+| --- | --- |
+| Current decision | Choose where to expand, defend, invest or redirect a force. |
+| Dominant focus | Known territory, meaningful places and active armies. |
+| Primary action | Issue the selected object's relevant order with its cost and constraints visible. End Turn remains separate. |
+| Supporting information | Calendar, actual resources/income/upkeep, owned force status, known threats, relevant supply and a compact attention list. |
+| Deferred information | Detailed accounts, composition, tactics, biographies, household administration, historical filters and utilities. |
+| Layout and camera | Keep most of the canvas for the map. Collapse the attention list at 720p when an inspector opens. Fit known land at a useful scale and retain orientation across views. |
+| Input and feedback | Tap objects and visible controls; drag/pinch or use zoom/recenter. Selection, saved orders and important consequences survive the end of transient feedback. |
 
-### Army composition
+Territory display distinguishes political claim, physical occupation, contested
+control and unknown geography. Kingdom labels and capital symbols establish
+orientation. Settlement silhouettes reflect their current tier; relevant
+resource/facility symbols and growth, construction, siege or damage states
+explain purpose. Labels depend on zoom, importance and available space.
 
-- **Current decision:** which formations and people should serve together or split into another army.
-- **Dominant focus:** six formation slots with current/capacity headcounts and attached people.
-- **Primary action:** confirm the chosen transfer or composition change, with requirements and consequences beside it.
-- **Supporting information:** veterancy, role, leader contribution, supply, and the receiving force where relevant.
-- **Deferred information:** full biographies, relationship networks, and hidden personality values.
-- **Layout and camera:** dedicated comparison view; at 720p, reflow slots and scroll within the view as needed. No map camera required.
-- **Input and feedback:** select slot, choose replacement or destination, then confirm. Dragging is optional; all transfers have tap controls. Explain unavailable options.
+A regional map depicts its own terrain and approaches, with roads and bridge/pass
+symbols placed meaningfully. Its breadcrumb and return control preserve the
+world context. The chosen first delivery retains separate world and region
+scopes; a seamless camera is deferred.
 
-### Battle result
+### Map orders and selection
 
-- **Current decision:** understand losses and the resulting strategic position.
-- **Dominant focus:** outcome and surviving forces.
-- **Primary action:** Continue to Map; use a visible retreat choice only if the combat model permits one at this stage.
-- **Supporting information:** casualties, destroyed formations, noteworthy character events, retreat destination, and control changes.
-- **Deferred information:** full exchange logs and formulas behind a Details action.
-- **Layout and camera:** readable report with linked places and people; long results scroll without hiding Continue.
-- **Input and feedback:** tap a person or formation for details, Close to return, then Continue. Do not require watching an animation to learn the result.
+Direct movement is implemented: tap Army, then a destination to execute the
+affordable travel immediately and retain any remaining route. End Turn continues
+saved orders after refresh. Cancel Route stops the plan; Review Route inspects
+it. Peaceful borders and encounter rules remain authoritative.
 
-### Siege
+The planned inspector keeps the object, cost, allowance, supply and expected
+action together. Common recruitment, construction, focus and diplomacy entry
+points stay in that context. Existing spending, battle and diplomatic review
+rules remain where relevant. Movement does not acquire a second confirmation.
 
-- **Current decision:** maintain, assault, withdraw, sortie, attempt escape, or provide relief, according to side and available forces.
-- **Dominant focus:** the besieged location and forces around it.
-- **Primary action:** the selected legal order, with risks and known defensive advantage beside it; equally valid choices can share emphasis.
-- **Supporting information:** elapsed seasons, current fort condition, supply, and known relief threats.
-- **Deferred information:** civilian chronology, biography, and detailed calculations.
-- **Layout and camera:** keep relevant entrances and relief approaches visible; compact view can open a focused siege sheet.
-- **Input and feedback:** visible labelled actions and clear disabled reasons; show the changed siege state after the action.
+Army banners show identity, owned strength and status; dense stacks offer a
+readable selection list. Relevant saved routes remain visible after the card
+closes. Idle, moving, blocked, besieged and unsupplied states use understandable
+symbols plus text or shape. Unknown enemy strength and plans stay hidden.
 
-### Settlement development
+### Seasonal outcomes and attention
 
-- **Current decision:** choose a development focus or feasible investment.
-- **Dominant focus:** selected settlement, condition, and the factors currently helping or blocking it.
-- **Primary action:** Set Focus or confirm a specific supported order with its cost and duration.
-- **Supporting information:** current focus, military state, supply/access, relevant population and damage.
-- **Deferred information:** all other settlements, full history, and future building possibilities.
-- **Layout and camera:** selection inspector or focused view; keep the location identifiable and avoid a building grid.
-- **Input and feedback:** select one focus and confirm; show why growth remains constrained. Investment must not visually promise an instant tier change when the simulation does not.
+Planned seasonal feedback prioritizes problems requiring a decision, then
+completed orders and useful changes. Selecting an entry focuses the place,
+army or person. Unresolved conditions remain discoverable; informational entries
+can be dismissed. Preserve receipt/acknowledgement state across reload without
+repeating actions or misleading the player about which season changed a value.
 
-### Character and legacy
+The attention list is a route into the map, not a second management dashboard.
+Collapse quiet categories. A history link provides supporting detail when
+needed; full biographies remain deliberate inspection.
 
-- **Current decision:** where this person can contribute and what opportunity to provide.
-- **Dominant focus:** identity, current role, relevant capability, and a few supported deeds.
-- **Primary action:** Assign, Mentor, or a supported career choice with prerequisites.
-- **Supporting information:** age, service, current army, known traits, eligibility and missing opportunities.
-- **Deferred information:** full genealogy, chronology, hidden disposition, and irrelevant class paths.
-- **Layout and camera:** dedicated detail view or expanded inspector; history opens separately rather than crowding every action.
-- **Input and feedback:** visible role and relationship links with Close/Back controls; show reassignment or eligibility changes clearly.
+### Introduction and contextual help
 
-The K15 Households view keeps the current site and five local people in focus.
-Tap Select A and Select B to choose the adults, guardian/ward or predecessor/heir.
-The household view then offers the local partnership, ward, raising, trainee,
-service and apprentice actions; Succession opens a separate category/link choice.
-The map remains visible behind one focused sheet. Rival family records are never
-shown in the player's projection. All selection and action targets are at least
-48 logical pixels. Review empty, dense, selected-pair and disabled-action states
-at 1920 × 1080 and 1280 × 720, including touch-only use and Back.
+The implemented guide teaches movement, region navigation, careers, households,
+End Turn and Records. M04 replaces it with a useful opening action and visible
+payoff: secure a nearby opportunity, resolve its consequence, invest the benefit
+and respond to a frontier. Prompts use actual legal choices and exact visible
+control labels; alternative actions can satisfy the lesson.
 
-### History and campaign end
+Teach careers after relevant service and households when their context matters.
+Dismiss/resume stays visible and save-compatible. Existing players are not
+forced into a new guide. Ordinary play retains concise labels and accessible
+help after prompts end.
 
-- **Current decision:** review what happened and follow an interesting person, place, army, or era.
-- **Dominant focus:** selected chronology; after victory or defeat, campaign outcome and a concise historical summary.
-- **Primary action:** inspect a linked event or choose a supported continue/new-campaign/menu action.
-- **Supporting information:** retained date, participants, location, outcome, and visibility confidence; clearly indicate when older history is unavailable.
-- **Deferred information:** unrelated event streams and technical save data.
-- **Layout and camera:** filterable timeline with bounded scrolling and a visible Back control.
-- **Input and feedback:** tap filters and links; retain navigation context after closing a biography.
+### Named characters within the army roster
 
-## Map visual language
+Six formation slots remain the composition focus. Each occupied row shows its
+one named member with troop type, or troops alone; headcount is separate.
+Starting Warriors read `Lord Name + Warriors`, recognized people can read
+`Hero Name + Archers`. Commander appointment is a separate role.
 
-Use botanical emblems and coherent faction colors, supported by shapes, labels, and borders so color alone is not required. Distinguish control from partial regional ownership, known from unknown territory, and current observation from last-known information.
+Transfers into an already staffed formation explain the restriction. Preserve
+troop type and headcount when shortening names; People exposes full identity,
+Career, History and Transfer. Dedicated composition views remain appropriate
+when comparison is the decision. See [army membership](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 
-Settlement size, fortification, damage, ruins, roads, and supply breaks should be visible where relevant. Avoid placing all history as permanent labels on the map. Dense army markers can open a selectable stack list. World/region breadcrumbs and a return action explain scale without exposing implementation concepts.
+### Settlement and kingdom decisions
 
-## First-use teaching flow
+Current Manage contains Overview, Build, Roads, Focus and Local Actions.
+Population, growth causes, damage, facilities, last income and work orders
+already exist. The redesign makes key consequences visible on the map and
+brings common orders into the selected-place inspector.
 
-The current decision is one introductory action on the existing screen. Keep the
-atlas or army roster dominant: a temporary guide occupies the calendar/title
-band, leaving costs, requirements and ordinary action controls available. Defer
-the full reference pages to Help. Use at least 48-pixel Close and Show HQ targets;
-closing pauses guidance without claiming completion, and Help resumes it.
-Persist completed actions with each campaign. New campaigns start the guide;
-older saves opt in through Help. Credit successful movement and turn commands,
-and actual visits to the roster, region, career, household review and Records.
+War, peace and defeat decisions remain explicit, with their consequences and
+disabled reasons. Foreign-place inspection links to known controller information.
+Urgent diplomatic decisions stay discoverable after dismissal. Save/settings
+utilities must be visually separate from gameplay decisions.
 
-Contextual Help uses the visible controls and the selected campaign's names:
+### Battle and siege
 
-1. Tap your headquarters, then Armies to inspect its six-slot roster.
-2. Open Orders, Move Army and Choose Destination; Review Route shows the cost
-   before Confirm Move.
-3. Select a named region and Enter Region; World Map restores the atlas camera.
-4. Use People and Career to inspect service, training and recognition.
-5. In Households or Succession, select local people and review a choice. The
-   review shows its current requirements before Confirm order.
-6. End Turn advances your faction; Pause, Step and Resume control rival work.
-7. Menu > Records opens witnessed battle reports and dated biographies.
+Battle preparation, playback and aftermath share a landscape. Preparation
+selects a formation for legal slot, tactic and leader edits. Start Battle resolves
+once; play/pause, step, speed and skip present the immutable result. Continue
+returns to the campaign and applies continuation once. Reports retain losses,
+wounds, locations and observed enemy facts.
 
-Show each only when the supporting feature exists. Dismiss completed prompts. A visible Help control reopens instructions. Hover and shortcuts can supplement every step, but cannot be required. Drag scrolling must not trigger an underlying action when the player releases their finger.
+Siege choices depend on side and available forces. Keep the place, legal exits,
+participants, supply, elapsed seasons, damage and known relief risk together.
+Dedicated preparation/comparison views are appropriate; preserve the route back
+to the affected place. Do not reveal hidden enemy rosters through map warnings.
 
-## Feedback, interruption, and recovery
+### Saved campaigns
 
-Place costs and missing requirements by the action. A lost supply route belongs beside the affected army. A high-priority unresolved choice may interrupt End Turn, but ordinary army availability should not force a confirmation after every turn.
+The catalogue supports named saves and seasonal checkpoints, with pagination
+and no game-imposed slot cap. Overwrite and Delete confirm the selected entry.
+Naming provides a visible touch keyboard. Retry and Continue Unsaved preserve a
+failed snapshot without replaying the season. Storage/writer conflicts explain
+recovery. Utility screens stay on demand.
 
-Save, load, settings, and debug controls belong behind clear navigation. Provide visible Save and Load controls in the menu: manual saving is available during the player's turn, and automatic saving follows every completed round. Save lists scroll or paginate without a fixed slot count. Show save progress, completion, and failures without obscuring the map. Failed saves, full storage, and invalid loads need an understandable message and a usable route back to play. Enemy turn progress remains visible; Pause stops between orders and Step advances one legal order. Current critical outcomes remain in state after transient notifications fade; older stories may expire under O23.
+## Visual and interaction review
 
-## Required visual and interaction review
+For each changed milestone, review normal/minimum sizes, early fog, developed
+territory, long labels, dense stacks, expanded inspectors, multiple orders and
+urgent conditions. Exercise selection, dismissal, movement, cancellation,
+regional boundaries, seasonal feedback and save/reload through visible controls.
+Check picking after zoom/resize and ensure drag release never issues an order.
 
-At 1920 × 1080 full screen and a 1280 × 720 WebGL canvas, inspect first use, ordinary play, selected/expanded objects, the dense 80-node map and roster, long names, large values, siege urgency, lost supply, and failure/recovery states that actually exist. Verify every required interaction using touch alone: setup, map pan and zoom, selection, regional navigation, orders, composition, report dismissal, Help, menu, full-screen entry, save/load, and recovery. Check manual saves during the player's turn, round-end autosave feedback, and long save lists.
-
-Check focus, map size, readable text, target sizes, clipping, overlap, hidden controls, drag-release behavior, and picking after resize/zoom/display scaling. Store captures directly in `docs/verification/` under stable scene names and replace equivalent states. Use the shared capture wrapper with its hidden-window default, wait for completion, and confirm the game exits. Browser touch checks supplement captures; neither compilation nor a clean screenshot proves usability.
-
-The initial title/empty-atlas review is recorded in [initial-map.md](verification/initial-map.md), including browser and physical-touch limitations. Current system evidence is linked from the implementation acceptance ledger; K18 retains the remaining platform checks.
+Judge whether the player can locate their realm, choose a useful action and
+explain its result. Readability and unclipped controls are necessary but do not
+prove that loop. Store stable captures directly in `docs/verification/`, follow
+the shared capture/publish workflow, and record remaining limitations in the
+[evidence index](verification/README.md).

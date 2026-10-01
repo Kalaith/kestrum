@@ -25,7 +25,7 @@ K12 saves that lack all person career records receive deterministic defaults fro
 the saved people RNG in PersonId order. Mixed old/new career records are rejected.
 Current saves round-trip without reconstructing progression. K13's choices and
 migration details are recorded as delegated implementation decisions in
-[I12](../13-decisions-and-open-questions.md#i12--grounded-careers-and-specialization).
+[I12](../06-character-development.md).
 
 ## Behavioral checks
 

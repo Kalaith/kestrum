@@ -5,10 +5,10 @@
 
 ## Current delivery
 
-M01–M05 in the map playability plan are the active next-work sequence. They are
-planned and have not been implemented by this documentation update. Complete,
-validate and commit each independently useful major change before beginning the
-next.
+M01 is implemented with recorded limits. M01A is the next planned milestone,
+followed by M02–M05 in the map playability plan. M01A and those later milestones
+remain unimplemented by this documentation update. Complete, validate and commit
+each independently useful major change before beginning the next.
 
 K01–K18 and B01–B07 are completed delivery records under their recorded scope.
 Their packages must not be reopened because a historical chapter says a system
@@ -23,8 +23,9 @@ behavioral cases and supported-size visual scenarios.
 
 The generational campaign, human/ordinary content, six-slot armies, 4–8 factions,
 80 major markers and seasonal turns remain. More races, extensive diplomacy,
-multiplayer, a larger world and new combat mechanics are deferred. A seamless
-map camera is also outside the initial delivery.
+multiplayer, additional world locations and new combat mechanics are deferred.
+M01A expands navigable presentation space and migrates to the sole 1920×1080
+canvas. A seamless transition between world/regional scopes remains deferred.
 
 ## Required engineering checks
 
@@ -53,8 +54,11 @@ changes use document checks and do not require an unchanged game to be published
 
 ## Visual and interaction review
 
-Read `UI_STYLE.md`. Review normal 1920×1080 and minimum 1280×720 native layouts,
-then the actual published browser canvas. Include relevant early, selected,
+Read `UI_STYLE.md`. The user's 2026-10-01 correction sets 1920×1080 as the sole
+design and acceptance spec. Review that actual usable canvas in native and
+published browser gameplay; measure client/canvas dimensions separately from
+window or page dimensions. Historical 720p checks do not create another target.
+Include relevant early, selected,
 dense, long-name, multi-army, urgent, blocked and post-season states. Check that
 the current decision, action, cost and consequence are understandable.
 
@@ -71,14 +75,14 @@ scratch captures, backup directories or alternate capture pipelines.
 
 Physical-touch testing was waived on 2026-09-28; further platform, performance
 and balance work was deferred under that scope. Preserve that authorization.
-Visible touch-capable controls and the minimum canvas remain requirements.
+Visible touch-capable controls and the sole 1920×1080 canvas remain requirements.
 Record click equivalents, actual hardware touch and untested interactions
 separately. Do not claim a deferred test passed.
 
 ## Existing limitations
 
 The [evidence index](verification/README.md) links the latest recorded limitations:
-the seed-88 victory assertion at its 240-round cap, minimum browser scaling and
+the seed-88 victory assertion at its 240-round cap, historical 720p browser scaling and
 dense battlefield presentation. Historical failures that have since been fixed
 are not a new task queue. Conversely, an earlier full-suite pass does not erase
 a later failure.
@@ -86,7 +90,8 @@ a later failure.
 Rerun relevant checks after changes and report actual results. Do not weaken an
 assertion or suppress a failure to close a milestone. An unrelated inherited
 failure can be reported while independently useful map work proceeds; final
-acceptance must state its practical limits.
+acceptance must state its practical limits. Keep old 720p results as historical
+evidence; evaluate host scaling issues against the current 1920×1080 canvas.
 
 ## Save and world validation
 

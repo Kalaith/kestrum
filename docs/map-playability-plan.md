@@ -1,6 +1,6 @@
 # Map playability implementation plan
 
-Updated 2026-10-01. **Status: M01 complete with recorded validation limits; M02 is next and unstarted.**
+Updated 2026-10-01. **Status: M01 complete with recorded validation limits; M01A spatial scale is next and unstarted.**
 
 Kestrum needs a map that explains the kingdom, presents useful decisions, and
 shows their consequences. This is the active implementation sequence following
@@ -11,21 +11,99 @@ baseline, subject to the changes explicitly described here.
 The user requested this plan and the documentation reconciliation. M01's
 implementation decisions are recorded below and in the owning chapters;
 [verification](verification/kingdom-overview.md) records its scoped acceptance
-and inherited limits. M02–M05 are unstarted. Ordinary design tuning is resolved
-during implementation and recorded in the owning chapter.
+and inherited limits. The subsequent request for a more spacious world adds
+M01A before M02. This update is a plan only: M01A and M02–M05 are unstarted.
+Ordinary design tuning is resolved during implementation and recorded in the
+owning chapter.
 
 ## Outcome
 
 A player should be able to see what they own, identify a useful next action,
 issue an order, and explain what changed after a season while staying oriented
 on the map. Kingdom growth, military pressure and remembered people should be
-visible through places and armies.
+visible through places and armies. Ordinary play should show one useful part
+of a world that continues beyond the viewport. A deliberate overview provides
+orientation across the known kingdom.
 
 Use Stellaris as a reference for territory, useful map symbols, contextual
 selection and attention management. Keep Kestrum's seasonal faction turns,
 physical route graph, automatic battles, restricted enemy knowledge and
 generational continuity. The existing simulation supplies most of the needed
 facts; this work connects them to play and improves the geography.
+
+## Spatial scale review
+
+The follow-up review inspected source at `ce22c6a` and the existing developed
+world and minimum-size regional captures. It did not run a new gameplay session.
+The user's concern is supported by these current presentation choices:
+
+| Current behavior | Effect on perceived scale |
+| --- | --- |
+| `navigation.rs` uses the same 1280×720 extent for the UI and normalized map positions; zoom is limited to 1–3. | At minimum zoom, the entire atlas occupies one screen and cannot pan. |
+| Developed-save loading calls `frame_discovered`; focus uses fixed world/regional zoom values. | Loading compresses the discovered realm into view, while recentering can abruptly magnify a small neighborhood. |
+| Settlement disks stay 48 logical pixels across; army banners stay 196×56. | Large symbols and cards dominate when many places are visible; zooming out alone packs them closer together. |
+| `game.rs` renders the 1280×720 logical UI through the virtual viewport. | At 1920×1080 it scales by 1.5: a settlement disk becomes 72 pixels and an army banner 294×84. |
+| Every regional view shows the same ten-site, two-row chain against the continental atlas. | A region reads as a complete diagram rather than a landscape with approaches and distance. |
+
+Sources: [camera and picking](../src/navigation.rs),
+[focus and banners](../src/navigation/armies.rs),
+[load behavior](../src/game/saves.rs), [atlas](../src/ui/atlas.rs),
+[symbols](../src/ui/world/symbols.rs), [virtual canvas](../src/game.rs), and
+[regional layout](../assets/data/world_layout.json).
+Existing images: [developed world](verification/ui_midgame_map.png) and
+[regional minimum](verification/ui_overview_region_minimum.png).
+
+### Resolution contract
+
+The user's correction on 2026-10-01 sets **1920×1080 as the sole design and
+acceptance resolution**, including the logical UI canvas. It replaces the
+previous 1920×1080/1280×720 target pair. The current 1280×720 logical layout must
+be migrated and recomposed. Increasing the window size while scaling the old
+layout by 1.5 would preserve the oversized controls and cramped composition.
+
+Design and verify native and published browser gameplay at an actual usable
+1920×1080 canvas. Window borders, browser chrome and embedded host padding do not
+count toward that area. Other host sizes may uniformly scale or letterbox this
+same composition through toolkit viewport conversion; they do not introduce
+another layout or acceptance spec. Keep historical captures and their recorded
+limitations as evidence of earlier builds.
+
+### Proposed scale and information contract
+
+Separate map coordinates from the 1920×1080 logical UI viewport. Keep readable
+text and controls while giving the existing geography a larger navigable extent.
+Start tuning with the full world about 2.5–3 viewport widths across at ordinary play
+scale, preserving the authored aspect ratio. For regional play, start around
+1.5–2 viewport widths. These are initial tuning targets, not measured acceptance
+results. Judge the visible neighborhood and useful terrain gaps at 1920×1080.
+
+Use three presentation bands within the existing world and regional scopes:
+
+| Band | What the player sees and does |
+| --- | --- |
+| Kingdom overview | Known territory, major names, capital, frontier and urgent activity. Minor places become quiet marks and nearby forces aggregate. Tap a crowded group to focus it. |
+| Campaign view, the default | A home area or active frontier with nearby objectives and connecting terrain. Places use compact symbols; armies have concise identity/status marks. Select an exact place or force to act. |
+| Local detail | More place names, relevant facilities, precise route costs and individual forces where the scope permits. Full troop/order details belong to the selected force. Enter Region still opens the internal graph explicitly. |
+
+Zoom changes the amount of information as well as geographic spacing. Use smooth
+transitions and separate entry/exit thresholds to prevent labels flickering near
+a boundary. Preserve capital, selection and actionable known danger at every
+useful scale. Aggregated forces must still distinguish a regional grouping from
+armies sharing one physical site.
+
+Provide a visible Overview action that fits known land and can restore the prior
+working view. Keep +/− and Recenter; Recenter focuses the selected force or home
+at a useful working scale. Initial play and older-save loading focus home and
+nearby routes. Selection, dismissal, End Turn and returning from another screen
+preserve the player's view unless they explicitly request a different focus.
+Retain independent world/region contexts. Camera persistence across application
+reload is optional presentation work, with additive defaults if introduced.
+
+The landscape should occupy the gaps: valleys, woodland, rivers, coasts and
+approaches give places separation. M01A reuses the current graph and normalized
+geometry. M03 authors distinctive regional terrain and routes. Keep geographic
+distance separate from travel cost; the authoritative route rules still determine
+how far an army can move. A larger drawing must not silently lengthen journeys.
 
 ## Historical starting point
 
@@ -54,8 +132,8 @@ Source entry points: [world rendering](../src/ui/world.rs),
 ## Scope and implementation decisions
 
 - Keep 80 major markers and 4–8 factions. Initially reuse the 152 physical sites
-  and their identities; varied connections and control objectives can produce
-  distinct regions without increasing the content count.
+  and their identities. Expand their presentation space in M01A; varied
+  connections and control objectives follow in M03.
 - Keep the world/region distinction for this delivery. Give regions coherent
   local terrain and a visible breadcrumb. A seamless zoom transition can be
   considered later if these views still break orientation.
@@ -72,8 +150,9 @@ Source entry points: [world rendering](../src/ui/world.rs),
   enemy strength, plans, treasury, unseen territory, or hidden tactical details.
 - Keep balance values and authored layout in validated JSON. Evaluate shared
   toolkit support before adding generic layout, picking or drawing utilities.
-- New diplomacy systems, races, classes, combat rules and a larger world are
-  outside this plan. Existing balance defects remain visible in the status ledger.
+- New diplomacy systems, races, classes, combat rules and additional world
+  locations are outside this plan. More navigable presentation space is in scope.
+  Existing balance defects remain visible in the status ledger.
 
 ## Target screen brief
 
@@ -84,7 +163,7 @@ Source entry points: [world rendering](../src/ui/world.rs),
 | Primary action | Issue the selected object's relevant order; show its cost, access and consequence beside it. End Turn stays separately reachable. |
 | Supporting information | Gold/Wood/Stone, actual seasonal income and upkeep, calendar, selected force condition, urgent known conditions and remaining orders. Label actual receipts separately from any forecast. |
 | Deferred information | Full accounts, rosters, tactics, biographies, household administration, historical filters and utilities. |
-| Layout and camera | At 1920×1080 and 1280×720, the map remains dominant. Collapse the attention list before reducing labels or touch targets. Fit the useful known realm and preserve camera orientation across selection. |
+| Layout and camera | At the sole 1920×1080 spec, a useful neighborhood fills the dominant map area and geography continues beyond it. Overview explicitly fits known land. Collapse secondary information before reducing readable text or touch targets; preserve orientation across selection. |
 | Input and feedback | Tap selects and reveals actions; close restores the view; drag/pinch and visible zoom/recenter controls work. Orders and results remain readable after transient effects end. |
 
 ### Visual language
@@ -111,16 +190,18 @@ and tap equivalents. Color is always paired with shape, symbol or text.
 ## Delivery sequence
 
 Each milestone is independently useful. Finish its validation and commit before
-starting the next major change. M01 is complete; M02 is the next unfinished
-milestone and has not started.
+starting the next major change. M01 is complete; M01A is the next unfinished
+milestone. Its camera and information hierarchy should settle before M02 adds
+further map actions and route detail.
 
 | Milestone | Result | Dependency | Status |
 | --- | --- | --- | --- |
 | M01 | Readable kingdom overview and truthful map information | Reconciled baseline `3073c18` | Complete; [evidence and limits](verification/kingdom-overview.md) |
-| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01 | Not started |
+| M01A | Spacious navigable geography, useful camera defaults and detail appropriate to scale | M01 | Not started; next |
+| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01A | Not started |
 | M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | Not started |
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
-| M05 | Integrated early and developed campaign acceptance | M01–M04 | Not started |
+| M05 | Integrated early and developed campaign acceptance | M01, M01A, M02–M04 | Not started |
 
 ### M01 Readable kingdom overview
 
@@ -195,6 +276,95 @@ developed campaign. The nine refreshed states at both sizes and the published
 browser checks are recorded in [M01 verification](verification/kingdom-overview.md),
 including the minimum browser limitation.
 
+### M01A Spatial scale and map navigation
+
+Deliver the scale contract above before adding more permanent map information.
+Implement in this order within the milestone:
+
+1. **Establish the 1920×1080 canvas.** Update native defaults, logical rendering,
+   UI bounds, text, overlays, pointer conversion and capture fixtures together.
+   Recompose the HUD at this resolution, with readable type and controls sized
+   for the new canvas. Audit management, tutorial and battle screens that share
+   the same viewport so they retain access and correct picking. Keep historical
+   720p evidence; new acceptance uses the sole 1080p spec.
+2. **Separate map extent and viewport.** Reuse toolkit `CameraTransform`, bounds,
+   viewport and gesture helpers. Add validated presentation settings for world
+   and regional extents and scale bands. Keep normalized authored positions and
+   graph identities. Update background, routes, masks, territorial fill, fog,
+   labels, banners, selection and inverse pointer projection together. Bounds
+   must work when a whole map fits and when only part is visible. Cull and clip
+   routes correctly even when both endpoints lie outside the viewport.
+3. **Establish navigation defaults.** Replace mandatory discovered-world framing
+   on load with useful home framing; keep fit-to-known as the explicit Overview
+   action. Preserve working cameras across selection, turns, management screens
+   and region return. Focus into the unobscured map area beside an inspector.
+   Keep zoom anchored to the pointer or touch midpoint and provide concise first-use
+   instructions for pan, zoom, Overview, Recenter and region entry/return.
+4. **Reduce symbol and card dominance.** Tune ordinary unselected glyphs initially
+   around 20–28 pixels on the 1920×1080 canvas, enlarging selection and critical
+   cues as needed.
+   Replace persistent full army cards with concise markers; selection exposes
+   exact troop counts, orders and costs. Retain at least 48-pixel interaction
+   targets and controls. When those targets overlap at overview scale, offer a
+   group focus or visible chooser; a tap on a group never issues movement.
+   Drawing and picking must use the same displayed grouping. Precise destinations
+   retain direct movement without a new confirmation step.
+5. **Recompose supporting UI.** Keep one inspector, compact resources, Attention
+   and End Turn. Move the permanent long legend and repeated instruction line
+   into visible Map Key/help disclosure. Keep the current selection's costs and
+   urgent state beside its action. Use the existing Attention path for offscreen
+   problems; add only a selected-target/destination edge cue if needed. Every cue
+   must use observed or owned information. Avoid a permanent minimap unless
+   navigation review shows Overview and Recenter leave a specific gap.
+6. **Validate the actual play loop.** Pan to a connected area beyond the initial
+   viewport, select a force, issue a precise order, inspect a known problem,
+   zoom to overview and return to the working view. Run these at 1920×1080 with
+   early fog and the developed campaign before completing the milestone.
+
+Likely boundaries: `src/main.rs`, shared UI composition and capture setup,
+`src/navigation.rs`, `src/navigation/armies.rs`,
+`src/navigation/exploration.rs`, `src/game/world.rs`, `src/game/saves.rs`,
+`src/ui/atlas.rs`, the layers under `src/ui/world/`, labels and movement picking,
+plus `map_presentation.json` and its schema/validation. Split cohesive modules
+before reaching the 800-line limit. Consider shared toolkit additions for any
+missing general camera/input capability before adding a local replacement.
+
+The existing atlas can establish the first camera pass. Check texture quality
+at the proposed scale and reuse layered terrain rendering where useful; reauthor
+art, masks and paths together if needed. Preserve aspect ratio and alignment.
+Scale the existing fog geometry consistently so zoom or a change in presentation
+extent cannot reveal new places or change discovered state. Keep drawing work
+bounded to visible detail and reuse existing profiling when investigating a
+regression; a larger map should not imply a larger full-resolution intermediate
+render target or new per-frame scans of campaign history.
+
+**Acceptance:** normal play presents a readable working area with connected
+geography beyond the screen. Overview gives a quieter understanding of the
+known kingdom and returns reliably to the previous view. Terrain visibly
+separates compact places; full army cards and labels do not cover every gap.
+At 1920×1080, the player can select precise destinations, recover an
+offscreen force and operate the inspector without shrinking required controls.
+Moving the camera never changes travel, discovery, supply or control.
+
+**Five behavioral cases:** projection/picking at 1920×1080 across scale bands, edges
+and scopes; gesture suppression and crowded-group selection without accidental
+orders; hidden-information invariance and unchanged discovery; view retention,
+load fallback and direct/queued movement through navigation; old-save graph and
+deterministic outcome preservation. Extend useful existing navigation,
+exploration, overview and movement tests rather than duplicate them.
+
+Review early home, developed frontier, explicit overview, regional detail and
+dense selected forces at actual 1920×1080 native and published browser canvases.
+Replace equivalent captures at their stable paths; add stable state names only
+for genuinely new scenes. Check actual drag, zoom, overview return, recenter,
+selection, movement and resize behavior. Record texture clarity, label stability,
+target access and whether land feels continuous beyond the viewport. Preserve
+the physical-touch waiver and distinguish click checks from hardware testing.
+Run formatting, strict Clippy, source-size and relevant tests through the required
+workflow, then no-argument `publish.ps1`. Investigate any host scaling failure
+that affects the supported 1920×1080 canvas; historical 720p failures remain
+recorded without creating a second resolution requirement.
+
 ### M02 Map orders and consequences
 
 Keep the selected place or army visible beside a compact inspector. Bring common
@@ -203,7 +373,9 @@ reuse existing commands and their blocked reasons. Detailed composition,
 tactics and histories retain dedicated views with a reliable return path.
 
 Show persistent route/order status, arrivals, idle or blocked own forces and
-supply problems. End Turn remains available during selection. Provide a compact
+supply problems using M01A's scale bands. Emphasize the selected route; aggregate
+other orders at overview scale so the expanded map does not become covered in
+lines and cards. End Turn remains available during selection. Provide a compact
 seasonal outcome list whose entries focus their affected places or people.
 Prioritize action-required outcomes; informational entries can collapse or be
 dismissed. Keep unresolved conditions until resolved. Store sufficient receipt
@@ -248,9 +420,13 @@ These are authoring briefs, adjustable while keeping their strategic distinction
 
 Give each regional scope terrain that agrees with its site geography and routes.
 Author bends and crossing geometry for internal roads; place bridge/pass symbols
-on the terrain they describe. Extend asset/schema validation where needed.
+on the terrain they describe. Carry M01A's spacious working scale into these
+layouts: cluster related settlements and leave coherent terrain between them,
+with entrances and approaches that can continue beyond the initial viewport.
+Show all sites together only through deliberate overview framing. Extend
+asset/schema validation where needed.
 Keep settlement tiers and condition overlays driven by campaign state. Art must
-support picking, visibility and map reading at the minimum size.
+support picking, visibility and map reading at 1920×1080.
 
 Likely boundaries: `world_layout.json`, world/layout schemas and validators,
 `src/state/validation/world.rs`, generation, map navigation, atlas assets and
@@ -332,6 +508,8 @@ Record observed answers to these questions without directing the player to a men
 3. What does the selected order cost, where will it go, and what might stop it?
 4. What changed after End Turn, and where did it happen?
 5. Which place or person matters because of something that happened in play?
+6. Where does the connected world continue beyond this view, and can you visit
+   that area and return home without losing your bearings?
 
 An agent walkthrough verifies interaction paths. Record a first-time human
 playtest when available; until then, retain that limitation instead of calling
@@ -348,16 +526,17 @@ then perform broader integration for changed projections, saves or topology.
 Keep useful regressions and strongly target five cases per major feature.
 
 For each milestone update its status, source/docs changed, tests actually run,
-normal/minimum captures, browser interactions, publish result, known blockers
+1920×1080 captures, browser interactions, publish result, known blockers
 and commit. Store screenshots directly in `docs/verification/` using stable
 screen/state names. Replace equivalent captures and confirm capture games exit.
 
-The last recorded production-victory test fails at its 240-round cap; minimum
-WebGL scaling and several dense battlefield presentation issues are also recorded.
+The last recorded production-victory test fails at its 240-round cap; historical
+720p WebGL scaling and several dense battlefield presentation issues are also recorded.
 See the [evidence index](verification/README.md). Keep those failures visible,
 rerun relevant checks when affected, and do not weaken tests or invent a clean
 workspace to claim acceptance. Their historical existence does not halt unrelated
-map implementation. M05 must report remaining failures explicitly.
+map implementation. M05 reports remaining failures and distinguishes historical
+out-of-spec results from failures at the current 1920×1080 spec.
 
 ## Documentation handoff
 

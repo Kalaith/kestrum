@@ -7,7 +7,9 @@
 
 This chapter owns the implemented M01 overview and the target follow-on map
 interface. M01 is implemented with [scoped verification](verification/kingdom-overview.md)
-and recorded inherited limitations; M02–M05 remain unstarted. The [project README](../README.md#map-controls)
+and recorded inherited limitations; M01A and M02–M05 remain unstarted.
+M01A establishes a more spacious map at the sole 1920×1080 spec.
+The [project README](../README.md#map-controls)
 describes controls. Earlier K/B captures establish only their recorded scenes
 and interactions; the [evidence index](verification/README.md) records remaining
 limitations.
@@ -17,15 +19,22 @@ and understand the consequence. Keep the world dominant, with one contextual
 inspector and quiet supporting information. M01 brings useful known state into
 that view while deferring detailed management until the player selects it.
 
-## Viewport targets
+## Viewport specification
 
-Normal target is a usable 1920×1080 canvas. Minimum supported landscape canvas
-is 1280×720. Check native and embedded/full-screen WebGL separately; a virtual
-resolution does not establish browser usability. Smaller portrait support is
-outside current scope.
+The user's 2026-10-01 correction establishes a usable **1920×1080 canvas as the
+sole design and acceptance spec**, including logical UI coordinates. It replaces
+the earlier dual-resolution target. The current source still lays out the UI
+at 1280×720; M01A migrates and recomposes it. Simply multiplying the existing
+UI by 1.5 would retain the current crowded proportions.
+
+Check native and embedded/full-screen WebGL at an actual 1920×1080 canvas;
+window decorations and host chrome do not count toward its usable area.
+Other host sizes may scale or letterbox this same composition with the toolkit's
+viewport mapping. They do not require separate layouts or visual acceptance.
+Historical smaller-size captures retain their original results.
 
 Use visible touch controls, with ordinary primary controls at least 48 logical
-pixels high at the minimum canvas. Reflow or collapse secondary information
+pixels high at the 1920×1080 design canvas. Reflow or collapse secondary information
 before shrinking text or targets. Dense battlefield tactic controls currently
 fall short of this target and remain a recorded issue. Physical-device touch
 testing is waived under the existing scope; mouse-equivalent checks must be
@@ -42,7 +51,7 @@ reported as such.
 | Primary action | Issue the selected object's relevant order with its cost and constraints visible. End Turn remains separate. |
 | Supporting information | Calendar, actual resources/income/upkeep, owned force status, known threats, relevant supply and a compact attention list. |
 | Deferred information | Detailed accounts, composition, tactics, biographies, household administration, historical filters and utilities. |
-| Layout and camera | Keep most of the canvas for the map. Lower accounts and a collapsed attention control preserve its upper extent; attention opens upward and collapses during selection. Fit known land at a useful scale and retain orientation across views. |
+| Layout and camera | At 1920×1080, keep most of the canvas for a working neighborhood with connected geography beyond the screen. Overview explicitly fits known land. Keep one inspector, compact accounts and collapsed Attention; retain the camera across selections and views. |
 | Input and feedback | Tap objects and visible controls; drag/pinch or use zoom/recenter. Selection, saved orders and important consequences survive the end of transient feedback. |
 
 M01 territory display distinguishes political claim, physical occupation,
@@ -66,7 +75,31 @@ names at once. Full facility and development detail stays on selection.
 M03 will give each regional map its own terrain and approaches, with roads and
 bridge/pass symbols placed meaningfully. The current regional background and
 repeated topology remain unchanged. World Map and Enter Region preserve their
-camera contexts; a seamless camera is deferred.
+camera contexts; a seamless transition between scopes is deferred. M01A changes
+their presentation extent and scale before M03 changes local geography.
+
+### Planned spatial scale and navigation
+
+M01A separates the 1920×1080 UI from independent map bounds. Ordinary play
+frames home, a selected force or an active frontier; it does not automatically
+fit the discovered realm on reload. The visible Overview action fits known land
+and restores the previous working view. Recenter and +/− stay visible. Selection,
+End Turn and management return preserve context; explicit attention navigation
+may focus the relevant observed place. Existing world/region contexts remain.
+
+At overview scale, emphasize territory, capitals, major names and known urgent
+conditions. Campaign scale adds compact places, useful routes and concise army
+markers. Close views add local names and relevant detail. Full army counts,
+orders and costs appear with selection. Maintain readable text and 48-pixel
+interaction targets; crowded groups focus or open a visible chooser without
+issuing movement. A region's force count must not imply physical co-location.
+
+Move the long permanent legend and repeated guidance to visible Map Key/help
+disclosure. Keep concise first-use navigation guidance, selection costs, known
+danger and End Turn discoverable. Terrain separates places; map expansion must
+preserve travel rules, fog and observer secrecy. The
+[scale contract](map-playability-plan.md#proposed-scale-and-information-contract)
+owns initial tuning values and M01A's implementation and acceptance sequence.
 
 ### M01 accounts and known attention
 
@@ -78,7 +111,8 @@ a completed receipt. No forecast or hidden rival treasury is displayed.
 
 Attention starts collapsed beside the accounts strip and expands upward with at
 most three rows per page and visible previous/next controls. It automatically
-collapses during place or army selection at both supported sizes. The lower
+collapses during place or army selection. M01's original captures covered both
+then-supported sizes; new work follows the sole 1920×1080 spec above. The lower
 placement preserves capitals and other targets near the top of a dense overview;
 inspectors and order cards end above the accounts. Tapping Attention while an
 object is selected dismisses that selection and reopens the list. Site entries
@@ -189,7 +223,7 @@ recovery. Utility screens stay on demand.
 
 ## Visual and interaction review
 
-For each changed milestone, review normal/minimum sizes, early fog, developed
+For each changed milestone, review the 1920×1080 canvas, early fog, developed
 territory, long labels, dense stacks, expanded inspectors, multiple orders and
 urgent conditions. Exercise selection, dismissal, movement, cancellation,
 regional boundaries, seasonal feedback and save/reload through visible controls.

@@ -22,6 +22,11 @@ blocker and battlefield presentation gaps. The
 package passes do not establish a current full-suite pass or replace disclosed
 platform limits and the new requirement for a readable strategic experience.
 
+The user's 2026-10-01 correction makes 1920×1080 the sole design and acceptance
+spec. The [current viewport contract](../10-interface-and-accessibility.md#viewport-specification)
+supersedes the dual-resolution checklists below for new work; their historical
+checks and results remain unchanged.
+
 ## Definition of done for every package
 
 1. All named rules and package outputs are implemented through real state and

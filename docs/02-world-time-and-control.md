@@ -57,7 +57,15 @@ Each external route can connect to a specific internal node. Arrival from the no
 
 Rosemarch is the retained small authored scenario used by regression tests and captures. New Game uses the production world. The original 8–12-site regional sketch describes scale; it is not a requirement to repeat one local layout throughout the world.
 
-### Planned geographic variety
+### Planned spatial scale and geographic variety
+
+M01A first enlarges the navigable presentation of the existing world and
+regional scopes. Map extent becomes independent of the sole 1920×1080 UI spec.
+Ordinary play frames a connected neighborhood; Overview deliberately frames
+known land. This changes no site count, identity, graph, route cost, supply rule
+or discovered state. Physical travel remains governed by authored connections.
+The [map plan](map-playability-plan.md#m01a-spatial-scale-and-map-navigation)
+owns the camera and scale work.
 
 All eight current production regions use the same ten-site chain, two entrances
 and anchor pattern, with repeated local coordinates. Geography types and

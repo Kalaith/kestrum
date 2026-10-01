@@ -32,7 +32,7 @@ because an original draft called them provisional.
 | Saves (O22) | Round-end autosaves, manual saves during player orders, no game-imposed slot cap, explicit recovery and overwrite/deletion flows. |
 | History (O23) | Bounded narrative retention may forget old stories while preserving current state and gameplay evidence. |
 | Content (O24) | Humans and ordinary classes first; other races and advanced classes are deferred. |
-| Viewports (O25) | Normal 1920×1080 and minimum landscape 1280×720, with visible touch controls. |
+| Viewport (O25, corrected 2026-10-01) | 1920×1080 is the sole logical UI, design and acceptance spec, with visible touch controls. This user correction supersedes the earlier dual-resolution target. Implementation migration is M01A. |
 
 ## Implemented defaults
 
@@ -78,11 +78,13 @@ problems. The [evidence index](verification/README.md) identifies current limits
 
 ## Planned map decisions
 
-The user requested a plan to address the map review. The following are selected
-implementation recommendations in that plan; they have not shipped:
+M01's political territory, local control, symbols, owned banners, accounts and
+known attention are implemented with recorded limits. The follow-up request
+prioritizes a spacious world. These plan recommendations remain unimplemented:
 
-1. Show political territory, local control and contested state distinctly, with
-   capitals, readable places, informative own-force banners and known threats.
+1. Migrate the logical UI to the sole 1920×1080 spec and separate map extent
+   from it. Use a useful working area as the default, a deliberate overview,
+   compact symbols and detail appropriate to scale. Preserve M01's known facts.
 2. Keep economic context and a compact attention list with the map; use one
    contextual inspector for common actions and defer full management detail.
 3. Keep direct movement and show relevant saved orders and seasonal consequences.
@@ -94,26 +96,27 @@ implementation recommendations in that plan; they have not shipped:
    Introduce careers/households when relevant to events in play.
 
 The [map plan](map-playability-plan.md) owns milestone detail and acceptance.
-This updates the earlier sparse-HUD and screen-tour assumptions.
+This updates the earlier sparse-HUD, fit-known-world and screen-tour assumptions.
 
 ## Remaining choices within the plan
 
 Resolve these while implementing the relevant milestone and record the result:
 
-- Exact territorial geometry, icon treatment and label thresholds, validated at
-  normal/minimum sizes and under fog.
+- Exact map extents, camera bands, territorial geometry, icon treatment and label
+  thresholds, validated at 1920×1080 and under fog.
 - Region-specific connections, local terrain and anchor expressions within the
   distinct strategic briefs and save-compatibility contract.
 - Which legal opening opportunities best demonstrate a payoff for different
   starting regions, assessed through actual interaction and player observation.
 
-These are bounded design tasks, not reasons to postpone M01 or recreate a full
+These are bounded design tasks, not reasons to postpone M01A or recreate a full
 GDD. Numerical balance remains tunable; avoid unrelated system expansion.
 
 ## Deferred work and validation limits
 
 The map plan does not add richer vassal diplomacy, alliances, tribute, other
-races, advanced classes, multiplayer, claimant factions or a larger world.
+races, advanced classes, multiplayer, claimant factions or additional world
+locations. A larger navigable presentation of the existing world is in scope.
 Existing recorded campaign-balance and battlefield issues remain visible in the
 [evidence index](verification/README.md).
 

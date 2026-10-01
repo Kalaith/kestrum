@@ -12,6 +12,10 @@ sections below are the design that guided delivery, not unstarted work. The
 The source notes remain preserved byte for byte. The original K01–K18 plan
 records the earlier release.
 
+The user's 2026-10-01 correction makes 1920×1080 the sole design and acceptance
+spec. The [current viewport contract](10-interface-and-accessibility.md#viewport-specification)
+supersedes this completed plan's earlier 720p requirements for new work.
+
 The [fresh battle review](verification/battle-review.md) supersedes B07's original
 validation claims where later fixes changed outcomes. Its current 240-round
 production victory failure remains a balance blocker. Multi-army clipping,

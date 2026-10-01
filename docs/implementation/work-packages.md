@@ -10,6 +10,10 @@ retain historical implementation contracts and regression intent; their imperati
 wording does not make completed features outstanding tasks. See the completion
 record in [acceptance](acceptance.md#completion-record).
 
+For new work, the user's 2026-10-01 sole 1920×1080 spec supersedes these packages'
+earlier dual-resolution requirements. Follow the
+[current viewport contract](../10-interface-and-accessibility.md#viewport-specification).
+
 Every package inherits C01–C07 and the common completion checklist. Paths below are
 relative to the project and are intended edit locations, not existing-file claims.
 Keep normal player screens honest while a prerequisite feature is unavailable.

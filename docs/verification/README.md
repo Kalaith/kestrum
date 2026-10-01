@@ -23,6 +23,11 @@ result still describes the recorded run.
 runtime record. [Map plan documentation verification](map-plan.md) records the
 preceding reconciliation at `3073c18`; it claims no runtime validation.
 
+The subsequent [spatial scale plan](../map-playability-plan.md#spatial-scale-review)
+adds M01A as the next milestone and records the user's sole 1920×1080 spec.
+It establishes no new runtime results. Earlier 720p checks remain historical
+evidence; current acceptance follows the corrected resolution contract.
+
 | Record | What it establishes |
 | --- | --- |
 | [M01 kingdom overview — 2026-10-01](kingdom-overview.md) | Known political/control layers, symbols/labels/banners, actual accounts and attention; full-suite result, final focused checks, nine native states at both sizes, publishing and browser gameplay/reload evidence |
@@ -68,4 +73,4 @@ evidence, published, and exercised browser gameplay. These limits remain:
   when relevant, not prerequisites for every map milestone.
 - M01's review establishes specific rendered states and browser interactions.
   It does not claim a first-time human playtest or the broader M05 early/developed
-  campaign acceptance; M02–M05 remain unstarted.
+  campaign acceptance; M01A and M02–M05 remain unstarted.

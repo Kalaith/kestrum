@@ -9,6 +9,10 @@ defaults, not outstanding approval. Status reconciled 2026-10-01: the
 ownership, observer, determinism and persistence boundaries during that work.
 Concrete existing modules take precedence over illustrative filenames below.
 
+The user's 2026-10-01 correction makes 1920×1080 the sole design and acceptance
+spec. The [current viewport contract](../10-interface-and-accessibility.md#viewport-specification)
+supersedes the earlier 1280×720 logical/minimum guidance retained below.
+
 ## C01 — Ownership and module boundaries
 
 Keep `GameState` as the owner of the optional `Campaign`. `Game` owns runtime

@@ -7,9 +7,10 @@ service, and places changed by decades of war and peace.
 
 M01 of the [map playability plan](docs/map-playability-plan.md) is implemented:
 a readable kingdom overview. [M01 verification](docs/verification/kingdom-overview.md)
-records its checks and retained limitations. M02, map orders and seasonal
-consequences, is the next unfinished milestone and has not started. Regional
-geography and the opening guide follow in M03/M04.
+records its checks and retained limitations. M01A, spatial scale and map
+navigation at the sole 1920×1080 spec, is next and has not started. M02's map
+orders and seasonal consequences follow, then regional geography and the opening
+guide in M03/M04. This plan does not change the running game yet.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 
@@ -80,6 +81,12 @@ dismissed or resumed from How to Play. Its replacement is M04 of the map plan.
 
 ## Current map limitations
 
+The current logical UI and atlas both use 1280×720, with large fixed-size
+symbols and banners. Developed saves fit discovered geography into that view.
+M01A migrates to the sole 1920×1080 canvas, separates world extent from UI size,
+adds scale-dependent map detail and makes whole-kingdom framing an explicit
+Overview action. Ordinary play will frame a useful part of a larger landscape.
+
 M01 provides the overview; common management actions and full seasonal
 consequences still need M02's contextual inspector and outcome work. Saved routes
 retain their existing selection-based detail; an unselected banner reports a
@@ -101,11 +108,15 @@ balances and actual seasonal accounts support it, with a compact attention list
 that gives way to selection. Political fill, local control marks, owned banners,
 settlement symbols and importance-based labels explain the known world. Camera
 controls, Menu and End Turn remain reachable; the selected-place inspector and
-movement card retain direct destination-tap movement. M02 brings common actions
-and seasonal consequences into that context.
+movement card retain direct destination-tap movement. M01A establishes useful
+working and overview scales with smaller unselected symbols and fewer full
+cards. M02 brings common actions and seasonal consequences into that context.
 
-Normal target is 1920×1080; minimum supported landscape canvas is 1280×720.
-Native and embedded browser sizing must be checked independently.
+**1920×1080 is the sole design and acceptance resolution**, including logical
+UI coordinates, per the user's 2026-10-01 correction. Native and browser checks
+must measure the actual usable canvas. Smaller hosts can scale/letterbox the
+same composition; there is no separate 1280×720 layout or acceptance requirement.
+The current implementation still uses the old logical canvas until M01A lands.
 
 ### Battle screens
 
@@ -182,7 +193,7 @@ cargo fmt -p kestrum -- --check
 After meaningful game changes, no-parameter publishing is required. For UI
 changes, use supported scenes in `scripts/capture_ui.ps1`, write directly to
 `docs/verification/`, replace equivalent captures and confirm launched games
-exit. Use 1920×1080 and 1280×720 plus browser interactions. See
+exit. Use an actual 1920×1080 canvas plus browser interactions. See
 [delivery and validation](docs/12-delivery-and-validation.md) for completion rules.
 
 ## Code and artwork

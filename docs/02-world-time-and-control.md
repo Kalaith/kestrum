@@ -90,6 +90,26 @@ The first two emerge from movement and warfare. Political ownership can change b
 
 Example: the player holds Western Gate and Milltown, High Fort is contested, and the enemy holds Rosemarch City and Southern Pass. A single solid player/enemy color cannot fully communicate this state.
 
+### M01 overview presentation
+
+Political fill and boundaries describe the known claim; the site's ring describes
+its current controller. Separate occupation and contested marks preserve local
+exceptions. A regional marker combines discovered local control without asserting
+that every internal site is secure. A partially explored region withholds its
+political claim and displays an unknown-claim cue, distinct from known neutral land.
+
+The territorial layer reads observer-filtered summaries and clips its display to
+known geography. The world view additionally uses authored land/water masks in
+`map_presentation.json`; regional fill uses the existing local coordinates.
+The masks describe the atlas artwork and change no routes, terrain mechanics,
+site identities, anchor rules or saved topology. M03 owns regional geography.
+
+World-region danger marks aggregate already-visible internal local threats,
+participant sieges and hostile-contact sites. Their counts describe known
+conditions, never enemy armies, troop strength or orders. Attention entries focus
+the specific discovered site, entering its region when needed, without moving a
+force. The owned capital has a crown; undisclosed foreign capitals remain private.
+
 ## Strategic anchors
 
 Regions can define important control requirements rather than demand every minor node. The source example for Rosemarch requires:
@@ -154,8 +174,8 @@ These are future possibilities, not current seasonal modifiers or a requirement 
 - Advancing one full round changes time exactly once, including after faction elimination.
 - History uses the same calendar for ages, wars, sieges, construction, and biographies.
 - Routes remain legible at both map scales; unknown territory does not reveal hidden enemy details.
-- Planned territorial overlays must distinguish secure control, partial regional claims and visible conflict; a kingdom's boundary cannot imply ownership of hidden or hostile sites.
-- Planned world markers aggregate known regional threats, sieges and orders without revealing enemy rosters.
+- Territorial display distinguishes political claim, occupation, contested control and withheld claims; a kingdom's boundary cannot imply ownership of hidden or hostile sites.
+- World markers aggregate known regional threats, participant sieges and hostile contacts without revealing enemy rosters. Persistent route presentation remains M02 work.
 
 ## Current defaults and future scope
 

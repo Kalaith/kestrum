@@ -38,6 +38,29 @@ impl Game {
             return;
         }
         match action {
+            UiAction::FocusAttention(target) => self.focus_attention(target),
+            UiAction::ToggleAttention => {
+                if self.navigation.selection().is_some()
+                    || self.movement.stage == ui::MoveStage::Map
+                {
+                    self.navigation.clear_selection();
+                    self.movement = ui::MoveView::default();
+                    self.overview_ui.expanded = true;
+                } else {
+                    self.overview_ui.expanded = !self.overview_ui.expanded;
+                }
+            }
+            UiAction::AttentionPage(delta) => {
+                let last = self.overview.as_ref().map_or(0, |overview| {
+                    overview.attention.len().div_ceil(3).saturating_sub(1)
+                });
+                self.overview_ui.page = self
+                    .overview_ui
+                    .page
+                    .min(last)
+                    .saturating_add_signed(delta as isize)
+                    .min(last);
+            }
             UiAction::OpenBattleReports
             | UiAction::BattleReport(_)
             | UiAction::BattlePage(_)

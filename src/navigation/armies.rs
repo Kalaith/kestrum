@@ -85,8 +85,10 @@ impl MapNavigation {
         view: &MapView,
         armies: &[Army],
     ) -> Vec<ArmyTarget> {
-        self.targets(world, view)
-            .into_iter()
+        let targets = self.targets(world, view);
+        let mut placed: Vec<Rect> = Vec::new();
+        targets
+            .iter()
             .filter_map(|target| {
                 let mut local: Vec<_> = armies
                     .iter()
@@ -99,14 +101,44 @@ impl MapNavigation {
                     .map(|army| army.id)
                     .collect();
                 local.sort_unstable();
-                (!local.is_empty()).then_some(ArmyTarget {
+                if local.is_empty() {
+                    return None;
+                }
+                let width = 196.0;
+                let height = 56.0;
+                let center = target.center;
+                // Keep the place, crown and warnings uncovered after clamping.
+                let own_place = Rect::new(center.x - 46.0, center.y - 50.0, 92.0, 88.0);
+                let options = [
+                    vec2(center.x + 50.0, center.y - height * 0.5),
+                    vec2(center.x - 50.0 - width, center.y - height * 0.5),
+                    vec2(center.x - width * 0.5, center.y + 46.0),
+                    vec2(center.x - width * 0.5, center.y - 54.0 - height),
+                    vec2(center.x - width - 50.0, center.y + 46.0),
+                    vec2(center.x + 50.0, center.y + 46.0),
+                ];
+                let bounds = options
+                    .into_iter()
+                    .map(|at| {
+                        Rect::new(
+                            at.x.clamp(12.0, WIDTH - width - 12.0),
+                            at.y.clamp(92.0, HEIGHT - height - 148.0),
+                            width,
+                            height,
+                        )
+                    })
+                    .filter(|rect| !own_place.overlaps(rect))
+                    .min_by_key(|rect| {
+                        targets
+                            .iter()
+                            .filter(|other| other.bounds().overlaps(rect))
+                            .count()
+                            + placed.iter().filter(|other| other.overlaps(rect)).count() * 4
+                    })?;
+                placed.push(bounds);
+                Some(ArmyTarget {
                     armies: local,
-                    bounds: Rect::new(
-                        (target.center.x + 32.0).min(WIDTH - 100.0),
-                        target.center.y - 24.0,
-                        96.0,
-                        MAP_TAP_SIZE,
-                    ),
+                    bounds,
                 })
             })
             .collect()

@@ -10,6 +10,7 @@ mod history;
 mod kingdom;
 mod menus;
 mod movement;
+mod overview;
 mod saves;
 mod selection;
 mod settlement;
@@ -51,7 +52,10 @@ pub use movement::{
     draw_map_overlay as draw_move_map_overlay, panel_bounds as movement_panel_bounds,
 };
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
+pub use overview::attention_bounds;
+pub use overview::{controls_contain as overview_controls_contain, OverviewView};
 pub use saves::{SaveMode, SaveRow, SaveView};
+pub use selection::bounds as selection_bounds;
 pub use settlement::{
     BuildChoice, BuilderChoice, FocusChoice, LocalAction, LocalDestination, SettlementMode,
     SettlementView, SETTLEMENT_PAGE_SIZE,
@@ -61,9 +65,13 @@ pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
 pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
 pub use tutorial::{bounds as tutorial_bounds, draw as draw_tutorial};
 pub use typography::prepare_dynamic_text;
+pub use world::banner_visible;
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    ToggleAttention,
+    AttentionPage(i32),
+    FocusAttention(kestrum::engine::AttentionTarget),
     DismissTutorial,
     ReopenTutorial,
     TutorialHeadquarters,
@@ -322,6 +330,8 @@ impl UiAction {
 }
 
 pub struct Context<'a> {
+    pub overview: Option<&'a kestrum::engine::MapOverview>,
+    pub overview_ui: &'a OverviewView,
     pub kingdom: &'a KingdomView,
     pub threat: &'a ThreatPanel,
     pub siege: &'a SiegePanel,

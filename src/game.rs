@@ -20,6 +20,7 @@ mod midgame_capture;
 mod military;
 mod military_capture;
 mod movement;
+mod overview_capture;
 mod profiling;
 mod projection;
 mod resources;
@@ -83,6 +84,8 @@ pub struct Game {
     diplomacy_seen: std::collections::BTreeSet<(u32, kestrum::data::world::FactionId, bool)>,
     ending_saved: bool,
     projection: Option<engine::VisibleCampaign>,
+    overview: Option<engine::MapOverview>,
+    overview_ui: ui::OverviewView,
     projection_revision: Option<(kestrum::state::CampaignId, u64)>,
     history_return: Overlay,
     history_from_records: bool,
@@ -137,6 +140,8 @@ impl Game {
             diplomacy_seen: Default::default(),
             ending_saved: false,
             projection: None,
+            overview: None,
+            overview_ui: ui::OverviewView::default(),
             projection_revision: None,
             history_return: Overlay::None,
             history_from_records: false,
@@ -177,6 +182,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_overview(scene) {
+            return;
+        }
         if self.capture_midgame(scene) {
             return;
         }
@@ -384,6 +392,7 @@ impl Game {
         self.battlefield_view = ui::BattlefieldView::default();
         self.reset_history();
         self.invalidate_projection();
+        self.overview_ui = ui::OverviewView::default();
         self.army = ui::ArmyView::default();
         self.help_page = 0;
         self.save_error.clear();
@@ -423,6 +432,8 @@ impl Game {
         self.clamp_pages();
         self.kingdom_events();
         let ctx = ui::Context {
+            overview: self.overview.as_ref(),
+            overview_ui: &self.overview_ui,
             kingdom: &self.kingdom,
             settlement: &self.settlement,
             siege: &self.siege,

@@ -4,6 +4,8 @@ mod armies;
 pub use armies::ArmyTarget;
 mod exploration;
 pub use exploration::MapExploration;
+mod labels;
+pub use labels::{place_map_labels, MapLabelCandidate, PlacedMapLabel};
 
 use crate::{
     data::world::{MarkerId, MarkerLocation, SiteId},

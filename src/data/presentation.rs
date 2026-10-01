@@ -3,9 +3,12 @@
 use serde::Deserialize;
 use std::collections::BTreeMap;
 mod life_text;
+mod map_presentation;
+mod overview_text;
 mod progression_text;
 mod required_text;
 mod tutorial_text;
+pub use map_presentation::MapPresentation;
 use progression_text::PROGRESSION_TEXT;
 use required_text::REQUIRED_TEXT;
 
@@ -18,6 +21,8 @@ pub struct GeographyLabel {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PresentationData {
+    #[serde(skip)]
+    pub map: MapPresentation,
     pub game_id: String,
     pub title: String,
     pub subtitle: String,
@@ -34,6 +39,7 @@ pub struct PresentationData {
 
 impl PresentationData {
     pub fn validate(&self) -> Result<(), String> {
+        self.map.validate()?;
         if !self.npc_action_delay_seconds.is_finite()
             || !(0.0..=1.0).contains(&self.npc_action_delay_seconds)
         {
@@ -48,6 +54,7 @@ impl PresentationData {
             .iter()
             .chain(PROGRESSION_TEXT)
             .chain(tutorial_text::TUTORIAL_TEXT)
+            .chain(overview_text::OVERVIEW_TEXT)
         {
             if self
                 .text

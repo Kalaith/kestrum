@@ -19,11 +19,13 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
-[Map plan documentation verification](map-plan.md) records the current planning
-and documentation reconciliation; it claims no new runtime validation.
+[M01 kingdom overview](kingdom-overview.md) is the latest implementation and
+runtime record. [Map plan documentation verification](map-plan.md) records the
+preceding reconciliation at `3073c18`; it claims no runtime validation.
 
 | Record | What it establishes |
 | --- | --- |
+| [M01 kingdom overview — 2026-10-01](kingdom-overview.md) | Known political/control layers, symbols/labels/banners, actual accounts and attention; full-suite result, final focused checks, nine native states at both sizes, publishing and browser gameplay/reload evidence |
 | [Movement plans — 2026-10-01](movement-plans.md) | Latest immediate destination taps, queued continuation, selected-unit End Turn and native action-harness checks; distinguishes the final focused checks from the preceding engine-change full suite and browser review |
 | [World army orders — 2026-10-01](world-army-orders.md) | World-level selection and regional entrance/departure orders; its Confirm Move flow is superseded by movement plans |
 | [Map fog — 2026-10-01](map-fog.md) | Frontier clearing and outgoing road hints, with focused tests and captures; it does not establish useful political borders or strategic map readability |
@@ -41,20 +43,19 @@ and [implementation-plan verification](implementation-plan.md) describe the
 
 ## Inherited limitations, last recorded 2026-10-01
 
-These are carried forward from the linked reports; this documentation update
-has not rerun runtime checks.
+M01 reran the full suite and affected focused checks, refreshed native visual
+evidence, published, and exercised browser gameplay. These limits remain:
 
-- The preceding engine-change full suite recorded in [movement plans](movement-plans.md)
-  has one failing
+- The M01 full suite again has one failing
   target: `k18_production_battle::four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`.
   It does not reach victory within 240 rounds. The 400-round continuity target
   passes in that run; one release profiling test remains intentionally ignored.
-- The final immediate-movement build has native action-harness, focused tests,
-  normal/minimum capture and publishing evidence. Its browser check reached the
-  updated title screen; gameplay checks stopped at the user's request. The
-  earlier browser travel/reload checks used the preceding engine-change build.
+- M01's published browser checks cover attention focus, immediate travel,
+  drag/zoom, selected-unit End Turn, actual receipts, world warnings and reload.
+  The final focused suite and captures cover the last display refinements;
+  the full suite ran immediately before those refinements.
 - Minimum native screenshots were reviewed at 1280 × 720. The in-app browser's
-  minimum-size override produced a smaller upper-left image and black remainder;
+  minimum-size override again produced a smaller upper-left image and black remainder;
   minimum browser acceptance remains unverified. Native captures and normal
   browser clicks do not establish that missing result.
 - Physical-touch testing was waived for K18. No device or pinch result has since
@@ -65,7 +66,6 @@ has not rerun runtime checks.
   multi-army clipping, target-priority editing, small tactic/leader controls and
   aggregate-morale findings. They are existing issues to preserve or address
   when relevant, not prerequisites for every map milestone.
-- Existing screenshots and technical tests establish specific rendered states
-  and mechanics. The new map work must separately show that players can identify
-  their realm, relevant threats and opportunities, choose an action and recognize
-  its outcome.
+- M01's review establishes specific rendered states and browser interactions.
+  It does not claim a first-time human playtest or the broader M05 early/developed
+  campaign acceptance; M02–M05 remain unstarted.

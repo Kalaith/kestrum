@@ -18,9 +18,9 @@ pub fn bounds(navigation: &MapNavigation, world: &CampaignWorld, view: &MapView)
     let left = view.project_normalized(position).x >= WIDTH * 0.5;
     Some(Rect::new(
         if left { 24.0 } else { 898.0 },
-        96.0,
+        92.0,
         358.0,
-        532.0,
+        480.0,
     ))
 }
 

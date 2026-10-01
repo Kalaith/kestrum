@@ -5,6 +5,7 @@ use super::*;
 impl Game {
     pub(super) fn invalidate_projection(&mut self) {
         self.projection = None;
+        self.overview = None;
         self.projection_revision = None;
     }
 
@@ -18,6 +19,7 @@ impl Game {
         let changed = self.projection_revision != Some(revision);
         if changed {
             self.projection = engine::project_map(campaign, campaign.player).ok();
+            self.overview = self.projection.as_ref().map(engine::map_overview);
             self.projection_revision = Some(revision);
         }
         changed

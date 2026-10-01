@@ -20,6 +20,14 @@
   ],
   "controls": [
     {
+      "key": "Attention",
+      "desc": "Expand known map warnings, page through them, and tap a row to focus its place or owned army"
+    },
+    {
+      "key": "Kingdom overview",
+      "desc": "Tint shows known political claims; rings show local control. Crown marks your capital, / occupation, X contested control and ? an unknown claim. The lower strip shows current resources and actual last-season accounts"
+    },
+    {
       "key": "Tap / Click",
       "desc": "Tap Army, then a destination to move immediately; unfinished routes continue after End Turn"
     },

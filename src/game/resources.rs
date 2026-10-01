@@ -17,11 +17,17 @@ pub(super) async fn load(data: &GameData) -> Result<AssetManager, String> {
     // Runtime names and messages are prepared separately before UI drawing.
     let mut characters: Vec<char> = (b' '..=b'~').map(char::from).collect();
     characters.extend("…—–×·→".chars());
-    for text in data.presentation.text.values().chain([
-        &data.presentation.title,
-        &data.presentation.subtitle,
-        &data.presentation.edition,
-    ]) {
+    for text in data
+        .presentation
+        .text
+        .values()
+        .chain(data.presentation.map.text.values())
+        .chain([
+            &data.presentation.title,
+            &data.presentation.subtitle,
+            &data.presentation.edition,
+        ])
+    {
         characters.extend(text.chars());
     }
     characters.sort_unstable();
@@ -29,7 +35,7 @@ pub(super) async fn load(data: &GameData) -> Result<AssetManager, String> {
     let common_text: String = characters.into_iter().collect();
     for (key, sizes) in [
         ("cinzel", &[15, 17, 18, 19, 20, 21, 24, 28, 30][..]),
-        ("body", &[16, 18, 19, 20, 21, 23, 25][..]),
+        ("body", &[14, 16, 17, 18, 19, 20, 21, 23, 25][..]),
     ] {
         let font = assets
             .get_font(key)

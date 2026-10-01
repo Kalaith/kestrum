@@ -29,7 +29,7 @@ pub fn panel_bounds(
     } else {
         350.0
     };
-    Rect::new(if left { 24.0 } else { 898.0 }, 100.0, 358.0, height)
+    Rect::new(if left { 24.0 } else { 898.0 }, 96.0, 358.0, height)
 }
 
 pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
@@ -73,7 +73,7 @@ fn draw_army_heading(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     lines(
         ctx,
         &title,
-        vec2(x, 132.0),
+        vec2(x, rect.y + 32.0),
         width - if multiple { 142.0 } else { 60.0 },
         2,
         CREAM,
@@ -81,7 +81,7 @@ fn draw_army_heading(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     if multiple
         && button(
             ctx,
-            Rect::new(rect.right() - 146.0, 108.0, 74.0, 48.0),
+            Rect::new(rect.right() - 146.0, rect.y + 8.0, 74.0, 48.0),
             &ctx.text("next"),
             active,
             false,
@@ -95,7 +95,7 @@ fn draw_army_heading(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     }
     if button(
         ctx,
-        Rect::new(rect.right() - 64.0, 108.0, 48.0, 48.0),
+        Rect::new(rect.right() - 64.0, rect.y + 8.0, 48.0, 48.0),
         "×",
         active,
         false,
@@ -106,12 +106,12 @@ fn draw_army_heading(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     body(
         ctx,
         &format!("{}: {remaining}", ctx.text("movement_left")),
-        vec2(x, 188.0),
+        vec2(x, rect.y + 88.0),
         20.0,
         BRASS,
     );
     if let Some(site) = ctx.movement.site.and_then(|id| campaign.world.site(id)) {
-        lines(ctx, &site.name, vec2(x, 217.0), width, 1, MUTED);
+        lines(ctx, &site.name, vec2(x, rect.y + 117.0), width, 1, MUTED);
     }
     None
 }
@@ -141,11 +141,11 @@ fn draw_route_preview(
         .and_then(|id| campaign.world.site(id))
         .map(|site| site.name.as_str())
         .unwrap_or_default();
-    lines(ctx, name, vec2(x, 260.0), width, 2, CREAM);
+    lines(ctx, name, vec2(x, rect.y + 160.0), width, 2, CREAM);
     body(
         ctx,
         &format!("{}: {}", ctx.text("route_cost"), preview.total_cost),
-        vec2(x, 316.0),
+        vec2(x, rect.y + 216.0),
         20.0,
         BRASS,
     );
@@ -161,7 +161,7 @@ fn draw_route_preview(
     };
     if button(
         ctx,
-        Rect::new(x, 426.0, width, 48.0),
+        Rect::new(x, rect.y + 326.0, width, 48.0),
         &ctx.text(primary.map_or("confirm_move", |(key, _)| key)),
         active && campaign.player_turn && (preview.can_confirm() || primary.is_some()),
         true,
@@ -202,7 +202,7 @@ fn draw_route_consequence(ctx: &Context<'_>, rect: Rect, preview: &MovementPrevi
             ctx,
             &ctx.text("map_region_exit_cost")
                 .replace("{cost}", &exit_cost.to_string()),
-            vec2(x, 343.0),
+            vec2(x, rect.y + 243.0),
             16.0,
             MUTED,
         );
@@ -210,7 +210,7 @@ fn draw_route_consequence(ctx: &Context<'_>, rect: Rect, preview: &MovementPrevi
     lines(
         ctx,
         &consequence,
-        vec2(x, if exit_cost > 0 { 373.0 } else { 345.0 }),
+        vec2(x, rect.y + if exit_cost > 0 { 273.0 } else { 245.0 }),
         width,
         if exit_cost > 0 { 2 } else { 3 },
         CREAM,
@@ -239,11 +239,11 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     } else {
         ctx.movement.status.clone()
     };
-    lines(ctx, &label, vec2(x, 265.0), width, 5, CREAM);
+    lines(ctx, &label, vec2(x, rect.y + 165.0), width, 5, CREAM);
     if ctx.movement.planned_destination.is_some() {
         if button(
             ctx,
-            Rect::new(x, 426.0, width, 48.0),
+            Rect::new(x, rect.y + 326.0, width, 48.0),
             &ctx.text("cancel_movement_plan"),
             active && campaign.player_turn,
             false,
@@ -266,7 +266,7 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
         if campaign.world.physical_site(id).is_none()
             && button(
                 ctx,
-                Rect::new(x, 426.0, width, 48.0),
+                Rect::new(x, rect.y + 326.0, width, 48.0),
                 &ctx.text("enter_region"),
                 active,
                 true,
@@ -315,7 +315,7 @@ fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
             } else {
                 "map_supply_cutoff"
             }),
-            vec2(x + 168.0, 508.0),
+            vec2(x + 168.0, rect.y + 408.0),
             158.0,
             2,
             MUTED,

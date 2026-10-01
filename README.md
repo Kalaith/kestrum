@@ -5,12 +5,13 @@ service, and places changed by decades of war and peace.
 
 ## Current milestone
 
-The next work is the [map playability plan](docs/map-playability-plan.md).
-It addresses kingdom visibility, useful place and army information, common
-actions on the map, varied regional geography, seasonal feedback and an opening
-that teaches a complete strategic loop. **These changes are planned, not yet
-implemented.** The [design index](docs/README.md) identifies the current owning
-documents and historical evidence.
+M01 of the [map playability plan](docs/map-playability-plan.md) is implemented:
+a readable kingdom overview. [M01 verification](docs/verification/kingdom-overview.md)
+records its checks and retained limitations. M02, map orders and seasonal
+consequences, is the next unfinished milestone and has not started. Regional
+geography and the opening guide follow in M03/M04.
+The [design index](docs/README.md) identifies the owning documents and historical
+evidence.
 
 K01–K18 and B01–B07 are complete under their recorded scope. This describes
 implemented systems and earlier checks; it does not establish satisfying map
@@ -55,6 +56,19 @@ camera contexts. Drag to pan; pinch, the mouse wheel, or visible +/− controls
 zoom. Recenter returns to the selected army or headquarters. Close dismisses
 selection. End Turn remains reachable during movement selection.
 
+The overview shows known political claims separately from local occupation and
+contested control, settlement silhouettes and the owned capital. Labels respond
+to zoom, importance and available space. Owned banners show identity, troop
+strength and route, siege, idle or supply state; world stacks aggregate owned
+forces without treating their internal sites as one physical location.
+
+Gold, Wood and Stone stay in a lower strip with the last completed season's
+actual income, upkeep paid/due and recovery spending. Attention starts collapsed
+beside it, opens upward to three known conditions per page and collapses during
+selection. Tap Attention to close the current selection and reopen the list;
+tap an entry to focus its exact observed place or owned army. World-region warnings aggregate only known
+internal threats, participant sieges and hostile contact cues.
+
 Army Details opens composition, recruitment and people. Manage opens a place's
 construction, roads, focus and local actions. Menu contains Kingdom, Records,
 save/load, settings and help. These are the **current** paths; the map plan brings
@@ -66,11 +80,12 @@ dismissed or resumed from How to Play. Its replacement is M04 of the map plan.
 
 ## Current map limitations
 
-The current map uses faction-letter circles, generic army banners and little
-economic or development information. Region markers do not aggregate all known
-internal threats. Ordinary names disappear from the production overview after
-24 visible markers. All eight regional graphs repeat the same ten-site chain,
-and their local view reuses the continental background.
+M01 provides the overview; common management actions and full seasonal
+consequences still need M02's contextual inspector and outcome work. Saved routes
+retain their existing selection-based detail; an unselected banner reports a
+queued route without displaying its full destination/path. All eight regional
+graphs still repeat the same ten-site chain, and their local view reuses the
+continental background. M03 owns that geography change.
 
 These are known design problems addressed by the active plan. The map's full
 canvas and unclipped controls alone do not establish strategic readability.
@@ -81,10 +96,13 @@ canvas and unclipped controls alone do not establish strategic readability.
 
 The [interface chapter](docs/10-interface-and-accessibility.md) owns the target
 screen composition; the [map plan](docs/map-playability-plan.md#target-screen-brief)
-owns its delivery. The implemented view keeps the calendar, active faction,
-camera controls, Menu, End Turn, selected-place inspector and movement card.
-The next design adds truthful territory, economic context, readable forces and
-places, a compact attention list, and visible consequences.
+owns its delivery. The map is the dominant play area. Calendar, active faction,
+balances and actual seasonal accounts support it, with a compact attention list
+that gives way to selection. Political fill, local control marks, owned banners,
+settlement symbols and importance-based labels explain the known world. Camera
+controls, Menu and End Turn remain reachable; the selected-place inspector and
+movement card retain direct destination-tap movement. M02 brings common actions
+and seasonal consequences into that context.
 
 Normal target is 1920×1080; minimum supported landscape canvas is 1280×720.
 Native and embedded browser sizing must be checked independently.
@@ -104,12 +122,15 @@ fixes and remaining presentation issues.
 ## Known validation limits
 
 The [evidence index](docs/verification/README.md) owns the pointers to current
-records and inherited limitations. At the latest recorded checks:
+records and inherited limitations. M01 passed formatting, strict Clippy, the
+800-line source limit, 23 final focused tests, native normal/minimum visual
+review, publishing and the recorded browser gameplay/reload checks. Its full
+suite and browser-size review retain these limits:
 
 - The unchanged seed-88 production-victory test fails at its 240-round cap after
   corrected combat reactions/routs. The failure remains a balance issue.
-- Minimum-size WebGL acceptance remains unverified because the viewport override
-  produced a smaller rendered image with black remainder.
+- Minimum-size WebGL acceptance remains unverified: the viewport override again
+  produced a smaller rendered image with black remainder after interaction.
 - Dense battlefield placement, target-priority editing, small tactic controls
   and aggregate morale have recorded presentation findings.
 - Physical-touch testing was waived on 2026-09-28; further platform, performance
@@ -117,7 +138,7 @@ records and inherited limitations. At the latest recorded checks:
   checks pass or remove visible touch-control requirements.
 - One release profiling test is intentionally ignored.
 
-These are last recorded results, not checks rerun for this documentation update.
+These inherited limits remain until superseded by scoped verification evidence.
 Rerun affected checks for implementation changes and report exact remaining
 failures. Do not reopen completed packages or weaken their regression assertions.
 

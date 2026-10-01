@@ -3,8 +3,9 @@
 Start with the [map playability plan](map-playability-plan.md) for new work and
 the [project README](../README.md) for implemented behavior and development
 commands. The current priority is a readable kingdom map, useful spatial
-decisions and visible consequences. The map improvements are planned; K01–K18
-and B01–B07 describe completed implementation work under their recorded scope.
+decisions and visible consequences. M01's kingdom overview is implemented;
+M02 is the next unfinished milestone. K01–K18 and B01–B07 describe completed
+implementation work under their recorded scope.
 
 ## Reading order
 

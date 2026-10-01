@@ -135,6 +135,7 @@ fn geography(ctx: &Context<'_>) {
 
 pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
+    let overview_action = super::overview::draw(ctx);
     if ctx.navigation.scope() == MapScope::World {
         emblem(vec2(44.0, 43.0), 19.0);
         text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
@@ -171,10 +172,12 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         } else {
             ctx.text("legacy_phase")
         };
-        let width = measure_text(&status, ctx.body_font(), 18, 1.0).width;
-        body(ctx, &status, vec2(640.0 - width * 0.5, 59.0), 18.0, CREAM);
+        let fitted =
+            macroquad_toolkit::ui::truncate_text_to_width_ex(&status, 740.0, ctx.body_font(), 18.0);
+        let width = measure_text(&fitted, ctx.body_font(), 18, 1.0).width;
+        body(ctx, &fitted, vec2(640.0 - width * 0.5, 59.0), 18.0, CREAM);
     }
-    if ctx.navigation.selection().is_none() {
+    if ctx.navigation.selection().is_none() && !ctx.overview_ui.expanded {
         compass(ctx);
     }
     // A narrow dark wash preserves contrast without reserving a panel for the map.
@@ -203,7 +206,10 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         selection::draw(ctx)
     };
-    selection_action.or(navigation_action).or(phase_action)
+    selection_action
+        .or(navigation_action)
+        .or(phase_action)
+        .or(overview_action)
 }
 
 fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {

@@ -135,12 +135,20 @@ Armies use connected routes and member-owned movement allowances. Composition, r
 
 **Current interaction:** tap an Army banner, inspect remaining movement and nearby costs, then tap a valid destination to issue the order immediately. Longer routes move as far as affordable and retain their remainder for later rounds; Review Route and Cancel Route are available. World orders include physical regional travel. Hostile contact, sieges, peaceful borders and discovery restrictions constrain travel. A changed route stops at the last legal location and reports the interruption.
 
-**Planned map feedback:** armies need recognizable identity, strength and useful
-state beside their location. Relevant saved orders, destinations, idle/exhausted
-state and supply warnings must remain understandable after the order card closes.
-Regional aggregation must preserve the distinction between armies at different
-physical sites. The [map playability plan](map-playability-plan.md) owns this work;
-generic Army banners and selection-only routes remain the current limitation.
+**M01 overview feedback:** each owned army banner shows its shortened name,
+current surviving troop count and an Idle, Route, Siege or Cut off state.
+World stacks show their owned army count, combined troops and the most urgent
+state; aggregation does not make different internal sites the same physical
+location. Siege takes precedence, followed by lack of supply, queued route and
+idle state. These are current owned facts, independent of an open order card.
+The attention list includes unsupplied owned armies and focuses the selected
+force through the existing movement interface.
+
+Exact composition, movement allowance and route detail remain available on
+selection. M02 of the [map playability plan](map-playability-plan.md) owns
+persistent destination/path presentation after dismissal, clearer interrupted
+orders and common actions in the map inspector. M01 preserves the existing
+destination-tap command path and does not infer enemy strength or orders.
 
 Do not promise exact information beyond fog of war. The preview can identify known threats and uncertainty separately.
 

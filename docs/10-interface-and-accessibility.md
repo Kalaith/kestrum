@@ -5,16 +5,17 @@
 
 ## Status and goals
 
-This chapter owns the target interface for the map improvements. The
-[project README](../README.md#map-controls) describes the implemented controls.
-The redesign is planned. Earlier K/B captures establish only their recorded
-scenes and interactions; the current [evidence index](verification/README.md)
-records remaining limitations.
+This chapter owns the implemented M01 overview and the target follow-on map
+interface. M01 is implemented with [scoped verification](verification/kingdom-overview.md)
+and recorded inherited limitations; M02–M05 remain unstarted. The [project README](../README.md#map-controls)
+describes controls. Earlier K/B captures establish only their recorded scenes
+and interactions; the [evidence index](verification/README.md) records remaining
+limitations.
 
 The player needs to recognize a strategic situation, act on a place or force,
 and understand the consequence. Keep the world dominant, with one contextual
-inspector and quiet supporting information. The current sparse HUD hides useful
-state; reducing visible information further is not the objective.
+inspector and quiet supporting information. M01 brings useful known state into
+that view while deferring detailed management until the player selects it.
 
 ## Viewport targets
 
@@ -34,26 +35,65 @@ reported as such.
 
 ### World and region map
 
-| Question | Planned behavior |
+| Question | Screen contract |
 | --- | --- |
 | Current decision | Choose where to expand, defend, invest or redirect a force. |
 | Dominant focus | Known territory, meaningful places and active armies. |
 | Primary action | Issue the selected object's relevant order with its cost and constraints visible. End Turn remains separate. |
 | Supporting information | Calendar, actual resources/income/upkeep, owned force status, known threats, relevant supply and a compact attention list. |
 | Deferred information | Detailed accounts, composition, tactics, biographies, household administration, historical filters and utilities. |
-| Layout and camera | Keep most of the canvas for the map. Collapse the attention list at 720p when an inspector opens. Fit known land at a useful scale and retain orientation across views. |
+| Layout and camera | Keep most of the canvas for the map. Lower accounts and a collapsed attention control preserve its upper extent; attention opens upward and collapses during selection. Fit known land at a useful scale and retain orientation across views. |
 | Input and feedback | Tap objects and visible controls; drag/pinch or use zoom/recenter. Selection, saved orders and important consequences survive the end of transient feedback. |
 
-Territory display distinguishes political claim, physical occupation, contested
-control and unknown geography. Kingdom labels and capital symbols establish
-orientation. Settlement silhouettes reflect their current tier; relevant
-resource/facility symbols and growth, construction, siege or damage states
-explain purpose. Labels depend on zoom, importance and available space.
+M01 territory display distinguishes political claim, physical occupation,
+contested control and unknown geography. Claim fill and boundaries are clipped
+to discovered geography; the world view additionally uses authored land/water
+masks for the existing atlas artwork. Regional fill retains the existing local
+coordinates. These masks have no role in movement or topology. Local rings show
+physical control; occupation and contested badges preserve exceptions. A region
+with undiscovered internal sites withholds its claim, rather than appearing
+neutral or implying its hidden sites are secure. Kingdom labels and the owned
+capital's crown establish orientation; foreign capital roles stay private.
 
-A regional map depicts its own terrain and approaches, with roads and bridge/pass
-symbols placed meaningfully. Its breadcrumb and return control preserve the
-world context. The chosen first delivery retains separate world and region
-scopes; a seamless camera is deferred.
+Settlement silhouettes distinguish unsettled places, camps, outposts, hamlets,
+villages, towns, cities and major cities; fort marks remain a separate layer.
+Work, damage and Wood/Stone cues appear at useful local or zoomed scales. Label
+placement prioritizes selection, capitals, danger and regions, then owned and
+developed places as zoom increases. Collision checks reserve space for controls,
+symbols, banners and the inspector; marker count no longer hides all ordinary
+names at once. Full facility and development detail stays on selection.
+
+M03 will give each regional map its own terrain and approaches, with roads and
+bridge/pass symbols placed meaningfully. The current regional background and
+repeated topology remain unchanged. World Map and Enter Region preserve their
+camera contexts; a seamless camera is deferred.
+
+### M01 accounts and known attention
+
+The lower strip shows current owned Gold/Wood/Stone balances and one dated actual
+receipt: last completed season's income, upkeep paid/due and recovery Gold
+spending. Any unpaid upkeep appears beside current balances, so a truncated
+receipt cannot conceal the shortfall. A new campaign identifies the absence of
+a completed receipt. No forecast or hidden rival treasury is displayed.
+
+Attention starts collapsed beside the accounts strip and expands upward with at
+most three rows per page and visible previous/next controls. It automatically
+collapses during place or army selection at both supported sizes. The lower
+placement preserves capitals and other targets near the top of a dense overview;
+inspectors and order cards end above the accounts. Tapping Attention while an
+object is selected dismisses that selection and reopens the list. Site entries
+use their most urgent known condition in
+this order: participant siege, hostile contact, local threat, owned contested
+control, owned occupation. Unsupplied owned forces follow. Selecting an entry
+focuses its exact observed object and clears any previous movement selection;
+it neither travels nor advances the simulation. Army entries then use the
+existing movement card. Hidden sites and foreign armies are not focus targets.
+
+World-region danger badges sum only already-known internal threats, participant
+sieges and hostile-contact sites. A number on a danger badge counts conditions,
+never enemy armies or strength. Current warnings are derived from current
+observer facts, so attention has no separate saved acknowledgement or event
+history. M02 owns seasonal outcome receipts and their acknowledgement behavior.
 
 ### Map orders and selection
 
@@ -67,10 +107,13 @@ action together. Common recruitment, construction, focus and diplomacy entry
 points stay in that context. Existing spending, battle and diplomatic review
 rules remain where relevant. Movement does not acquire a second confirmation.
 
-Army banners show identity, owned strength and status; dense stacks offer a
-readable selection list. Relevant saved routes remain visible after the card
-closes. Idle, moving, blocked, besieged and unsupplied states use understandable
-symbols plus text or shape. Unknown enemy strength and plans stay hidden.
+M01 army banners show a single army's shortened name or a stack's owned army
+count, surviving troop strength and a text status. Siege takes priority, then
+Cut off, Route and Idle. A world stack may represent different internal sites;
+the existing movement selector preserves each force's physical location.
+Selection exposes exact allowance and composition. A queued order remains
+recognizable after the card closes; persistent route paths/destinations and
+interruption detail are M02 work. Unknown enemy strength and plans stay hidden.
 
 ### Seasonal outcomes and attention
 
@@ -80,9 +123,10 @@ army or person. Unresolved conditions remain discoverable; informational entries
 can be dismissed. Preserve receipt/acknowledgement state across reload without
 repeating actions or misleading the player about which season changed a value.
 
-The attention list is a route into the map, not a second management dashboard.
-Collapse quiet categories. A history link provides supporting detail when
-needed; full biographies remain deliberate inspection.
+The existing M01 attention list provides current conditions. M02 adds the
+seasonal outcome path and supporting history where needed; full biographies
+remain deliberate inspection. Keep this compact route into the affected map
+objects separate from a full management dashboard.
 
 ### Introduction and contextual help
 
@@ -113,8 +157,9 @@ when comparison is the decision. See [army membership](04-armies-and-logistics.m
 
 Current Manage contains Overview, Build, Roads, Focus and Local Actions.
 Population, growth causes, damage, facilities, last income and work orders
-already exist. The redesign makes key consequences visible on the map and
-brings common orders into the selected-place inspector.
+already exist. M01 exposes current habitation, known danger and selected local
+cues; M02 brings common orders and seasonal consequences into the selected-place
+inspector.
 
 War, peace and defeat decisions remain explicit, with their consequences and
 disabled reasons. Foreign-place inspection links to known controller information.

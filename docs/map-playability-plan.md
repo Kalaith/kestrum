@@ -1,6 +1,6 @@
 # Map playability implementation plan
 
-Updated 2026-10-01. **Status: planned; implementation has not started.**
+Updated 2026-10-01. **Status: M01 complete with recorded validation limits; M02 is next and unstarted.**
 
 Kestrum needs a map that explains the kingdom, presents useful decisions, and
 shows their consequences. This is the active implementation sequence following
@@ -8,10 +8,11 @@ the map review. It replaces the completed K01–K18 and B01–B07 delivery seque
 as the starting point for new work. Their implemented mechanics remain the
 baseline, subject to the changes explicitly described here.
 
-The user requested this plan and the documentation reconciliation. The detailed
-layouts, milestones and regional briefs below are implementation recommendations;
-they are not claims that these changes have shipped. Ordinary design tuning can
-be resolved during implementation and recorded in the owning chapter.
+The user requested this plan and the documentation reconciliation. M01's
+implementation decisions are recorded below and in the owning chapters;
+[verification](verification/kingdom-overview.md) records its scoped acceptance
+and inherited limits. M02–M05 are unstarted. Ordinary design tuning is resolved
+during implementation and recorded in the owning chapter.
 
 ## Outcome
 
@@ -26,18 +27,19 @@ physical route graph, automatic battles, restricted enemy knowledge and
 generational continuity. The existing simulation supplies most of the needed
 facts; this work connects them to play and improves the geography.
 
-## Verified starting point
+## Historical starting point
 
 The review inspected source at `b6978a3`, the supplied midgame image, existing
 captures, and the published browser's early campaign map, settlement and army
-interfaces. It did not establish full campaign balance or physical-touch usability.
+interfaces. The following findings describe that pre-M01 review, not the current
+implementation. It did not establish full campaign balance or physical-touch usability.
 
-| Existing behavior | Problem this plan addresses |
+| Baseline behavior | Finding at the initial review |
 | --- | --- |
-| Political claims, physical control and contested regions | Ownership appears mainly as faction initials and colored rings; territory has little visible shape. |
-| Population, income, facilities, damage, growth and construction | Places look similar and their purpose is mostly hidden in management sheets. |
-| Direct destination taps, immediate partial travel and saved routes | Army banners show a generic label/count; order state disappears from the ordinary overview. |
-| Observed threats and hostile presence | Region markers do not aggregate their internal visible danger badges. |
+| Political claims, physical control and contested regions | Ownership appeared mainly as faction initials and colored rings; territory had little visible shape. |
+| Population, income, facilities, damage, growth and construction | Places looked similar and their purpose was mostly hidden in management sheets. |
+| Direct destination taps, immediate partial travel and saved routes | Army banners showed a generic label/count; order state disappeared from the ordinary overview. |
+| Observed threats and hostile presence | Region markers did not aggregate their internal visible danger badges. |
 | Eight regions with ten sites each | Every internal network is the same nine-edge chain with the same two-row placement and anchor pattern. |
 | World and regional map scopes | Both reuse the continental atlas; local terrain and routes do not explain local geography. |
 | Seasonal economy and many durable consequences | Feedback lacks a concise map-linked account of the changes that matter next. |
@@ -109,17 +111,25 @@ and tap equivalents. Color is always paired with shape, symbol or text.
 ## Delivery sequence
 
 Each milestone is independently useful. Finish its validation and commit before
-starting the next major change. All five are currently **Not started**.
+starting the next major change. M01 is complete; M02 is the next unfinished
+milestone and has not started.
 
-| Milestone | Result | Dependency |
-| --- | --- | --- |
-| M01 | Readable kingdom overview and truthful map information | Current checkout |
-| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01 |
-| M03 | Distinct regional geography with coherent terrain and compatible saves | M02 |
-| M04 | Opening play teaches a complete strategic loop | M03 |
-| M05 | Integrated early and developed campaign acceptance | M01–M04 |
+| Milestone | Result | Dependency | Status |
+| --- | --- | --- | --- |
+| M01 | Readable kingdom overview and truthful map information | Reconciled baseline `3073c18` | Complete; [evidence and limits](verification/kingdom-overview.md) |
+| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01 | Not started |
+| M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | Not started |
+| M04 | Opening play teaches a complete strategic loop | M03 | Not started |
+| M05 | Integrated early and developed campaign acceptance | M01–M04 | Not started |
 
 ### M01 Readable kingdom overview
+
+**Complete, 2026-10-01.** Native normal/minimum review, observer/movement checks,
+strict Clippy, formatting, source-size checks, publishing and published browser
+gameplay/reload checks are recorded in [M01 verification](verification/kingdom-overview.md).
+The unchanged seed-88 victory failure, minimum WebGL rendering limitation and
+physical-touch waiver remain explicit; no broader platform/balance acceptance
+is implied.
 
 Extend the observer projection with the public and owned facts needed by the
 map. Build political boundaries, capital/settlement symbols, zoom-aware labels,
@@ -128,10 +138,10 @@ focuses the affected place or army. Aggregate observed threats, sieges and
 hostile contacts from regional sites onto their world marker without revealing
 unobserved occupants.
 
-Likely boundaries: `src/engine/projection.rs`, `src/game/projection.rs`,
-`src/ui/atlas.rs`, `src/ui/world.rs`, `src/ui/selection.rs`, navigation helpers
-and presentation data. Split cohesive map layers before any Rust file reaches
-the 800-line limit. Political rendering reads control; it cannot change it.
+Implementation boundaries: observer projection and `src/engine/overview.rs`,
+`src/game/projection.rs`, `src/ui/overview.rs`, cohesive layers under
+`src/ui/world/`, selection and navigation helpers, and validated
+`map_presentation.json`. Political rendering reads control; it cannot change it.
 
 **Acceptance:** a developed realm can be read without opening a management
 sheet. The player can locate their capital, a frontier, their forces, an urgent
@@ -142,6 +152,48 @@ unknown territory remain distinct.
 known danger; development/ownership changes update summaries; picking and label
 selection remain correct across zoom and supported sizes. Visual review covers
 early fog, the developed realm, long names, eight factions and dense contacts.
+
+#### Implementation decisions
+
+- Observer summaries contain discovered sites/claims, owned capital and army
+  supply, owned troop totals/orders, and existing visible danger facts. A region
+  with undiscovered internal sites withholds its political claim; known neutral
+  land remains distinct. No enemy strength, orders or undiscovered control enters
+  a summary.
+- Political fill and boundaries are clipped to discovered geography; the world
+  view also uses authored atlas land/water masks. Regional fill retains local
+  coordinates. These are presentation data, with no new routes, terrain
+  rules, control rules or topology revision. Local control rings, occupation and
+  contested marks remain independent of the political fill.
+- Settlement silhouettes and separate fort marks replace generic site initials.
+  The owned capital is crowned. Work, damage and Wood/Stone cues appear at local
+  or zoomed scales. Labels use zoom, strategic importance and collision placement
+  rather than a total-marker cutoff.
+- A single owned banner shows its name; a stack shows its army count. Both show
+  combined surviving troops and the highest priority state: Siege, Cut off,
+  Route or Idle. Exact composition and path details remain on selection. M02
+  retains responsibility for persistent destinations/routes and richer inspectors.
+- The lower accounts strip separates current Gold/Wood/Stone from the last actual
+  completed season's income, upkeep paid/due, recovery spending and shortfall.
+  Before the first receipt it says no season has completed. No forecast is added.
+- Attention starts collapsed beside the lower accounts, expands upward with
+  three rows per page and visible navigation, and collapses during selection.
+  This placement preserves upper-map capitals; inspectors end above the strip.
+  It focuses exact observed sites or owned
+  armies without issuing travel. Region warnings aggregate already-known internal
+  threats, participant sieges and hostile-contact sites; counts describe known
+  conditions rather than enemy forces.
+
+The capture harness uses `production_world` for early fog and includes
+`overview_urgent`, `overview_region`, `overview_attention`, `overview_siege`
+and `overview_deficit`, each with a `_minimum` variant. The deficit scene shows
+an actual unpaid-upkeep receipt after ordinary seasonal resolution. The
+eight-faction stress scene authors supported conditions
+and validates its campaign; its economy receipt comes from ordinary full-round
+commands. Existing `midgame_map`/`midgame_frontier` supply the separately earned
+developed campaign. The nine refreshed states at both sizes and the published
+browser checks are recorded in [M01 verification](verification/kingdom-overview.md),
+including the minimum browser limitation.
 
 ### M02 Map orders and consequences
 

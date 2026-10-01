@@ -47,8 +47,12 @@ pub struct VisibleCampaign {
     pub completed_rounds: u32,
     pub player: FactionId,
     pub observer: FactionId,
+    /// Discovery boundary retained even by projections used outside the map.
+    pub known_sites: BTreeSet<SiteId>,
     /// Derived only for the observer; foreign functional HQ roles stay private.
     pub supplied_sites: BTreeSet<SiteId>,
+    /// Actual owned-army supply includes the existing besieger endpoint rule.
+    pub supplied_armies: BTreeSet<ArmyId>,
     /// Boolean hostile contact cues, without foreign army identities or counts.
     pub hostile_presence: BTreeSet<SiteId>,
     pub active_faction: FactionId,
@@ -111,7 +115,14 @@ pub fn project(
         completed_rounds: campaign.completed_rounds,
         player: campaign.player,
         observer,
+        known_sites: super::explored_sites(campaign, observer),
         supplied_sites: campaign.supplied_sites(observer),
+        supplied_armies: campaign
+            .armies
+            .values()
+            .filter(|army| army.faction == observer && campaign.army_is_supplied(army.id))
+            .map(|army| army.id)
+            .collect(),
         hostile_presence: super::hostile_presence(campaign, observer),
         active_faction,
         active_faction_name: active.name.clone(),

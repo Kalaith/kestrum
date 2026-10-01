@@ -64,7 +64,7 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
             .map(|army| army.name.as_str())
             .chain(view.people.iter().map(|person| person.name.as_str()))
         {
-            for size in [16, 18, 20, 21] {
+            for size in [16, 17, 18, 20, 21] {
                 samples.push((size, name));
             }
             titles.push((24, name));

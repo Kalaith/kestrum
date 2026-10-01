@@ -34,6 +34,16 @@ impl Game {
         {
             return true;
         }
+        if ui::overview_controls_contain(
+            point,
+            &self.overview_ui,
+            self.navigation.selection().is_some() || self.movement.stage == ui::MoveStage::Map,
+            self.overview
+                .as_ref()
+                .map_or(0, |overview| overview.attention.len()),
+        ) {
+            return true;
+        }
         let world = self
             .state
             .campaign
@@ -41,6 +51,32 @@ impl Game {
             .and_then(Campaign::strategic)
             .map(|campaign| &campaign.world);
         ui::map_controls_contain(point, &self.navigation, world, &self.view, &self.movement)
+    }
+
+    /// Warning navigation uses only observer-approved objects and never issues travel.
+    pub(super) fn focus_attention(&mut self, target: engine::AttentionTarget) {
+        let Some(view) = &self.projection else {
+            return;
+        };
+        let site = match target {
+            engine::AttentionTarget::Site(id) => id,
+            engine::AttentionTarget::Army(id) => {
+                let Some(army) = view.armies.iter().find(|army| army.id == id) else {
+                    return;
+                };
+                army.site
+            }
+        };
+        if view.world.site(site).is_none() {
+            return;
+        }
+        self.movement = ui::MoveView::default();
+        self.state.overlay = Overlay::None;
+        self.navigation
+            .focus_site(&view.world, site, &mut self.view);
+        if let engine::AttentionTarget::Army(id) = target {
+            self.begin_move(id);
+        }
     }
 
     pub(super) fn map_selection_action(&self, pointer: Pointer) -> Option<UiAction> {
@@ -59,6 +95,23 @@ impl Game {
             return None;
         }
         if campaign.player_turn {
+            let panel = if self.movement.stage == ui::MoveStage::Map {
+                Some(ui::movement_panel_bounds(
+                    &self.movement,
+                    &self.navigation,
+                    world,
+                    &self.view,
+                ))
+            } else {
+                ui::selection_bounds(&self.navigation, world, &self.view)
+            };
+            let attention = ui::attention_bounds(
+                &self.overview_ui,
+                panel.is_some(),
+                self.overview
+                    .as_ref()
+                    .map_or(0, |overview| overview.attention.len()),
+            );
             if let Some(target) = self
                 .navigation
                 .army_targets(world, &self.view, &campaign.armies)
@@ -66,14 +119,7 @@ impl Game {
                 .find(|target| {
                     target.bounds.contains(origin)
                         && target.bounds.contains(pointer.position)
-                        && !(self.movement.stage == ui::MoveStage::Map
-                            && ui::movement_panel_bounds(
-                                &self.movement,
-                                &self.navigation,
-                                world,
-                                &self.view,
-                            )
-                            .overlaps(&target.bounds))
+                        && ui::banner_visible(target.bounds, panel, attention)
                 })
             {
                 return target.armies.first().copied().map(UiAction::BeginMove);

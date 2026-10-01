@@ -32,7 +32,7 @@ The explicit resources are **Gold, Wood, and Stone**. They support recruitment, 
 
 | Resource or capacity | Source purpose | Presentation target |
 | --- | --- | --- |
-| Gold | Recruitment, upkeep, and development | Available balance and expected seasonal change |
+| Gold | Recruitment, upkeep, and development | Available balance, actual last-season income, upkeep paid/due and recovery spending |
 | Wood | Roads, outposts, construction, and military support | Cost beside the chosen action |
 | Stone | Construction and fortification | Cost beside the chosen action |
 | Population | Settlement growth, displacement and conserved settlers | Local population and development conditions; recruitment currently makes no population deduction |
@@ -69,13 +69,19 @@ The player can also establish an outpost, encourage settlement, invest in trade,
 
 **Implemented rule:** focus and local conditions influence [development pressure](07-living-places.md), rather than guarantee an immediate settlement-tier upgrade. Geography caps, supply, damage, occupation and safety constrain growth. The available commands and their costs live in the construction and development data and validation.
 
-**Planned map presentation:** show kingdom balances and meaningful seasonal
-changes in a compact map strip. Give developed places recognizable silhouettes
-and resource/facility cues; show local work and danger beside the affected site.
-Selecting a place should expose relevant actions and costs without losing the
-strategic view. Current resource and development detail still lives chiefly in
-management views; these improvements belong to the
-[map playability plan](map-playability-plan.md).
+**M01 map presentation:** the compact lower strip shows current owned Gold, Wood
+and Stone balances separately from the last completed season's actual income,
+upkeep paid/due and recovery Gold spent. It names the completed season and shows
+an upkeep shortfall when present. Before the first receipt it explicitly says
+that no season has completed. These values are saved simulation receipts, not a
+forecast of the next season or a promise that current balances match the closing
+receipt after later spending.
+
+Settlement silhouettes show habitation tiers, with local work, damage and
+Wood/Stone cues at appropriate scale. Full accounts, facilities, population and
+growth causes remain in Manage. M02 brings common actions and their costs into
+the selected-place inspector, plus map-linked seasonal consequences. No economy
+rules or additional resource stockpiles are introduced by the overview.
 
 ## World-based military capability
 
@@ -112,7 +118,7 @@ War, peace and truce decisions and dated knowledge are implemented. Their effect
 
 **Agreed direction (O21):** the player receives little to no information about enemy armies until meeting them in combat. Any pre-combat presence or rough-size cue must preserve that limited knowledge. Combat can reveal troop types, composition, commanders, notable characters, and approximate strength. Scouts and spies remain later possibilities.
 
-**Implemented knowledge contract:** records preserve what a faction observed, when, and where; history and projections filter by observer. A force seen years ago is not currently exact intelligence. Planned danger badges may aggregate already-known regional threats and contact, but must not reveal hidden commanders, composition or undiscovered sites.
+**Implemented knowledge contract:** records preserve what a faction observed, when, and where; history and projections filter by observer. A force seen years ago is not currently exact intelligence. M01 danger badges aggregate already-known regional threats, participant sieges and contact sites. They reveal no hidden commanders, composition, orders or undiscovered sites, and their counts never represent enemy strength.
 
 ## Acceptance examples
 

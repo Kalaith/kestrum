@@ -49,7 +49,7 @@ pub struct GameData {
 
 impl GameData {
     pub fn load() -> Result<Self, String> {
-        let data = Self {
+        let mut data = Self {
             ai: macroquad_toolkit::include_json!("../assets/data/ai.json")?,
             battle_tactics: macroquad_toolkit::include_json!("../assets/data/battle_tactics.json")?,
             diplomacy: macroquad_toolkit::include_json!("../assets/data/diplomacy.json")?,
@@ -74,6 +74,8 @@ impl GameData {
                 "../assets/data/world_layout.json"
             )?,
         };
+        data.presentation.map =
+            macroquad_toolkit::include_json!("../assets/data/map_presentation.json")?;
         data.validate()?;
         Ok(data)
     }

@@ -1,84 +1,92 @@
-# Formation membership verification — 2026-09-30
+# Formation membership verification — 2026-10-01
 
-The army roster previously showed only troop types in its six formation slots,
-while naming the lord in the separate army Commander summary. The design already
-called for `Squire Elian + Warriors`. The state already attached the founding
-lord to Warriors; this follow-up makes that membership visible for every named
-formation member, including non-commanders and characters emerging from Archers.
+Each army slot holds one named person plus ordinary troops, or troops alone.
+The previous implementation allowed eight people in one formation and rendered
+`Ashen Cairn + 7 others + Warriors`. The roster now shows a separate formation
+for each named person. Transfers and service entry reject a second person;
+emergence, AI deployment, disbanding and combat recovery choose an unstaffed
+formation or preserve the person at the local site when every formation is staffed.
 
-Rows now show `Lord Catrin Cairn + Warriors`, an untitled `Elian Dale + Archers`,
-or `Hero Elian Dale + Archers` after formal recognition. A formation with several
-people uses one representative and an explicit `1 other` / `N others` count.
-The representative is the attached commander, otherwise a lord, recognized hero,
-then the lowest stable person ID. Long names shorten while preserving troop type,
-member count and current/capacity headcount. Tier and movement share the second
-line. Wounds do not erase continuing membership; dead, displaced and site-assigned
-people are excluded. Formation and person transfer rules, headcounts, capacity,
-slot usage, upkeep, combat and persistence are unchanged.
+Older saves redistribute stacked members among available same-faction formations
+at the same physical site, preferring the least staffed army. The commander stays
+with their formation. Overflow remains at the site without losing people, moving
+them across the map, or inventing troops. Historical battle receipts, troop
+headcounts, RNG state and identifier counters survive the migration. Saves carrying
+the new roster schema reject duplicate assignments rather than silently repairing them.
 
-The complete [formation-slot contract](../04-armies-and-logistics.md#characters-belong-inside-formation-slots)
-defines the examples, membership, multi-person ordering, transfers, wounds,
-headcount conservation, overflow and save behavior. Character development,
-interface design, implementation rules and the README now repeat or link the
-contract at the relevant decision.
+The midgame generator recruits additional formations through normal paid orders
+and patrols learner armies together. Its ten living named adults occupy ten
+different formations across three armies: two in Rose Host, six in Army 5 and
+two in Army 12. The two other armies contain troops alone. Native Continue now
+loads review save #29, written and reloaded identically through the catalogue API.
+Older entries remain available.
 
-## Checks
+The [formation-slot contract](../04-armies-and-logistics.md#characters-belong-inside-formation-slots)
+defines assignments, transfers, wounds, overflow and save compatibility.
 
-All validation used the actual checkout and its registered shared workspace.
+## Validation
+
+All checks use the actual checkout and registered shared workspace.
 
 | Check | Result |
 | --- | --- |
 | `cargo fmt -p kestrum -- --check` | Passed. |
-| Shared Cargo strict Clippy, all targets with `-D warnings` | Passed after the final display correction. |
-| Shared Cargo tests: founding_lord, economy, movement, progression, knowledge, code_standards | All 31 cases passed. Existing emergence and transfer regressions preserve membership and headcount; no rendering-mirroring test suite was added. |
-| Expanded founding_lord regression plus source-size gate | All six cases passed after explicitly checking the founding lord's Warriors assignment, full headcount/capacity and three occupied slots; the final data-label recheck also passed. |
-| Shared hidden-window captures | Five supported states passed at each native size. The first dense capture exposed missing evidence counters in its fixture; the fixture was repaired, validated and recaptured. |
-| Final `.\publish.ps1` with no arguments | Passed Windows/WebGL release builds, packaging, Preview deployment, Project Roost recording and catalogue update. |
+| Shared Cargo strict Clippy, all targets with `-D warnings` | Passed after the final transfer-label and capture changes. |
+| Shared Cargo full integration suite, `--tests --no-fail-fast` | 315 passed, one failed, one profiling case ignored. |
+| Six new formation-person regressions | Passed: atomic transfer rejection, service entry, eight-person legacy distribution across three armies, local overflow conservation, modern invalid-save rejection and disband fallback. |
+| Midgame regressions | All five passed; every living named person has a distinct formation, with at least three staffed armies. |
+| Source-size gate | Passed; every Rust file remains within the 800-line limit. |
+| Shared hidden-window captures | Eight supported states reviewed at normal and minimum native sizes. |
+| `.\publish.ps1` with no arguments | Passed Windows and WebGL release builds, packaging, Preview deployment, Project Roost recording and catalogue update. |
 
-The previously recorded full-suite long-campaign failures are not addressed by
-this presentation change. See [founding-lord verification](founding-lord.md) for
-the two existing simulation blockers and diagnostics. That full suite was not
-repeated for this roster correction.
+The sole full-suite failure is the previously documented
+`four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`
+deadline: no production victory by round 240. A baseline run before this rule
+change reproduced it. The four- and eight-faction 400-round continuity cases pass.
+This change does not tune the production victory script or campaign balance.
 
 ## Native visual review
 
-The capture wrapper saved directly to the stable paths below. Normal windows
-requested 1920 × 1080 and produced 1920 × 1061 client images; minimum captures are
-1280 × 720. The transferred-member scene uses the real TransferPerson command.
-Archer and dense scenes are isolated, semantically validated capture fixtures;
-they do not write production saves. Transfer images were refreshed after fixing
-the singular others label.
-
-The wrapper's game processes exited after both successful captures and the
-repaired fixture failure; no Kestrum process remained at the final check.
+The wrapper captures directly to the stable paths below. Normal windows request
+1920 × 1080 and produce 1920 × 1061 client images; minimum captures are 1280 × 720.
+The midgame scene uses the real generator. Founder transfer uses the actual
+TransferPerson command; the staffed-target scene uses the real transfer UI and
+command preview. Dense and long-name fixtures are semantically validated.
 
 | State | Normal | Minimum |
 | --- | --- | --- |
-| New kingdom, lord within Warriors | [Army](ui_founder_army.png) | [Army](ui_founder_army_minimum.png) |
-| Six Warriors members, one wounded, and a recognized archer | [Members](ui_formation_members.png) | [Members](ui_formation_members_minimum.png) |
+| Founding lord with Warriors; troops-only Spearmen and Archers | [Army](ui_founder_army.png) | [Army](ui_founder_army_minimum.png) |
+| Seven named people in separate formations across two armies; one wounded | [Members](ui_formation_members.png) | [Members](ui_formation_members_minimum.png) |
 | Named archer before recognition | [Emergence](ui_formation_emerged.png) | [Emergence](ui_formation_emerged_minimum.png) |
-| Lord transferred from Warriors to Archers | [Transfer](ui_formation_transfer.png) | [Transfer](ui_formation_transfer_minimum.png) |
-| Maximum-length person names and several members | [Long names](ui_formation_long_name.png) | [Long names](ui_formation_long_name_minimum.png) |
+| Lord transferred from Warriors to unstaffed Archers | [Transfer](ui_formation_transfer.png) | [Transfer](ui_formation_transfer_minimum.png) |
+| Maximum-length names in separate formation slots | [Long names](ui_formation_long_name.png) | [Long names](ui_formation_long_name_minimum.png) |
+| Real midgame Army 5, six named people in six formations | [Midgame](ui_midgame_army.png) | [Midgame](ui_midgame_army_minimum.png) |
+| Transfer into a troops-only formation | [Recipient](ui_transfer_person.png) | [Recipient](ui_transfer_person_minimum.png) |
+| Transfer into a staffed formation, long recipient name, disabled confirmation | [Blocked](ui_formation_transfer_blocked.png) | [Blocked](ui_formation_transfer_blocked_minimum.png) |
 
-Review followed `UI_STYLE.md`. Composition remains the dominant focus and the
-right-hand summary retains the army's leadership, command appointment and supply.
-Troop identities, membership counts, headcount and movement remain readable at
-both sizes, without overlap or clipped actions. The 64-character wide-letter
-names shorten in the row and wrap in the commander summary. No extra panel or
-slot is created. Selection rectangles remain 52 logical pixels high; visible
-Orders, Back, training and recruitment controls remain reachable. Individual
-full names, condition, Career, History and Transfer remain in Orders > People.
+Review follows `UI_STYLE.md`. The six-slot comparison stays dominant, with
+leadership, upkeep and supply in the existing supporting summary. Troop identities,
+headcounts and movement remain readable without overlap. Long names shorten while
+preserving troop type and headcount; the commander's full name wraps. Transfer
+recipients show their named occupant and explain the blocked choice beside the
+disabled Confirm Transfer control. Formation rows are 52 logical pixels high,
+transfer rows 50, and action buttons 48. Full names and Career, History and Transfer
+remain available through Orders > People. Capture processes exit after completion.
 
 ## Browser review and limitations
 
-At the published Preview's 1920 × 1080 fullscreen viewport, Continue restored
-the previous campaign. Army > Army Details visibly showed `Lord Catrin Cairn +
-Warriors`, 100/100 Warriors and 98.3% leadership. Selecting the Archers row moved
-the highlight; Train Formation opened the Archers specialization view with its
-correct 80 headcount, and Back returned to the roster.
+The published [Preview](http://127.0.0.1/games/kestrum/) was reloaded after deployment.
+At a 1920 × 1080 fullscreen viewport, Continue restored the previous browser
+campaign. Army > Army Details showed `Lord Catrin Cairn + Warriors`, troops-only
+Spearmen and Archers, and preserved headcounts. Visible Orders > People > Transfer
+controls opened the local army, showed the named occupant in Warriors, and enabled
+Confirm Transfer when troops-only Spearmen were selected. Cancelling returned
+without changing the assignment.
 
-At 1280 × 720, the previously documented WebGL scaling issue remained: the game
-occupied a smaller upper-left area with black space around it. This review cannot
-sign off minimum browser usability or physical-device touch. Native minimum
-layout passes, and the visible pointer controls were exercised at normal browser
-size. Temporary browser viewport overrides were reset and the review tab closed.
+At 1280 × 720, the existing WebGL scaling problem remains: the game occupies a
+smaller upper-left area with black space around it. Picking after resize also
+mismatches the displayed rows: selecting visible Archers selected Warriors.
+Minimum browser usability therefore remains blocked, despite passing native
+minimum layouts. Physical-device touch is untested. The normal browser review
+used visible pointer controls; the temporary viewport override was reset and the
+review tab closed. No native capture process remained at the final process check.

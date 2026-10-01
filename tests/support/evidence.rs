@@ -44,6 +44,10 @@ pub(super) fn encounter(
     let formation = campaign.formations.get_mut(&FormationId(1)).unwrap();
     formation.headcount = formation.capacity;
     formation.movement_spent = 0;
+    let members: Vec<_> = campaign.armies[&ArmyId(1)].formation_ids().collect();
+    for id in members {
+        campaign.formations.get_mut(&id).unwrap().movement_spent = 0;
+    }
     for person in campaign.people.values_mut() {
         person.movement_spent = 0;
     }

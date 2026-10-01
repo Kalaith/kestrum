@@ -10,6 +10,7 @@ mod evidence;
 mod households;
 mod legacy;
 mod progression;
+mod roster;
 mod siege;
 
 impl StrategicCampaign {
@@ -17,6 +18,13 @@ impl StrategicCampaign {
         mut value: serde_json::Value,
     ) -> Result<Self, serde_json::Error> {
         let earlier_exploration = value.pointer("/knowledge/explored").is_none();
+        let earlier_roster = value.get("roster_version").is_none();
+        if earlier_roster {
+            value
+                .as_object_mut()
+                .ok_or_else(|| serde_json::Error::custom("campaign must be an object"))?
+                .insert("roster_version".into(), serde_json::json!(1));
+        }
         let earlier_battle_leaders = battle::missing_leader_fields(&value);
         initialize_earlier_military(&mut value);
         initialize_earlier_battles(&mut value);
@@ -97,6 +105,9 @@ impl StrategicCampaign {
         }
         if earlier_exploration {
             crate::engine::exploration::observe(&mut campaign);
+        }
+        if earlier_roster {
+            roster::restore(&mut campaign);
         }
         Ok(campaign)
     }

@@ -311,6 +311,9 @@ fn validate_service(
         if army.site != site {
             return Err(RuleError::NotColocated);
         }
+        if campaign.formation_person(formation_id).is_some() {
+            return Err(RuleError::PersonSlotOccupied);
+        }
     }
     Ok(())
 }

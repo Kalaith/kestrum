@@ -23,6 +23,7 @@ impl Game {
                 | "formation_members"
                 | "formation_emerged"
                 | "formation_transfer"
+                | "formation_transfer_blocked"
                 | "formation_long_name"
         ) {
             return false;
@@ -45,6 +46,9 @@ impl Game {
         if name == "formation_long_name" {
             campaign.people.get_mut(&founder).unwrap().name = "W".repeat(64);
         }
+        if name.starts_with("formation_") {
+            roster_archer(&self.data, campaign, name);
+        }
         if matches!(
             name,
             "founder_dense" | "formation_members" | "formation_long_name"
@@ -60,6 +64,37 @@ impl Game {
                     self.data.human_names.family_names[index]
                 );
                 companion.career.founding_lord = false;
+                if campaign
+                    .available_person_formation(campaign.player, site)
+                    .is_none()
+                {
+                    let army = campaign
+                        .armies
+                        .values()
+                        .filter(|army| {
+                            army.faction == campaign.player
+                                && army.site == site
+                                && army.first_empty_slot().is_some()
+                        })
+                        .map(|army| army.id)
+                        .min();
+                    engine::apply(
+                        campaign,
+                        &self.data,
+                        engine::Actor::Player,
+                        Command::Recruit {
+                            site,
+                            army,
+                            kind: TroopKind::Warriors,
+                        },
+                    )
+                    .expect("funded capture formation for each companion");
+                }
+                companion.assignment = PersonAssignment::Formation {
+                    formation: campaign
+                        .available_person_formation(campaign.player, site)
+                        .expect("separate companion slot"),
+                };
                 if name == "formation_members" && index == 0 {
                     companion.status = PersonStatus::Wounded {
                         since_round: 0,
@@ -68,9 +103,6 @@ impl Game {
                 }
                 campaign.people.insert(companion.id, companion);
             }
-        }
-        if name.starts_with("formation_") {
-            roster_archer(&self.data, campaign, name);
         }
         campaign
             .validate(&self.data)
@@ -82,7 +114,36 @@ impl Game {
             "founder_career" | "founder_long_name" => ui::ArmyMode::ProgressionPerson(founder),
             _ => ui::ArmyMode::Roster,
         };
+        if name == "formation_transfer_blocked" {
+            self.capture_staffed_transfer(founder);
+        }
         true
+    }
+
+    fn capture_staffed_transfer(&mut self, founder: PersonId) {
+        let campaign = self.state.campaign.as_ref().unwrap().strategic().unwrap();
+        let formation = campaign
+            .people
+            .values()
+            .find_map(|person| match person.assignment {
+                PersonAssignment::Formation { formation }
+                    if person.id != founder && person.faction == campaign.player =>
+                {
+                    Some(formation)
+                }
+                _ => None,
+            })
+            .expect("staffed capture formation");
+        let army = campaign
+            .armies
+            .values()
+            .find(|army| army.formation_ids().any(|id| id == formation))
+            .unwrap()
+            .id;
+        self.begin_transfer(ui::TransferSubject::Person(founder));
+        self.apply(UiAction::SelectTransferArmy(army));
+        self.apply(UiAction::SelectTransferFormation(formation));
+        assert!(self.army.transfer.blocked.is_some());
     }
 }
 
@@ -105,7 +166,7 @@ fn roster_archer(data: &GameData, campaign: &mut StrategicCampaign, scene: &str)
     let mut archer = founder.clone();
     archer.id = campaign.next_ids.person;
     campaign.next_ids.person = PersonId(archer.id.0 + 1);
-    archer.name = if scene == "formation_long_name" {
+    archer.name = if matches!(scene, "formation_long_name" | "formation_transfer_blocked") {
         "W".repeat(64)
     } else {
         format!(
@@ -160,7 +221,9 @@ fn roster_archer(data: &GameData, campaign: &mut StrategicCampaign, scene: &str)
             site,
         });
     }
-    campaign.people.insert(archer.id, archer);
+    if scene != "formation_transfer" {
+        campaign.people.insert(archer.id, archer);
+    }
     if scene == "formation_transfer" {
         engine::apply(
             campaign,

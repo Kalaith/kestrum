@@ -154,7 +154,8 @@ impl Planner<'_> {
             });
             let missing_role = person.class != PersonClass::Recruit
                 && !members.iter().copied().filter(attached).any(|other| other.class == person.class);
-            (replacement || missing_role).then(|| army.formation_ids().next()).flatten()
+            (replacement || missing_role).then(|| army.formation_ids()
+                .find(|id| self.campaign.formation_person(*id).is_none())).flatten()
         })
     }
 }

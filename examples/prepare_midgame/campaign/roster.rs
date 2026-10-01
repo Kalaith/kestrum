@@ -82,9 +82,27 @@ pub(super) fn develop(
         if campaign.people[&person].career.course.is_none()
             && campaign.people[&person].assignment == (PersonAssignment::Site { site: home })
         {
-            if let Some(formation) =
-                garrison.and_then(|army| campaign.armies[&army].formation_ids().next())
-            {
+            let mut available = campaign.available_person_formation(campaign.player, home);
+            if available.is_none() {
+                let receiving = campaign
+                    .armies
+                    .values()
+                    .filter(|army| army.faction == campaign.player && army.site == home)
+                    .filter(|army| army.first_empty_slot().is_some())
+                    .min_by_key(|army| (army.formation_ids().count(), army.id))
+                    .map(|army| army.id);
+                try_order(
+                    campaign,
+                    data,
+                    Command::Recruit {
+                        site: home,
+                        army: receiving,
+                        kind: kestrum::data::economy::TroopKind::Warriors,
+                    },
+                )?;
+                available = campaign.available_person_formation(campaign.player, home);
+            }
+            if let Some(formation) = available {
                 try_order(
                     campaign,
                     data,
@@ -93,12 +111,18 @@ pub(super) fn develop(
                         to_formation: formation,
                     },
                 )?;
-                if campaign.armies[&garrison.unwrap()].commander.is_none() {
+                let army = campaign
+                    .armies
+                    .values()
+                    .find(|army| army.formation_ids().any(|id| id == formation))
+                    .expect("deployed formation")
+                    .id;
+                if campaign.armies[&army].commander.is_none() {
                     try_order(
                         campaign,
                         data,
                         Command::SetCommander {
-                            army: garrison.unwrap(),
+                            army,
                             person: Some(person),
                         },
                     )?;

@@ -189,14 +189,7 @@ fn last_encounter_stays_unchanged_through_hidden_changes_until_real_contact() {
 #[test]
 fn linked_views_and_bounded_search_resolve_only_own_or_witnessed_identity() {
     let (data, mut campaign) = fixture();
-    for id in 6..60 {
-        let mut person = campaign.people[&PersonId(3)].clone();
-        person.id = PersonId(id);
-        person.name = format!("Enemy witness {id:03}");
-        campaign.people.insert(person.id, person);
-    }
-    campaign.next_ids.person = PersonId(60);
-    fight(&mut campaign, &data);
+    witness_roster(&mut campaign, &data);
     let first = known_people(&campaign, FactionId(1), " enemy WITNESS ", 0);
     let second = known_people(&campaign, FactionId(1), "Enemy witness", 1);
     assert_eq!(
@@ -235,7 +228,9 @@ fn linked_views_and_bounded_search_resolve_only_own_or_witnessed_identity() {
         ));
     }
     assert_eq!(campaign, before);
-    assert_history_visibility(&data, &campaign);
+    let (_, mut single_encounter) = fixture();
+    fight(&mut single_encounter, &data);
+    assert_history_visibility(&data, &single_encounter);
 }
 
 #[test]

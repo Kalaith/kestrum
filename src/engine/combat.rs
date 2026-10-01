@@ -262,6 +262,7 @@ fn cleanup(campaign: &mut StrategicCampaign, data: &GameData) {
             .then(|| {
                 army.formation_ids().find(|id| {
                     !destroyed.contains(id)
+                        && campaign.formation_person(*id).is_none()
                         && campaign
                             .formations
                             .get(id)

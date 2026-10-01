@@ -33,15 +33,11 @@ use support::*;
 fn pending_leader_edits_refresh_the_witnessed_roster_and_survive_save_commit() {
     let (data, mut campaign) = fixture(100, 100);
     person(&mut campaign, 1, 1, 1);
-    person(&mut campaign, 2, 1, 1);
+    add_formation(&mut campaign, 2, 1, 1);
+    person(&mut campaign, 2, 1, 2);
     person(&mut campaign, 3, 3, 7);
     apply(&mut campaign, &data, Actor::Player, command()).unwrap();
-    for leader in [
-        Some(PersonId(1)),
-        Some(PersonId(2)),
-        None,
-        Some(PersonId(1)),
-    ] {
+    for leader in [Some(PersonId(1)), None, Some(PersonId(1))] {
         let movement = campaign.pending_battle.as_ref().unwrap().movement.clone();
         apply(
             &mut campaign,
@@ -125,7 +121,9 @@ fn committed_formation_receipts_drive_campaign_losses_and_keep_the_round_clock()
     for named in [false, true] {
         let (data, mut campaign) = fixture(100, 100);
         if named {
-            for (id, faction, formation) in [(1, 1, 1), (5, 1, 1), (3, 3, 7), (6, 3, 7)] {
+            add_formation(&mut campaign, 2, 1, 1);
+            add_formation(&mut campaign, 8, 3, 7);
+            for (id, faction, formation) in [(1, 1, 1), (5, 1, 2), (3, 3, 7), (6, 3, 8)] {
                 person(&mut campaign, id, faction, formation);
             }
         }

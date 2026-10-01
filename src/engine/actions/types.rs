@@ -298,6 +298,7 @@ pub enum RuleError {
     NotColocated,
     InvalidSlot,
     SlotOccupied,
+    PersonSlotOccupied,
     TransferUnchanged,
     TransferPauseRequired,
     UnknownPerson {
@@ -331,6 +332,8 @@ impl fmt::Display for RuleError {
             ),
             Self::InvalidSlot => formatter.write_str("Choose one of the six formation slots."),
             Self::SlotOccupied => formatter.write_str("The receiving slot is occupied."),
+            Self::PersonSlotOccupied => formatter
+                .write_str("This formation already has a named person. Choose a troops-only slot."),
             Self::TransferUnchanged => {
                 formatter.write_str("That person already serves in this formation.")
             }

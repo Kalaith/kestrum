@@ -62,6 +62,16 @@ pub(super) fn person(campaign: &mut StrategicCampaign, id: u32, faction: u32, fo
     campaign.next_ids.person = PersonId(campaign.next_ids.person.0.max(id + 1));
 }
 
+pub(super) fn add_formation(campaign: &mut StrategicCampaign, id: u32, army: u32, source: u32) {
+    let mut unit = campaign.formations[&FormationId(source)].clone();
+    unit.id = FormationId(id);
+    campaign.formations.insert(unit.id, unit);
+    let army = campaign.armies.get_mut(&ArmyId(army)).unwrap();
+    let slot = army.first_empty_slot().unwrap();
+    army.slots[slot] = Some(FormationId(id));
+    campaign.next_ids.formation.0 = campaign.next_ids.formation.0.max(id + 1);
+}
+
 pub(super) fn kind(
     campaign: &mut StrategicCampaign,
     data: &GameData,

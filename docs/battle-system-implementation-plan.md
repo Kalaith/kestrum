@@ -64,7 +64,7 @@ strength from attack, morale and resistance.
 | --- | --- |
 | `Army.slots` already holds six optional formations in `src/state/military.rs` | Give those indices front/rear and column meaning; preserve formation IDs and actual troop counts. |
 | Formations already retain capacity, service, veterancy and specialization | Add saved tactics and a selected battle leader; keep temporary combat state separate. |
-| Several named people can share a formation; `Army.commander` is a separate appointment | Preserve every assignment. A hero remains embedded in troops and consumes no extra slot. |
+| One named person shares a formation slot with troops; `Army.commander` is a separate appointment | Preserve one hero per slot. Another hero needs a different formation; troops-only slots remain valid. |
 | `src/engine/combat/arithmetic.rs` resolves up to eight simultaneous exchanges with rotating targets | Replace targeting and simultaneous exchanges with ordered activations, reactions, exposure and morale. This changes outcomes and requires new behavioral fixtures. |
 | `src/engine/combat.rs` and its context/threat modules apply casualties, retreats, person consequences and site results | Keep the encounter transaction and adapt it to the new resolver result. |
 | Movement, siege actions and threat clearing resolve encounters inside accepted commands | Introduce a serializable pending encounter for player preparation, with explicit command blocking and turn continuation. |

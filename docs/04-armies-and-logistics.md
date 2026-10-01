@@ -52,11 +52,16 @@ A newly emerging character may appear within a formation as “Squire Elian + Wa
 
 ### Characters belong inside formation slots
 
-The roster must show a formation's attached named characters together with its
+Each formation slot permits **one named character plus troops, or troops alone**.
+Two named characters can never share a slot. Multiple characters in an army
+occupy different formations; distribute them across armies when local formations
+are available. Transfers and entry into service reject an already staffed slot.
+
+The roster must show a formation's attached named character together with its
 troops. An army-level Commander label alone does not communicate this membership.
 The founding lord begins inside Warriors, so the first slot displays, for example,
-**Lord Catrin Cairn + Warriors**. A character emerging from Archers remains in
-that Archers slot; once formally recognized, it can read **Hero Elian + Archers**.
+**Lord Catrin Cairn + Warriors**. A named character serving in an Archers slot
+can read **Hero Elian + Archers** once formally recognized.
 Before recognition it reads **Elian + Archers**. Profession, founding nobility,
 recognition and army command are independent of the host formation's troop type.
 
@@ -64,7 +69,7 @@ recognition and army command are independent of the host formation's troop type.
 | --- | --- |
 | No attached named people | Troop type alone, such as Warriors. |
 | One named member | Name and any established title, followed by `+` and the troop type. |
-| Several named members | One representative name, `+ N others`, then the troop type. The commander is shown first if attached here; otherwise prefer a lord, then a recognized hero, then the lowest stable person ID. All members remain available through Orders > People. |
+| Another named person tries to join | Reject the order and ask for a troops-only formation slot. |
 | A different commander is appointed | Formation labels keep showing their actual members; appointment alone does not move anyone. |
 | A person transfers | Remove them from the source label and include them in the receiving formation immediately. Their class does not choose the troop type. |
 | Wounded but still attached | Keep their membership visible; fitness and leadership contribution remain separate rules. |
@@ -76,12 +81,19 @@ charge. `Lord + Warriors, 100/100` still represents the same 100-capacity Warrio
 formation. Show current/capacity headcount separately from named membership;
 veterancy and remaining/spent movement remain visible on the same row.
 
-Keep the troop type, member count and headcount readable when names are long.
-Shorten the representative name if needed; the paged People view preserves full
+Keep the troop type and headcount readable when names are long.
+Shorten the name if needed; the paged People view preserves full
 identity, assignment, condition, Career and History controls. The army Commander
 summary states who commands the whole army, while the formation row states where
 that person serves. Save/reload restores labels from actual person assignments,
 including earlier saves; no new people or honorary status are inferred.
+
+Earlier stacked saves retain the commander in their existing formation and move
+other members into troops-only formations at the same physical site, preferring
+the least staffed army. If no local formation remains, people wait at that site.
+This migration preserves people, troops, movement, service and historical reports;
+it neither teleports people to distant armies nor grants free formations. Newly
+emerging people likewise use a local troops-only slot or remain at the site.
 
 ## Formation persistence
 

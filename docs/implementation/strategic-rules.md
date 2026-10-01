@@ -142,8 +142,9 @@ may transfer independently to another surviving friendly formation at that site.
 The roster displays living named members in their actual formation slot:
 `Lord Name + Warriors`, `Hero Name + Archers` after recognition, or an untitled
 `Name + Troops` before recognition. This supplements the distinct army commander
-appointment. Several members use one representative name plus an explicit others
-count; Orders > People retains every full record. Transfers update source and
+appointment. A slot allows one named person plus troops, or troops alone; a second
+named person must choose another formation. Orders > People retains every full
+record. Transfers update source and
 recipient labels without changing headcounts, capacities, slot usage or upkeep.
 Wounds do not hide continuing attachment; site-assigned, displaced and dead
 people are not current formation members. See the

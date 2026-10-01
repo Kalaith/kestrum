@@ -28,8 +28,6 @@ pub(super) const PROGRESSION_TEXT: &[&str] = &[
     "person_age_label",
     "person_title_lord",
     "person_title_hero",
-    "formation_other_people",
-    "formation_other_person",
     "person_founding_lord",
     "setup_founding_lord",
     "emerged_served_with",

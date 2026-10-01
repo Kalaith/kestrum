@@ -94,7 +94,9 @@ fn remote_sites_and_pre_service_dependents_do_not_receive_stationary_credit() {
 #[test]
 fn movement_and_stationary_contact_share_one_season_stamp() {
     let (data, mut campaign) = fixture();
-    let assignment = campaign.people[&PersonId(1)].assignment;
+    let assignment = PersonAssignment::Formation {
+        formation: kestrum::state::military::FormationId(2),
+    };
     let second = colleague(&mut campaign, assignment);
     apply(
         &mut campaign,

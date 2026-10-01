@@ -139,7 +139,7 @@ pub(super) fn assert_commander_thresholds_and_no_per_hit_rolls() {
         [(96, 44, 0, false), (95, 0, 1, false), (95, 44, 1, true)]
     {
         let (data, mut campaign) = fixture();
-        add_person(&mut campaign, 5, 1, 1, 30); // surviving ordinary attached people get no roll
+        add_person(&mut campaign, 5, 1, 2, 30); // surviving ordinary attached people get no roll
         let context = context(&campaign);
         campaign
             .formations
@@ -158,7 +158,7 @@ pub(super) fn assert_commander_thresholds_and_no_per_hit_rolls() {
 pub(super) fn assert_real_commander_battle() {
     use kestrum::{data::world::DiplomaticState, engine::MoveOrder};
     let (data, mut campaign) = fixture();
-    add_person(&mut campaign, 5, 1, 1, 30);
+    add_person(&mut campaign, 5, 1, 2, 30);
     campaign
         .relations
         .iter_mut()

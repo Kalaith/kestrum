@@ -16,11 +16,12 @@ regressions, fixes and remaining presentation issues.
 Native debug runs resume the catalogue's Continue save after storage becomes
 ready. Running `cargo run` therefore opens the prepared **Briarhold - Midgame
 Battle Review** campaign: Year 16, 60 completed rounds, 32 revealed world markers
-(59 physical sites), 26 player settlements, four armies, ten living named adults
+(59 physical sites), 26 player settlements, five armies, ten living named adults
 and three retained battle receipts. Eight apprentices have earned Scout careers
 through real patrols and courses; the founder is an Officer, and a battle-emerged
 Recruit remains with the field host. The realm borders Orren Frostmarch and Bera
-Pike, with active war on its frontier. The installed save is #25 in this machine's native
+Pike, with active war on its frontier. The ten named people occupy ten separate
+formations across three armies. The installed save is #29 in this machine's native
 catalogue. Later saves become Continue normally. Use `cargo run -- --title` to
 open the title screen. Release and browser builds retain their title startup.
 
@@ -404,7 +405,7 @@ K18 integrated/platform acceptance remains required.
 | Current decision | Inspect the starting army and choose where its founding lord should lead it. |
 | Dominant focus | The existing army roster or selected person's career, opened from the map. |
 | Primary action | Use Orders to move the army; People opens its named commander and Career explains their role. |
-| Supporting information | Each formation shows its named members with its troops: Lord Name + Warriors, or Hero Name + Archers after recognition. Headcount stays separate; tier and movement share the second line. Career shows age, founding kingdom and the five-point command bonus beside identity. |
+| Supporting information | Each formation shows its one named member with its troops: Lord Name + Warriors, or Hero Name + Archers after recognition; troops-only formations show their troop type. Headcount stays separate; tier and movement share the second line. Career shows age, founding kingdom and the five-point command bonus beside identity. |
 | Deferred information | Earned deeds, traits, household and succession choices stay in their existing views. Founding nobility requires no earned recognition. |
 | Layout and camera | Existing landscape sheets at 1920 × 1080 and the 1280 × 720 minimum; dense people lists retain paging. |
 | Input and feedback | Tap Army and Details to see Lord Name + Warriors in the first slot. Tap slots to select them; Orders > People retains full identities, Career, History and Transfer. Transferring a person updates the source and receiving labels. |
@@ -419,13 +420,14 @@ attached to a surviving formation, and appointed commander.
 feature tests, native and browser review, Preview publish and remaining blockers.
 
 Named people remain part of their host formation rather than occupying a
-separate army slot. A row with several people shows a representative and an
-explicit others count; long names shorten while keeping troop type and headcount
+separate character-only slot. Each slot holds one named person plus troops, or
+troops alone. Another named person must use a different formation. Long names
+shorten while keeping troop type and headcount
 visible. Membership follows saved assignments, including non-commanders and
 people emerging from Archers. The [formation-slot design](docs/04-armies-and-logistics.md#characters-belong-inside-formation-slots)
-defines titles, multiple people, transfers, wounds, headcount and save behavior.
+defines titles, separate assignments, transfers, wounds, headcount and save behavior.
 [Formation membership verification](docs/verification/formation-members.md)
-records the corrected roster, five representative states at both native sizes,
+records the corrected roster, eight representative states at both native sizes,
 regression checks and published-browser review.
 
 ### History item inspector

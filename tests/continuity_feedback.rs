@@ -93,6 +93,7 @@ fn later_family_transfers_keep_wounds_evidence_movement_and_original_service() {
             let mut parent = campaign.people[&person].clone();
             parent.id = id;
             parent.birth_round -= 80;
+            parent.assignment = kestrum::state::people::PersonAssignment::Site { site: SiteId(1) };
             campaign.people.insert(id, parent);
             if origin == FamilyOrigin::Birth || links.is_empty() {
                 links.insert(id, link);

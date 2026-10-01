@@ -43,9 +43,7 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
             person.faction = FactionId(3);
             person.name = format!("Witness {id}");
             person.class = PersonClass::Officer;
-            person.assignment = PersonAssignment::Formation {
-                formation: FormationId(7),
-            };
+            person.assignment = PersonAssignment::Site { site: SiteId(3) };
             person.career = Default::default();
             person.evidence = Default::default();
             campaign.people.insert(PersonId(id), person);
@@ -107,6 +105,14 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
     companion.id = PersonId(4);
     companion.class = PersonClass::Recruit;
     companion.name = "A serving companion".into();
+    let formation = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let mut unit = campaign.formations[&FormationId(1)].clone();
+    unit.id = formation;
+    unit.headcount = 1;
+    campaign.formations.insert(formation, unit);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(formation);
+    companion.assignment = PersonAssignment::Formation { formation };
     campaign.people.insert(companion.id, companion);
     campaign.next_ids.person = PersonId(5);
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
@@ -390,6 +396,14 @@ fn a_known_rival_requires_two_actual_mutual_combats() {
     let mut companion = campaign.people[&PersonId(1)].clone();
     companion.id = PersonId(4);
     companion.name = "Della Rose".into();
+    let formation = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let mut unit = campaign.formations[&FormationId(1)].clone();
+    unit.id = formation;
+    unit.headcount = 1;
+    campaign.formations.insert(formation, unit);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(formation);
+    companion.assignment = PersonAssignment::Formation { formation };
     companion.career = Default::default();
     companion.evidence = Default::default();
     campaign.people.insert(companion.id, companion);

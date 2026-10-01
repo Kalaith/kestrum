@@ -36,7 +36,7 @@ use support::*;
 #[test]
 fn wipes_draw_once_per_person_in_global_id_order_and_preserve_surviving_identity() {
     let (data, mut campaign) = fixture();
-    add_person(&mut campaign, 5, 1, 1, 30);
+    add_person(&mut campaign, 5, 1, 3, 30);
     let context = context(&campaign);
     campaign
         .formations
@@ -46,6 +46,11 @@ fn wipes_draw_once_per_person_in_global_id_order_and_preserve_surviving_identity
     campaign
         .formations
         .get_mut(&FormationId(4))
+        .unwrap()
+        .headcount = 0;
+    campaign
+        .formations
+        .get_mut(&FormationId(3))
         .unwrap()
         .headcount = 0;
     campaign.rng.combat = SeededRng::new(2); // 96, 13, 71: survive, die, survive.
@@ -58,8 +63,12 @@ fn wipes_draw_once_per_person_in_global_id_order_and_preserve_surviving_identity
     for id in [PersonId(1), PersonId(5)] {
         assert_eq!(
             campaign.people[&id].assignment,
-            PersonAssignment::Formation {
-                formation: FormationId(2)
+            if id == PersonId(1) {
+                PersonAssignment::Formation {
+                    formation: FormationId(2),
+                }
+            } else {
+                PersonAssignment::Site { site: SiteId(1) }
             }
         );
         assert_eq!(campaign.people[&id].status, wounded(2));
@@ -208,6 +217,19 @@ fn commander_wound_uses_one_qualifying_roll_and_lowest_fit_adult_successor() {
             PersonAssignment::Site { site: SiteId(1) };
         campaign.people.get_mut(&PersonId(7)).unwrap().status = wounded(1);
         split_formation(&mut campaign, FormationId(2), ArmyId(5), Some(PersonId(5)));
+        for (slot, person) in [(1, 7), (2, 8), (3, 9)] {
+            let id = campaign.next_ids.formation;
+            campaign.next_ids.formation.0 += 1;
+            let mut unit = campaign.formations[&FormationId(2)].clone();
+            unit.id = id;
+            campaign.formations.insert(id, unit);
+            campaign.armies.get_mut(&ArmyId(5)).unwrap().slots[slot] = Some(id);
+            campaign
+                .people
+                .get_mut(&PersonId(person))
+                .unwrap()
+                .assignment = PersonAssignment::Formation { formation: id };
+        }
         let mut context = context(&campaign);
         context.sides[0] = side(&campaign, FactionId(1), vec![ArmyId(5), ArmyId(1)]);
         context.sides[0].commanders = vec![PersonId(5), PersonId(1)];

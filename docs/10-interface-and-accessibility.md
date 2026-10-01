@@ -10,12 +10,13 @@ an emerged archer reads `Name + Archers` and a formally recognized one reads
 share the supporting line. The army Commander summary describes the separate
 appointment rather than substituting for formation membership.
 
-Multiple attached people use one representative name and an explicit others
-count. Shorten long names while preserving troop type and the others count;
+Each slot permits one named character plus troops, or troops alone. Transfers
+into a staffed formation are blocked with an explanation. Shorten long names
+while preserving troop type and headcount;
 Orders > People keeps full identities and individual Career, History and Transfer
 actions in its existing paged view. Tapping a formation continues to select it
 for training and orders; Back, Orders and recruitment retain their visible
-controls. Review new-game, recognized archer, several-members, long-name and
+controls. Review new-game, recognized archer, distributed-members, long-name and
 transferred-member states at normal and 1280 × 720 sizes. Full membership and
 display rules are in [Armies and logistics](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 

@@ -3,6 +3,7 @@
 mod cleanup;
 mod income;
 pub use income::{SettlementIncomeStatement, SiteIncomeStatement};
+mod roster;
 mod setup;
 mod validation;
 

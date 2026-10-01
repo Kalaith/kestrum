@@ -7,14 +7,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     let subject = view.subject?;
     let label = match subject {
         TransferSubject::Formation(id) => formation(campaign, id)
-            .map(|formation| {
-                format!(
-                    "{} · {} / {}",
-                    ctx.text(troop_key(formation.kind)),
-                    formation.headcount,
-                    formation.capacity
-                )
-            })
+            .map(|formation| formation_label(ctx, campaign, formation, 822.0))
             .unwrap_or_default(),
         TransferSubject::Person(id) => campaign
             .people
@@ -212,14 +205,7 @@ fn slots(
         }
         let label = slot
             .and_then(|id| formation(campaign, id))
-            .map(|formation| {
-                format!(
-                    "{} · {} / {}",
-                    ctx.text(troop_key(formation.kind)),
-                    formation.headcount,
-                    formation.capacity
-                )
-            })
+            .map(|formation| formation_label(ctx, campaign, formation, 980.0))
             .unwrap_or_else(|| {
                 ctx.text(if matches!(subject, TransferSubject::Person(_)) {
                     "person_needs_formation"
@@ -248,4 +234,32 @@ fn slots(
         }
     }
     None
+}
+
+fn formation_label(
+    ctx: &Context<'_>,
+    campaign: &VisibleCampaign,
+    formation: &Formation,
+    width: f32,
+) -> String {
+    let troops = format!(
+        "{} · {} / {}",
+        ctx.text(troop_key(formation.kind)),
+        formation.headcount,
+        formation.capacity
+    );
+    let member = campaign.people.iter().find(|person| {
+        person.assignment
+            == (kestrum::state::people::PersonAssignment::Formation {
+                formation: formation.id,
+            })
+    });
+    let Some(person) = member else {
+        return troops;
+    };
+    let suffix = format!(" + {troops}");
+    let name_width = (width - measure_text(&suffix, ctx.body_font(), 20, 1.0).width).max(0.0);
+    let name =
+        truncate_text_to_width_ex(&person_name(ctx, person), name_width, ctx.body_font(), 20.0);
+    format!("{name}{suffix}")
 }

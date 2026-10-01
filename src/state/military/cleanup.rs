@@ -33,17 +33,7 @@ impl StrategicCampaign {
         if army.is_empty() {
             candidate.armies.remove(&army_id);
         }
-        let recipient = candidate
-            .armies
-            .values()
-            .filter(|army| army.faction == faction && army.site == site)
-            .flat_map(|army| army.formation_ids())
-            .find(|id| {
-                candidate
-                    .formations
-                    .get(id)
-                    .is_some_and(|formation| formation.headcount > 0)
-            });
+        let recipient = candidate.available_person_formation(faction, site);
         let assignment = recipient.map_or(PersonAssignment::Site { site }, |formation| {
             PersonAssignment::Formation { formation }
         });

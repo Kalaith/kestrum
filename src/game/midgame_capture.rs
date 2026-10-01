@@ -11,7 +11,7 @@ impl Game {
         let scene = requested.trim_end_matches("_minimum");
         if !matches!(
             scene,
-            "midgame_map" | "midgame_frontier" | "midgame_heroes" | "midgame_hero"
+            "midgame_map" | "midgame_frontier" | "midgame_heroes" | "midgame_hero" | "midgame_army"
         ) {
             return false;
         }
@@ -19,6 +19,32 @@ impl Game {
         self.finish_load(Ok(Campaign::Strategic(Box::new(prepared))));
         self.notice = None;
         match scene {
+            "midgame_army" => {
+                let campaign = self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .and_then(Campaign::strategic)
+                    .unwrap();
+                let army = campaign
+                    .armies
+                    .values()
+                    .filter(|army| army.faction == campaign.player)
+                    .max_by_key(|army| {
+                        army.formation_ids()
+                            .filter(|id| campaign.formation_person(*id).is_some())
+                            .count()
+                    })
+                    .expect("staffed review army");
+                let (id, site) = (army.id, army.site);
+                self.open_armies(site);
+                self.army.page = self
+                    .local_armies()
+                    .iter()
+                    .position(|army| *army == id)
+                    .unwrap();
+                self.refresh_army();
+            }
             "midgame_frontier" => {
                 let world = &self.projection.as_ref().expect("loaded projection").world;
                 let frontier = world

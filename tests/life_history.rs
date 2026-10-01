@@ -112,7 +112,7 @@ fn local_apprenticeship_class_and_retirement_leave_one_shared_dated_trace() {
         Actor::Player,
         Command::TransferPerson {
             person: learner,
-            to_formation: FormationId(1),
+            to_formation: FormationId(2),
         },
     )
     .unwrap();
@@ -406,7 +406,7 @@ fn a_ward_ages_into_real_service_and_records_the_entry_once() {
         Actor::Player,
         Command::EnterService {
             person: ward,
-            formation: Some(FormationId(1)),
+            formation: Some(FormationId(2)),
         },
     )
     .unwrap();

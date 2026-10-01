@@ -48,13 +48,30 @@ pub(super) fn develop(
         .filter(|army| army.faction == campaign.player && army.id != host)
         .map(|army| army.id)
         .min();
-    if let Some(army) = garrison.filter(|_| campaign.completed_rounds >= 40) {
-        patrol.advance(campaign, data, army, home)?;
+    let learners: Vec<_> = campaign
+        .armies
+        .values()
+        .filter(|army| army.faction == campaign.player && army.id != host)
+        .filter(|army| {
+            army.formation_ids().any(|id| {
+                campaign.formation_person(id).is_some_and(|person| {
+                    person.class == kestrum::data::world::PersonClass::Recruit
+                })
+            })
+        })
+        .map(|army| army.id)
+        .collect();
+    if !learners.is_empty() && campaign.completed_rounds >= 40 {
+        patrol.advance(campaign, data, &learners, home)?;
     }
     let travelers: Vec<_> = campaign
         .armies
         .values()
-        .filter(|army| army.faction == campaign.player && Some(army.id) != garrison)
+        .filter(|army| {
+            army.faction == campaign.player
+                && Some(army.id) != garrison
+                && !learners.contains(&army.id)
+        })
         .map(|army| army.id)
         .collect();
     for army in travelers {
@@ -80,14 +97,14 @@ impl Patrol {
         &mut self,
         campaign: &mut StrategicCampaign,
         data: &GameData,
-        army: ArmyId,
+        armies: &[ArmyId],
         home: SiteId,
     ) -> Result<(), String> {
         if self.complete {
             return Ok(());
         }
         for _ in 0..6 {
-            let formation = campaign.armies[&army]
+            let formation = campaign.armies[&armies[0]]
                 .formation_ids()
                 .next()
                 .ok_or("Patrol has no formation")?;
@@ -96,7 +113,7 @@ impl Patrol {
                 .ledger
                 .traversed_routes;
             self.returning |= traveled.len() >= data.progression.careers.scout_routes as usize;
-            if self.returning && campaign.armies[&army].site == home {
+            if self.returning && campaign.armies[&armies[0]].site == home {
                 self.complete = true;
                 break;
             }
@@ -107,8 +124,7 @@ impl Patrol {
                     .supplied_sites(campaign.player)
                     .into_iter()
                     .filter_map(|site| {
-                        engine::movement_preview(campaign, data, campaign.player, &[army], site)
-                            .ok()
+                        engine::movement_preview(campaign, data, campaign.player, armies, site).ok()
                     })
                     .filter(|preview| {
                         preview.reachable_steps > 0
@@ -130,7 +146,7 @@ impl Patrol {
                 break;
             };
             let Ok(preview) =
-                engine::movement_preview(campaign, data, campaign.player, &[army], destination)
+                engine::movement_preview(campaign, data, campaign.player, armies, destination)
             else {
                 break;
             };

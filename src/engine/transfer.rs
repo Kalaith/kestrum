@@ -131,6 +131,9 @@ pub(super) fn person(
     {
         return Err(RuleError::TransferUnchanged);
     }
+    if campaign.formation_person(to_formation).is_some() {
+        return Err(RuleError::PersonSlotOccupied);
+    }
     let source = match selected.assignment {
         PersonAssignment::Formation { formation } => {
             Some(formation_army(campaign, owner, formation)?)

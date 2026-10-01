@@ -186,15 +186,25 @@ fn resolve_wipe(
         );
         return;
     }
-    let survivor = side
-        .starting_headcounts
-        .keys()
-        .copied()
-        .find(|id| campaign.formations[id].headcount > 0);
+    let survivor = side.starting_headcounts.keys().copied().find(|id| {
+        campaign.formations[id].headcount > 0 && campaign.formation_person(*id).is_none()
+    });
     let assignment = survivor
         .map(|formation| PersonAssignment::Formation { formation })
         .or_else(|| {
-            refuge(campaign, context.site, side).map(|site| PersonAssignment::Site { site })
+            let surviving_site = side
+                .armies
+                .iter()
+                .filter_map(|id| campaign.armies.get(id))
+                .filter(|army| {
+                    army.formation_ids()
+                        .any(|id| campaign.formations[&id].headcount > 0)
+                })
+                .map(|army| army.site)
+                .min();
+            surviving_site
+                .or_else(|| refuge(campaign, context.site, side))
+                .map(|site| PersonAssignment::Site { site })
         });
     let Some(assignment) = assignment else {
         kill(

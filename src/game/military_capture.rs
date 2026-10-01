@@ -146,7 +146,7 @@ impl Game {
             );
             companion.evidence = Default::default();
             companion.assignment = PersonAssignment::Formation {
-                formation: FormationId(1),
+                formation: FormationId(2),
             };
             campaign.people.insert(companion_id, companion);
             campaign.next_ids.person = PersonId(ward_id.0 + 1);

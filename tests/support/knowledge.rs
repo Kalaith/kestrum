@@ -544,3 +544,74 @@ pub(super) fn assert_history_visibility(data: &GameData, campaign: &StrategicCam
         snapshot(campaign, FactionId(1), PersonId(3))
     );
 }
+
+pub(super) fn witness_roster(campaign: &mut StrategicCampaign, data: &GameData) {
+    for id in 6..60 {
+        let mut person = campaign.people[&PersonId(3)].clone();
+        person.id = PersonId(id);
+        person.name = format!("Enemy witness {id:03}");
+        let recipient = campaign
+            .armies
+            .values()
+            .find(|army| {
+                army.faction == FactionId(3)
+                    && army.site == SiteId(10)
+                    && army.first_empty_slot().is_some()
+            })
+            .map(|army| army.id);
+        let army_id = recipient.unwrap_or_else(|| {
+            let mut army = campaign.armies[&ArmyId(3)].clone();
+            army.id = campaign.next_ids.army;
+            campaign.next_ids.army.0 += 1;
+            army.name = format!("Witness host {}", army.id.0);
+            army.slots = [None; 6];
+            army.commander = None;
+            let id = army.id;
+            campaign.armies.insert(id, army);
+            id
+        });
+        let formation = campaign.next_ids.formation;
+        campaign.next_ids.formation.0 += 1;
+        let mut unit = campaign.formations[&FormationId(7)].clone();
+        unit.id = formation;
+        unit.battle_leader = None;
+        campaign.formations.insert(formation, unit);
+        let army = campaign.armies.get_mut(&army_id).unwrap();
+        let slot = army.first_empty_slot().unwrap();
+        army.slots[slot] = Some(formation);
+        person.assignment = PersonAssignment::Formation { formation };
+        campaign.people.insert(person.id, person);
+    }
+    campaign.next_ids.person = PersonId(60);
+    // Meet the dense roster in legal four-army batches. Wait tactics keep the
+    // encounters about witnessed identity and pagination rather than attrition.
+    let waiting: kestrum::data::battle_tactics::TroopTactics = serde_json::from_value(serde_json::json!({
+        "activation": [{"id":"wait", "trigger":"activation", "action":"wait",
+            "condition":"always", "target_filter":"none", "target_priority":"own_column_first"}],
+        "reaction": []
+    }))
+    .unwrap();
+    for unit in campaign.formations.values_mut() {
+        unit.tactics = Some(waiting.clone());
+        unit.tactics_override = Some(true);
+    }
+    let enemies: Vec<_> = campaign
+        .armies
+        .values()
+        .filter(|army| army.faction == FactionId(3))
+        .map(|army| army.id)
+        .collect();
+    for (index, group) in enemies.chunks(4).enumerate() {
+        for id in &enemies {
+            campaign.armies.get_mut(id).unwrap().site = if group.contains(id) {
+                SiteId(10)
+            } else {
+                SiteId(3)
+            };
+        }
+        fight(campaign, data);
+        if index + 1 < enemies.len().div_ceil(4) {
+            finish_round(campaign, data);
+        }
+    }
+}

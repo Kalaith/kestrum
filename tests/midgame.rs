@@ -126,6 +126,28 @@ fn midgame_has_ten_distinct_living_named_people_with_service() {
     );
     let names: std::collections::BTreeSet<_> = people.iter().map(|person| &person.name).collect();
     assert_eq!(names.len(), people.len());
+    let slots: std::collections::BTreeSet<_> = people
+        .iter()
+        .filter_map(|person| match person.assignment {
+            kestrum::state::people::PersonAssignment::Formation { formation } => Some(formation),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        slots.len(),
+        people.len(),
+        "every midgame hero has their own formation"
+    );
+    assert!(
+        campaign
+            .armies
+            .values()
+            .filter(|army| army.faction == campaign.player)
+            .filter(|army| army.formation_ids().any(|id| slots.contains(&id)))
+            .count()
+            >= 3,
+        "heroes are spread across the armies"
+    );
     assert!(
         people
             .iter()

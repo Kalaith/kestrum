@@ -8,6 +8,11 @@ use std::collections::BTreeSet;
 
 impl StrategicCampaign {
     pub(crate) fn validate_military(&self, data: &GameData) -> Result<(), String> {
+        require(
+            self.roster_version == 1,
+            "roster_version",
+            "unsupported roster schema",
+        )?;
         let mut assigned = BTreeSet::new();
         for (id, army) in &self.armies {
             require(*id == army.id && id.0 > 0, "armies.id", "invalid identity")?;

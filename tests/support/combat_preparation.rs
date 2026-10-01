@@ -207,7 +207,8 @@ fn player_and_npc_preparation_commands_can_edit_only_their_own_battle_side() {
 fn battle_leaders_are_compatible_campaign_people_and_refresh_pending_snapshots() {
     let (data, mut campaign) = fixture(80, 80);
     person(&mut campaign, 1, 1, 1);
-    person(&mut campaign, 2, 1, 1);
+    add_formation(&mut campaign, 2, 1, 1);
+    person(&mut campaign, 2, 1, 2);
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(2));
     apply(
         &mut campaign,
@@ -227,7 +228,7 @@ fn battle_leaders_are_compatible_campaign_people_and_refresh_pending_snapshots()
     assert_eq!(
         campaign.people[&PersonId(2)].assignment,
         PersonAssignment::Formation {
-            formation: FormationId(1)
+            formation: FormationId(2)
         }
     );
     let saved = serde_json::to_string(&Campaign::Strategic(Box::new(campaign.clone()))).unwrap();

@@ -449,7 +449,7 @@ fn adopted_household_successors_keep_their_own_skills_and_command_successors_sta
         .commander = Some(commander);
     let formation = campaign.armies[&kestrum::state::military::ArmyId(1)]
         .formation_ids()
-        .next()
+        .nth(1)
         .unwrap();
     campaign.completed_rounds = 4;
     let pupil = add_person(&mut campaign, 24, PersonAssignment::Formation { formation });

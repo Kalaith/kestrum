@@ -175,6 +175,17 @@ fn create(
         curiosity: tendency(&mut campaign.rng.people),
     };
     let source = &campaign.formations[&formation];
+    let site = campaign
+        .armies
+        .values()
+        .find(|army| army.formation_ids().any(|id| id == formation))
+        .ok_or_else(|| RuleError::InvalidState("Emergence source has no army.".into()))?
+        .site;
+    let assignment = campaign
+        .available_person_formation(faction, site)
+        .map_or(PersonAssignment::Site { site }, |formation| {
+            PersonAssignment::Formation { formation }
+        });
     let evidence = retrospective(&source.service, source.kind, service_start);
     let mut career_state = PersonCareer {
         disposition,
@@ -207,7 +218,7 @@ fn create(
             birth_round,
             service_start_round: service_start,
             class: PersonClass::Recruit,
-            assignment: PersonAssignment::Formation { formation },
+            assignment,
             movement_spent: 0,
             status: PersonStatus::Fit,
         },

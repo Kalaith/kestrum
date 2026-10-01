@@ -8,6 +8,7 @@ use crate::data::{progression::EpithetFact, world::PersonClass, GameData};
 
 impl StrategicCampaign {
     pub(crate) fn validate_people(&self, data: &GameData) -> Result<(), String> {
+        let mut occupied = std::collections::BTreeSet::new();
         for (id, person) in &self.people {
             require(*id == person.id && id.0 > 0, "id", "invalid identity")?;
             require(
@@ -37,6 +38,13 @@ impl StrategicCampaign {
                 "exceeds seasonal allowance",
             )?;
             self.validate_person_status(person, data)?;
+            if let PersonAssignment::Formation { formation } = person.assignment {
+                require(
+                    occupied.insert(formation),
+                    "assignment",
+                    "each formation slot can contain only one named person",
+                )?;
+            }
             let valid_assignment = match person.assignment {
                 PersonAssignment::Formation { formation } => {
                     person.is_alive()

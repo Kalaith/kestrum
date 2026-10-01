@@ -230,6 +230,8 @@ pub struct StrategicCampaign {
     #[serde(default)]
     pub pending_battle: Option<PendingBattle>,
     pub version: u32,
+    #[serde(default)]
+    pub roster_version: u32,
     pub content_version: u32,
     #[serde(default = "default_scenario_kind")]
     pub scenario_kind: ScenarioKind,
@@ -325,6 +327,7 @@ impl StrategicCampaign {
             battles: BTreeMap::new(),
             pending_battle: None,
             version: STRATEGIC_VERSION,
+            roster_version: 1,
             content_version: scenario.content_version,
             scenario_kind: scenario.kind,
             campaign_id: CampaignId(scenario.seed),

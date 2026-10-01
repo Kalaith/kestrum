@@ -69,6 +69,22 @@ fn main() -> Result<(), String> {
         .count();
     println!("Revealed {}/{} markers and {}/{} sites; {settlements} settlements, {armies} armies, {people} living named people, {} known factions",
         view.world.markers.len(), saved.world.markers.len(), view.world.sites.len(), saved.world.sites.len(), view.factions.len());
+    for army in saved
+        .armies
+        .values()
+        .filter(|army| army.faction == saved.player)
+    {
+        let staffed = army
+            .formation_ids()
+            .filter(|id| saved.formation_person(*id).is_some())
+            .count();
+        println!(
+            "{}: {staffed} named people in {} distinct formations at {:?}",
+            army.name,
+            army.formation_ids().count(),
+            army.site
+        );
+    }
     for person in saved
         .people
         .values()

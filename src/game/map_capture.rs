@@ -4,6 +4,42 @@ use super::*;
 use kestrum::{navigation::MapSelection, state::military::ArmyId};
 
 impl Game {
+    pub(super) fn capture_map_fog(&mut self, requested: &str) -> bool {
+        let scene = requested.trim_end_matches("_minimum");
+        if !matches!(scene, "fog_north" | "fog_revealed") {
+            return false;
+        }
+        self.setup.factions = 8;
+        self.setup.seed = self.data.production_layout.default_seed;
+        self.start_game();
+        let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
+            panic!("fog capture requires a production campaign");
+        };
+        campaign.tutorial.dismiss();
+        let sites: Vec<_> = campaign
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                scene == "fog_revealed"
+                    || campaign.world.marker(site.marker).unwrap().position[1] <= 0.4
+            })
+            .map(|site| site.id)
+            .collect();
+        for site in sites {
+            campaign
+                .set_site_control(&self.data, site, Some(campaign.player), false)
+                .expect("valid control after northern conquest");
+        }
+        self.invalidate_projection();
+        self.refresh_projection();
+        self.navigation.show_world(&mut self.view);
+        self.view.reset();
+        self.navigation.clear_selection();
+        self.notice = None;
+        true
+    }
+
     pub(super) fn capture_map_movement(&mut self, scene: &str) -> bool {
         let scene = scene.trim_end_matches("_minimum");
         if !matches!(

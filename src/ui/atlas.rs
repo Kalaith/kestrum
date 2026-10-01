@@ -86,14 +86,17 @@ pub fn draw_landscape(ctx: &Context<'_>) {
         {
             geography(ctx);
         }
-        world::draw_fog(ctx);
+        let exploration = world::map_exploration(ctx);
+        if let Some(area) = &exploration {
+            world::draw_fog(ctx, area);
+        }
         for row in 0..100 {
             let opacity = (1.0 - row as f32 / 100.0).powi(2) * 0.82;
             let shade = Color::new(INK.r, INK.g, INK.b, opacity);
             draw_rectangle(0.0, row as f32, WIDTH, 1.0, shade);
             draw_rectangle(0.0, HEIGHT - row as f32 - 1.0, WIDTH, 1.0, shade);
         }
-        world::draw(ctx);
+        world::draw(ctx, exploration.as_ref());
     }
 }
 

@@ -1,36 +1,18 @@
-//! Soft atlas cover follows discovered graph locations, including offscreen ones.
+//! Soft atlas cover follows the boundary between known and unknown locations.
 
 use super::*;
-use kestrum::navigation::{HEIGHT, WIDTH};
+use kestrum::navigation::{MapExploration, HEIGHT, MAP_RECT, WIDTH};
 
-pub fn draw(ctx: &Context<'_>) {
-    let Some(campaign) = ctx.campaign_view else {
-        return;
-    };
-    let positions: Vec<_> = match ctx.navigation.scope() {
-        MapScope::World => campaign
-            .world
-            .markers
-            .iter()
-            .map(|marker| marker.position)
-            .collect(),
-        MapScope::Region(id) => campaign
-            .world
-            .sites
-            .iter()
-            .filter(|site| site.marker == id)
-            .map(|site| site.position)
-            .collect(),
-    };
-    let centers: Vec<_> = positions
-        .into_iter()
-        .map(|position| ctx.view.project_normalized(position))
-        .collect();
-    let radius = if ctx.navigation.scope() == MapScope::World {
-        74.0
-    } else {
-        105.0
-    } * ctx.view.camera.zoom();
+pub fn exploration(ctx: &Context<'_>) -> Option<MapExploration> {
+    let campaign = ctx.state.campaign.as_ref()?.strategic()?;
+    Some(MapExploration::new(
+        &campaign.world,
+        &ctx.campaign_view?.world,
+        ctx.navigation.scope(),
+    ))
+}
+
+pub fn draw(ctx: &Context<'_>, exploration: &MapExploration) {
     // A small screen-space mesh batches the cover into bounded strips, with smoothly
     // interpolated opacity. This atlas is an irregular graph, not a tile grid.
     let mut mesh = Mesh {
@@ -49,11 +31,8 @@ pub fn draw(ctx: &Context<'_>) {
                     f32::from(column) * WIDTH / f32::from(columns),
                     f32::from(vertex_row) * HEIGHT / f32::from(rows),
                 );
-                let distance = centers
-                    .iter()
-                    .map(|center| center.distance(at))
-                    .fold(f32::INFINITY, f32::min);
-                let opacity = ((distance / radius - 0.65) / 0.35).clamp(0.0, 1.0);
+                let point = ctx.view.camera.screen_to_world(MAP_RECT, at).unwrap_or(at);
+                let opacity = exploration.opacity(point);
                 mesh.vertices.push(Vertex::new(
                     at.x,
                     at.y,

@@ -186,6 +186,9 @@ impl Game {
         if self.capture_founder(scene) {
             return;
         }
+        if self.capture_map_fog(scene) {
+            return;
+        }
         if self.capture_map_movement(scene) {
             return;
         }

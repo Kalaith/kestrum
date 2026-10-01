@@ -6,7 +6,7 @@ use kestrum::{
         rules::Emblem,
         world::{AnchorExpression, FactionId, MarkerLocation, MilitaryLayer, SiteId},
     },
-    navigation::{MapScope, MapSelection, MapTarget},
+    navigation::{MapExploration, MapScope, MapSelection, MapTarget},
     state::Overlay,
 };
 use macroquad::prelude::*;
@@ -14,11 +14,11 @@ use macroquad_toolkit::ui::truncate_text_to_width_ex;
 
 mod fog;
 mod routes;
-pub use fog::draw as draw_fog;
+pub use fog::{draw as draw_fog, exploration as map_exploration};
 
 pub const WORLD_MAP: Rect = Rect::new(24.0, 20.0, 194.0, 48.0);
 
-pub fn draw(ctx: &Context<'_>) {
+pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
@@ -34,7 +34,7 @@ pub fn draw(ctx: &Context<'_>) {
     } else {
         selection::bounds(ctx.navigation, world, ctx.view)
     };
-    routes::draw(ctx);
+    routes::draw(ctx, exploration);
     for target in &targets {
         if panel.is_some_and(|panel| {
             panel.contains(target.center) && ctx.navigation.selection() != Some(target.selection)

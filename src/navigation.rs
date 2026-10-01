@@ -2,6 +2,8 @@
 
 mod armies;
 pub use armies::ArmyTarget;
+mod exploration;
+pub use exploration::MapExploration;
 
 use crate::{
     data::world::{MarkerId, MarkerLocation, SiteId},

@@ -2,12 +2,17 @@
 use super::*;
 use kestrum::{data::world::Route, state::world::CampaignWorld};
 
-pub(super) fn draw(ctx: &Context<'_>) {
+pub(super) fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
     let world = &campaign.world;
     let overview = ctx.navigation.scope() == MapScope::World;
+    if let Some(area) = exploration {
+        for points in &area.connection_hints {
+            frontier(ctx, area, points);
+        }
+    }
     for route in &world.routes {
         let Some((from, to)) = endpoints(ctx, world, route) else {
             continue;
@@ -30,6 +35,29 @@ pub(super) fn draw(ctx: &Context<'_>) {
             for position in &geometry.bridges {
                 bridge(ctx.view.project_normalized(*position), &points);
             }
+        }
+    }
+}
+
+fn frontier(ctx: &Context<'_>, exploration: &MapExploration, points: &[Vec2]) {
+    // Sample authored bends in atlas space and fade the road into the same cover
+    // as the terrain. Unknown endpoints and entirely hidden roads stay concealed.
+    for segment in points.windows(2) {
+        let steps = (segment[0].distance(segment[1]) / 6.0).ceil().max(1.0) as u32;
+        for step in 0..steps {
+            let start = segment[0].lerp(segment[1], step as f32 / steps as f32);
+            let end = segment[0].lerp(segment[1], (step + 1) as f32 / steps as f32);
+            let alpha = 1.0 - exploration.opacity((start + end) * 0.5);
+            if alpha <= 0.0 {
+                continue;
+            }
+            let projected = [ctx.view.project(start), ctx.view.project(end)];
+            stroke(&projected, 3.0, Color::new(INK.r, INK.g, INK.b, alpha));
+            stroke(
+                &projected,
+                1.0,
+                Color::new(BRASS.r, BRASS.g, BRASS.b, alpha),
+            );
         }
     }
 }

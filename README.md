@@ -44,10 +44,13 @@ generator is tracked in `examples/prepare_midgame.rs`.
 | Current decision | Choose where to expand or defend an established kingdom along its rival borders. |
 | Dominant focus | The discovered realm and its routes fill the atlas, showing multiple holdings at once. |
 | Primary action | Tap Army, choose a destination, then Confirm Move after reviewing movement, supply and encounter risks. |
-| Supporting information | Season, active faction, settlement ownership and nearby army banners remain visible. |
+| Supporting information | Season, active faction, settlement ownership and nearby army banners remain visible. Discovered terrain clears to the unknown frontier and map edges; outgoing roads fade into fog to show possible exploration directions. |
 | Deferred information | Place details open on selection; named careers and biographies live in Menu > Records. |
 | Layout and camera | The resume camera fits discovered markers at 1920×1080 and the minimum 1280×720 viewport; regional inspection and Recenter retain their local framing. |
 | Input and feedback | Visible map, zoom, region, selection and Records controls work by tap/click; completed moves update the army position and remaining movement. |
+
+The [map fog review](docs/verification/map-fog.md) records northern-edge clearing,
+outgoing connection hints, visual evidence and validation.
 
 ## Formation battle screen brief
 

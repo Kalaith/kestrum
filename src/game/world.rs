@@ -15,8 +15,13 @@ impl Game {
             .movement
             .site
             .unwrap_or(campaign.factions[&campaign.player].headquarters);
-        self.navigation
-            .focus_site(&campaign.world, site, &mut self.view);
+        if self.movement.site.is_some() {
+            self.navigation
+                .focus_army_site(&campaign.world, site, &mut self.view);
+        } else {
+            self.navigation
+                .focus_site(&campaign.world, site, &mut self.view);
+        }
         self.navigation.clear_selection();
     }
 
@@ -88,16 +93,9 @@ impl Game {
             return;
         }
         if self.movement.stage == ui::MoveStage::Map {
-            let site = match selection {
-                MapSelection::Site(id) => Some(id),
-                MapSelection::Marker(id) => campaign.world.physical_site(id),
-            };
-            if let Some(site) = site {
-                self.select_move_destination(site);
-            } else {
-                self.movement.destination = None;
-                self.movement.preview = None;
-                self.movement.status.clear();
+            match selection {
+                MapSelection::Site(id) => self.select_move_destination(id),
+                MapSelection::Marker(id) => self.select_world_destination(id),
             }
         }
     }
@@ -112,6 +110,7 @@ impl Game {
         {
             self.error = Some(error);
         }
+        self.refresh_move_options();
     }
 
     pub(super) fn capture_world(&mut self, scene: &str) {

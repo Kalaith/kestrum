@@ -398,7 +398,10 @@ impl Game {
             }
             UiAction::SelectMap(selection) => self.select_map(selection),
             UiAction::EnterRegion(region) => self.enter_region(region),
-            UiAction::WorldMap => self.navigation.show_world(&mut self.view),
+            UiAction::WorldMap => {
+                self.navigation.show_world(&mut self.view);
+                self.refresh_move_options();
+            }
             UiAction::CloseSelection => self.navigation.clear_selection(),
             _ => unreachable!("navigation action dispatch"),
         }

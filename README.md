@@ -482,6 +482,19 @@ faction seals, tappable Army banners and observed local threats. Regional maps
 reveal internal sites through physical travel. Army Details and group orders
 remain available from the order card; Next selects another local army.
 
+World army orders keep the atlas open, including Army Details and Recenter.
+Next cycles all armies represented by a world banner, even at different regional
+sites; Move Group still requires armies at the same physical site. Tapping another
+region chooses its cheapest accessible known entrance. The route cost includes
+every internal step to the departure gate before crossing the world connection.
+Review Route lists those steps, and insufficient movement leaves the army at the
+last reachable physical site. Enter Region remains an explicit choice for local
+destinations.
+
+[World army verification](docs/verification/world-army-orders.md) records the
+movement regressions, both-size screen review, browser checks and publishing
+result, including the remaining production-victory and browser-size limitations.
+
 ### K12 — Rival kingdoms, diplomacy and endings
 
 Specialist mentorship supplements practical service: two Medicine lesson seasons

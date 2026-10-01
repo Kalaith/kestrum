@@ -3,6 +3,8 @@
 mod execute;
 mod path;
 mod service;
+mod world;
+pub use world::world_movement_preview;
 
 use super::{actions::validate_command, Actor, Command, RuleError};
 use crate::{

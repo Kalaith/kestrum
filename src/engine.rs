@@ -55,8 +55,8 @@ pub use knowledge::{
 pub use mentorship::{mentorship_options, mentorship_status_text, MentorshipOption};
 pub use movement::{
     army_remaining, formation_remaining, map_movement_preview, movement_preview, person_remaining,
-    route_cost, MoveOrder, MovementBlock, MovementEncounter, MovementOutcome, MovementPreview,
-    MovementStop, RouteStep,
+    route_cost, world_movement_preview, MoveOrder, MovementBlock, MovementEncounter,
+    MovementOutcome, MovementPreview, MovementStop, RouteStep,
 };
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
 pub use progression::{

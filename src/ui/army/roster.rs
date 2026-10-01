@@ -182,7 +182,7 @@ fn army_summary(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> f
 }
 
 fn army_header(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -> Option<UiAction> {
-    let name = truncate_text_to_width_ex(&army.name, 624.0, ctx.font(), 24.0);
+    let name = truncate_text_to_width_ex(&army.name, 560.0, ctx.font(), 24.0);
 
     text(ctx, &name, vec2(112.0, 185.0), 24.0, CREAM);
 

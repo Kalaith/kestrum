@@ -36,6 +36,11 @@ impl Game {
             site: Some(site),
             ..Default::default()
         };
+        self.army.page = self
+            .local_armies()
+            .iter()
+            .position(|id| self.movement.armies.first() == Some(id))
+            .unwrap_or(0);
         self.state.overlay = Overlay::Armies;
         self.error = None;
         self.notice = None;

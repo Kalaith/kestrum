@@ -95,11 +95,22 @@ fn movement_cost(ctx: &Context<'_>, target: &MapTarget) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
-    let site = match target.selection {
-        MapSelection::Site(id) => Some(id),
-        MapSelection::Marker(id) => campaign.world.physical_site(id),
+    let cost = match target.selection {
+        MapSelection::Site(id) => ctx.movement.nearby.get(&id),
+        MapSelection::Marker(id) => ctx
+            .movement
+            .nearby
+            .iter()
+            .filter(|(site, _)| {
+                campaign
+                    .world
+                    .site(**site)
+                    .is_some_and(|site| site.marker == id)
+            })
+            .map(|(_, cost)| cost)
+            .min(),
     };
-    if let Some(cost) = site.and_then(|site| ctx.movement.nearby.get(&site)) {
+    if let Some(cost) = cost {
         let at = target.center;
         draw_circle_lines(at.x, at.y, 29.0, 2.0, CREAM);
         let badge = at + vec2(0.0, -42.0);

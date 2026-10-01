@@ -38,12 +38,11 @@ impl Game {
             ..Default::default()
         };
         self.navigation.clear_selection();
-        if campaign.world.site(site).is_some_and(|site| {
-            campaign.world.physical_site(site.marker).is_none()
-                && self.navigation.scope() != kestrum::navigation::MapScope::Region(site.marker)
-        }) {
+        if matches!(self.navigation.scope(), kestrum::navigation::MapScope::Region(region)
+            if campaign.world.site(site).is_none_or(|site| site.marker != region))
+        {
             self.navigation
-                .focus_site(&campaign.world, site, &mut self.view);
+                .focus_army_site(&campaign.world, site, &mut self.view);
             self.navigation.clear_selection();
         }
         self.state.overlay = Overlay::None;
@@ -124,7 +123,7 @@ impl Game {
         }
     }
 
-    fn refresh_move_options(&mut self) {
+    pub(super) fn refresh_move_options(&mut self) {
         self.movement.nearby.clear();
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
@@ -132,6 +131,35 @@ impl Game {
         let Some(origin) = self.movement.site else {
             return;
         };
+        if self.navigation.scope() == kestrum::navigation::MapScope::World {
+            let Some(marker) = campaign.world.site(origin).map(|site| site.marker) else {
+                return;
+            };
+            let neighbors: std::collections::BTreeSet<_> = campaign
+                .world
+                .routes
+                .iter()
+                .filter_map(|route| route.major_connection)
+                .filter(|pair| pair.contains(&marker))
+                .flat_map(|pair| pair.into_iter().filter(|id| *id != marker))
+                .collect();
+            for destination in neighbors {
+                if let Ok(preview) = engine::world_movement_preview(
+                    campaign,
+                    &self.data,
+                    campaign.player,
+                    &self.movement.armies,
+                    destination,
+                ) {
+                    if preview.stop.is_none() {
+                        if let Some(site) = preview.order.path.last() {
+                            self.movement.nearby.insert(*site, preview.total_cost);
+                        }
+                    }
+                }
+            }
+            return;
+        }
         for destination in campaign.world.adjacent_sites(origin) {
             if let Ok(preview) = engine::map_movement_preview(
                 campaign,
@@ -151,15 +179,54 @@ impl Game {
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
         };
-        self.movement.destination = Some(site);
-        self.movement.route_page = 0;
-        match engine::map_movement_preview(
+        let preview = engine::map_movement_preview(
             campaign,
             &self.data,
             campaign.player,
             &self.movement.armies,
             site,
-        ) {
+        );
+        self.set_move_preview(Some(site), preview);
+    }
+
+    pub(super) fn select_world_destination(&mut self, marker: kestrum::data::world::MarkerId) {
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        if self
+            .movement
+            .site
+            .and_then(|id| campaign.world.site(id))
+            .is_some_and(|site| site.marker == marker)
+        {
+            self.movement.destination = None;
+            self.movement.preview = None;
+            self.movement.status.clear();
+            return;
+        }
+        let preview = engine::world_movement_preview(
+            campaign,
+            &self.data,
+            campaign.player,
+            &self.movement.armies,
+            marker,
+        );
+        let site = preview
+            .as_ref()
+            .ok()
+            .and_then(|preview| preview.order.path.last())
+            .copied();
+        self.set_move_preview(site, preview);
+    }
+
+    fn set_move_preview(
+        &mut self,
+        site: Option<SiteId>,
+        result: Result<engine::MovementPreview, engine::RuleError>,
+    ) {
+        self.movement.destination = site;
+        self.movement.route_page = 0;
+        match result {
             Ok(preview) => {
                 self.movement.preview = Some(preview);
                 self.movement.status.clear();

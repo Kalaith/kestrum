@@ -32,11 +32,24 @@ pub fn panel_bounds(
 pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
     let campaign = ctx.campaign_view?;
     let rect = panel_bounds(ctx.movement, ctx.navigation, &campaign.world, ctx.view);
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
+    if let Some(action) = draw_army_heading(ctx, rect) {
+        return Some(action);
+    }
+    let action = if let Some(preview) = &ctx.movement.preview {
+        draw_route_preview(ctx, rect, preview)
+    } else {
+        draw_pick_destination(ctx, rect)
+    };
+    action.or_else(|| draw_order_controls(ctx, rect))
+}
+
+fn draw_army_heading(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
+    let campaign = ctx.campaign_view?;
     let x = rect.x + 16.0;
     let width = rect.w - 32.0;
     let active = ctx.state.overlay == Overlay::None;
-    draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
-    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
     let army = campaign
         .armies
         .iter()
@@ -50,7 +63,10 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
             ctx.movement.armies.len()
         )
     };
-    let multiple = ctx.movement.remaining.len() > 1;
+    let ids =
+        ctx.navigation
+            .armies_at_selection(&campaign.world, ctx.movement.site?, &campaign.armies);
+    let multiple = ids.len() > 1;
     lines(
         ctx,
         &title,
@@ -68,7 +84,6 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
             false,
         )
     {
-        let ids: Vec<_> = ctx.movement.remaining.keys().copied().collect();
         let current = ids
             .iter()
             .position(|id| ctx.movement.armies.first() == Some(id))
@@ -84,14 +99,7 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
     ) {
         return Some(UiAction::CancelMove);
     }
-    let remaining = ctx
-        .movement
-        .armies
-        .iter()
-        .filter_map(|id| ctx.movement.remaining.get(id))
-        .min()
-        .copied()
-        .unwrap_or(0);
+    let remaining = movement_remaining(ctx);
     body(
         ctx,
         &format!("{}: {remaining}", ctx.text("movement_left")),
@@ -102,70 +110,145 @@ pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
     if let Some(site) = ctx.movement.site.and_then(|id| campaign.world.site(id)) {
         lines(ctx, &site.name, vec2(x, 217.0), width, 1, MUTED);
     }
-    if let Some(preview) = &ctx.movement.preview {
-        let name = ctx
-            .movement
-            .destination
-            .and_then(|id| campaign.world.site(id))
-            .map(|site| site.name.as_str())
-            .unwrap_or_default();
-        lines(ctx, name, vec2(x, 260.0), width, 2, CREAM);
+    None
+}
+
+fn movement_remaining(ctx: &Context<'_>) -> u32 {
+    ctx.movement
+        .armies
+        .iter()
+        .filter_map(|id| ctx.movement.remaining.get(id))
+        .min()
+        .copied()
+        .unwrap_or(0)
+}
+
+fn draw_route_preview(
+    ctx: &Context<'_>,
+    rect: Rect,
+    preview: &MovementPreview,
+) -> Option<UiAction> {
+    let campaign = ctx.campaign_view?;
+    let x = rect.x + 16.0;
+    let width = rect.w - 32.0;
+    let active = ctx.state.overlay == Overlay::None;
+    let name = ctx
+        .movement
+        .destination
+        .and_then(|id| campaign.world.site(id))
+        .map(|site| site.name.as_str())
+        .unwrap_or_default();
+    lines(ctx, name, vec2(x, 260.0), width, 2, CREAM);
+    body(
+        ctx,
+        &format!("{}: {}", ctx.text("route_cost"), preview.total_cost),
+        vec2(x, 316.0),
+        20.0,
+        BRASS,
+    );
+    draw_route_consequence(ctx, rect, preview);
+    let threat = campaign
+        .threats
+        .iter()
+        .find(|threat| Some(threat.site) == ctx.movement.destination);
+    let primary = if preview.reachable_steps == 0 {
+        threat.map(|threat| ("clear_threat", UiAction::OpenThreat(threat.id)))
+    } else {
+        None
+    };
+    if button(
+        ctx,
+        Rect::new(x, 426.0, width, 48.0),
+        &ctx.text(primary.map_or("confirm_move", |(key, _)| key)),
+        active && campaign.player_turn && (preview.reachable_steps > 0 || primary.is_some()),
+        true,
+    ) {
+        return Some(primary.map_or(UiAction::ConfirmMove, |(_, action)| action));
+    }
+    None
+}
+
+fn draw_route_consequence(ctx: &Context<'_>, rect: Rect, preview: &MovementPreview) {
+    let Some(campaign) = ctx.campaign_view else {
+        return;
+    };
+    let x = rect.x + 16.0;
+    let width = rect.w - 32.0;
+    let consequence = if ctx.movement.status.is_empty() {
+        route_consequence(ctx, preview)
+    } else {
+        ctx.movement.status.clone()
+    };
+    let exit_cost: u32 = if ctx.navigation.scope() == MapScope::World {
+        preview
+            .steps
+            .iter()
+            .position(|step| {
+                campaign
+                    .world
+                    .route(step.route)
+                    .is_some_and(|route| route.major_connection.is_some())
+            })
+            .map(|crossing| preview.steps[..crossing].iter().map(|step| step.cost).sum())
+            .unwrap_or(0)
+    } else {
+        0
+    };
+    if exit_cost > 0 {
         body(
             ctx,
-            &format!("{}: {}", ctx.text("route_cost"), preview.total_cost),
-            vec2(x, 316.0),
-            20.0,
-            BRASS,
+            &ctx.text("map_region_exit_cost")
+                .replace("{cost}", &exit_cost.to_string()),
+            vec2(x, 343.0),
+            16.0,
+            MUTED,
         );
-        let consequence = if ctx.movement.status.is_empty() {
-            route_consequence(ctx, preview)
+    }
+    lines(
+        ctx,
+        &consequence,
+        vec2(x, if exit_cost > 0 { 373.0 } else { 345.0 }),
+        width,
+        if exit_cost > 0 { 2 } else { 3 },
+        CREAM,
+    );
+}
+
+fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
+    let campaign = ctx.campaign_view?;
+    let x = rect.x + 16.0;
+    let width = rect.w - 32.0;
+    let active = ctx.state.overlay == Overlay::None;
+    let remaining = movement_remaining(ctx);
+    let label = if ctx.movement.status.is_empty() {
+        ctx.text(if remaining == 0 {
+            "map_move_exhausted"
         } else {
-            ctx.movement.status.clone()
-        };
-        lines(ctx, &consequence, vec2(x, 345.0), width, 3, CREAM);
-        let threat = campaign
-            .threats
-            .iter()
-            .find(|threat| Some(threat.site) == ctx.movement.destination);
-        let primary = if preview.reachable_steps == 0 {
-            threat.map(|threat| ("clear_threat", UiAction::OpenThreat(threat.id)))
-        } else {
-            None
-        };
-        if button(
-            ctx,
-            Rect::new(x, 426.0, width, 48.0),
-            &ctx.text(primary.map_or("confirm_move", |(key, _)| key)),
-            active && campaign.player_turn && (preview.reachable_steps > 0 || primary.is_some()),
-            true,
-        ) {
-            return Some(primary.map_or(UiAction::ConfirmMove, |(_, action)| action));
-        }
+            "map_pick_destination"
+        })
     } else {
-        let label = if ctx.movement.status.is_empty() {
-            ctx.text(if remaining == 0 {
-                "map_move_exhausted"
-            } else {
-                "map_pick_destination"
-            })
-        } else {
-            ctx.movement.status.clone()
-        };
-        lines(ctx, &label, vec2(x, 265.0), width, 5, CREAM);
-        if let Some(kestrum::navigation::MapSelection::Marker(id)) = ctx.navigation.selection() {
-            if campaign.world.physical_site(id).is_none()
-                && button(
-                    ctx,
-                    Rect::new(x, 426.0, width, 48.0),
-                    &ctx.text("enter_region"),
-                    active,
-                    true,
-                )
-            {
-                return Some(UiAction::EnterRegion(id));
-            }
+        ctx.movement.status.clone()
+    };
+    lines(ctx, &label, vec2(x, 265.0), width, 5, CREAM);
+    if let Some(kestrum::navigation::MapSelection::Marker(id)) = ctx.navigation.selection() {
+        if campaign.world.physical_site(id).is_none()
+            && button(
+                ctx,
+                Rect::new(x, 426.0, width, 48.0),
+                &ctx.text("enter_region"),
+                active,
+                true,
+            )
+        {
+            return Some(UiAction::EnterRegion(id));
         }
     }
+    None
+}
+
+fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
+    let x = rect.x + 16.0;
+    let active = ctx.state.overlay == Overlay::None;
     let secondary = if ctx.movement.preview.is_some() {
         ("route_review", UiAction::ReviewMove)
     } else {

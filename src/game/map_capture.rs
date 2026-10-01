@@ -2,6 +2,7 @@
 
 use super::*;
 use kestrum::{navigation::MapSelection, state::military::ArmyId};
+mod world_orders;
 
 impl Game {
     pub(super) fn capture_map_fog(&mut self, requested: &str) -> bool {

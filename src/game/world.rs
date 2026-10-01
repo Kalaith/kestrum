@@ -7,6 +7,17 @@ use kestrum::{
 };
 
 impl Game {
+    /// Start beside the physical home and its usable local routes.
+    pub(super) fn focus_initial_home(&mut self) {
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        let site = campaign.factions[&campaign.player].headquarters;
+        self.navigation
+            .focus_site(&campaign.world, site, &mut self.view);
+        self.navigation.clear_selection();
+    }
+
     pub(super) fn focus_home(&mut self) {
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
@@ -15,13 +26,8 @@ impl Game {
             .movement
             .site
             .unwrap_or(campaign.factions[&campaign.player].headquarters);
-        if self.movement.site.is_some() {
-            self.navigation
-                .focus_army_site(&campaign.world, site, &mut self.view);
-        } else {
-            self.navigation
-                .focus_site(&campaign.world, site, &mut self.view);
-        }
+        self.navigation
+            .focus_army_site(&campaign.world, site, &mut self.view);
         self.navigation.clear_selection();
     }
 
@@ -30,7 +36,7 @@ impl Game {
             || ui::tutorial_bounds(&self.state).is_some_and(|rect| rect.contains(point))
             || ((self.error.is_some() || self.notice.is_some())
                 && !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery)
-                && ui::FEEDBACK.contains(point))
+                && ui::feedback_bounds(&self.state).contains(point))
         {
             return true;
         }
@@ -94,17 +100,20 @@ impl Game {
         if origin.distance(pointer.position) > macroquad_toolkit::input::gestures::DRAG_THRESHOLD {
             return None;
         }
+        let panel = if self.movement.stage == ui::MoveStage::Map {
+            Some(ui::movement_panel_bounds(
+                &self.movement,
+                &self.navigation,
+                world,
+                &self.view,
+            ))
+        } else {
+            ui::selection_bounds(&self.navigation, world, &self.view)
+        };
+        if let Some(action) = self.group_focus_action(origin, pointer.position, panel) {
+            return Some(action);
+        }
         if campaign.player_turn {
-            let panel = if self.movement.stage == ui::MoveStage::Map {
-                Some(ui::movement_panel_bounds(
-                    &self.movement,
-                    &self.navigation,
-                    world,
-                    &self.view,
-                ))
-            } else {
-                ui::selection_bounds(&self.navigation, world, &self.view)
-            };
             let attention = ui::attention_bounds(
                 &self.overview_ui,
                 panel.is_some(),
@@ -122,12 +131,50 @@ impl Game {
                         && ui::banner_visible(target.bounds, panel, attention)
                 })
             {
+                if let Some(position) = target.focus {
+                    return Some(UiAction::FocusMapGroup(position, self.view.working_zoom()));
+                }
                 return target.armies.first().copied().map(UiAction::BeginMove);
             }
         }
         self.navigation
             .pick_release(world, &self.view, origin, pointer.position)
             .map(UiAction::SelectMap)
+    }
+
+    fn group_focus_action(
+        &self,
+        origin: Vec2,
+        release: Vec2,
+        panel: Option<Rect>,
+    ) -> Option<UiAction> {
+        let world = &self.projection.as_ref()?.world;
+        if let Some(group) = self
+            .navigation
+            .pick_group_release(world, &self.view, origin, release)
+            .filter(|group| !panel.is_some_and(|panel| panel.overlaps(&group.bounds())))
+        {
+            return Some(UiAction::FocusMapGroup(group.focus, group.zoom));
+        }
+        let selected = self.navigation.selection();
+        let groups = self.navigation.place_groups(world, &self.view);
+        self.navigation
+            .targets(world, &self.view)
+            .into_iter()
+            .filter(|target| {
+                target.bounds().contains(origin)
+                    && target.bounds().contains(release)
+                    && ui::important_target(self.overview.as_ref(), selected, target.selection)
+                    && !panel.is_some_and(|panel| {
+                        panel.contains(target.center) && selected != Some(target.selection)
+                    })
+            })
+            .find_map(|target| {
+                groups
+                    .iter()
+                    .find(|group| group.selections.contains(&target.selection))
+                    .map(|group| UiAction::FocusMapGroup(group.focus, group.zoom))
+            })
     }
 
     pub(super) fn select_map(&mut self, selection: MapSelection) {
@@ -158,9 +205,16 @@ impl Game {
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
         };
+        let visible = match engine::project_map(campaign, campaign.player) {
+            Ok(visible) => visible,
+            Err(error) => {
+                self.error = Some(error.to_string());
+                return;
+            }
+        };
         if let Err(error) = self
             .navigation
-            .enter_region(&campaign.world, region, &mut self.view)
+            .enter_region(&visible.world, region, &mut self.view)
         {
             self.error = Some(error);
         }

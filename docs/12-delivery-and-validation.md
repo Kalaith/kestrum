@@ -5,10 +5,14 @@
 
 ## Current delivery
 
-M01 is implemented with recorded limits. M01A is the next planned milestone,
-followed by M02–M05 in the map playability plan. M01A and those later milestones
-remain unimplemented by this documentation update. Complete, validate and commit
-each independently useful major change before beginning the next.
+M01 and M01A are complete under their recorded scope. M01A passed formatting,
+strict Clippy, source-size checks and the final 14-scene native capture batch,
+as recorded in [verification](verification/spatial-scale.md). The full
+suite retains the single inherited production-victory failure and one ignored
+profiling test. Automated native actions, background browser gameplay,
+publishing and reload passed, with native/browser captures at actual 1920×1080.
+M02–M05 remain unimplemented. Complete, validate and commit each independently
+useful major change before beginning the next.
 
 K01–K18 and B01–B07 are completed delivery records under their recorded scope.
 Their packages must not be reopened because a historical chapter says a system
@@ -24,8 +28,10 @@ behavioral cases and supported-size visual scenarios.
 The generational campaign, human/ordinary content, six-slot armies, 4–8 factions,
 80 major markers and seasonal turns remain. More races, extensive diplomacy,
 multiplayer, additional world locations and new combat mechanics are deferred.
-M01A expands navigable presentation space and migrates to the sole 1920×1080
-canvas. A seamless transition between world/regional scopes remains deferred.
+M01A expands navigable presentation space and composes the map at the sole
+1920×1080 canvas. Its 5280×2970 world and 3360×1890 regional bounds use normal
+zoom 1, three information bands and explicit Overview/Return View navigation.
+A seamless transition between world/regional scopes remains deferred.
 
 ## Required engineering checks
 
@@ -63,10 +69,18 @@ dense, long-name, multi-army, urgent, blocked and post-season states. Check that
 the current decision, action, cost and consequence are understandable.
 
 Exercise visible tap/click controls, selection/dismissal, drag suppression,
-zoom/recenter, regional transitions, immediate movement, route continuation and
-cancellation, common contextual orders and seasonal feedback. Include reload
+zoom/recenter, Overview/Return View, group focus, regional transitions, immediate
+movement, route continuation and cancellation, common contextual orders and
+seasonal feedback. Include reload
 when changed state persists. Check that both rendering and picking remain correct
 after viewport changes.
+
+M01A review also checks that working cameras survive selection, dismissal, End
+Turn and management return, and that world and regional contexts stay independent.
+Verify the three bands across their separate entry/exit thresholds. Inspect the
+centered management sheets at their original pixel size and exercise translated
+pointer input, confirmation and on-screen text entry. The inherited small
+battlefield tactic/playback controls remain an explicit limitation.
 
 Use `scripts/capture_ui.ps1` with supported scenes and the hidden-window default.
 Write directly to stable files in `docs/verification/`, replace equivalent

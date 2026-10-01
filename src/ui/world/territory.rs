@@ -113,10 +113,10 @@ fn known_land(
         let sample = point + offset;
         exploration.is_none_or(|area| area.opacity(sample) < 0.04)
             && (ctx.navigation.scope() != MapScope::World
-                || ctx
-                    .data
-                    .map
-                    .is_atlas_land([sample.x / WIDTH, sample.y / HEIGHT]))
+                || ctx.data.map.is_atlas_land([
+                    sample.x / ctx.view.extent().x,
+                    sample.y / ctx.view.extent().y,
+                ]))
     })
 }
 
@@ -132,7 +132,7 @@ fn claims(ctx: &Context<'_>) -> Vec<Claim> {
             .filter_map(|marker| {
                 let summary = overview.markers.get(&marker.id)?;
                 Some(Claim {
-                    at: vec2(marker.position[0] * WIDTH, marker.position[1] * HEIGHT),
+                    at: ctx.view.normalized_world(marker.position),
                     owner: summary.political_owner,
                     known: summary.political_known,
                 })
@@ -146,7 +146,7 @@ fn claims(ctx: &Context<'_>) -> Vec<Claim> {
             .filter_map(|site| {
                 let summary = overview.sites.get(&site.id)?;
                 Some(Claim {
-                    at: vec2(site.position[0] * WIDTH, site.position[1] * HEIGHT),
+                    at: ctx.view.normalized_world(site.position),
                     owner: summary.political_owner,
                     known: summary.political_known,
                 })

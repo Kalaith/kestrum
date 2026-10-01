@@ -1,33 +1,42 @@
-//! Army banners share the same geometry for drawing and release picking.
+//! Compact force targets and explicit place/force focus without travel changes.
 
 use super::*;
 use crate::state::military::{Army, ArmyId};
+use macroquad::prelude::vec2;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArmyGrouping {
+    Site,
+    Region,
+    Nearby,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ArmyTarget {
     pub armies: Vec<ArmyId>,
     pub bounds: Rect,
+    pub grouping: ArmyGrouping,
+    /// A nearby group focuses geography before the player chooses an exact force.
+    pub focus: Option<[f32; 2]>,
 }
 
 impl MapNavigation {
-    /// Recenter an army in the current map; only explicit entry opens a region.
     pub fn focus_army_site(&mut self, world: &CampaignWorld, site: SiteId, view: &mut MapView) {
         let Some(place) = world.site(site) else {
             return;
         };
         if self.scope() == MapScope::Region(place.marker) {
-            view.focus(place.position, 1.5);
+            view.focus(place.position, view.working_zoom());
             self.selection = Some(MapSelection::Site(site));
         } else {
             self.show_world(view);
             if let Some(marker) = world.marker(place.marker) {
-                view.focus(marker.position, 2.5);
+                view.focus(marker.position, view.working_zoom());
                 self.selection = Some(MapSelection::Marker(place.marker));
             }
         }
     }
 
-    /// A world banner includes every army in its region, even at different sites.
     pub fn armies_at_selection(
         &self,
         world: &CampaignWorld,
@@ -51,32 +60,11 @@ impl MapNavigation {
         ids
     }
 
-    /// Resume with all discovered markers in view; the caller supplies the
-    /// observer-filtered world so hidden geography cannot affect the camera.
+    /// Explicit overview framing for capture tools and the Overview action.
     pub fn frame_discovered(&mut self, world: &CampaignWorld, view: &mut MapView) {
-        let Some(first) = world.markers.first() else {
-            return;
-        };
-        let mut minimum = first.position;
-        let mut maximum = first.position;
-        for marker in &world.markers {
-            for axis in 0..2 {
-                minimum[axis] = minimum[axis].min(marker.position[axis]);
-                maximum[axis] = maximum[axis].max(marker.position[axis]);
-            }
-        }
         self.show_world(view);
-        let margin = 2.0 * MAP_TAP_SIZE / HEIGHT;
-        let extent = (maximum[0] - minimum[0]).max(maximum[1] - minimum[1]);
-        let zoom = (1.0 / (extent + margin)).min(2.5);
-        view.focus(
-            [
-                (minimum[0] + maximum[0]) / 2.0,
-                (minimum[1] + maximum[1]) / 2.0,
-            ],
-            zoom,
-        );
-        self.clear_selection();
+        let positions: Vec<_> = world.markers.iter().map(|marker| marker.position).collect();
+        view.frame_positions(&positions);
     }
 
     pub fn army_targets(
@@ -86,83 +74,133 @@ impl MapNavigation {
         armies: &[Army],
     ) -> Vec<ArmyTarget> {
         let targets = self.targets(world, view);
-        let mut placed: Vec<Rect> = Vec::new();
-        targets
+        let occupied: Vec<_> = targets
             .iter()
-            .filter_map(|target| {
-                let mut local: Vec<_> = armies
-                    .iter()
-                    .filter(|army| match target.selection {
-                        MapSelection::Site(id) => army.site == id,
-                        MapSelection::Marker(id) => {
-                            world.site(army.site).is_some_and(|site| site.marker == id)
-                        }
-                    })
-                    .map(|army| army.id)
-                    .collect();
-                local.sort_unstable();
-                if local.is_empty() {
-                    return None;
-                }
-                let width = 196.0;
-                let height = 56.0;
-                let center = target.center;
-                // Keep the place, crown and warnings uncovered after clamping.
-                let own_place = Rect::new(center.x - 46.0, center.y - 50.0, 92.0, 88.0);
-                let options = [
-                    vec2(center.x + 50.0, center.y - height * 0.5),
-                    vec2(center.x - 50.0 - width, center.y - height * 0.5),
-                    vec2(center.x - width * 0.5, center.y + 46.0),
-                    vec2(center.x - width * 0.5, center.y - 54.0 - height),
-                    vec2(center.x - width - 50.0, center.y + 46.0),
-                    vec2(center.x + 50.0, center.y + 46.0),
-                ];
-                let bounds = options
-                    .into_iter()
-                    .map(|at| {
-                        Rect::new(
-                            at.x.clamp(12.0, WIDTH - width - 12.0),
-                            at.y.clamp(92.0, HEIGHT - height - 148.0),
-                            width,
-                            height,
-                        )
-                    })
-                    .filter(|rect| !own_place.overlaps(rect))
-                    .min_by_key(|rect| {
-                        targets
-                            .iter()
-                            .filter(|other| other.bounds().overlaps(rect))
-                            .count()
-                            + placed.iter().filter(|other| other.overlaps(rect)).count() * 4
-                    })?;
-                placed.push(bounds);
-                Some(ArmyTarget {
-                    armies: local,
-                    bounds,
+            .map(MapTarget::bounds)
+            .chain(self.place_groups(world, view).iter().map(MapGroup::bounds))
+            .collect();
+        let mut groups: Vec<(Vec<ArmyId>, Vec<SiteId>, Vec2, usize)> = Vec::new();
+        for target in &targets {
+            let local: Vec<_> = armies
+                .iter()
+                .filter(|army| match target.selection {
+                    MapSelection::Site(id) => army.site == id,
+                    MapSelection::Marker(id) => {
+                        world.site(army.site).is_some_and(|site| site.marker == id)
+                    }
                 })
+                .collect();
+            if local.is_empty() {
+                continue;
+            }
+            let close = (view.band() == MapScaleBand::Overview)
+                .then(|| {
+                    groups.iter().position(|group| {
+                        group.2.distance(target.center) < view.settings.army_group_distance
+                    })
+                })
+                .flatten();
+            if let Some(index) = close {
+                let group = &mut groups[index];
+                group.0.extend(local.iter().map(|army| army.id));
+                group.1.extend(local.iter().map(|army| army.site));
+                group.2 = (group.2 * group.3 as f32 + target.center) / (group.3 + 1) as f32;
+                group.3 += 1;
+            } else {
+                groups.push((
+                    local.iter().map(|army| army.id).collect(),
+                    local.iter().map(|army| army.site).collect(),
+                    target.center,
+                    1,
+                ));
+            }
+        }
+        let mut placed = Vec::new();
+        groups
+            .into_iter()
+            .map(|(mut ids, sites, center, places)| {
+                ids.sort_unstable();
+                let regional = self.scope() == MapScope::World
+                    && sites.iter().any(|site| {
+                        world
+                            .site(*site)
+                            .and_then(|place| world.marker(place.marker))
+                            .is_some_and(|marker| {
+                                matches!(marker.location, MarkerLocation::Region { .. })
+                            })
+                    });
+                let grouping = if places > 1 {
+                    ArmyGrouping::Nearby
+                } else if regional {
+                    ArmyGrouping::Region
+                } else {
+                    ArmyGrouping::Site
+                };
+                let focus = (grouping == ArmyGrouping::Nearby).then(|| {
+                    (view
+                        .camera
+                        .screen_to_world(MAP_RECT, center)
+                        .unwrap_or(center)
+                        / view.extent())
+                    .to_array()
+                });
+                let bounds = compact_bounds(center, &occupied, &placed);
+                placed.push(bounds);
+                ArmyTarget {
+                    armies: ids,
+                    bounds,
+                    grouping,
+                    focus,
+                }
             })
             .collect()
     }
 
-    /// Frame the physical home/army site, opening its region when needed.
+    /// Exact site attention may enter a region; ordinary Recenter retains scope.
     pub fn focus_site(&mut self, world: &CampaignWorld, site: SiteId, view: &mut MapView) {
         let Some(place) = world.site(site) else {
             return;
         };
         self.show_world(view);
+        if let Some(marker) = world.marker(place.marker) {
+            view.focus(marker.position, view.working_zoom());
+        }
         if world.physical_site(place.marker) == Some(site) {
-            if let Some(marker) = world.marker(place.marker) {
-                view.focus(marker.position, 2.5);
-            }
             self.selection = Some(MapSelection::Marker(place.marker));
-        } else {
-            if let Some(marker) = world.marker(place.marker) {
-                view.focus(marker.position, 2.5);
-            }
-            if self.enter_region(world, place.marker, view).is_ok() {
-                view.focus(place.position, 1.5);
-                self.selection = Some(MapSelection::Site(site));
-            }
+        } else if self.enter_region(world, place.marker, view).is_ok() {
+            view.focus(place.position, view.working_zoom());
+            self.selection = Some(MapSelection::Site(site));
         }
     }
+}
+
+fn compact_bounds(center: Vec2, targets: &[Rect], placed: &[Rect]) -> Rect {
+    let options = [
+        vec2(50.0, 0.0),
+        vec2(-50.0, 0.0),
+        vec2(0.0, 58.0),
+        vec2(0.0, -58.0),
+        vec2(50.0, 58.0),
+        vec2(-50.0, 58.0),
+    ];
+    options
+        .into_iter()
+        .map(|offset| {
+            let at = center + offset - Vec2::splat(MAP_TAP_SIZE * 0.5);
+            Rect::new(
+                at.x.clamp(12.0, WIDTH - MAP_TAP_SIZE - 12.0),
+                at.y.clamp(96.0, HEIGHT - MAP_TAP_SIZE - 136.0),
+                MAP_TAP_SIZE,
+                MAP_TAP_SIZE,
+            )
+        })
+        .min_by_key(|rect| {
+            targets
+                .iter()
+                .filter(|target| target.overlaps(rect))
+                .count()
+                * 2
+                + placed.iter().filter(|other| other.overlaps(rect)).count() * 4
+        })
+        .expect("compact force offsets are nonempty")
 }

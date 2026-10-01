@@ -19,17 +19,21 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
-[M01 kingdom overview](kingdom-overview.md) is the latest implementation and
-runtime record. [Map plan documentation verification](map-plan.md) records the
-preceding reconciliation at `3073c18`; it claims no runtime validation.
+[M01A spatial scale](spatial-scale.md) is complete under its recorded scope and
+is the latest runtime record. Formatting, strict Clippy, source-size checks and 14 final native
+captures passed. The full suite retains one production-victory failure and one
+ignored profiling test. Automated native actions, background browser gameplay
+and publishing/reload passed. Final native and browser captures measure the
+sole **1920×1080** spec.
 
-The subsequent [spatial scale plan](../map-playability-plan.md#spatial-scale-review)
-adds M01A as the next milestone and records the user's sole 1920×1080 spec.
-It establishes no new runtime results. Earlier 720p checks remain historical
-evidence; current acceptance follows the corrected resolution contract.
+[M01 kingdom overview](kingdom-overview.md) records the preceding map work.
+[Map plan documentation verification](map-plan.md) records the earlier
+reconciliation at `3073c18`; it claims no runtime validation. Earlier 720p checks
+remain historical evidence and do not define another acceptance target.
 
 | Record | What it establishes |
 | --- | --- |
+| [M01A spatial scale — 2026-10-02](spatial-scale.md) | Independent extents, three scale bands, compact marks and retained cameras; engineering results, 14 actual 1920×1080 native captures, native actions, browser gameplay/capture and publishing/reload |
 | [M01 kingdom overview — 2026-10-01](kingdom-overview.md) | Known political/control layers, symbols/labels/banners, actual accounts and attention; full-suite result, final focused checks, nine native states at both sizes, publishing and browser gameplay/reload evidence |
 | [Movement plans — 2026-10-01](movement-plans.md) | Latest immediate destination taps, queued continuation, selected-unit End Turn and native action-harness checks; distinguishes the final focused checks from the preceding engine-change full suite and browser review |
 | [World army orders — 2026-10-01](world-army-orders.md) | World-level selection and regional entrance/departure orders; its Confirm Move flow is superseded by movement plans |
@@ -46,23 +50,20 @@ work before improving the map. [Documentation verification](documentation.md)
 and [implementation-plan verification](implementation-plan.md) describe the
 2026-09-26 planning baseline, including blockers that later work superseded.
 
-## Inherited limitations, last recorded 2026-10-01
+## Current and inherited limitations, last recorded 2026-10-02
 
-M01 reran the full suite and affected focused checks, refreshed native visual
-evidence, published, and exercised browser gameplay. These limits remain:
+M01A reran the full suite and refreshed native visual evidence. These limits
+remain:
 
-- The M01 full suite again has one failing
+- The M01A full suite again has one failing
   target: `k18_production_battle::four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`.
   It does not reach victory within 240 rounds. The 400-round continuity target
   passes in that run; one release profiling test remains intentionally ignored.
-- M01's published browser checks cover attention focus, immediate travel,
-  drag/zoom, selected-unit End Turn, actual receipts, world warnings and reload.
-  The final focused suite and captures cover the last display refinements;
-  the full suite ran immediately before those refinements.
-- Minimum native screenshots were reviewed at 1280 × 720. The in-app browser's
-  minimum-size override again produced a smaller upper-left image and black remainder;
-  minimum browser acceptance remains unverified. Native captures and normal
-  browser clicks do not establish that missing result.
+- Native operating-system rapid-click timing is not established. The final
+  headless native checks validate synthetic pointer frames and dispatched actions.
+- Historical 1280×720 native screenshots and the in-app browser's smaller
+  upper-left image/black remainder remain recorded in M01. Current acceptance
+  uses only actual 1920×1080; those historical results create no second target.
 - Physical-touch testing was waived for K18. No device or pinch result has since
   been established by these records. Keep touch-accessible controls and no-hover
   interaction in the implementation requirements; report the device limitation
@@ -71,6 +72,7 @@ evidence, published, and exercised browser gameplay. These limits remain:
   multi-army clipping, target-priority editing, small tactic/leader controls and
   aggregate-morale findings. They are existing issues to preserve or address
   when relevant, not prerequisites for every map milestone.
-- M01's review establishes specific rendered states and browser interactions.
-  It does not claim a first-time human playtest or the broader M05 early/developed
-  campaign acceptance; M01A and M02–M05 remain unstarted.
+- M01A's review establishes specific rendered states and automated application
+  actions. It does not claim a first-time human playtest or the broader M05
+  early/developed campaign acceptance. M01A is complete under that recorded
+  scope; M02–M05 remain unstarted.

@@ -195,6 +195,10 @@ impl Game {
             return;
         }
         match self.state.overlay {
+            Overlay::Help => {
+                self.state.overlay = self.help_return_overlay;
+                self.help_return_overlay = Overlay::None;
+            }
             Overlay::Kingdom => self.kingdom_back(),
             Overlay::CampaignEnd => {}
             Overlay::Settlement => self.settlement_back(),

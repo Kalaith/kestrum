@@ -3,7 +3,7 @@
 use super::*;
 use kestrum::{
     data::{economy::Habitation, world::MarkerLocation},
-    navigation::{place_map_labels, MapLabelCandidate},
+    navigation::{place_map_labels, MapLabelCandidate, HEIGHT, WIDTH},
 };
 use std::collections::BTreeMap;
 
@@ -28,9 +28,15 @@ pub(super) fn draw(
     }
     reserved.extend(
         ctx.navigation
+            .place_groups(&campaign.world, ctx.view)
+            .iter()
+            .map(|group| group.bounds()),
+    );
+    reserved.extend(
+        ctx.navigation
             .army_targets(&campaign.world, ctx.view, &campaign.armies)
             .into_iter()
-            .map(|target| target.bounds),
+            .map(|target| armies::display_bounds(ctx, &target)),
     );
     let placed = place_map_labels(candidates, targets, &reserved, ctx.view.camera.zoom());
     reserved.extend(placed.iter().map(|label| label.bounds));
@@ -75,7 +81,10 @@ fn kingdoms(
     reserved: &mut Vec<Rect>,
     exploration: Option<&MapExploration>,
 ) {
-    if ctx.navigation.scope() != MapScope::World || ctx.preferences.hide_labels {
+    if ctx.navigation.scope() != MapScope::World
+        || ctx.preferences.hide_labels
+        || ctx.view.band() == MapScaleBand::Detail
+    {
         return;
     }
     let (Some(view), Some(overview)) = (ctx.campaign_view, ctx.overview) else {
@@ -174,6 +183,23 @@ fn candidates(
             if ctx.preferences.hide_labels && !selected && !capital {
                 return None;
             }
+            let eligible = match ctx.view.band() {
+                MapScaleBand::Overview => {
+                    selected || capital || danger || region || habitation >= Habitation::City
+                }
+                MapScaleBand::Campaign => {
+                    selected
+                        || capital
+                        || danger
+                        || region
+                        || owned
+                        || habitation >= Habitation::Hamlet
+                }
+                MapScaleBand::Detail => true,
+            };
+            if !eligible {
+                return None;
+            }
             let identity = if capital {
                 format!("{} · {name}", ctx.data.map.text("capital"))
             } else {
@@ -196,21 +222,12 @@ fn candidates(
             } else {
                 30
             };
-            let minimum_zoom = if priority >= 80 || ctx.navigation.scope() != MapScope::World {
-                1.0
-            } else if owned || habitation >= Habitation::Town {
-                1.25
-            } else if habitation >= Habitation::Hamlet {
-                1.7
-            } else {
-                2.15
-            };
             Some(MapLabelCandidate {
                 selection: target.selection,
                 center: target.center,
                 width,
                 priority,
-                minimum_zoom,
+                minimum_zoom: 0.0,
             })
         })
         .collect();
@@ -229,7 +246,7 @@ fn kingdom_bounds(
     candidates
         .map(|at| {
             Rect::new(
-                (at.x - width * 0.5).clamp(12.0, 1268.0 - width),
+                (at.x - width * 0.5).clamp(12.0, WIDTH - 12.0 - width),
                 at.y,
                 width,
                 27.0,
@@ -237,7 +254,7 @@ fn kingdom_bounds(
         })
         .find(|rect| {
             rect.y >= 92.0
-                && rect.bottom() <= 572.0
+                && rect.bottom() <= HEIGHT - 160.0
                 && !reserved.iter().any(|reserved| reserved.overlaps(rect))
                 && !targets.iter().any(|target| target.bounds().overlaps(rect))
                 && targets
@@ -261,10 +278,10 @@ fn kingdom_bounds(
                             .screen_to_world(kestrum::navigation::MAP_RECT, point)
                             .unwrap_or(point);
                         exploration.is_none_or(|area| area.opacity(atlas) < 0.04)
-                            && ctx
-                                .data
-                                .map
-                                .is_atlas_land([atlas.x / 1280.0, atlas.y / 720.0])
+                            && ctx.data.map.is_atlas_land([
+                                atlas.x / ctx.view.extent().x,
+                                atlas.y / ctx.view.extent().y,
+                            ])
                     })
         })
 }

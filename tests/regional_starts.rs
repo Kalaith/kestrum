@@ -107,7 +107,7 @@ fn home_camera_and_region_round_trip_use_the_discovered_projection() {
         .iter()
         .all(|target| MAP_RECT.contains(target.bounds.center())));
     navigation.show_world(&mut view);
-    assert_eq!(view.camera.zoom(), 2.5);
+    assert_eq!(view.camera.zoom(), view.working_zoom());
     assert_eq!(navigation.selection(), Some(MapSelection::Marker(region)));
     let target = navigation
         .targets(&visible.world, &view)

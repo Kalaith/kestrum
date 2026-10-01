@@ -248,14 +248,7 @@ impl Game {
                 self.ending_saved = self.kingdom_ended();
                 self.invalidate_projection();
                 self.refresh_projection();
-                if let Some(projection) = &self.projection {
-                    if projection.world.markers.len() == 1 {
-                        self.focus_home();
-                    } else {
-                        self.navigation
-                            .frame_discovered(&projection.world, &mut self.view);
-                    }
-                }
+                self.focus_initial_home();
                 self.npc_delay = 0.0;
                 self.error = None;
                 self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));

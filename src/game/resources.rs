@@ -45,7 +45,7 @@ pub(super) async fn load(data: &GameData) -> Result<AssetManager, String> {
             .map(|size| (*size, common_text.as_str()))
             .collect();
         if key == "cinzel" {
-            samples.push((76, &data.presentation.title));
+            samples.push((88, &data.presentation.title));
             samples.extend(
                 data.presentation
                     .geography

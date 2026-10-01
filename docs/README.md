@@ -3,9 +3,12 @@
 Start with the [map playability plan](map-playability-plan.md) for new work and
 the [project README](../README.md) for implemented behavior and development
 commands. The current priority is a readable kingdom map, useful spatial
-decisions and visible consequences. M01's kingdom overview is implemented;
-M01A adds spatial scale and navigation at the sole 1920×1080 spec before M02.
-It is the next unfinished milestone. K01–K18 and B01–B07 describe completed
+decisions and visible consequences. M01's kingdom overview and M01A's spatial
+scale/navigation are complete under their recorded scope. M01A's
+[verification](verification/spatial-scale.md) records engineering checks, actual
+1920×1080 native/browser captures, automated native actions, browser gameplay,
+publishing and reload, with explicit inherited limits. M02 is next.
+K01–K18 and B01–B07 describe completed
 implementation work under their recorded scope.
 
 ## Reading order
@@ -33,7 +36,7 @@ Historical speculative wording does not override the current request or plan.
 | [07 Living places](07-living-places.md) | Growth, decline, occupation, refugees and local roles |
 | [08 Generations and succession](08-generations-and-succession.md) | Aging, recovery, households, heirs and continuity |
 | [09 History and content](09-history-and-content.md) | Knowledge, history retention, legacy and content scope |
-| [10 Interface and accessibility](10-interface-and-accessibility.md) | Current interaction baseline and target map composition |
+| [10 Interface and accessibility](10-interface-and-accessibility.md) | Implemented 1920×1080 composition, spatial navigation and remaining interface work |
 | [11 Simulation and data](11-simulation-and-data.md) | State ownership, commands, projections, content and saves |
 | [12 Delivery and validation](12-delivery-and-validation.md) | Required checks, evidence, publishing and completion |
 | [13 Decisions and open questions](13-decisions-and-open-questions.md) | Fixed constraints, current defaults and bounded remaining design choices |

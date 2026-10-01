@@ -76,7 +76,6 @@ impl HistoryRow {
 }
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
-    draw_rectangle(0.0, 0.0, 1280.0, 720.0, Color::new(0.02, 0.05, 0.05, 0.78));
     draw_rectangle(80.0, 38.0, 1120.0, 650.0, INK);
     let title = title(ctx);
     let title = truncate_text_to_width_ex(&title, 1056.0, ctx.font(), 28.0);

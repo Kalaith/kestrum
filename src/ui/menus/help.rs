@@ -1,4 +1,4 @@
-//! Short topic pages flow by wrapped height, keeping navigation clear at 720p.
+//! Short topic pages flow by wrapped height within the centered help sheet.
 use super::*;
 use macroquad_toolkit::ui::wrap_text_ex;
 
@@ -32,8 +32,10 @@ const PAGES: &[&[&str]] = &[
     &["help_households"],
     &["help_succession"],
     &["help_heirlooms"],
+    &["help_map_scales", "help_map_symbols", "help_map_contacts"],
 ];
 pub const HELP_PAGE_COUNT: usize = PAGES.len();
+pub const MAP_KEY_PAGE: usize = HELP_PAGE_COUNT - 1;
 
 pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     let legacy = ctx.state.campaign.is_some() && ctx.campaign_view.is_none();
@@ -44,8 +46,8 @@ pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     };
     let mut y = 223.0;
     for key in keys {
-        for line in wrap_text_ex(&ctx.text(key), 453.0, ctx.body_font(), 19.0) {
-            body(ctx, &line, vec2(414.0, y), 19.0, CREAM);
+        for line in wrap_text_ex(&ctx.text(key), 653.0, ctx.body_font(), 19.0) {
+            body(ctx, &line, vec2(314.0, y), 19.0, CREAM);
             y += 28.0;
         }
         y += 14.0;

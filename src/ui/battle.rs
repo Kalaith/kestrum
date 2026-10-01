@@ -128,7 +128,6 @@ pub fn prepare_text(ctx: &Context<'_>) {
 }
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
-    draw_rectangle(0.0, 0.0, 1280.0, 720.0, Color::new(0.02, 0.05, 0.05, 0.78));
     draw_rectangle(80.0, 38.0, 1120.0, 650.0, INK);
     text(
         ctx,

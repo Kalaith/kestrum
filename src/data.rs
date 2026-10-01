@@ -21,7 +21,7 @@ mod world_layout_validation;
 mod world_validation;
 
 mod presentation;
-pub use presentation::{GeographyLabel, PresentationData};
+pub use presentation::{GeographyLabel, MapCameraSettings, PresentationData};
 
 #[derive(Debug, Clone)]
 pub struct GameData {

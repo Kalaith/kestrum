@@ -6,7 +6,8 @@ use kestrum::{
         world::{MarkerId, MarkerLocation, RouteId, SiteId},
         GameData,
     },
-    engine::{apply, Actor, Command},
+    engine::{apply, project_map, Actor, Command},
+    navigation::{MapNavigation, MapScope, MapView},
     state::StrategicCampaign,
 };
 
@@ -59,11 +60,50 @@ fn new_layout_and_authored_crossings_survive_save_reload_and_orders() {
     let json = serde_json::to_vec(&current).unwrap();
     let mut loaded: StrategicCampaign = serde_json::from_slice(&json).unwrap();
     loaded.validate(&data).unwrap();
+    inspect_at_all_scales(&loaded, &data);
     apply(&mut current, &data, Actor::Player, Command::EndTurn).unwrap();
     apply(&mut loaded, &data, Actor::Player, Command::EndTurn).unwrap();
     assert_eq!(loaded, current);
     assert_eq!(loaded.world.markers, world.markers);
     assert_eq!(loaded.world.atlas_paths, world.atlas_paths);
+}
+
+/// Camera exploration is presentation only, including on historical layouts.
+fn inspect_at_all_scales(campaign: &StrategicCampaign, data: &GameData) {
+    use macroquad::prelude::vec2;
+    let bytes = serde_json::to_vec(campaign).unwrap();
+    let visible = project_map(campaign, campaign.player).unwrap();
+    let mut navigation = MapNavigation::configured(&data.presentation.map.camera);
+    let mut view = MapView::configured(&data.presentation.map.camera, MapScope::World);
+    let home = campaign.factions[&campaign.player].headquarters;
+    navigation.focus_army_site(&visible.world, home, &mut view);
+    let working = view;
+    navigation.toggle_overview(&visible.world, &mut view);
+    navigation.toggle_overview(&visible.world, &mut view);
+    assert_eq!(view, working);
+    for factor in [0.3, 2.0, 5.0] {
+        view.zoom(vec2(1100.0, 480.0), factor);
+        view.pan(vec2(-850.0, 250.0));
+        let groups = navigation.place_groups(&visible.world, &view);
+        for group in &groups {
+            assert_eq!(
+                navigation.pick_group_release(&visible.world, &view, group.center, group.center),
+                Some(group.clone())
+            );
+        }
+        for target in navigation.targets(&visible.world, &view) {
+            let picked = navigation.pick(&visible.world, &view, target.center);
+            if groups
+                .iter()
+                .any(|group| group.selections.contains(&target.selection))
+            {
+                assert_ne!(picked, Some(target.selection));
+            } else {
+                assert_eq!(picked, Some(target.selection));
+            }
+        }
+    }
+    assert_eq!(serde_json::to_vec(campaign).unwrap(), bytes);
 }
 
 fn old_layout(data: &GameData) -> StrategicCampaign {
@@ -111,6 +151,7 @@ fn missing_revision_decodes_as_original_without_moving_any_saved_site() {
     world.remove("atlas_paths");
     let loaded: StrategicCampaign = serde_json::from_value(value).unwrap();
     loaded.validate(&data).unwrap();
+    inspect_at_all_scales(&loaded, &data);
     assert_eq!(loaded, old);
     assert_eq!(
         loaded.world.site(SiteId(40)).unwrap().position,
@@ -120,6 +161,11 @@ fn missing_revision_decodes_as_original_without_moving_any_saved_site() {
         loaded.world.marker(MarkerId(77)).unwrap().position,
         [0.225, 0.54]
     );
+    let mut expected = old;
+    let mut actual = loaded;
+    apply(&mut expected, &data, Actor::Player, Command::EndTurn).unwrap();
+    apply(&mut actual, &data, Actor::Player, Command::EndTurn).unwrap();
+    assert_eq!(actual, expected);
 }
 
 #[test]

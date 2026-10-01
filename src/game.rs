@@ -30,6 +30,7 @@ mod settlement_capture;
 mod setup;
 mod siege;
 mod siege_capture;
+mod spatial_capture;
 mod storage;
 mod threat;
 mod tutorial;
@@ -91,6 +92,7 @@ pub struct Game {
     history_from_records: bool,
     battle_return: Option<Overlay>,
     help_page: usize,
+    help_return_overlay: Overlay,
     pending_save: Option<storage::PendingWrite>,
     retry_save_when_ready: bool,
     save_error: String,
@@ -114,6 +116,11 @@ impl Game {
             factions: data.rules.default_factions,
             ..ui::SetupView::default()
         };
+        let view = MapView::configured(
+            &data.presentation.map.camera,
+            kestrum::navigation::MapScope::World,
+        );
+        let navigation = MapNavigation::configured(&data.presentation.map.camera);
         let mut game = Self {
             save_exists: false,
             legacy_save_exists: !capture && slot_exists(&data.presentation.game_id, SAVE_SLOT),
@@ -147,6 +154,7 @@ impl Game {
             history_from_records: false,
             battle_return: None,
             help_page: 0,
+            help_return_overlay: Overlay::None,
             pending_save: None,
             retry_save_when_ready: false,
             save_error: String::new(),
@@ -155,8 +163,8 @@ impl Game {
             assets,
             state: GameState::default(),
             preferences: Preferences::default(),
-            view: MapView::default(),
-            navigation: MapNavigation::default(),
+            view,
+            navigation,
             gesture: TouchGesture::new(),
             origin: None,
             was_down: false,
@@ -182,6 +190,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_spatial(scene) {
+            return;
+        }
         if self.capture_overview(scene) {
             return;
         }
@@ -395,6 +406,7 @@ impl Game {
         self.overview_ui = ui::OverviewView::default();
         self.army = ui::ArmyView::default();
         self.help_page = 0;
+        self.help_return_overlay = Overlay::None;
         self.save_error.clear();
     }
 

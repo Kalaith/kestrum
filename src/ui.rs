@@ -47,7 +47,7 @@ pub use battle::{BattleTab, BattleView};
 pub use battlefield::{BattlefieldAction, BattlefieldView, TacticEdit};
 pub use history::{HistoryMode, HistoryView, RecordCategory, HISTORY_ROWS_PER_SCREEN};
 pub use kingdom::{KingdomIntent, KingdomView, KINGDOM_PAGE_SIZE};
-pub use menus::HELP_PAGE_COUNT;
+pub use menus::{HELP_PAGE_COUNT, MAP_KEY_PAGE};
 pub use movement::{
     draw_map_overlay as draw_move_map_overlay, panel_bounds as movement_panel_bounds,
 };
@@ -65,7 +65,7 @@ pub use siege::{SiegeExit, SiegeMode, SiegePanel, SIEGE_PAGE_SIZE};
 pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
 pub use tutorial::{bounds as tutorial_bounds, draw as draw_tutorial};
 pub use typography::prepare_dynamic_text;
-pub use world::banner_visible;
+pub use world::{banner_visible, important_target};
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
@@ -233,6 +233,9 @@ pub enum UiAction {
     ContinueUnsaved,
     EditSaveName(macroquad_toolkit::ui::text_entry::TextEntryAction),
     Zoom(f32),
+    Overview,
+    MapKey,
+    FocusMapGroup([f32; 2], f32),
     Recenter,
     ToggleLabels,
     ToggleContrast,
@@ -329,6 +332,7 @@ impl UiAction {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Context<'a> {
     pub overview: Option<&'a kestrum::engine::MapOverview>,
     pub overview_ui: &'a OverviewView,
@@ -381,7 +385,7 @@ impl Context<'_> {
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     if ctx.state.overlay == Overlay::Battlefield {
-        return battlefield::draw(ctx);
+        return centered_sheet(ctx, battlefield::draw);
     }
     atlas::draw_landscape(ctx);
     let action = if ctx.state.screen == Screen::Title {
@@ -389,56 +393,80 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         atlas::hud(ctx)
     };
-    if ctx.state.overlay == Overlay::Kingdom {
-        return kingdom::draw(ctx);
+    if ctx.state.overlay == Overlay::None {
+        return action;
     }
-    if ctx.state.overlay == Overlay::Setup {
-        return setup::draw(ctx);
-    }
-    if ctx.state.overlay == Overlay::CampaignEnd {
-        return campaign_end::draw(ctx);
-    }
-    if ctx.state.overlay == Overlay::Threat {
-        return threat::draw(ctx);
-    }
-    if ctx.state.overlay == Overlay::Siege {
-        siege::draw(ctx)
-    } else if ctx.state.overlay == Overlay::Settlement {
-        settlement::draw(ctx)
-    } else if ctx.state.overlay == Overlay::Saves {
-        saves::draw(ctx)
-    } else if ctx.state.overlay == Overlay::History {
-        history::draw(ctx)
-    } else if ctx.state.overlay == Overlay::Battle {
-        battle::draw(ctx)
-    } else if ctx.state.overlay == Overlay::Armies {
-        army::draw(ctx)
-    } else if matches!(ctx.state.overlay, Overlay::MoveGroup | Overlay::MoveReview) {
-        movement::draw(ctx)
-    } else if ctx.state.overlay == Overlay::SaveRecovery {
-        saves::recovery(ctx, ctx.save_error)
-    } else if ctx.state.overlay != Overlay::None {
-        menus::overlay(ctx)
-    } else {
-        action
+    centered_sheet(ctx, draw_sheet)
+}
+
+/// Management content has a fixed pixel size within the larger map canvas.
+/// Translate both the toolkit camera and pointer; never enlarge sheet controls.
+fn centered_sheet(
+    ctx: &Context<'_>,
+    draw: impl FnOnce(&Context<'_>) -> Option<UiAction>,
+) -> Option<UiAction> {
+    use kestrum::navigation::{HEIGHT, WIDTH};
+    use macroquad_toolkit::ui::VirtualUi;
+    draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, Color::new(0.02, 0.05, 0.05, 0.78));
+    let offset = vec2((WIDTH - 1280.0) * 0.5, (HEIGHT - 720.0) * 0.5);
+    let mut camera = VirtualUi::new(WIDTH, HEIGHT).camera();
+    camera.target -= offset;
+    push_camera_state();
+    set_camera(&camera);
+    let local = Context {
+        pointer: Pointer {
+            position: ctx.pointer.position - offset,
+            ..ctx.pointer
+        },
+        origin: ctx.origin.map(|origin| origin - offset),
+        ..*ctx
+    };
+    let action = draw(&local);
+    pop_camera_state();
+    action
+}
+
+fn draw_sheet(ctx: &Context<'_>) -> Option<UiAction> {
+    match ctx.state.overlay {
+        Overlay::Kingdom => kingdom::draw(ctx),
+        Overlay::Setup => setup::draw(ctx),
+        Overlay::CampaignEnd => campaign_end::draw(ctx),
+        Overlay::Threat => threat::draw(ctx),
+        Overlay::Siege => siege::draw(ctx),
+        Overlay::Settlement => settlement::draw(ctx),
+        Overlay::Saves => saves::draw(ctx),
+        Overlay::History => history::draw(ctx),
+        Overlay::Battle => battle::draw(ctx),
+        Overlay::Armies => army::draw(ctx),
+        Overlay::MoveGroup | Overlay::MoveReview => movement::draw(ctx),
+        Overlay::SaveRecovery => saves::recovery(ctx, ctx.save_error),
+        _ => menus::overlay(ctx),
     }
 }
 
-pub const FEEDBACK: Rect = Rect::new(328.0, 628.0, 642.0, 82.0);
+pub fn feedback_bounds(state: &GameState) -> Rect {
+    let y = if state.screen == Screen::Campaign && state.overlay == Overlay::None {
+        830.0
+    } else {
+        900.0
+    };
+    Rect::new(560.0, y, 800.0, 82.0)
+}
 
 pub fn feedback(ctx: &Context<'_>, message: &str) -> Option<UiAction> {
     use components::*;
+    let bounds = feedback_bounds(ctx.state);
     draw_rectangle(
-        FEEDBACK.x,
-        FEEDBACK.y,
-        FEEDBACK.w,
-        FEEDBACK.h,
+        bounds.x,
+        bounds.y,
+        bounds.w,
+        bounds.h,
         Color::new(0.07, 0.12, 0.12, 0.98),
     );
-    paragraph(ctx, message, vec2(346.0, 653.0), 500.0);
+    paragraph(ctx, message, vec2(bounds.x + 18.0, bounds.y + 25.0), 650.0);
     if button(
         ctx,
-        Rect::new(852.0, 646.0, 108.0, 48.0),
+        Rect::new(bounds.right() - 118.0, bounds.y + 18.0, 108.0, 48.0),
         &ctx.text("close"),
         true,
         false,

@@ -61,6 +61,7 @@ impl Game {
             self.navigation.show_world(&mut self.view);
             self.navigation.clear_selection();
             self.view.reset();
+            self.apply(UiAction::Overview);
             self.notice = None;
             return true;
         }
@@ -97,10 +98,20 @@ impl Game {
         self.navigation.show_world(&mut self.view);
         self.navigation.clear_selection();
         self.view.reset();
+        self.apply(UiAction::Overview);
         self.overview_ui.expanded = scene == "overview_urgent";
         if scene == "overview_region" {
             self.enter_region(fixture.region);
             self.view.reset();
+            let position = self
+                .projection
+                .as_ref()
+                .unwrap()
+                .world
+                .site(fixture.threat)
+                .unwrap()
+                .position;
+            self.view.focus(position, 1.6);
         }
         if scene == "overview_attention" {
             self.apply(UiAction::FocusAttention(engine::AttentionTarget::Site(

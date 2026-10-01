@@ -1,6 +1,6 @@
 # Map playability implementation plan
 
-Updated 2026-10-01. **Status: M01 complete with recorded validation limits; M01A spatial scale is next and unstarted.**
+Updated 2026-10-02. **Status: M01 and M01A complete under their recorded scope; M02 is next.**
 
 Kestrum needs a map that explains the kingdom, presents useful decisions, and
 shows their consequences. This is the active implementation sequence following
@@ -12,7 +12,7 @@ The user requested this plan and the documentation reconciliation. M01's
 implementation decisions are recorded below and in the owning chapters;
 [verification](verification/kingdom-overview.md) records its scoped acceptance
 and inherited limits. The subsequent request for a more spacious world adds
-M01A before M02. This update is a plan only: M01A and M02–M05 are unstarted.
+M01A before M02. M01A implementation and its scoped validation are recorded in [spatial scale verification](verification/spatial-scale.md). M02–M05 remain unstarted.
 Ordinary design tuning is resolved during implementation and recorded in the
 owning chapter.
 
@@ -33,11 +33,11 @@ facts; this work connects them to play and improves the geography.
 
 ## Spatial scale review
 
-The follow-up review inspected source at `ce22c6a` and the existing developed
+The follow-up review inspected source at `ce22c6a` and the then-existing developed
 world and minimum-size regional captures. It did not run a new gameplay session.
-The user's concern is supported by these current presentation choices:
+These findings describe the pre-M01A implementation that motivated the work:
 
-| Current behavior | Effect on perceived scale |
+| Behavior at the review | Effect on perceived scale |
 | --- | --- |
 | `navigation.rs` uses the same 1280×720 extent for the UI and normalized map positions; zoom is limited to 1–3. | At minimum zoom, the entire atlas occupies one screen and cannot pan. |
 | Developed-save loading calls `frame_discovered`; focus uses fixed world/regional zoom values. | Loading compresses the discovered realm into view, while recentering can abruptly magnify a small neighborhood. |
@@ -57,7 +57,7 @@ Existing images: [developed world](verification/ui_midgame_map.png) and
 
 The user's correction on 2026-10-01 sets **1920×1080 as the sole design and
 acceptance resolution**, including the logical UI canvas. It replaces the
-previous 1920×1080/1280×720 target pair. The current 1280×720 logical layout must
+previous 1920×1080/1280×720 target pair. The former 1280×720 logical layout must
 be migrated and recomposed. Increasing the window size while scaling the old
 layout by 1.5 would preserve the oversized controls and cramped composition.
 
@@ -190,14 +190,14 @@ and tap equivalents. Color is always paired with shape, symbol or text.
 ## Delivery sequence
 
 Each milestone is independently useful. Finish its validation and commit before
-starting the next major change. M01 is complete; M01A is the next unfinished
-milestone. Its camera and information hierarchy should settle before M02 adds
-further map actions and route detail.
+starting the next major change. M01 and M01A are complete under their recorded
+scope. M02 is the next unfinished milestone, adding map actions and route detail
+to the implemented camera and information hierarchy.
 
 | Milestone | Result | Dependency | Status |
 | --- | --- | --- | --- |
 | M01 | Readable kingdom overview and truthful map information | Reconciled baseline `3073c18` | Complete; [evidence and limits](verification/kingdom-overview.md) |
-| M01A | Spacious navigable geography, useful camera defaults and detail appropriate to scale | M01 | Not started; next |
+| M01A | Spacious navigable geography, useful camera defaults and detail appropriate to scale | M01 | Complete; [evidence and limits](verification/spatial-scale.md) |
 | M02 | Orders, common actions and seasonal consequences stay connected to the map | M01A | Not started |
 | M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | Not started |
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
@@ -277,6 +277,37 @@ browser checks are recorded in [M01 verification](verification/kingdom-overview.
 including the minimum browser limitation.
 
 ### M01A Spatial scale and map navigation
+
+**Complete, 2026-10-02, under the recorded headless review scope.**
+
+Implementation uses a 1920×1080 logical canvas, a 5280×2970 world and
+3360×1890 regional extent at working zoom 1.0. The JSON presentation settings
+validate aspect ratio, extents and separated band thresholds. Overview enters
+at 0.68 and exits at 0.78; Detail enters at 1.45 and exits at 1.30. The maximum
+zoom is 2.4. Authored normalized geometry and physical route rules are unchanged.
+
+Overview/Return View remembers the previous camera separately for each scope.
+New and loaded campaigns focus the physical home, opening its region when needed. Selection, management,
+title return and seasonal actions retain context; Recenter and Attention focus
+explicitly. Compact places retain 48-pixel targets. Crowded places and nearby
+forces provide shared visible focus targets; regional force counts distinguish
+regional aggregation from co-located armies. Exact force details stay selected.
+
+The HUD, title, inspector and accounts are composed directly at 1920×1080.
+Management content keeps its pixel sizes in centered sheets with matching
+pointer translation. Map Key holds symbol meanings and navigation guidance.
+Historical smaller-size captures and inherited battlefield limitations remain
+recorded. See [verification](verification/spatial-scale.md) for measured results.
+
+Formatting, strict Clippy, source-size checks and the final 14-scene native
+capture batch passed. All captures measure 1920×1080. The full suite retains
+one inherited production-victory failure and one intentionally ignored profiling
+test. Automated native actions, background browser gameplay and publishing/reload
+passed, including a complete 1920×1080 browser capture. Hardware touch and native
+operating-system rapid-click timing remain unverified; no broad human playtest
+is claimed.
+
+The following sequence defines the milestone's acceptance scope:
 
 Deliver the scale contract above before adding more permanent map information.
 Implement in this order within the milestone:

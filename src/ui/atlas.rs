@@ -2,18 +2,20 @@
 
 use super::{components::*, selection, world, Context, UiAction};
 use kestrum::{
-    navigation::{MapNavigation, MapScope, MapView, HEIGHT, WIDTH},
+    navigation::{MapNavigation, MapScaleBand, MapScope, MapView, HEIGHT, WIDTH},
     state::{world::CampaignWorld, Overlay, Screen},
 };
 use macroquad::prelude::*;
 
-const MENU: Rect = Rect::new(1148.0, 20.0, 108.0, 48.0);
-const ZOOM_OUT: Rect = Rect::new(24.0, 646.0, 48.0, 48.0);
-const ZOOM_IN: Rect = Rect::new(78.0, 646.0, 48.0, 48.0);
-const RECENTER: Rect = Rect::new(138.0, 646.0, 144.0, 48.0);
-const END_TURN: Rect = Rect::new(1072.0, 646.0, 184.0, 48.0);
-const STEP_NPC: Rect = Rect::new(954.0, 646.0, 108.0, 48.0);
-const KINGDOM_DECISION: Rect = Rect::new(928.0, 646.0, 328.0, 48.0);
+const MENU: Rect = Rect::new(WIDTH - 132.0, 24.0, 108.0, 48.0);
+const ZOOM_OUT: Rect = Rect::new(24.0, HEIGHT - 72.0, 48.0, 48.0);
+const ZOOM_IN: Rect = Rect::new(80.0, HEIGHT - 72.0, 48.0, 48.0);
+const OVERVIEW: Rect = Rect::new(144.0, HEIGHT - 72.0, 148.0, 48.0);
+const RECENTER: Rect = Rect::new(304.0, HEIGHT - 72.0, 148.0, 48.0);
+const MAP_KEY: Rect = Rect::new(464.0, HEIGHT - 72.0, 132.0, 48.0);
+const END_TURN: Rect = Rect::new(WIDTH - 208.0, HEIGHT - 72.0, 184.0, 48.0);
+const STEP_NPC: Rect = Rect::new(WIDTH - 326.0, HEIGHT - 72.0, 108.0, 48.0);
+const KINGDOM_DECISION: Rect = Rect::new(WIDTH - 352.0, HEIGHT - 72.0, 328.0, 48.0);
 
 pub fn map_controls_contain(
     point: Vec2,
@@ -26,7 +28,9 @@ pub fn map_controls_contain(
         MENU,
         ZOOM_OUT,
         ZOOM_IN,
+        OVERVIEW,
         RECENTER,
+        MAP_KEY,
         END_TURN,
         STEP_NPC,
         KINGDOM_DECISION,
@@ -49,14 +53,24 @@ pub fn map_controls_contain(
 
 pub fn draw_landscape(ctx: &Context<'_>) {
     if let Some(texture) = ctx.assets.get_texture("atlas") {
-        let corner = ctx.view.project(Vec2::ZERO);
+        let campaign = ctx.state.screen == Screen::Campaign;
+        let corner = if campaign {
+            ctx.view.project(Vec2::ZERO)
+        } else {
+            Vec2::ZERO
+        };
+        let size = if campaign {
+            ctx.view.extent() * ctx.view.camera.zoom()
+        } else {
+            vec2(WIDTH, HEIGHT)
+        };
         draw_texture_ex(
             texture,
             corner.x,
             corner.y,
             WHITE,
             DrawTextureParams {
-                dest_size: Some(vec2(WIDTH, HEIGHT) * ctx.view.camera.zoom()),
+                dest_size: Some(size),
                 ..Default::default()
             },
         );
@@ -93,7 +107,6 @@ pub fn draw_landscape(ctx: &Context<'_>) {
         for row in 0..100 {
             let opacity = (1.0 - row as f32 / 100.0).powi(2) * 0.82;
             let shade = Color::new(INK.r, INK.g, INK.b, opacity);
-            draw_rectangle(0.0, row as f32, WIDTH, 1.0, shade);
             draw_rectangle(0.0, HEIGHT - row as f32 - 1.0, WIDTH, 1.0, shade);
         }
         world::draw(ctx, exploration.as_ref());
@@ -102,10 +115,8 @@ pub fn draw_landscape(ctx: &Context<'_>) {
 
 fn geography(ctx: &Context<'_>) {
     for label in &ctx.data.geography {
-        let at = ctx
-            .view
-            .project(vec2(label.position[0] * WIDTH, label.position[1] * HEIGHT));
-        if !(100.0..620.0).contains(&at.y) {
+        let at = ctx.view.project_normalized(label.position);
+        if !(100.0..HEIGHT - 160.0).contains(&at.y) {
             continue;
         }
         let width = measure_text(&label.name, ctx.font(), label.size as u16, 1.0).width;
@@ -135,13 +146,30 @@ fn geography(ctx: &Context<'_>) {
 
 pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
+    // Paint after the map layers so bright peaks and political ink cannot
+    // wash out the header. The fade keeps the landscape continuous below it.
+    for row in 0..140 {
+        let opacity = (1.0 - (row as f32 / 140.0).powi(2)) * 0.88;
+        draw_rectangle(
+            0.0,
+            row as f32,
+            WIDTH,
+            1.0,
+            Color::new(INK.r, INK.g, INK.b, opacity),
+        );
+    }
     let overview_action = super::overview::draw(ctx);
     if ctx.navigation.scope() == MapScope::World {
         emblem(vec2(44.0, 43.0), 19.0);
         text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
         body(ctx, &ctx.data.title, vec2(81.0, 60.0), 16.0, BRASS);
     }
-    if let Some(campaign) = &ctx.state.campaign {
+    if let Some(campaign) = ctx
+        .state
+        .campaign
+        .as_ref()
+        .filter(|_| super::tutorial_bounds(ctx.state).is_none())
+    {
         let season = &ctx.data.seasons[campaign.season_index()];
         centered(
             ctx,
@@ -150,7 +178,7 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
                 ctx.text("year"),
                 campaign.year(ctx.data.start_year)
             ),
-            vec2(640.0, 36.0),
+            vec2(WIDTH * 0.5, 36.0),
             21.0,
             CREAM,
         );
@@ -175,7 +203,13 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         let fitted =
             macroquad_toolkit::ui::truncate_text_to_width_ex(&status, 740.0, ctx.body_font(), 18.0);
         let width = measure_text(&fitted, ctx.body_font(), 18, 1.0).width;
-        body(ctx, &fitted, vec2(640.0 - width * 0.5, 59.0), 18.0, CREAM);
+        body(
+            ctx,
+            &fitted,
+            vec2(WIDTH * 0.5 - width * 0.5, 59.0),
+            18.0,
+            CREAM,
+        );
     }
     if ctx.navigation.selection().is_none() && !ctx.overview_ui.expanded {
         compass(ctx);
@@ -183,8 +217,8 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     // A narrow dark wash preserves contrast without reserving a panel for the map.
     draw_rectangle(
         18.0,
-        640.0,
-        270.0,
+        HEIGHT - 78.0,
+        816.0,
         60.0,
         Color::new(INK.r, INK.g, INK.b, 0.72),
     );
@@ -192,12 +226,34 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         (MENU, "menu", UiAction::Open(Overlay::Menu)),
         (ZOOM_OUT, "zoom_out", UiAction::Zoom(1.0 / 1.25)),
         (ZOOM_IN, "zoom_in", UiAction::Zoom(1.25)),
+        (
+            OVERVIEW,
+            if ctx.view.overview_active() {
+                "map_return_view"
+            } else {
+                "map_overview"
+            },
+            UiAction::Overview,
+        ),
         (RECENTER, "reset_view", UiAction::Recenter),
+        (MAP_KEY, "map_key", UiAction::MapKey),
     ] {
         if button(ctx, rect, &ctx.text(key), active, key == "end_turn") {
             return Some(intent);
         }
     }
+    let band = match ctx.view.band() {
+        MapScaleBand::Overview => "map_band_overview",
+        MapScaleBand::Campaign => "map_band_campaign",
+        MapScaleBand::Detail => "map_band_detail",
+    };
+    body(
+        ctx,
+        &ctx.text(band),
+        vec2(616.0, HEIGHT - 40.0),
+        18.0,
+        CREAM,
+    );
     let moving = ctx.movement.stage == super::MoveStage::Map;
     let phase_action = phase_controls(ctx, active);
     let navigation_action = world::navigation(ctx);
@@ -246,9 +302,9 @@ fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
     };
     if !view.player_turn {
         draw_rectangle(
-            300.0,
-            640.0,
-            640.0,
+            860.0,
+            HEIGHT - 78.0,
+            680.0,
             60.0,
             macroquad_toolkit::colors::with_alpha(INK, 0.88),
         );
@@ -257,11 +313,17 @@ fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
         } else {
             "npc_phase"
         };
-        body(ctx, &ctx.text(phase), vec2(318.0, 663.0), 18.0, CREAM);
+        body(
+            ctx,
+            &ctx.text(phase),
+            vec2(878.0, HEIGHT - 55.0),
+            18.0,
+            CREAM,
+        );
         body(
             ctx,
             &ctx.text("npc_prototype"),
-            vec2(318.0, 686.0),
+            vec2(878.0, HEIGHT - 32.0),
             16.0,
             CREAM,
         );
@@ -282,7 +344,7 @@ fn phase_controls(ctx: &Context<'_>, active: bool) -> Option<UiAction> {
 }
 
 fn compass(ctx: &Context<'_>) {
-    let center = vec2(1212.0, 563.0);
+    let center = vec2(WIDTH - 68.0, HEIGHT - 216.0);
     draw_circle_lines(center.x, center.y, 22.0, 1.0, CREAM);
     draw_triangle(
         center + vec2(0.0, -31.0),

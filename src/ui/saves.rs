@@ -76,7 +76,6 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
 }
 
 fn sheet(ctx: &Context<'_>, title: &str) {
-    draw_rectangle(0.0, 0.0, 1280.0, 720.0, Color::new(0.02, 0.05, 0.05, 0.70));
     draw_rectangle(108.0, 44.0, 1064.0, 632.0, INK);
     text(ctx, &ctx.text(title), vec2(144.0, 100.0), 30.0, CREAM);
     draw_line(144.0, 125.0, 1136.0, 125.0, 1.0, BRASS);

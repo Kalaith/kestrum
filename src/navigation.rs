@@ -1,7 +1,11 @@
 //! Bounded atlas navigation and stable selection in shared logical pixels.
 
 mod armies;
-pub use armies::ArmyTarget;
+pub use armies::{ArmyGrouping, ArmyTarget};
+mod view;
+pub use view::{MapScaleBand, MapView};
+mod groups;
+pub use groups::MapGroup;
 mod exploration;
 pub use exploration::MapExploration;
 mod labels;
@@ -11,84 +15,16 @@ use crate::{
     data::world::{MarkerId, MarkerLocation, SiteId},
     state::world::CampaignWorld,
 };
-use macroquad::prelude::{vec2, Rect, Vec2};
-use macroquad_toolkit::camera::{CameraBounds, CameraBoundsPolicy, CameraTransform};
-use macroquad_toolkit::input::gestures::{TouchGestureFrame, DRAG_THRESHOLD};
+use macroquad::prelude::{Rect, Vec2};
+
+use macroquad_toolkit::input::gestures::DRAG_THRESHOLD;
 use std::collections::BTreeMap;
 
-pub const WIDTH: f32 = 1280.0;
-pub const HEIGHT: f32 = 720.0;
+pub const WIDTH: f32 = 1920.0;
+pub const HEIGHT: f32 = 1080.0;
 pub const MAP_RECT: Rect = Rect::new(0.0, 0.0, WIDTH, HEIGHT);
-pub const ZOOM_LIMITS: (f32, f32) = (1.0, 3.0);
+
 pub const MAP_TAP_SIZE: f32 = 48.0;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct MapView {
-    pub camera: CameraTransform,
-}
-
-impl Default for MapView {
-    fn default() -> Self {
-        Self {
-            camera: CameraTransform::new(vec2(WIDTH / 2.0, HEIGHT / 2.0), 1.0)
-                .expect("fixed Kestrum map dimensions are valid"),
-        }
-    }
-}
-
-impl MapView {
-    pub fn focus(&mut self, position: [f32; 2], zoom: f32) {
-        if !position.iter().all(|value| value.is_finite()) || !zoom.is_finite() {
-            return;
-        }
-        self.camera = CameraTransform::new(
-            vec2(position[0] * WIDTH, position[1] * HEIGHT),
-            zoom.clamp(ZOOM_LIMITS.0, ZOOM_LIMITS.1),
-        )
-        .expect("finite position and positive zoom");
-        self.constrain();
-    }
-
-    pub fn reset(&mut self) {
-        *self = Self::default();
-    }
-
-    pub fn pan(&mut self, delta: Vec2) {
-        self.camera.pan_screen(delta);
-        self.constrain();
-    }
-
-    pub fn zoom(&mut self, anchor: Vec2, factor: f32) {
-        self.camera.zoom_at(MAP_RECT, anchor, factor, ZOOM_LIMITS);
-        self.constrain();
-    }
-
-    pub fn gesture(&mut self, frame: &TouchGestureFrame) {
-        self.camera.apply_gesture(MAP_RECT, frame, ZOOM_LIMITS);
-        self.constrain();
-    }
-
-    pub fn project(&self, point: Vec2) -> Vec2 {
-        self.camera
-            .world_to_screen(MAP_RECT, point)
-            .unwrap_or(point)
-    }
-
-    /// Authored positions are normalized within their own world or regional map.
-    pub fn project_normalized(&self, position: [f32; 2]) -> Vec2 {
-        self.project(vec2(position[0] * WIDTH, position[1] * HEIGHT))
-    }
-
-    fn constrain(&mut self) {
-        // Restrict the center by the visible half-extents: no blank edges at any zoom.
-        let half = vec2(WIDTH, HEIGHT) / (2.0 * self.camera.zoom());
-        self.camera.constrain(
-            MAP_RECT,
-            CameraBounds::new(half, vec2(WIDTH, HEIGHT) - half),
-            CameraBoundsPolicy::TargetInside,
-        );
-    }
-}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum MapScope {
@@ -133,6 +69,27 @@ pub struct MapNavigation {
 }
 
 impl MapNavigation {
+    pub fn configured(settings: &crate::data::MapCameraSettings) -> Self {
+        Self {
+            world_view: MapView::configured(settings, MapScope::World),
+            ..Self::default()
+        }
+    }
+
+    /// Overview is explicit and restores the working camera independently per scope.
+    pub fn toggle_overview(&mut self, world: &CampaignWorld, view: &mut MapView) {
+        let positions: Vec<_> = match self.scope {
+            MapScope::World => world.markers.iter().map(|marker| marker.position).collect(),
+            MapScope::Region(region) => world
+                .sites
+                .iter()
+                .filter(|site| site.marker == region)
+                .map(|site| site.position)
+                .collect(),
+        };
+        view.toggle_overview(&positions);
+    }
+
     pub fn scope(&self) -> MapScope {
         self.scope
     }
@@ -146,8 +103,8 @@ impl MapNavigation {
     }
 
     pub fn reset(&mut self, view: &mut MapView) {
-        *self = Self::default();
-        view.reset();
+        *self = Self::configured(&view.settings);
+        *view = self.world_view;
     }
 
     /// Invalid or off-scope identities leave the current selection intact.
@@ -178,13 +135,30 @@ impl MapNavigation {
         if self.scope != MapScope::World {
             return Err("Return to the World Map before entering another region.".into());
         }
-        if !world.markers.iter().any(|marker| {
-            marker.id == id && matches!(marker.location, MarkerLocation::Region { .. })
-        }) {
+        let Some(marker) = world.marker(id) else {
             return Err("That world location does not contain a regional map.".into());
-        }
+        };
+        let MarkerLocation::Region {
+            sites, entrances, ..
+        } = &marker.location
+        else {
+            return Err("That world location does not contain a regional map.".into());
+        };
         self.world_view = *view;
-        *view = self.region_views.get(&id).copied().unwrap_or_default();
+        *view = self.region_views.get(&id).copied().unwrap_or_else(|| {
+            let mut initial = MapView::configured(&self.world_view.settings, MapScope::Region(id));
+            // The caller supplies known geography. A new region can have only
+            // one visible entrance outside the middle of its larger extent.
+            if let Some(site) = entrances
+                .iter()
+                .map(|entry| entry.site)
+                .chain(sites.iter().copied())
+                .find_map(|site| world.site(site))
+            {
+                initial.focus(site.position, initial.working_zoom());
+            }
+            initial
+        });
         self.scope = MapScope::Region(id);
         self.selection = None;
         Ok(())
@@ -239,8 +213,14 @@ impl MapNavigation {
         if !logical_point.is_finite() || !MAP_RECT.contains(logical_point) {
             return None;
         }
+        let grouped = self.place_groups(world, view);
         self.targets(world, view)
             .into_iter()
+            .filter(|target| {
+                !grouped
+                    .iter()
+                    .any(|group| group.selections.contains(&target.selection))
+            })
             .filter(|target| target.bounds().contains(logical_point))
             .min_by(|a, b| {
                 a.center

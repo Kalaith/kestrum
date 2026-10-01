@@ -17,6 +17,8 @@ impl Game {
         }
         let prepared = campaign::generate(&self.data).expect("valid developed review campaign");
         self.finish_load(Ok(Campaign::Strategic(Box::new(prepared))));
+        self.navigation.show_world(&mut self.view);
+        self.navigation.clear_selection();
         self.notice = None;
         match scene {
             "midgame_army" => {

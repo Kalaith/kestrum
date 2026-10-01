@@ -19,9 +19,9 @@ pub fn bounds(state: &GameState) -> Option<Rect> {
         return None;
     }
     match state.overlay {
-        Overlay::None => Some(Rect::new(244.0, 8.0, 888.0, 80.0)),
+        Overlay::None => Some(Rect::new(400.0, 24.0, 1120.0, 64.0)),
         Overlay::Armies | Overlay::MoveGroup | Overlay::MoveReview => {
-            Some(Rect::new(92.0, 40.0, 1096.0, 56.0))
+            Some(Rect::new(412.0, 220.0, 1096.0, 56.0))
         }
         _ => None,
     }

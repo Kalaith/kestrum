@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MapPresentation {
+    pub camera: MapCameraSettings,
     pub land: Vec<Vec<[f32; 2]>>,
     pub water: Vec<Vec<[f32; 2]>>,
     pub text: BTreeMap<String, String>,
@@ -13,6 +14,7 @@ pub struct MapPresentation {
 
 impl MapPresentation {
     pub fn validate(&self) -> Result<(), String> {
+        self.camera.validate()?;
         if self.land.is_empty()
             || self.land.iter().chain(&self.water).any(|polygon| {
                 polygon.len() < 3
@@ -60,6 +62,76 @@ impl MapPresentation {
 
     pub fn text<'a>(&'a self, key: &'a str) -> &'a str {
         self.text.get(key).map(String::as_str).unwrap_or(key)
+    }
+}
+
+/// Presentation distances are independent of route costs and saved geography.
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MapCameraSettings {
+    pub world_extent: [f32; 2],
+    pub region_extent: [f32; 2],
+    pub working_zoom: f32,
+    pub maximum_zoom: f32,
+    pub overview_enter: f32,
+    pub overview_exit: f32,
+    pub detail_enter: f32,
+    pub detail_exit: f32,
+    pub army_group_distance: f32,
+}
+
+impl Default for MapCameraSettings {
+    fn default() -> Self {
+        Self {
+            world_extent: [5280.0, 2970.0],
+            region_extent: [3360.0, 1890.0],
+            working_zoom: 1.0,
+            maximum_zoom: 2.4,
+            overview_enter: 0.68,
+            overview_exit: 0.78,
+            detail_enter: 1.45,
+            detail_exit: 1.30,
+            army_group_distance: 88.0,
+        }
+    }
+}
+
+impl MapCameraSettings {
+    fn validate(&self) -> Result<(), String> {
+        let values = [
+            self.working_zoom,
+            self.maximum_zoom,
+            self.overview_enter,
+            self.overview_exit,
+            self.detail_enter,
+            self.detail_exit,
+            self.army_group_distance,
+        ];
+        if values
+            .iter()
+            .any(|value| !value.is_finite() || *value <= 0.0)
+            || [self.world_extent, self.region_extent]
+                .iter()
+                .any(|extent| {
+                    extent.iter().any(|value| !value.is_finite())
+                        || extent[0] < 1920.0
+                        || extent[1] < 1080.0
+                        || (extent[0] / extent[1] - 16.0 / 9.0).abs() > 0.001
+                        || 1920.0 / extent[0] > self.overview_enter
+                        || 1080.0 / extent[1] > self.overview_enter
+                })
+            || !(self.overview_enter < self.overview_exit
+                && self.overview_exit < self.working_zoom
+                && self.working_zoom < self.detail_exit
+                && self.detail_exit < self.detail_enter
+                && self.detail_enter < self.maximum_zoom)
+            || !(48.0..=160.0).contains(&self.army_group_distance)
+        {
+            return Err(
+                "map_presentation.json: invalid map extent, zoom bands or grouping distance".into(),
+            );
+        }
+        Ok(())
     }
 }
 

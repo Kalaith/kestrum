@@ -7,10 +7,10 @@ use kestrum::{
 };
 use macroquad::prelude::*;
 mod help;
-pub use help::HELP_PAGE_COUNT;
+pub use help::{HELP_PAGE_COUNT, MAP_KEY_PAGE};
 
 pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
-    for column in 0..1280 {
+    for column in 0..WIDTH as i32 {
         let fraction = column as f32 / WIDTH;
         let alpha = (0.96 - fraction * 0.85).clamp(0.20, 0.96);
         draw_rectangle(
@@ -21,14 +21,14 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
             Color::new(0.035, 0.08, 0.08, alpha),
         );
     }
-    emblem(vec2(322.0, 150.0), 40.0);
-    centered(ctx, &ctx.data.title, vec2(322.0, 264.0), 76.0, CREAM);
-    horizontal_rule(vec2(322.0, 291.0), 207.0);
+    emblem(vec2(480.0, 258.0), 48.0);
+    centered(ctx, &ctx.data.title, vec2(480.0, 382.0), 88.0, CREAM);
+    horizontal_rule(vec2(480.0, 414.0), 236.0);
     let subtitle_width = measure_text(&ctx.data.subtitle, ctx.body_font(), 23, 1.0).width;
     body(
         ctx,
         &ctx.data.subtitle,
-        vec2(322.0 - subtitle_width * 0.5, 325.0),
+        vec2(480.0 - subtitle_width * 0.5, 454.0),
         23.0,
         CREAM,
     );
@@ -42,7 +42,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
         ("credits", UiAction::Open(Overlay::Credits), true),
     ];
     for (index, (key, action, enabled)) in entries.into_iter().enumerate() {
-        let rect = Rect::new(178.0, 353.0 + index as f32 * 51.0, 288.0, 48.0);
+        let rect = Rect::new(318.0, 502.0 + index as f32 * 60.0, 324.0, 52.0);
         let primary = if can_continue {
             key == "continue"
         } else {
@@ -55,7 +55,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
             body(
                 ctx,
                 &ctx.text("no_save"),
-                vec2(479.0, rect.y + 30.0),
+                vec2(662.0, rect.y + 30.0),
                 16.0,
                 MUTED,
             );
@@ -64,7 +64,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     #[cfg(not(target_arch = "wasm32"))]
     if button(
         ctx,
-        Rect::new(178.0, 608.0, 288.0, 48.0),
+        Rect::new(318.0, 802.0, 324.0, 52.0),
         &ctx.text("quit"),
         active,
         false,
@@ -74,7 +74,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     if ctx.legacy_save_exists
         && button(
             ctx,
-            Rect::new(850.0, 608.0, 350.0, 48.0),
+            Rect::new(1506.0, 944.0, 350.0, 52.0),
             &ctx.text("load_legacy"),
             active,
             false,
@@ -84,7 +84,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     }
     if button(
         ctx,
-        Rect::new(850.0, 556.0, 350.0, 48.0),
+        Rect::new(1506.0, 884.0, 350.0, 52.0),
         &ctx.text("save_catalogue"),
         active,
         false,
@@ -94,7 +94,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     if ctx.import_save_exists
         && button(
             ctx,
-            Rect::new(850.0, 504.0, 350.0, 48.0),
+            Rect::new(1506.0, 824.0, 350.0, 52.0),
             &ctx.text("import_campaign"),
             active,
             false,
@@ -102,14 +102,17 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     {
         return Some(UiAction::ImportCampaign);
     }
-    text(ctx, &ctx.data.edition, vec2(38.0, 693.0), 15.0, BRASS);
-    body(ctx, "WebHatchery", vec2(1138.0, 693.0), 18.0, CREAM);
+    text(ctx, &ctx.data.edition, vec2(48.0, 1040.0), 17.0, BRASS);
+    body(ctx, "WebHatchery", vec2(1734.0, 1040.0), 18.0, CREAM);
     None
 }
 
 pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
-    draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, Color::new(0.02, 0.05, 0.05, 0.60));
-    let panel = Rect::new(378.0, 104.0, 524.0, 512.0);
+    let panel = if ctx.state.overlay == Overlay::Help {
+        Rect::new(278.0, 104.0, 724.0, 512.0)
+    } else {
+        Rect::new(378.0, 104.0, 524.0, 512.0)
+    };
     draw_rectangle(
         panel.x,
         panel.y,

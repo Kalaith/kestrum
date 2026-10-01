@@ -26,7 +26,7 @@ fn fixture() -> (GameData, StrategicCampaign) {
 }
 
 fn point(position: [f32; 2]) -> Vec2 {
-    vec2(position[0] * WIDTH, position[1] * HEIGHT)
+    MapView::default().normalized_world(position)
 }
 
 fn only_marker(world: &CampaignWorld, marker: MarkerId) -> CampaignWorld {
@@ -56,7 +56,12 @@ fn owning_the_north_clears_empty_land_above_it() {
             .unwrap();
     }
     let visible = engine::project_map(&campaign, campaign.player).unwrap();
-    let fog = MapExploration::new(&campaign.world, &visible.world, MapScope::World);
+    let fog = MapExploration::new(
+        &campaign.world,
+        &visible.world,
+        MapScope::World,
+        &MapView::default(),
+    );
     for column in 0..=40 {
         for y in [0.0, 0.05, 0.1] {
             let at = point([column as f32 / 40.0, y]);
@@ -81,7 +86,13 @@ fn fog_softens_the_frontier_and_disappears_after_complete_discovery() {
     let mut world = campaign.world.clone();
     world.markers.truncate(2);
     let visible = only_marker(&world, world.markers[0].id);
-    let fog = MapExploration::new(&world, &visible, MapScope::World);
+    let fog = MapExploration::new(&world, &visible, MapScope::World, &MapView::default());
+    let expanded_settings = kestrum::data::MapCameraSettings {
+        world_extent: [10560.0, 5940.0],
+        ..Default::default()
+    };
+    let expanded_view = MapView::configured(&expanded_settings, MapScope::World);
+    let expanded = MapExploration::new(&world, &visible, MapScope::World, &expanded_view);
     let a = point(world.markers[0].position);
     let b = point(world.markers[1].position);
     assert_eq!(fog.opacity(a), 0.0);
@@ -91,12 +102,26 @@ fn fog_softens_the_frontier_and_disappears_after_complete_discovery() {
         .map(|step| fog.opacity(a.lerp(b, step as f32 / 20.0)))
         .collect();
     assert!(samples.windows(2).all(|pair| pair[0] <= pair[1]));
-    let revealed = MapExploration::new(&campaign.world, &campaign.world, MapScope::World);
+    for step in 0..=20 {
+        let original = a.lerp(b, step as f32 / 20.0);
+        assert!((fog.opacity(original) - expanded.opacity(original * 2.0)).abs() < 0.001);
+    }
+    let revealed = MapExploration::new(
+        &campaign.world,
+        &campaign.world,
+        MapScope::World,
+        &MapView::default(),
+    );
     let mut empty = campaign.world.clone();
     empty.markers.clear();
     empty.sites.clear();
     empty.routes.clear();
-    let hidden = MapExploration::new(&campaign.world, &empty, MapScope::World);
+    let hidden = MapExploration::new(
+        &campaign.world,
+        &empty,
+        MapScope::World,
+        &MapView::default(),
+    );
     for at in [
         Vec2::ZERO,
         vec2(WIDTH, HEIGHT),
@@ -127,7 +152,12 @@ fn frontier_hints_preserve_authored_bends_without_revealing_targets() {
         .unwrap();
     let [from, to] = route.major_connection.unwrap();
     let visible = only_marker(&campaign.world, from);
-    let fog = MapExploration::new(&campaign.world, &visible, MapScope::World);
+    let fog = MapExploration::new(
+        &campaign.world,
+        &visible,
+        MapScope::World,
+        &MapView::default(),
+    );
     let expected: Vec<_> = std::iter::once(campaign.world.marker(from).unwrap().position)
         .chain(
             campaign.world.atlas_paths[&route.id]
@@ -167,7 +197,13 @@ fn regional_fog_and_connections_use_only_the_regions_sites() {
     let campaign = StrategicCampaign::new(&data).unwrap();
     let visible = engine::project_map(&campaign, campaign.player).unwrap();
     let region = MarkerId(5);
-    let fog = MapExploration::new(&campaign.world, &visible.world, MapScope::Region(region));
+    let regional = MapView::configured(&data.presentation.map.camera, MapScope::Region(region));
+    let fog = MapExploration::new(
+        &campaign.world,
+        &visible.world,
+        MapScope::Region(region),
+        &regional,
+    );
     let eligible: Vec<_> = campaign
         .world
         .routes
@@ -185,9 +221,10 @@ fn regional_fog_and_connections_use_only_the_regions_sites() {
     for route in eligible {
         let a = campaign.world.site(route.from).unwrap();
         let b = campaign.world.site(route.to).unwrap();
-        assert!(fog
-            .connection_hints
-            .contains(&vec![point(a.position), point(b.position)]));
+        assert!(fog.connection_hints.contains(&vec![
+            regional.normalized_world(a.position),
+            regional.normalized_world(b.position)
+        ]));
     }
     let mut outside_changed = campaign.world.clone();
     for site in outside_changed
@@ -197,9 +234,17 @@ fn regional_fog_and_connections_use_only_the_regions_sites() {
     {
         site.position = [0.5, 0.5];
     }
-    let same = MapExploration::new(&outside_changed, &visible.world, MapScope::Region(region));
+    let same = MapExploration::new(
+        &outside_changed,
+        &visible.world,
+        MapScope::Region(region),
+        &regional,
+    );
     for position in [[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]] {
-        assert_eq!(fog.opacity(point(position)), same.opacity(point(position)));
+        assert_eq!(
+            fog.opacity(regional.normalized_world(position)),
+            same.opacity(regional.normalized_world(position))
+        );
     }
 }
 
@@ -207,7 +252,12 @@ fn regional_fog_and_connections_use_only_the_regions_sites() {
 fn pan_and_zoom_preserve_the_discovery_boundary() {
     let (_, campaign) = fixture();
     let visible = engine::project_map(&campaign, campaign.player).unwrap();
-    let fog = MapExploration::new(&campaign.world, &visible.world, MapScope::World);
+    let fog = MapExploration::new(
+        &campaign.world,
+        &visible.world,
+        MapScope::World,
+        &MapView::default(),
+    );
     let mut view = MapView::default();
     for zoom in [1.0, 1.7, 3.0] {
         view.focus([0.4, 0.2], zoom);

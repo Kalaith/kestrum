@@ -1,21 +1,28 @@
 //! Terrain discovery and non-interactive road hints on the irregular atlas.
 
-use super::{MapScope, HEIGHT, WIDTH};
+use super::{MapScope, MapView};
 use crate::state::world::CampaignWorld;
-use macroquad::prelude::{vec2, Vec2};
+use macroquad::prelude::Vec2;
 
 /// Presentation geometry only: hidden sites never become selection or move targets.
 pub struct MapExploration {
     revealed: Vec<Vec2>,
     hidden: Vec<Vec2>,
+    softness: f32,
     pub connection_hints: Vec<Vec<Vec2>>,
 }
 
 impl MapExploration {
-    pub fn new(world: &CampaignWorld, visible: &CampaignWorld, scope: MapScope) -> Self {
+    pub fn new(
+        world: &CampaignWorld,
+        visible: &CampaignWorld,
+        scope: MapScope,
+        view: &MapView,
+    ) -> Self {
         let mut exploration = Self {
             revealed: Vec::new(),
             hidden: Vec::new(),
+            softness: 56.0 * view.extent().x / 1280.0,
             connection_hints: Vec::new(),
         };
         let positions: Vec<_> = match scope {
@@ -37,9 +44,9 @@ impl MapExploration {
             } else {
                 &mut exploration.hidden
             };
-            points.push(atlas_point(position));
+            points.push(view.normalized_world(position));
         }
-        exploration.connection_hints = connection_hints(world, visible, scope);
+        exploration.connection_hints = connection_hints(world, visible, scope, view);
         exploration
     }
 
@@ -60,20 +67,17 @@ impl MapExploration {
                 .fold(f32::INFINITY, f32::min)
                 .sqrt()
         };
-        let blend =
-            ((nearest(&self.revealed) - nearest(&self.hidden)) / 56.0 + 0.5).clamp(0.0, 1.0);
+        let blend = ((nearest(&self.revealed) - nearest(&self.hidden)) / self.softness + 0.5)
+            .clamp(0.0, 1.0);
         blend * blend * (3.0 - 2.0 * blend)
     }
-}
-
-fn atlas_point(position: [f32; 2]) -> Vec2 {
-    vec2(position[0] * WIDTH, position[1] * HEIGHT)
 }
 
 fn connection_hints(
     world: &CampaignWorld,
     visible: &CampaignWorld,
     scope: MapScope,
+    view: &MapView,
 ) -> Vec<Vec<Vec2>> {
     let mut hints = Vec::new();
     for route in &world.routes {
@@ -109,7 +113,7 @@ fn connection_hints(
                         .flat_map(|path| path.waypoints.iter().copied()),
                 )
                 .chain(std::iter::once(to))
-                .map(atlas_point)
+                .map(|point| view.normalized_world(point))
                 .collect(),
         );
     }

@@ -35,8 +35,8 @@ pub fn place_map_labels(
         let width = candidate.width.clamp(48.0, 230.0);
         let x = (candidate.center.x - width * 0.5).clamp(12.0, WIDTH - width - 12.0);
         let mut options = vec![
-            Rect::new(x, candidate.center.y + 42.0, width, 27.0),
-            Rect::new(x, candidate.center.y - 61.0, width, 27.0),
+            Rect::new(x, candidate.center.y + 44.0, width, 27.0),
+            Rect::new(x, candidate.center.y - 54.0, width, 27.0),
         ];
         if candidate.priority >= 80 {
             options.extend(

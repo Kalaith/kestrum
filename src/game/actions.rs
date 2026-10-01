@@ -162,6 +162,9 @@ impl Game {
             UiAction::StepNpc => self.apply_campaign_command(Command::StepNpc),
             UiAction::Zoom(_)
             | UiAction::Recenter
+            | UiAction::Overview
+            | UiAction::MapKey
+            | UiAction::FocusMapGroup(_, _)
             | UiAction::ToggleLabels
             | UiAction::ToggleContrast
             | UiAction::DismissFeedback => self.apply_view_action(action),
@@ -417,15 +420,15 @@ impl Game {
                 }
             }
             UiAction::Open(overlay) => {
-                self.state.overlay = overlay;
                 if overlay == Overlay::Help {
+                    self.help_return_overlay = self.state.overlay;
                     self.help_page = 0;
                 }
+                self.state.overlay = overlay;
             }
             UiAction::Back => self.go_back(),
             UiAction::MainMenu => {
                 self.state.main_menu();
-                self.navigation.reset(&mut self.view);
                 self.movement = ui::MoveView::default();
             }
             UiAction::SelectMap(selection) => self.select_map(selection),
@@ -443,6 +446,18 @@ impl Game {
         match action {
             UiAction::Zoom(factor) => self.view.zoom(vec2(WIDTH / 2.0, HEIGHT / 2.0), factor),
             UiAction::Recenter => self.focus_home(),
+            UiAction::Overview => {
+                if let Some(projection) = &self.projection {
+                    self.navigation
+                        .toggle_overview(&projection.world, &mut self.view);
+                }
+            }
+            UiAction::FocusMapGroup(position, zoom) => self.view.focus(position, zoom),
+            UiAction::MapKey => {
+                self.help_return_overlay = self.state.overlay;
+                self.state.overlay = Overlay::Help;
+                self.help_page = ui::MAP_KEY_PAGE;
+            }
             UiAction::ToggleLabels => {
                 self.preferences.hide_labels = !self.preferences.hide_labels;
                 self.save_preferences();

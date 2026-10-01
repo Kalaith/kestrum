@@ -8,7 +8,7 @@ mod overview_text;
 mod progression_text;
 mod required_text;
 mod tutorial_text;
-pub use map_presentation::MapPresentation;
+pub use map_presentation::{MapCameraSettings, MapPresentation};
 use progression_text::PROGRESSION_TEXT;
 use required_text::REQUIRED_TEXT;
 

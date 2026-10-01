@@ -8,15 +8,15 @@
   },
   "canvas_rendering": "auto",
   "canvas": {
-    "width": 1280,
-    "height": 720
+    "width": 1920,
+    "height": 1080
   },
-  "controls_hint": "Choose New Game, name your kingdom and choose four to eight factions. Full Screen gives the map more room.",
+  "controls_hint": "Choose New Game, name your kingdom and choose four to eight factions. Play at a usable 1920 by 1080 canvas. Overview fits known land and returns to your working view.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
     "Found a human kingdom on the 80-location atlas with a chosen emblem, four to eight factions and a repeatable world seed. Recruit six-slot armies, inspect land routes and supply, build settlements, clear local threats and decide war or peace. Battles and sieges leave persistent casualties, wounds and dated reports.",
     "Service earns classes, formation specializations and recognition. Teach apprentices, form households, raise or adopt dependents and choose qualified successors as people age. Local training focus discounts courses by 25%. Biographies and place histories retain witnessed milestones; rival details come from actual encounters.",
-    "Each full round advances one season and creates a checkpoint. Save named copies, reload earlier moments and continue a campaign through its kingdom victory or defeat. The supported play canvas is landscape at least 1280 by 720; use Full Screen when the embedded view is smaller."
+    "Each full round advances one season and creates a checkpoint. Save named copies, reload earlier moments and continue a campaign through its kingdom victory or defeat. The sole design and acceptance canvas is 1920 by 1080. Other host sizes scale or letterbox the same composition; use Full Screen to reach the intended play area."
   ],
   "controls": [
     {
@@ -69,7 +69,7 @@
     },
     {
       "key": "Move Army",
-      "desc": "Tap an Army banner, then a destination to move now; Move Group selects companions and Review Route inspects saved travel"
+      "desc": "Tap an Army marker, then a destination to move now; Move Group selects companions and Review Route inspects saved travel"
     },
     {
       "key": "Records / Battle Reports",
@@ -100,8 +100,8 @@
       "desc": "Zoom the map; a mouse wheel also works"
     },
     {
-      "key": "Recenter",
-      "desc": "Return to your selected army or home area"
+      "key": "Overview / Recenter / Map Key",
+      "desc": "Overview fits known land; tap Return View to restore your camera. Recenter focuses your selected army or home. Map Key explains symbols and navigation"
     },
     {
       "key": "End Turn",

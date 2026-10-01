@@ -2,7 +2,7 @@
 
 use super::*;
 use kestrum::{
-    navigation::{MapNavigation, MapScope, MapView},
+    navigation::{MapNavigation, MapScope, MapView, WIDTH},
     state::{world::CampaignWorld, Overlay},
 };
 
@@ -18,7 +18,7 @@ pub fn panel_bounds(
         MapScope::Region(region) if region == site.marker => Some(site.position),
         _ => None,
     });
-    let left = position.is_none_or(|position| view.project_normalized(position).x >= 640.0);
+    let left = position.is_none_or(|position| view.project_normalized(position).x >= WIDTH * 0.5);
     let choosing_region = matches!(navigation.selection(), Some(kestrum::navigation::MapSelection::Marker(id))
         if world.physical_site(id).is_none());
     let height = if movement.preview.is_some()
@@ -29,7 +29,12 @@ pub fn panel_bounds(
     } else {
         350.0
     };
-    Rect::new(if left { 24.0 } else { 898.0 }, 96.0, 358.0, height)
+    Rect::new(
+        if left { 24.0 } else { WIDTH - 382.0 },
+        126.0,
+        358.0,
+        height,
+    )
 }
 
 pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {

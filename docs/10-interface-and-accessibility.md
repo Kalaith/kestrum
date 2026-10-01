@@ -5,10 +5,13 @@
 
 ## Status and goals
 
-This chapter owns the implemented M01 overview and the target follow-on map
-interface. M01 is implemented with [scoped verification](verification/kingdom-overview.md)
-and recorded inherited limitations; M01A and M02–M05 remain unstarted.
-M01A establishes a more spacious map at the sole 1920×1080 spec.
+This chapter owns the implemented M01 overview, M01A spatial navigation and
+the target follow-on map interface. M01 has
+[scoped verification](verification/kingdom-overview.md). M01A is complete under
+its [recorded scope](verification/spatial-scale.md), including engineering checks,
+14 native captures, automated native actions, background browser gameplay,
+publishing and reload. M02–M05 remain unstarted. M01A establishes a more spacious
+map at the sole 1920×1080 spec.
 The [project README](../README.md#map-controls)
 describes controls. Earlier K/B captures establish only their recorded scenes
 and interactions; the [evidence index](verification/README.md) records remaining
@@ -23,9 +26,9 @@ that view while deferring detailed management until the player selects it.
 
 The user's 2026-10-01 correction establishes a usable **1920×1080 canvas as the
 sole design and acceptance spec**, including logical UI coordinates. It replaces
-the earlier dual-resolution target. The current source still lays out the UI
-at 1280×720; M01A migrates and recomposes it. Simply multiplying the existing
-UI by 1.5 would retain the current crowded proportions.
+the earlier dual-resolution target. The map HUD and title now compose directly
+in 1920×1080 logical coordinates. Controls retain their intended pixel sizes;
+the map uses the added space for geography.
 
 Check native and embedded/full-screen WebGL at an actual 1920×1080 canvas;
 window decorations and host chrome do not count toward its usable area.
@@ -69,7 +72,7 @@ villages, towns, cities and major cities; fort marks remain a separate layer.
 Work, damage and Wood/Stone cues appear at useful local or zoomed scales. Label
 placement prioritizes selection, capitals, danger and regions, then owned and
 developed places as zoom increases. Collision checks reserve space for controls,
-symbols, banners and the inspector; marker count no longer hides all ordinary
+symbols, force marks and the inspector; marker count no longer hides all ordinary
 names at once. Full facility and development detail stays on selection.
 
 M03 will give each regional map its own terrain and approaches, with roads and
@@ -78,28 +81,49 @@ repeated topology remain unchanged. World Map and Enter Region preserve their
 camera contexts; a seamless transition between scopes is deferred. M01A changes
 their presentation extent and scale before M03 changes local geography.
 
-### Planned spatial scale and navigation
+### Implemented spatial scale and navigation
 
-M01A separates the 1920×1080 UI from independent map bounds. Ordinary play
-frames home, a selected force or an active frontier; it does not automatically
-fit the discovered realm on reload. The visible Overview action fits known land
-and restores the previous working view. Recenter and +/− stay visible. Selection,
-End Turn and management return preserve context; explicit attention navigation
-may focus the relevant observed place. Existing world/region contexts remain.
+M01A separates the 1920×1080 UI from independent 5280×2970 world bounds and
+3360×1890 regional bounds. Normal zoom 1 displays 2.75 world screen widths or
+1.75 regional screen widths across their full extent. The values live in
+validated `map_presentation.json`; normalized authored geometry, route costs,
+fog and campaign saves keep their existing meaning.
+
+New and loaded campaigns focus the physical home at normal campaign scale, opening its region when needed. Overview fits
+known land and becomes Return View, which restores the previous working camera.
+Recenter focuses the selected force or home at that normal scale; +/− stay
+visible. Selection, dismissal, End Turn and management return preserve context.
+Explicit attention navigation may focus the relevant observed place. World and
+each region retain independent camera contexts for the current session; reload
+uses the home default rather than introducing camera fields into saved campaigns.
 
 At overview scale, emphasize territory, capitals, major names and known urgent
 conditions. Campaign scale adds compact places, useful routes and concise army
-markers. Close views add local names and relevant detail. Full army counts,
-orders and costs appear with selection. Maintain readable text and 48-pixel
-interaction targets; crowded groups focus or open a visible chooser without
-issuing movement. A region's force count must not imply physical co-location.
+markers. Local detail adds names and relevant place detail. Full army counts,
+orders and costs appear with selection. Overview enters at zoom 0.68 and exits
+at 0.78; detail enters at 1.45 and exits at 1.30. These separate thresholds
+prevent repeated information changes near a boundary. Maximum zoom is 2.4.
+Symbols remain compact while interactive targets retain a 48-pixel floor.
+Crowded place and nearby-force groups focus without issuing movement. A regional
+force group identifies armies across sites separately from a stack at one site.
 
-Move the long permanent legend and repeated guidance to visible Map Key/help
-disclosure. Keep concise first-use navigation guidance, selection costs, known
-danger and End Turn discoverable. Terrain separates places; map expansion must
-preserve travel rules, fog and observer secrecy. The
+Map Key opens the scale and symbol explanations in Help. The long permanent
+legend is removed. First-use guidance, selection costs, known danger and End
+Turn remain discoverable. Terrain separates places; map expansion preserves
+travel rules, fog and observer secrecy. The
 [scale contract](map-playability-plan.md#proposed-scale-and-information-contract)
-owns initial tuning values and M01A's implementation and acceptance sequence.
+owns M01A's intended outcome; [verification](verification/spatial-scale.md)
+records measured results and remaining limits.
+
+### Management and setup sheets
+
+Army, place, records, save, setup and other management content is centered in a
+1280×720 content region of the 1920×1080 canvas. Its existing readable controls
+keep their pixel size. A full-canvas scrim makes the current sheet the focus.
+The toolkit viewport camera and pointer/press origin receive the same translation,
+so drawing and picking use identical coordinates. Sheet navigation preserves
+the map camera. Costs, eligibility, confirmation, Back and text-entry controls
+remain beside the current decision.
 
 ### M01 accounts and known attention
 
@@ -141,11 +165,11 @@ action together. Common recruitment, construction, focus and diplomacy entry
 points stay in that context. Existing spending, battle and diplomatic review
 rules remain where relevant. Movement does not acquire a second confirmation.
 
-M01 army banners show a single army's shortened name or a stack's owned army
-count, surviving troop strength and a text status. Siege takes priority, then
-Cut off, Route and Idle. A world stack may represent different internal sites;
-the existing movement selector preserves each force's physical location.
-Selection exposes exact allowance and composition. A queued order remains
+M01A replaces the large unselected army banners with compact force marks.
+Status still prioritizes Siege, then Cut off, Route and Idle. The existing
+movement selector preserves each force's physical location, including forces
+represented by a regional group. Selection exposes exact counts, allowance and
+composition. A queued order remains
 recognizable after the card closes; persistent route paths/destinations and
 interruption detail are M02 work. Unknown enemy strength and plans stay hidden.
 
@@ -207,6 +231,11 @@ selects a formation for legal slot, tactic and leader edits. Start Battle resolv
 once; play/pause, step, speed and skip present the immutable result. Continue
 returns to the campaign and applies continuation once. Reports retain losses,
 wounds, locations and observed enemy facts.
+
+M01A centers the existing battlefield presentation at its original pixel size.
+Inherited small tactic/playback controls and dense placement remain recorded
+limitations; this migration does not claim a battle-interface redesign or touch
+acceptance for those controls.
 
 Siege choices depend on side and available forces. Keep the place, legal exits,
 participants, supply, elapsed seasons, damage and known relief risk together.

@@ -5,12 +5,14 @@ service, and places changed by decades of war and peace.
 
 ## Current milestone
 
-M01 of the [map playability plan](docs/map-playability-plan.md) is implemented:
-a readable kingdom overview. [M01 verification](docs/verification/kingdom-overview.md)
-records its checks and retained limitations. M01A, spatial scale and map
-navigation at the sole 1920×1080 spec, is next and has not started. M02's map
-orders and seasonal consequences follow, then regional geography and the opening
-guide in M03/M04. This plan does not change the running game yet.
+M01A of the [map playability plan](docs/map-playability-plan.md) is complete under
+its [recorded scope](docs/verification/spatial-scale.md): spatial scale and map
+navigation use the sole 1920×1080 spec. Engineering checks, 14 native captures,
+automated native actions, background browser gameplay, publishing and reload
+are recorded. The full suite retains one inherited production-victory failure.
+It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
+M02's map orders and seasonal consequences follow, then regional geography and
+the opening guide in M03/M04.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 
@@ -46,7 +48,7 @@ and the latest scoped evidence take precedence over old milestone prose.
 
 ## Map controls
 
-Tap an Army banner, then a destination to move immediately. Long orders use the
+Tap an Army marker, then a destination to move immediately. Long orders use the
 available allowance and save their remaining physical route. End Turn refreshes
 movement and continues those orders; encounters and changed access can pause them.
 A destination can also be queued when no movement remains. Cancel Route stops
@@ -54,14 +56,25 @@ it; another destination replaces it. Review Route inspects the saved order.
 
 Tap a place to inspect it. Enter Region and World Map retain their respective
 camera contexts. Drag to pan; pinch, the mouse wheel, or visible +/− controls
-zoom. Recenter returns to the selected army or headquarters. Close dismisses
-selection. End Turn remains reachable during movement selection.
+zoom. Overview fits known land and changes to Return View, which restores the
+working camera. Recenter focuses the selected army or headquarters at campaign
+scale. Close dismisses selection. Selection, End Turn and returning from a sheet
+retain the camera; End Turn remains reachable during movement selection.
 
 The overview shows known political claims separately from local occupation and
 contested control, settlement silhouettes and the owned capital. Labels respond
-to zoom, importance and available space. Owned banners show identity, troop
-strength and route, siege, idle or supply state; world stacks aggregate owned
-forces without treating their internal sites as one physical location.
+to zoom, importance and available space. Compact owned force marks expose route,
+siege, idle and supply state; selection opens full counts and order details.
+Overview aggregates nearby forces. Tap a crowded group to focus it before
+choosing an exact place or army. Regional force groups and armies sharing one
+physical site remain distinct. Map Key explains these scales and symbols.
+
+The map has independent presentation bounds: 5280×2970 for the world and
+3360×1890 for regions. At normal zoom 1, they span 2.75 and 1.75 screen widths.
+Kingdom overview, campaign and local detail bands reveal information as space
+allows. Different entry and exit thresholds keep labels stable near a boundary.
+These dimensions change the drawing; the saved physical graph and travel costs
+remain authoritative.
 
 Gold, Wood and Stone stay in a lower strip with the last completed season's
 actual income, upkeep paid/due and recovery spending. Attention starts collapsed
@@ -81,15 +94,9 @@ dismissed or resumed from How to Play. Its replacement is M04 of the map plan.
 
 ## Current map limitations
 
-The current logical UI and atlas both use 1280×720, with large fixed-size
-symbols and banners. Developed saves fit discovered geography into that view.
-M01A migrates to the sole 1920×1080 canvas, separates world extent from UI size,
-adds scale-dependent map detail and makes whole-kingdom framing an explicit
-Overview action. Ordinary play will frame a useful part of a larger landscape.
-
-M01 provides the overview; common management actions and full seasonal
+M01A provides spatial navigation; common management actions and full seasonal
 consequences still need M02's contextual inspector and outcome work. Saved routes
-retain their existing selection-based detail; an unselected banner reports a
+retain their existing selection-based detail; an unselected force mark reports a
 queued route without displaying its full destination/path. All eight regional
 graphs still repeat the same ten-site chain, and their local view reuses the
 continental background. M03 owns that geography change.
@@ -105,7 +112,7 @@ The [interface chapter](docs/10-interface-and-accessibility.md) owns the target
 screen composition; the [map plan](docs/map-playability-plan.md#target-screen-brief)
 owns its delivery. The map is the dominant play area. Calendar, active faction,
 balances and actual seasonal accounts support it, with a compact attention list
-that gives way to selection. Political fill, local control marks, owned banners,
+that gives way to selection. Political fill, local control marks, owned forces,
 settlement symbols and importance-based labels explain the known world. Camera
 controls, Menu and End Turn remain reachable; the selected-place inspector and
 movement card retain direct destination-tap movement. M01A establishes useful
@@ -116,7 +123,25 @@ cards. M02 brings common actions and seasonal consequences into that context.
 UI coordinates, per the user's 2026-10-01 correction. Native and browser checks
 must measure the actual usable canvas. Smaller hosts can scale/letterbox the
 same composition; there is no separate 1280×720 layout or acceptance requirement.
-The current implementation still uses the old logical canvas until M01A lands.
+M01A composes the map directly in these coordinates. Its 48–60 pixel controls
+retain their intended size, leaving most of the canvas for navigable terrain.
+Resources and actual receipts sit above the bottom camera controls; Attention
+opens upward at the right. A selected place uses one narrow side inspector.
+Overview deliberately frames known land, Return View restores the working
+camera, and Recenter focuses a selected army or home. Map Key explains scale
+and symbols. Tutorial prompts share the quiet top strip and disappear when
+completed or dismissed.
+
+### Management and setup sheets
+
+The current decision is the selected army, place, record, save or setup choice.
+That sheet is the dominant focus; costs, eligibility and confirmation remain
+next to its primary action. The map is dimmed behind it and secondary systems
+stay in their own sheets. Existing sheet content keeps its readable pixel sizes
+in a centered 1280×720 content region of the 1920×1080 canvas, without enlargement.
+The toolkit viewport handles the host boundary; sheet drawing and pointer input
+receive the same translation. Back, confirmations and on-screen text entry
+remain visible touch controls. Sheet navigation preserves map camera context.
 
 ### Battle screens
 
@@ -126,6 +151,10 @@ offers play/pause, step, speed and skip; those controls only present the resolve
 receipt. Aftermath shows surviving groups and Continue returns to campaign play.
 Detailed reports remain retrievable.
 
+M01A centers the existing battlefield content at its original pixel size within
+1920×1080. Its inherited small tactic and playback controls, dense placement and
+other recorded battle findings remain outside this map milestone's redesign.
+
 The [battle plan](docs/battle-system-implementation-plan.md) records the completed
 delivery and the [battle review](docs/verification/battle-review.md) records later
 fixes and remaining presentation issues.
@@ -133,21 +162,26 @@ fixes and remaining presentation issues.
 ## Known validation limits
 
 The [evidence index](docs/verification/README.md) owns the pointers to current
-records and inherited limitations. M01 passed formatting, strict Clippy, the
-800-line source limit, 23 final focused tests, native normal/minimum visual
-review, publishing and the recorded browser gameplay/reload checks. Its full
-suite and browser-size review retain these limits:
+records and inherited limitations. M01A passed formatting, strict Clippy, the
+800-line source limit and its final 14-scene native capture batch, all at actual
+1920×1080. Its full suite passed all targets except the production-victory target;
+one profiling test remains intentionally ignored. Automated native actions,
+background browser gameplay, publishing and reload passed, with a complete
+1920×1080 browser capture in [spatial-scale verification](docs/verification/spatial-scale.md).
+These limits remain:
 
 - The unchanged seed-88 production-victory test fails at its 240-round cap after
   corrected combat reactions/routs. The failure remains a balance issue.
-- Minimum-size WebGL acceptance remains unverified: the viewport override again
-  produced a smaller rendered image with black remainder after interaction.
+- Historical minimum-size WebGL acceptance remained unverified: the viewport
+  override produced a smaller rendered image with black remainder after interaction.
 - Dense battlefield placement, target-priority editing, small tactic controls
   and aggregate morale have recorded presentation findings.
 - Physical-touch testing was waived on 2026-09-28; further platform, performance
   and balance work was deferred under that scope. The waiver does not make those
   checks pass or remove visible touch-control requirements.
 - One release profiling test is intentionally ignored.
+- Native operating-system rapid-click timing remains unverified; the final
+  headless checks exercise synthetic pointer frames and dispatched actions.
 
 These inherited limits remain until superseded by scoped verification evidence.
 Rerun affected checks for implementation changes and report exact remaining
@@ -173,8 +207,9 @@ With the native game closed:
 ```
 
 Native catalogue storage lives under `%LOCALAPPDATA%\kestrum`. The generator is
-tracked; the user's catalogue is not a fixture to overwrite. Loaded developed
-campaigns frame discovered geography, while early campaigns focus home.
+tracked; the user's catalogue is not a fixture to overwrite. Loaded campaigns
+focus home at normal campaign scale. Overview explicitly fits known geography;
+camera positions are transient and do not change the saved campaign schema.
 
 ## Development
 

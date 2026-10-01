@@ -9,7 +9,6 @@ use kestrum::{
     navigation::{MapNavigation, MapSelection, MapView, MAP_RECT},
     state::{military::ArmyId, Campaign, StrategicCampaign},
 };
-use macroquad::prelude::vec2;
 
 fn fixture() -> (GameData, StrategicCampaign) {
     let mut data = GameData::load().unwrap();
@@ -157,9 +156,9 @@ fn home_camera_and_army_targets_stay_in_their_physical_scope() {
     let mut navigation = MapNavigation::default();
     let mut view = MapView::default();
     navigation.focus_site(&visible.world, SiteId(1), &mut view);
-    assert!(view.camera.zoom() > 1.0);
+    assert_eq!(view.camera.zoom(), view.working_zoom());
     for factor in [1.0, 1.2, 0.7] {
-        view.zoom(vec2(640.0, 360.0), factor);
+        view.zoom(MAP_RECT.center(), factor);
         let targets = navigation.army_targets(&visible.world, &view, &visible.armies);
         let army = targets
             .iter()

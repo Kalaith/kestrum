@@ -5,8 +5,8 @@ use kestrum::engine::{AttentionKind, AttentionTarget};
 use macroquad::prelude::*;
 use macroquad_toolkit::{colors::with_alpha, ui::truncate_text_to_width_ex};
 
-const ACCOUNTS: Rect = Rect::new(24.0, 580.0, 924.0, 52.0);
-const ATTENTION: Rect = Rect::new(964.0, 580.0, 292.0, 52.0);
+const ACCOUNTS: Rect = Rect::new(24.0, 936.0, 1100.0, 60.0);
+const ATTENTION: Rect = Rect::new(1572.0, 936.0, 324.0, 60.0);
 const ROWS: usize = 3;
 
 #[derive(Debug, Clone, Default)]
@@ -79,7 +79,7 @@ fn accounts(ctx: &Context<'_>) {
             receipt.shortfall
         ));
     }
-    body(ctx, &balances, vec2(38.0, ACCOUNTS.y + 22.0), 20.0, CREAM);
+    body(ctx, &balances, vec2(38.0, ACCOUNTS.y + 25.0), 20.0, CREAM);
     let receipt = faction.last_economy.as_ref().map_or_else(
         || ctx.text("map_no_receipt"),
         |receipt| {
@@ -108,7 +108,7 @@ fn accounts(ctx: &Context<'_>) {
     body(
         ctx,
         &label,
-        vec2(38.0, ACCOUNTS.y + 44.0),
+        vec2(38.0, ACCOUNTS.y + 49.0),
         17.0,
         if faction.deficit == Some(true) {
             BRASS
@@ -225,13 +225,13 @@ fn attention_pager(ctx: &Context<'_>, page: usize, pages: usize) -> Option<UiAct
         body(
             ctx,
             &format!("{}/{}", page + 1, pages),
-            vec2(ATTENTION.x + 126.0, y + 30.0),
+            vec2(ATTENTION.x + 142.0, y + 30.0),
             18.0,
             CREAM,
         );
         if button(
             ctx,
-            Rect::new(ATTENTION.x + 210.0, y, 82.0, 48.0),
+            Rect::new(ATTENTION.right() - 82.0, y, 82.0, 48.0),
             &ctx.text("map_next"),
             active && page + 1 < pages,
             false,

@@ -6,7 +6,7 @@ use kestrum::{
         rules::Emblem,
         world::{AnchorExpression, FactionId, SiteId},
     },
-    navigation::{MapExploration, MapScope, MapSelection, MapTarget},
+    navigation::{MapExploration, MapScaleBand, MapScope, MapSelection, MapTarget},
     state::Overlay,
 };
 use macroquad::prelude::*;
@@ -33,6 +33,7 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     };
     let world = &campaign.world;
     let targets = ctx.navigation.targets(world, ctx.view);
+    let groups = ctx.navigation.place_groups(world, ctx.view);
     let panel = if ctx.movement.stage == super::MoveStage::Map {
         Some(super::movement_panel_bounds(
             ctx.movement,
@@ -51,24 +52,65 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
         }) {
             continue;
         }
+        if groups
+            .iter()
+            .any(|group| group.selections.contains(&target.selection))
+            && !important_target(ctx.overview, ctx.navigation.selection(), target.selection)
+        {
+            continue;
+        }
         symbols::draw_target(ctx, target);
         movement_cost(ctx, target);
         symbols::danger(ctx, target);
     }
-    armies::draw(ctx, panel);
-    labels::draw(ctx, &targets, panel, exploration);
-    if panel.is_none() {
-        let legend = ctx.data.map.text("legend");
-        let width = measure_text(legend, ctx.body_font(), 16, 1.0).width;
-        draw_rectangle(
-            20.0,
-            65.0,
-            width + 12.0,
-            23.0,
-            Color::new(INK.r, INK.g, INK.b, 0.88),
+    for group in &groups {
+        if panel.is_some_and(|panel| panel.overlaps(&group.bounds())) {
+            continue;
+        }
+        let at = group.center;
+        draw_circle(at.x, at.y, 15.0, INK);
+        draw_circle_lines(at.x, at.y, 18.0, 1.5, BRASS);
+        centered(
+            ctx,
+            &group.selections.len().to_string(),
+            at + vec2(0.0, 6.0),
+            17.0,
+            CREAM,
         );
-        body(ctx, legend, vec2(26.0, 82.0), 16.0, CREAM);
     }
+    armies::draw(ctx, panel);
+    let label_targets: Vec<_> = targets
+        .into_iter()
+        .filter(|target| {
+            important_target(ctx.overview, ctx.navigation.selection(), target.selection)
+                || !groups
+                    .iter()
+                    .any(|group| group.selections.contains(&target.selection))
+        })
+        .collect();
+    labels::draw(ctx, &label_targets, panel, exploration);
+}
+
+/// Capital, danger and selection stay visible inside a crowded place group.
+/// Input uses this same rule before focusing a group from its visible member.
+pub fn important_target(
+    overview: Option<&kestrum::engine::MapOverview>,
+    selected: Option<MapSelection>,
+    selection: MapSelection,
+) -> bool {
+    if selected == Some(selection) {
+        return true;
+    }
+    overview.is_some_and(|overview| match selection {
+        MapSelection::Marker(id) => overview
+            .markers
+            .get(&id)
+            .is_some_and(|summary| summary.capital || summary.danger.any()),
+        MapSelection::Site(id) => overview
+            .sites
+            .get(&id)
+            .is_some_and(|summary| summary.capital || summary.danger.any()),
+    })
 }
 
 fn movement_cost(ctx: &Context<'_>, target: &MapTarget) {
@@ -95,8 +137,8 @@ fn movement_cost(ctx: &Context<'_>, target: &MapTarget) {
     };
     if let Some(cost) = cost {
         let at = target.center;
-        draw_circle_lines(at.x, at.y, 29.0, 2.0, CREAM);
-        let badge = at + vec2(0.0, -42.0);
+        draw_circle_lines(at.x, at.y, 19.0, 1.5, CREAM);
+        let badge = at + vec2(0.0, -58.0);
         draw_circle(badge.x, badge.y, 14.0, INK);
         centered(ctx, &cost.to_string(), badge + vec2(0.0, 6.0), 17.0, CREAM);
     }
@@ -158,18 +200,6 @@ pub fn navigation(ctx: &Context<'_>) -> Option<UiAction> {
             false,
         ) {
             return Some(UiAction::WorldMap);
-        }
-    } else if ctx.navigation.selection().is_none()
-        && ctx.state.overlay == Overlay::None
-        && ctx.movement.stage == super::MoveStage::Inactive
-    {
-        let label = ctx.text("select_place");
-        let width = measure_text(&label, ctx.body_font(), 18, 1.0).width;
-        if ctx
-            .campaign_view
-            .is_some_and(|campaign| campaign.player_turn)
-        {
-            body(ctx, &label, vec2(640.0 - width * 0.5, 678.0), 18.0, CREAM);
         }
     }
     None

@@ -1,6 +1,6 @@
 //! The normal road, selected route and bridge marks share authored atlas geometry.
 use super::*;
-use kestrum::{data::world::Route, state::world::CampaignWorld};
+use kestrum::{data::world::Route, navigation::MAP_RECT, state::world::CampaignWorld};
 
 pub(super) fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     let Some(campaign) = ctx.campaign_view else {
@@ -27,9 +27,9 @@ pub(super) fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
             .chain(std::iter::once(to))
             .map(|point| ctx.view.project_normalized(point))
             .collect::<Vec<_>>();
-        let production = overview && world.markers.len() > 24;
-        stroke(&points, if production { 3.0 } else { 7.0 }, INK);
-        stroke(&points, if production { 1.0 } else { 2.5 }, BRASS);
+        let detail = ctx.view.band() == MapScaleBand::Detail;
+        stroke(&points, if detail { 4.0 } else { 3.0 }, INK);
+        stroke(&points, if detail { 1.5 } else { 1.0 }, BRASS);
         selected_route(ctx, route, &points);
         if let Some(geometry) = geometry {
             for position in &geometry.bridges {
@@ -84,6 +84,13 @@ fn endpoints(
 
 fn stroke(points: &[Vec2], width: f32, color: Color) {
     for segment in points.windows(2) {
+        // Cull the segment's extent, never its endpoints: long roads can cross
+        // the viewport while both places are outside it. The renderer clips.
+        let min = segment[0].min(segment[1]) - Vec2::splat(width);
+        let max = segment[0].max(segment[1]) + Vec2::splat(width);
+        if !Rect::new(min.x, min.y, max.x - min.x, max.y - min.y).overlaps(&MAP_RECT) {
+            continue;
+        }
         draw_line(
             segment[0].x,
             segment[0].y,
@@ -119,6 +126,9 @@ fn selected_route(ctx: &Context<'_>, route: &Route, points: &[Vec2]) {
     };
     stroke(points, 5.0, color);
     let center = midpoint(points);
+    if !MAP_RECT.contains(center) {
+        return;
+    }
     draw_circle(center.x, center.y, 14.0, INK);
     body(
         ctx,
@@ -142,6 +152,9 @@ fn midpoint(points: &[Vec2]) -> Vec2 {
 }
 
 fn bridge(position: Vec2, points: &[Vec2]) {
+    if !MAP_RECT.contains(position) {
+        return;
+    }
     let Some((center, direction, _)) = points
         .windows(2)
         .filter_map(|segment| {

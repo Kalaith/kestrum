@@ -9,6 +9,7 @@ pub fn exploration(ctx: &Context<'_>) -> Option<MapExploration> {
         &campaign.world,
         &ctx.campaign_view?.world,
         ctx.navigation.scope(),
+        ctx.view,
     ))
 }
 

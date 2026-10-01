@@ -32,7 +32,7 @@ because an original draft called them provisional.
 | Saves (O22) | Round-end autosaves, manual saves during player orders, no game-imposed slot cap, explicit recovery and overwrite/deletion flows. |
 | History (O23) | Bounded narrative retention may forget old stories while preserving current state and gameplay evidence. |
 | Content (O24) | Humans and ordinary classes first; other races and advanced classes are deferred. |
-| Viewport (O25, corrected 2026-10-01) | 1920×1080 is the sole logical UI, design and acceptance spec, with visible touch controls. This user correction supersedes the earlier dual-resolution target. Implementation migration is M01A. |
+| Viewport (O25, corrected 2026-10-01) | 1920×1080 is the sole logical UI, design and acceptance spec, with visible touch controls. This user correction supersedes the earlier dual-resolution target. M01A implements the migration; acceptance is tracked separately. |
 
 ## Implemented defaults
 
@@ -42,6 +42,7 @@ with evidence; their earlier “open” labels are not blockers.
 | Area | Current baseline and owner |
 | --- | --- |
 | Setup and starts | Seeded production layout revision 3; region-based headquarters candidates with a safe first route and nearby threats. [World](02-world-time-and-control.md), [generation source](../src/data/generation.rs). |
+| Spatial scale and navigation | M01A uses a 1920×1080 UI, 5280×2970 world and 3360×1890 regional bounds at normal zoom 1. Three bands use separate entry/exit thresholds; Overview/Return View, compact force marks and group focus preserve context. [Interface](10-interface-and-accessibility.md), [scoped verification](verification/spatial-scale.md). |
 | Movement and roads | Immediate destination orders, partial travel, saved continuation, access rechecks and preserved spent allowance. [Armies](04-armies-and-logistics.md), [movement source](../src/engine/movement.rs). |
 | Supply and recovery | Physical connectivity, post-upkeep affordability and persisted outcomes. [Armies](04-armies-and-logistics.md). |
 | Construction | Persistent prepaid work, builders, progress, interruption, cancellation and conserved settlers. [Living places](07-living-places.md). |
@@ -76,23 +77,32 @@ Historical I01–I20 fix narratives are represented by the completed acceptance
 and verification records. They should not be copied into new plans as unresolved
 problems. The [evidence index](verification/README.md) identifies current limits.
 
-## Planned map decisions
+## Implemented and planned map decisions
 
-M01's political territory, local control, symbols, owned banners, accounts and
-known attention are implemented with recorded limits. The follow-up request
-prioritizes a spacious world. These plan recommendations remain unimplemented:
+M01's political territory, local control, symbols, accounts and known attention
+are implemented with recorded limits. M01A completes the spacious-world request
+under its [recorded scope](verification/spatial-scale.md): engineering checks,
+14 native captures, automated native actions, background browser gameplay,
+publishing and reload, with a complete 1920×1080 browser capture.
 
-1. Migrate the logical UI to the sole 1920×1080 spec and separate map extent
-   from it. Use a useful working area as the default, a deliberate overview,
-   compact symbols and detail appropriate to scale. Preserve M01's known facts.
-2. Keep economic context and a compact attention list with the map; use one
+| Choice | Implemented default |
+| --- | --- |
+| Presentation bounds | World 5280×2970, region 3360×1890; at normal zoom 1, respectively 2.75 and 1.75 screen widths. Authored normalized geometry and movement costs are unchanged. |
+| Information bands | Overview enters at 0.68 and exits at 0.78; detail enters at 1.45 and exits at 1.30; campaign fills the middle. Maximum zoom is 2.4. Values are validated JSON tuning defaults. |
+| Camera actions | New and loaded campaigns focus home. Overview fits known land; Return View restores the working camera. Recenter focuses the selected force or home. World and individual regions retain independent session contexts. |
+| Symbols and forces | Compact marks replace large unselected banners. Crowded place and nearby-force groups focus before exact selection; regional grouping remains distinct from armies sharing one site. Full details remain on selection. |
+| Secondary screens | Management sheets keep pixel-sized content centered within 1920×1080, with matching camera/pointer translation. Map Key holds symbol and navigation explanations. Battlefield small controls remain an inherited limitation. |
+
+These map recommendations remain planned:
+
+1. Keep economic context and a compact attention list with the map; use one
    contextual inspector for common actions and defer full management detail.
-3. Keep direct movement and show relevant saved orders and seasonal consequences.
-4. Replace repeated regional chains with distinct connected geography. Retain
+2. Keep direct movement and show relevant saved orders and seasonal consequences.
+3. Replace repeated regional chains with distinct connected geography. Retain
    the existing world/region scopes and initial physical-site count for delivery.
-5. Preserve existing campaign topology; establish versioned authored validation
+4. Preserve existing campaign topology; establish versioned authored validation
    before introducing new graphs. New worlds and old worlds remain truthful.
-6. Teach the opening through a useful action, consequence and investment.
+5. Teach the opening through a useful action, consequence and investment.
    Introduce careers/households when relevant to events in play.
 
 The [map plan](map-playability-plan.md) owns milestone detail and acceptance.
@@ -102,14 +112,14 @@ This updates the earlier sparse-HUD, fit-known-world and screen-tour assumptions
 
 Resolve these while implementing the relevant milestone and record the result:
 
-- Exact map extents, camera bands, territorial geometry, icon treatment and label
-  thresholds, validated at 1920×1080 and under fog.
+- Further map extent, band, icon and label tuning where actual 1920×1080 review
+  supplies evidence; the M01A defaults above are implemented rather than open.
 - Region-specific connections, local terrain and anchor expressions within the
   distinct strategic briefs and save-compatibility contract.
 - Which legal opening opportunities best demonstrate a payoff for different
   starting regions, assessed through actual interaction and player observation.
 
-These are bounded design tasks, not reasons to postpone M01A or recreate a full
+These are bounded design tasks, not reasons to postpone delivery or recreate a full
 GDD. Numerical balance remains tunable; avoid unrelated system expansion.
 
 ## Deferred work and validation limits

@@ -35,55 +35,97 @@ impl Game {
         self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(
             if scene == "world_move_entry" { 5 } else { 1 },
         ))));
-        let preview = self.movement.preview.as_ref().expect("world route preview");
-        assert_eq!(
-            preview.total_cost,
-            if scene == "world_move_entry" { 2 } else { 4 }
+        if scene == "world_move_peace" {
+            let preview = self.movement.preview.as_ref().expect("blocked world route");
+            assert_eq!(preview.total_cost, 4);
+            assert!(!preview.can_confirm());
+            assert_eq!(self.movement.site, Some(SiteId(6)));
+            assert_eq!(self.movement.planned_destination, None);
+            return true;
+        }
+        assert!(
+            self.movement.preview.is_none(),
+            "taps apply orders immediately"
         );
         if scene == "world_move_review" {
+            let sequence = self
+                .state
+                .campaign
+                .as_ref()
+                .unwrap()
+                .strategic()
+                .unwrap()
+                .accepted_sequence;
             self.apply(UiAction::ReviewMove);
+            assert!(self.movement.reviewing_plan);
+            assert_eq!(
+                self.movement.preview.as_ref().unwrap().order.path,
+                [5, 1].map(SiteId)
+            );
+            assert_eq!(
+                self.state
+                    .campaign
+                    .as_ref()
+                    .unwrap()
+                    .strategic()
+                    .unwrap()
+                    .accepted_sequence,
+                sequence
+            );
         } else if matches!(
             scene,
             "world_move_partial" | "world_move_queued" | "world_move_continued"
         ) {
-            self.apply(UiAction::ConfirmMove);
-            assert_eq!(self.movement.site, Some(SiteId(5)));
-            assert_eq!(self.navigation.scope(), MapScope::World);
-            assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
-            match scene {
-                "world_move_partial" => {
-                    self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
-                    assert!(self.movement.preview.as_ref().unwrap().can_confirm());
-                    assert_eq!(self.movement.preview.as_ref().unwrap().reachable_steps, 0);
-                }
-                "world_move_queued" => {
-                    self.apply(UiAction::CancelMovementPlan(ArmyId(1)));
-                    assert_eq!(self.movement.planned_destination, None);
-                    self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
-                    self.apply(UiAction::ConfirmMove);
-                    assert_eq!(self.movement.site, Some(SiteId(5)));
-                    assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
-                }
-                "world_move_continued" => {
-                    self.apply(UiAction::CancelMove);
-                    self.apply(UiAction::EndTurn);
-                    for _ in 0..3 {
-                        let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
-                            panic!("world movement capture needs a campaign");
-                        };
-                        let actor = engine::Actor::Npc(campaign.active_faction());
-                        let outcome = engine::apply(campaign, &self.data, actor, Command::EndTurn);
-                        self.handle_campaign_result(outcome);
-                    }
-                    self.refresh_projection();
-                    self.begin_move(ArmyId(1));
-                    assert_eq!(self.movement.site, Some(SiteId(1)));
-                    assert_eq!(self.movement.planned_destination, None);
-                }
-                _ => {}
-            }
+            self.capture_pending_world_order(scene);
+        } else {
+            assert_eq!(
+                self.movement.site,
+                Some(SiteId(if scene == "world_move_entry" { 5 } else { 1 }))
+            );
+            assert_eq!(
+                self.movement.remaining[&ArmyId(1)],
+                if scene == "world_move_entry" { 4 } else { 2 }
+            );
         }
         true
+    }
+
+    fn capture_pending_world_order(&mut self, scene: &str) {
+        assert_eq!(self.movement.site, Some(SiteId(5)));
+        assert_eq!(self.navigation.scope(), MapScope::World);
+        assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
+        match scene {
+            "world_move_partial" => {
+                self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
+                assert!(self.movement.preview.is_none());
+                assert_eq!(self.movement.remaining[&ArmyId(1)], 0);
+                assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
+            }
+            "world_move_queued" => {
+                self.apply(UiAction::CancelMovementPlan(ArmyId(1)));
+                assert_eq!(self.movement.planned_destination, None);
+                self.apply(UiAction::SelectMap(MapSelection::Marker(MarkerId(1))));
+                assert_eq!(self.movement.site, Some(SiteId(5)));
+                assert_eq!(self.movement.planned_destination, Some(SiteId(1)));
+            }
+            "world_move_continued" => {
+                assert_eq!(self.movement.stage, ui::MoveStage::Map);
+                self.apply(UiAction::EndTurn);
+                for _ in 0..3 {
+                    let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
+                        panic!("world movement capture needs a campaign");
+                    };
+                    let actor = engine::Actor::Npc(campaign.active_faction());
+                    let outcome = engine::apply(campaign, &self.data, actor, Command::EndTurn);
+                    self.handle_campaign_result(outcome);
+                }
+                self.refresh_projection();
+                self.begin_move(ArmyId(1));
+                assert_eq!(self.movement.site, Some(SiteId(1)));
+                assert_eq!(self.movement.planned_destination, None);
+            }
+            _ => {}
+        }
     }
 
     fn prepare_world_order_capture(&mut self, scene: &str) {

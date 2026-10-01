@@ -241,7 +241,8 @@ pub fn map_movement_preview(
     preview_order(campaign, data, observer, &MoveOrder { armies, path })
 }
 
-pub(super) fn preview_order(
+/// Inspect an exact physical order without spending movement or replacing its plan.
+pub fn preview_order(
     campaign: &StrategicCampaign,
     data: &GameData,
     observer: FactionId,

@@ -1,7 +1,12 @@
 # Movement plans — 2026-10-01
 
+Destination taps now issue movement immediately. Previously a tap only populated
+a preview and required a separate Confirm Move, so dismissing it or ending the
+turn could leave the army stationary with no saved order. End Turn now remains
+visible while an army is selected.
+
 Long orders spend the group's available movement and save the remaining physical
-route. A fully exhausted group can confirm a destination without a movement
+route. A fully exhausted group can tap a destination without a movement
 error or a fabricated movement fact. The order resumes on its next faction turn,
 after movement refreshes, and remains queued over further seasons as needed.
 New orders replace overlapping plans; Cancel Route stops the selected plan.
@@ -23,18 +28,21 @@ facts without repeating seasonal effects or movement.
 ## Screen composition and visual review
 
 The current decision is where the selected army should travel. The atlas remains
-dominant; the existing order card shows remaining movement, destination, current
-turn stopping site, and Confirm Move. A saved route uses that same card for its
-destination and Cancel Route. Route detail remains behind Review Route, and
-rosters behind Army Details. Future affordable-season steps use the route's gold
-colour; actual blocked borders use orange and disable confirmation.
+dominant; the existing order card shows the resulting location, remaining movement
+and saved destination. Nearby rings show costs before a tap. A saved route uses
+that same card for Review Route and Cancel Route. Review Route inspects the exact
+stored path without issuing another command, including after a projection refresh;
+its action is Cancel Route. Rosters remain behind Army Details. Blocked borders
+use orange and show their error beside the requested route.
 
 The shared hidden capture wrapper wrote directly to the stable files below.
 Requested normal size is 1920 × 1080 (native client image 1920 × 1061), with the
-minimum 1280 × 720. Orders, zero-movement confirmation, saved destination,
-cancellation, arrival, peaceful borders, route detail, dense army names and help
-were visually reviewed at both sizes. Help wording was shortened after review
-found its last paragraph touching the navigation controls.
+minimum 1280 × 720. Fifteen states were captured at each size. Immediate travel,
+zero-movement planning, saved destination, cancellation, arrival, peaceful borders,
+route detail, dense army names, help and guide progress were checked. The order
+card and End Turn stay separate; help fits above its navigation controls. The
+regional border capture now explicitly assigns a peaceful foreign destination
+instead of assuming generated headquarters always have a threatened exit.
 
 | State | Normal | Minimum |
 | --- | --- | --- |
@@ -47,16 +55,22 @@ found its last paragraph touching the navigation controls.
 | Dense names and multiple armies | [Stack](ui_world_move_stack.png) | [Stack](ui_world_move_stack_minimum.png) |
 | Exhausted-army instructions | [Exhausted](ui_move_exhausted.png) | [Exhausted](ui_move_exhausted_minimum.png) |
 | Movement help | [Help](ui_help_movement.png) | [Help](ui_help_movement_minimum.png) |
+| Regional immediate arrival | [Arrival](ui_move_arrived.png) | [Arrival](ui_move_arrived_minimum.png) |
+| Regional peaceful border | [Border](ui_move_blocked.png) | [Border](ui_move_blocked_minimum.png) |
+| Guide before the first tap | [Guide](ui_tutorial_group.png) | [Guide](ui_tutorial_group_minimum.png) |
+| Guide after immediate arrival | [Guide](ui_tutorial_route.png) | [Guide](ui_tutorial_route_minimum.png) |
+| Completed guide | [Complete](ui_tutorial_complete.png) | [Complete](ui_tutorial_complete_minimum.png) |
 
 The harness selects the actual projected army banner with press/release input,
-dispatches real destination and confirmation actions, cancels and replaces a
-saved route, and advances a completed season through ordinary commands. It
-asserts gate arrival, a zero-step confirmable preview, the persisted remainder,
-and next-turn arrival with the correct remaining allowance.
+dispatches real destination actions without Confirm Move, cancels and replaces a
+saved route, and advances a completed season with the order card still selected.
+It asserts immediate gate arrival, exhausted planning, the persisted remainder,
+read-only route review, and next-turn arrival with the correct allowance. The
+regional guide advances to its next lesson immediately after destination travel.
 
-## Published browser review
+## Browser review
 
-The Preview WebGL build at `http://127.0.0.1/games/kestrum/` was exercised with
+The preceding engine-change Preview WebGL build at `http://127.0.0.1/games/kestrum/` was exercised with
 visible click controls. Rose Host moved from Riverfold Green to Riverfold Bridge
 and back, spending all six movement points. Confirming Bridge again saved a
 route at zero movement. Cancel Route cleared both the plan and its feedback;
@@ -70,31 +84,37 @@ viewport overrides were reset after the review.
 [Queued browser route](ui_move_plan_browser.png) and
 [automatic browser arrival](ui_move_plan_arrived_browser.png) retain evidence.
 
-The in-app browser's 1280 × 720 viewport override again rendered a smaller image
+That earlier in-app browser's 1280 × 720 viewport override rendered a smaller image
 in the upper-left with black remainder, as documented in earlier map reviews.
 Minimum browser acceptance remains unverified. Native minimum-size review and
 click/press-release equivalents do not establish physical-touch acceptance;
 physical touch and pinch hardware were not exercised.
 
+The current published page loaded with the updated immediate-move controls and
+the game title screen. Gameplay verification of this build stopped at the user's
+request to finish and commit without further testing. The native action harness
+provides the completed immediate-tap and selected-unit End Turn checks above.
+
 ## Validation
 
 All validation uses this project checkout and the real shared workspace. The
-focused movement, plan, persistence, AI, diplomacy, siege and source-size targets
-passed all 34 checks, including five new movement-plan cases and a catalogue
-checkpoint/reload regression. The full suite passed 327 checks, with one ignored
+current movement, plan, persistence, AI, content, tutorial, world-order, map-picking
+and source-size targets pass all 41 checks. The movement-plan regression now
+asserts the position and allowance immediately before any End Turn and verifies
+that inspecting the exact saved order changes no campaign state.
+
+The preceding engine-change full suite passed 327 checks, with one ignored
 release profiling test and the existing production victory assertion failing at
 its 240-round cap (`k18_production_battle`). Its balance blocker is already
 recorded in the README and earlier battle review; the assertion remains intact.
 Four- and eight-faction campaigns retained and replayed through round 400, and
 all developed-midgame-save checks passed.
 
-The final AI eligibility short-circuit retained cheap rejection before preview;
-its AI, movement-plan, persistence and source-size rerun passed all 19 checks.
 `cargo fmt -p kestrum -- --check`, whitespace checks, and strict all-target
 Clippy (`..\rust_management\cargo.ps1 clippy -p kestrum --all-targets '--' -D warnings`)
-passed. Every Rust file remains within the 800-total-line limit. All capture
-wrapper runs completed and their launched game processes exited; no native
-Kestrum process remained after the final help captures.
+passed. Every Rust file remains within the 800-total-line limit. The final normal
+and minimum capture runs completed successfully and their game processes exited; no native
+Kestrum process remained after the normal and minimum capture runs.
 
 Final no-argument `.\publish.ps1` succeeded: Windows and WebGL release builds,
 packages, assets and the root catalogue thumbnail deployed to Preview at

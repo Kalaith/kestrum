@@ -74,9 +74,9 @@ impl Game {
             .into_iter()
             .find(|site| {
                 engine::map_movement_preview(campaign, &self.data, campaign.player, &[army], *site)
-                    .is_ok_and(|preview| (preview.reachable_steps > 0) != (scene == "move_blocked"))
+                    .is_ok_and(|preview| preview.can_confirm() && preview.reachable_steps > 0)
             })
-            .expect("production home has open and threatened exits");
+            .expect("production home has an open exit");
         if scene == "move_stack" {
             let formation = campaign.armies[&army]
                 .formation_ids()
@@ -92,6 +92,18 @@ impl Game {
                     .get_mut(&result.split_army.unwrap())
                     .unwrap()
                     .name = "The Riverward Guard of the Silver Hawthorns".into();
+            }
+        }
+        if scene == "move_blocked" {
+            if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+                let neighbor = *campaign
+                    .factions
+                    .keys()
+                    .find(|id| **id != campaign.player)
+                    .unwrap();
+                campaign
+                    .set_site_control(&self.data, destination, Some(neighbor), false)
+                    .expect("capture owns a peaceful foreign border");
             }
         }
         self.refresh_projection();
@@ -135,11 +147,12 @@ impl Game {
             MapSelection::Site(destination)
         };
         self.apply(UiAction::SelectMap(selection));
-        assert!(self.movement.preview.is_some());
         assert_eq!(self.state.overlay, Overlay::None);
-        if scene == "move_arrived" {
-            self.apply(UiAction::ConfirmMove);
-            assert_eq!(self.state.overlay, Overlay::None);
+        if scene == "move_blocked" {
+            assert!(self.movement.preview.is_some());
+            assert_eq!(self.movement.site, Some(origin));
+        } else {
+            assert!(self.movement.preview.is_none());
             assert_eq!(self.movement.site, Some(destination));
         }
         true

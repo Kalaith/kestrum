@@ -120,14 +120,30 @@ fn review_controls(
     ) {
         return Some(UiAction::ChooseMoveDestination);
     }
+    let plan = ctx
+        .movement
+        .reviewing_plan
+        .then(|| {
+            ctx.campaign_view?
+                .movement_plans
+                .iter()
+                .find(|plan| plan.armies == ctx.movement.armies)
+                .and_then(|plan| plan.armies.first())
+                .copied()
+        })
+        .flatten();
     if button(
         ctx,
         Rect::new(860.0, 626.0, 308.0, 48.0),
-        &ctx.text("confirm_move"),
-        preview.can_confirm(),
-        true,
+        &ctx.text(if ctx.movement.reviewing_plan {
+            "cancel_movement_plan"
+        } else {
+            "confirm_move"
+        }),
+        plan.is_some() || (!ctx.movement.reviewing_plan && preview.can_confirm()),
+        !ctx.movement.reviewing_plan,
     ) {
-        return Some(UiAction::ConfirmMove);
+        return Some(plan.map_or(UiAction::ConfirmMove, UiAction::CancelMovementPlan));
     }
     None
 }

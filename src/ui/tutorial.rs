@@ -82,6 +82,7 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
             TutorialStep::Headquarters => "tutorial_headquarters",
             TutorialStep::Movement => match ctx.movement.stage {
                 MoveStage::Group => "tutorial_move_group",
+                MoveStage::Review if ctx.movement.reviewing_plan => "move_planned_notice",
                 MoveStage::Review => "tutorial_move_confirm",
                 MoveStage::Map if ctx.movement.preview.is_some() => "tutorial_move_review",
                 MoveStage::Map if ctx.movement.destination.is_some() => "tutorial_move_blocked",

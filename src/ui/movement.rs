@@ -33,6 +33,7 @@ pub struct MoveView {
     pub destination: Option<SiteId>,
     pub planned_destination: Option<SiteId>,
     pub preview: Option<MovementPreview>,
+    pub reviewing_plan: bool,
     pub remaining: BTreeMap<ArmyId, u32>,
     pub nearby: BTreeMap<SiteId, u32>,
     pub status: String,

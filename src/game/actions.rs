@@ -268,6 +268,9 @@ impl Game {
             UiAction::CancelMovementPlan(army) => {
                 self.notice = None;
                 self.apply_campaign_command(Command::CancelMovementPlan { army });
+                if self.movement.reviewing_plan {
+                    self.choose_move_destination();
+                }
                 self.refresh_movement();
             }
             UiAction::CancelMove => self.cancel_move(),

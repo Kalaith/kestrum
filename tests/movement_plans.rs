@@ -61,7 +61,26 @@ fn long_orders_keep_the_remainder_across_save_reload_and_resume_on_the_next_turn
     let (data, mut campaign) = fixture();
     let moved = move_group(&mut campaign, &data, &[ArmyId(1)], &[1, 5, 6, 7, 14]);
     assert_eq!(moved.movement.unwrap().path, [1, 5, 6, 7].map(SiteId));
+    assert_eq!(campaign.armies[&ArmyId(1)].site, SiteId(7));
+    assert_eq!(
+        engine::army_remaining(&campaign, &data, ArmyId(1)).unwrap(),
+        0
+    );
     assert_eq!(campaign.movement_plans[0].path, [7, 14].map(SiteId));
+    let before_review = campaign.clone();
+    let plan = &campaign.movement_plans[0];
+    let review = engine::movement_order_preview(
+        &campaign,
+        &data,
+        campaign.player,
+        &MoveOrder {
+            armies: plan.armies.clone(),
+            path: plan.path.clone(),
+        },
+    )
+    .unwrap();
+    assert_eq!(review.order.path, [7, 14].map(SiteId));
+    assert_eq!(campaign, before_review);
     let raw = macroquad_toolkit::persistence::encode_slot(
         "strategic_v2",
         &Campaign::Strategic(Box::new(campaign.clone())),

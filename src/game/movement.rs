@@ -1,4 +1,4 @@
-//! Confirmed physical routes and group selection are presentation state.
+//! Destination taps issue immediate orders; route reviews remain presentation state.
 
 use super::*;
 use kestrum::{data::world::SiteId, state::military::ArmyId};
@@ -68,6 +68,7 @@ impl Game {
             self.movement.armies.sort_unstable();
         }
         self.movement.preview = None;
+        self.movement.reviewing_plan = false;
         self.movement.status.clear();
         self.movement.planned_destination = self
             .state
@@ -95,6 +96,7 @@ impl Game {
         self.movement.stage = ui::MoveStage::Map;
         self.movement.destination = None;
         self.movement.preview = None;
+        self.movement.reviewing_plan = false;
         self.movement.status.clear();
         self.navigation.clear_selection();
         self.state.overlay = Overlay::None;
@@ -151,7 +153,14 @@ impl Game {
             })
             .collect();
         self.refresh_move_options();
-        if let Some(destination) = self.movement.destination {
+        if self.movement.reviewing_plan {
+            self.movement.preview = None;
+            if self.movement.planned_destination.is_some() {
+                self.review_move();
+            } else {
+                self.choose_move_destination();
+            }
+        } else if let Some(destination) = self.movement.destination {
             self.select_move_destination(destination);
         }
     }
@@ -184,7 +193,7 @@ impl Game {
                     &self.movement.armies,
                     destination,
                 ) {
-                    if preview.stop.is_none() {
+                    if preview.blocked.is_none() && preview.stop.is_none() {
                         if let Some(site) = preview.order.path.last() {
                             self.movement.nearby.insert(*site, preview.total_cost);
                         }
@@ -259,6 +268,7 @@ impl Game {
     ) {
         self.movement.destination = site;
         self.movement.route_page = 0;
+        self.movement.reviewing_plan = false;
         match result {
             Ok(preview) => {
                 self.movement.preview = Some(preview);
@@ -273,13 +283,38 @@ impl Game {
 
     pub(super) fn review_move(&mut self) {
         if self.movement.preview.is_none() {
+            let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+                return;
+            };
+            let Some(plan) = campaign.movement_plans.iter().find(|plan| {
+                plan.armies
+                    .iter()
+                    .any(|army| self.movement.armies.contains(army))
+            }) else {
+                return;
+            };
+            let order = engine::MoveOrder {
+                armies: plan.armies.clone(),
+                path: plan.path.clone(),
+            };
+            let preview =
+                engine::movement_order_preview(campaign, &self.data, campaign.player, &order);
+            self.movement.armies = order.armies;
+            self.set_move_preview(order.path.last().copied(), preview);
+            self.movement.reviewing_plan = true;
+        }
+        if self.movement.preview.is_none() {
             return;
         }
         self.movement.stage = ui::MoveStage::Review;
         self.state.overlay = Overlay::MoveReview;
+        self.notice = None;
     }
 
     pub(super) fn confirm_move(&mut self) {
+        if self.movement.reviewing_plan {
+            return;
+        }
         let Some(preview) = &self.movement.preview else {
             return;
         };
@@ -295,7 +330,7 @@ impl Game {
                     return;
                 }
                 if let Some(movement) = outcome.movement {
-                    let selected = movement.armies.first().copied();
+                    let selected = movement.armies;
                     let message = if movement.planned_destination.is_some() {
                         self.data
                             .presentation
@@ -312,8 +347,10 @@ impl Game {
                     self.movement = ui::MoveView::default();
                     self.state.overlay = Overlay::None;
                     self.navigation.clear_selection();
-                    if let Some(army) = selected {
-                        self.begin_move(army);
+                    if let Some(army) = selected.first() {
+                        self.begin_move(*army);
+                        self.movement.armies = selected;
+                        self.refresh_move_options();
                     }
                     self.notice = Some((message, 5.0));
                 }

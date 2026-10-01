@@ -80,13 +80,12 @@ impl Game {
             return true;
         }
         self.apply(UiAction::SelectMap(MapSelection::Site(destination)));
-        self.apply(UiAction::ReviewMove);
-        assert_eq!(self.state.overlay, Overlay::MoveReview);
+        assert_eq!(self.movement.site, Some(destination));
+        assert_eq!(self.state.overlay, Overlay::None);
+        self.assert_tutorial(TutorialStep::Region);
         if scene == "tutorial_route" {
             return true;
         }
-        self.apply(UiAction::ConfirmMove);
-        self.assert_tutorial(TutorialStep::Region);
         if scene == "tutorial_region_return" {
             return true;
         }

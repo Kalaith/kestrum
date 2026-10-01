@@ -44,11 +44,11 @@ generator is tracked in `examples/prepare_midgame.rs`.
 | --- | --- |
 | Current decision | Choose where to expand or defend an established kingdom along its rival borders. |
 | Dominant focus | The discovered realm and its routes fill the atlas, showing multiple holdings at once. |
-| Primary action | Tap Army, choose a destination, then Confirm Move after reviewing movement, supply and encounter risks. Long orders use available movement and save their remaining route. |
+| Primary action | Tap Army, then a destination to move immediately. Nearby rings show costs; long orders use available movement and save their remaining route for End Turn. |
 | Supporting information | Season, active faction, settlement ownership and nearby army banners remain visible. Discovered terrain clears to the unknown frontier and map edges; outgoing roads fade into fog to show possible exploration directions. |
 | Deferred information | Place details open on selection; named careers and biographies live in Menu > Records. |
 | Layout and camera | The resume camera fits discovered markers at 1920×1080 and the minimum 1280×720 viewport; regional inspection and Recenter retain their local framing. |
-| Input and feedback | Visible controls work by tap/click. Moves update position and remaining movement; saved destinations show Cancel Route and continue when the next faction turn refreshes movement. |
+| Input and feedback | Visible controls work by tap/click. Moves update position and remaining movement; saved destinations show Review Route and Cancel Route. End Turn remains visible while selected and continues plans when movement refreshes. |
 
 The [map fog review](docs/verification/map-fog.md) records northern-edge clearing,
 outgoing connection hints, visual evidence and validation.
@@ -98,7 +98,7 @@ and deferred checks. K18 closure does not claim settled balance or full platform
 acceptance.
 
 Armies can now move directly on the map: tap an Army banner, inspect remaining
-movement and nearby costs, tap a destination, then Confirm Move. New campaigns
+movement and nearby costs, then tap a destination to move immediately. New campaigns
 start zoomed into their home area; army travel reveals adjacent places and saves
 those discoveries. [Map movement and exploration verification](docs/verification/map-movement-exploration.md)
 records regression coverage, normal/minimum captures and the published browser check.
@@ -107,8 +107,9 @@ records the follow-up that makes regional navigation available at the start.
 
 Long orders move as far as the group's remaining allowance permits, retain the
 physical route, and continue automatically when movement refreshes after End
-Turn. Orders can also be saved with no movement left. Cancel Route stops the
-plan; confirming another destination replaces it. Peaceful foreign territory
+Turn. Destination taps execute the affordable part immediately; End Turn remains
+visible with the unit selected. Orders can also be saved with no movement left.
+Cancel Route stops the plan; tapping another destination replaces it. Peaceful foreign territory
 rejects the whole order, including borders beyond this turn's reach. Continued
 travel rechecks access and pauses at encounters. Plans and automatic arrivals
 survive catalogue saves and reloads. [Movement-plan verification](docs/verification/movement-plans.md)
@@ -251,8 +252,8 @@ records visual, browser, save and Windows/WebGL Preview verification and limitat
 ### K06 — Movement, composition and connected recovery
 
 Orders opens group movement, formation transfers, local People and disbanding.
-Choose co-located armies, select a physical destination, review the route and
-Confirm Move. Every member pays actual edge costs; the group stops at its last
+Choose co-located armies, then tap a physical destination to move immediately.
+Every member pays actual edge costs; the group stops at its last
 legal site when a later edge is blocked. Route details can close without cancelling
 the order. K07 added field combat; K10 extends fortified arrival into persistent sieges.
 
@@ -467,17 +468,17 @@ previews reveal nothing. Older saves begin from their current holdings and armie
 The current decision is where to move the selected army. The atlas remains the
 dominant area at both 1920 × 1080 and the 1280 × 720 minimum. Tap an **Army** banner
 to see movement remaining and nearby legal destinations with their costs. Tap a
-place, inspect the highlighted route and **Confirm Move** in the compact order
-card. Arrival and cancellation stay on the map. Army Details, group selection
-and the full route breakdown are optional disclosures. All actions have visible
-tap controls, with 48-pixel minimum targets; depleted movement and blocked routes
-explain why the order cannot proceed. Recenter returns to the army or home area.
+place to move immediately. The compact order card shows the new location and
+any saved route. Arrival and cancellation stay on the map. Army Details, group
+selection and the full route breakdown are optional disclosures. All actions have visible
+tap controls, with 48-pixel minimum targets. Depleted movement saves a route;
+blocked routes explain why the order cannot proceed. Recenter returns to the army or home area.
 
 | Question | Current answer |
 | --- | --- |
 | Current decision | Select an army and choose where to move it; the opening guide then teaches returning to the world map and entering the known home region. |
 | Dominant focus | The connected strategic map over the full-bleed illustrated atlas. |
-| Primary action | Tap Army, tap a destination, then Confirm Move beside its cost. No management overlay is required. |
+| Primary action | Tap Army, then a destination to move immediately. End Turn advances saved travel when movement refreshes. |
 | Supporting information | The compact order card shows remaining movement, cost, risks and supply. Nearby legal moves have numbered rings. |
 | Deferred information | Undiscovered geography and kingdoms remain hidden. Army Details, Move Group, Review Route and utilities open on request. |
 | Layout and camera | 1280 × 720 logical canvas, scaled to 1920 × 1080; minimum supported landscape canvas is 1280 × 720. Camera stays within the atlas at 1–3× zoom. |

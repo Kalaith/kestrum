@@ -281,7 +281,8 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
 fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     let x = rect.x + 16.0;
     let active = ctx.state.overlay == Overlay::None;
-    let secondary = if ctx.movement.preview.is_some() {
+    let secondary = if ctx.movement.preview.is_some() || ctx.movement.planned_destination.is_some()
+    {
         ("route_review", UiAction::ReviewMove)
     } else {
         ("map_army_details", UiAction::OpenArmies(ctx.movement.site?))

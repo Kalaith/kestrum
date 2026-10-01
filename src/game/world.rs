@@ -1,4 +1,4 @@
-//! Map navigation changes presentation only; campaign geography stays authoritative.
+//! Atlas navigation and destination taps; campaign geography stays authoritative.
 
 use super::*;
 use kestrum::{
@@ -96,6 +96,14 @@ impl Game {
             match selection {
                 MapSelection::Site(id) => self.select_move_destination(id),
                 MapSelection::Marker(id) => self.select_world_destination(id),
+            }
+            if self
+                .movement
+                .preview
+                .as_ref()
+                .is_some_and(engine::MovementPreview::can_confirm)
+            {
+                self.confirm_move();
             }
         }
     }

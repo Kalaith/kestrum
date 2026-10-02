@@ -552,8 +552,6 @@ the onboarding proven. No blanket new physical-touch requirement is added to
 the existing waiver. Visible touch-capable controls and supported browser sizing
 remain implementation requirements.
 
-## Validation and completion
-
 ### Campaign review cases
 
 The [early Stellaris review](stellaris-release-lessons.md) motivates these five
@@ -590,7 +588,7 @@ and the limits of the sample. Separate human observation from an agent walkthrou
 and an engine-only simulation. This documentation review executes none of these
 scenarios or changes a milestone to complete.
 
-### Engineering and completion evidence
+## Validation and completion
 
 Follow [delivery and validation](12-delivery-and-validation.md), the shared
 engineering rules and `UI_STYLE.md`. Use the actual checkout, shared Cargo pool,

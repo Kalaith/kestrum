@@ -42,7 +42,9 @@ working toward, which competing use of resources they rejected, and how a
 recent change alters that goal. Include a period of consolidation: repairing
 damage, restoring supply, developing a holding or preparing a successor. Those
 are meaningful intermediate aims under the current rules; they are not claims
-that peaceful victory conditions exist. Treat deliberate waiting as valid when
+that peaceful victory conditions exist. Current
+[victory rules](03-kingdoms-and-economy.md) require eliminating or securing the
+submission of every independent rival. Treat deliberate waiting as valid when
 the player can explain its expected payoff and what would change the plan.
 
 Keep the roughly 20–50-year campaign target separate from evidence. The
@@ -50,6 +52,8 @@ Keep the roughly 20–50-year campaign target separate from evidence. The
 at 240 rounds raises a pacing/completion question; it does not establish that
 every campaign stalls or identify the cause. The existing deferred balance scope
 stays in place. Record sustained campaign quality as unverified until observed.
+The [earlier implementation review](implementation-review.md) likewise separates
+scripted conquest and 200/400-round continuity checks from ordinary play.
 
 ## Preparation that players can learn from
 
@@ -78,6 +82,13 @@ manual tactical control merely to make automatic combat understandable.
 supply, construction and diplomacy have defined eligibility rules. Unknown
 enemy details are deliberately restricted. Seeded outcomes and save continuity
 protect consistency; they do not by themselves tell a player how to plan.
+
+**Observed explanation gap:** the
+[person course interface](../src/ui/army/progression/person.rs) distinguishes
+missing experience, Gold and facilities, but falls back to `Unavailable` for
+other restrictions such as age, fitness or an existing course. The rule exists;
+its specific reason is not supplied by that disabled label. This is a source
+finding, not a new usability test or a claim that every career action is opaque.
 
 **Recommendation:** distinguish a known prerequisite, a conditional forecast
 and an unknown enemy fact. For a selected order or career, the player should

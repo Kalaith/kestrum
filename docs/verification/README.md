@@ -46,6 +46,7 @@ remain historical evidence and do not define another acceptance target.
 | Record | What it establishes |
 | --- | --- |
 | [Border visuals — 2026-10-02](border-visuals.md) | Clearer two-sided political borders, native review of eight colors and seven map/menu states, browser loading/campaign smoke check, and final engineering results; records the inherited regional mask limitation and production-victory failure |
+| [Early Stellaris review — 2026-10-02](stellaris-release-review.md) | Documentation-only campaign lessons review; links, diff scope and source archive checks, including the pre-existing template README manifest mismatch |
 | [Observer mode — 2026-10-02](observer.md) | Separate AI-only sessions, full visibility, automatic decisions, playback pacing, read-only inspections and human-campaign restoration |
 | [Regional border access — 2026-10-02](border-access.md) | Selected-army region entry, retained orders and camera framing, explicit Peace/War and closed-border diplomacy |
 | [M01A spatial scale — 2026-10-02](spatial-scale.md) | Independent extents, three scale bands, compact marks and retained cameras; engineering results, 14 actual 1920×1080 native captures, native actions, browser gameplay/capture and publishing/reload |

@@ -13,12 +13,30 @@ use crate::{
 pub use types::{ActionOutcome, ActionPreview, Actor, Command, RuleError};
 pub(super) use validation::validate_command;
 
+fn validate_observer_actor(
+    campaign: &StrategicCampaign,
+    actor: Actor,
+    command: &Command,
+) -> Result<(), RuleError> {
+    if campaign.observer_mode
+        && actor == Actor::Player
+        && !matches!(
+            command,
+            Command::StartPendingBattle | Command::SetNpcPaused(_) | Command::StepNpc
+        )
+    {
+        return Err(RuleError::ObserverControlOnly);
+    }
+    Ok(())
+}
+
 pub fn preview(
     campaign: &StrategicCampaign,
     data: &GameData,
     actor: Actor,
     command: Command,
 ) -> Result<ActionPreview, RuleError> {
+    validate_observer_actor(campaign, actor, &command)?;
     if matches!(
         command,
         Command::SetFormationTactics { .. }
@@ -104,6 +122,7 @@ pub fn apply(
     actor: Actor,
     command: Command,
 ) -> Result<ActionOutcome, RuleError> {
+    validate_observer_actor(campaign, actor, &command)?;
     if matches!(
         command,
         Command::SetFormationTactics { .. }
@@ -129,6 +148,16 @@ pub fn advance_npc(
     campaign: &mut StrategicCampaign,
     data: &GameData,
 ) -> Result<ActionOutcome, RuleError> {
+    if campaign.observer_mode {
+        return super::observer::advance_observer(campaign, data);
+    }
+    advance_npc_action(campaign, data)
+}
+
+pub(super) fn advance_npc_action(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<ActionOutcome, RuleError> {
     if campaign.pending_battle.is_some() {
         return Err(RuleError::BattlePending);
     }
@@ -140,18 +169,15 @@ pub fn advance_npc(
     }
     let decision = super::ai::propose(campaign, data, faction)?;
     let mut candidate = campaign.clone();
-    let outcome = match apply(
-        &mut candidate,
-        data,
-        Actor::Npc(faction),
-        decision.command.clone(),
-    ) {
+    let actor = Actor::Npc(faction);
+    let outcome = match apply(&mut candidate, data, actor, decision.command.clone()) {
         Ok(mut outcome) => {
             if candidate.pending_battle.as_ref().is_some_and(|pending| {
-                !pending
-                    .report
-                    .participant_factions()
-                    .any(|participant| participant == campaign.player)
+                candidate.observer_mode
+                    || !pending
+                        .report
+                        .participant_factions()
+                        .any(|participant| participant == campaign.player)
             }) {
                 let accepted = apply(
                     &mut candidate,
@@ -166,7 +192,7 @@ pub fn advance_npc(
         }
         Err(_) => {
             super::ai::rejected(&mut candidate, campaign, data, faction, &decision)?;
-            apply(&mut candidate, data, Actor::Npc(faction), Command::EndTurn)?
+            apply(&mut candidate, data, actor, Command::EndTurn)?
         }
     };
     *campaign = candidate;

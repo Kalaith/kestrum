@@ -11,6 +11,9 @@ impl Game {
         ) {
             return false;
         }
+        if self.is_observer() {
+            return true;
+        }
         let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
             return true;
         };
@@ -35,7 +38,7 @@ impl Game {
     }
 
     pub(super) fn observe_tutorial(&mut self, action: UiAction) {
-        if self.state.screen != Screen::Campaign {
+        if self.is_observer() || self.state.screen != Screen::Campaign {
             return;
         }
         let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {

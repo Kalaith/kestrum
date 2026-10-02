@@ -144,7 +144,7 @@ impl Game {
     }
 
     pub(super) fn sync_pending_battle(&mut self) {
-        if self.state.overlay == Overlay::Battlefield {
+        if self.is_observer() || self.state.overlay == Overlay::Battlefield {
             return;
         }
         let pending = self

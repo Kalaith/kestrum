@@ -19,12 +19,16 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Observer mode](observer.md) records the separate AI-only title mode, full-map
+visibility, automatic progression and playback controls. It builds on the map
+work below without changing the M02–M05 scope.
+
 [Regional border access](border-access.md) records the later correction for
 selected-army regional navigation, supply explanations and diplomatic access.
 It does not claim completion of the broader M02 inspector work.
 
 [M01A spatial scale](spatial-scale.md) is complete under its recorded scope and
-is the latest runtime record. Formatting, strict Clippy, source-size checks and 14 final native
+records the spatial milestone. Formatting, strict Clippy, source-size checks and 14 final native
 captures passed. The full suite retains one production-victory failure and one
 ignored profiling test. Automated native actions, background browser gameplay
 and publishing/reload passed. Final native and browser captures measure the
@@ -37,6 +41,7 @@ remain historical evidence and do not define another acceptance target.
 
 | Record | What it establishes |
 | --- | --- |
+| [Observer mode — 2026-10-02](observer.md) | Separate AI-only sessions, full visibility, automatic decisions, playback pacing, read-only inspections and human-campaign restoration |
 | [Regional border access — 2026-10-02](border-access.md) | Selected-army region entry, retained orders and camera framing, explicit Peace/War and closed-border diplomacy |
 | [M01A spatial scale — 2026-10-02](spatial-scale.md) | Independent extents, three scale bands, compact marks and retained cameras; engineering results, 14 actual 1920×1080 native captures, native actions, browser gameplay/capture and publishing/reload |
 | [M01 kingdom overview — 2026-10-01](kingdom-overview.md) | Known political/control layers, symbols/labels/banners, actual accounts and attention; full-suite result, final focused checks, nine native states at both sizes, publishing and browser gameplay/reload evidence |

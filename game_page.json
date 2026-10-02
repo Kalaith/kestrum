@@ -11,9 +11,10 @@
     "width": 1920,
     "height": 1080
   },
-  "controls_hint": "Choose New Game, name your kingdom and choose four to eight factions. Play at a usable 1920 by 1080 canvas. Overview fits known land and returns to your working view.",
+  "controls_hint": "Choose New Game to lead a kingdom, or Observer to watch an AI-only world with no fog. Observer offers Pause, Step and 1x/2x/4x speed. Play at a usable 1920 by 1080 canvas.",
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
+    "Observer is a separate mode for watching every AI kingdom on the fully revealed atlas. Choose the kingdom count and world seed, pause to inspect, or speed up automatic turns. Observer sessions leave your campaign saves untouched.",
     "Found a human kingdom on the 80-location atlas with a chosen emblem, four to eight factions and a repeatable world seed. Recruit six-slot armies, inspect land routes and supply, build settlements, clear local threats and decide war or peace. Battles and sieges leave persistent casualties, wounds and dated reports.",
     "Service earns classes, formation specializations and recognition. Teach apprentices, form households, raise or adopt dependents and choose qualified successors as people age. Local training focus discounts courses by 25%. Biographies and place histories retain witnessed milestones; rival details come from actual encounters.",
     "Each full round advances one season and creates a checkpoint. Save named copies, reload earlier moments and continue a campaign through its kingdom victory or defeat. The sole design and acceptance canvas is 1920 by 1080. Other host sizes scale or letterbox the same composition; use Full Screen to reach the intended play area."

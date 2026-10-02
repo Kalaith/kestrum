@@ -48,7 +48,7 @@ impl Game {
     }
 
     pub(super) fn kingdom_events(&mut self) {
-        if self.state.screen != Screen::Campaign {
+        if self.is_observer() || self.state.screen != Screen::Campaign {
             return;
         }
         if self.kingdom_ended() {

@@ -20,6 +20,7 @@ mod lifecycle;
 mod mentorship;
 mod movement;
 mod notices;
+mod observer;
 mod overview;
 mod person_combat;
 pub(crate) mod progression;
@@ -63,6 +64,7 @@ pub use movement::{
     preview_order as movement_order_preview, route_cost, world_movement_preview, MoveOrder,
     MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,
 };
+pub use observer::{advance_observer, step_observer};
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
 pub use progression::{
     career_options, specialization_options, CareerOption, CareerRequirement, SpecializationOption,

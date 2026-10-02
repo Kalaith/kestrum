@@ -93,6 +93,7 @@ fn heading(ctx: &Context<'_>) {
         let role = ctx.text(match view.role {
             SiegeRole::Defender => "siege_defending",
             SiegeRole::Besieger => "siege_besieging",
+            SiegeRole::Observer => "observer_siege_observing",
         });
         let summary = format!(
             "{role} · {}: {} · {}: {}% · {}: {:.2}×",
@@ -104,14 +105,16 @@ fn heading(ctx: &Context<'_>) {
             view.wall_permille as f32 / 1000.0
         );
         lines(ctx, &summary, vec2(112.0, 123.0), 1056.0, 2, BRASS);
-        lines(
-            ctx,
-            &ctx.text("siege_enemy_unknown"),
-            vec2(112.0, 176.0),
-            1056.0,
-            2,
-            MUTED,
-        );
+        if view.role != SiegeRole::Observer {
+            lines(
+                ctx,
+                &ctx.text("siege_enemy_unknown"),
+                vec2(112.0, 176.0),
+                1056.0,
+                2,
+                MUTED,
+            );
+        }
     }
 }
 

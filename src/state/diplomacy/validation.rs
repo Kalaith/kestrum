@@ -146,18 +146,26 @@ impl StrategicCampaign {
                     && self.defeat_eligible(self.player)
             }
             EndingKind::Victory => {
-                self.is_independent(self.player)
-                    && self
-                        .factions
-                        .values()
-                        .filter(|faction| faction.id != self.player)
-                        .all(|faction| {
-                            faction.status == FactionStatus::Eliminated
-                                || faction.status
-                                    == FactionStatus::Vassal {
-                                        sovereign: self.player,
-                                    }
-                        })
+                if self.observer_mode {
+                    self.factions
+                        .keys()
+                        .filter(|faction| self.is_independent(**faction))
+                        .count()
+                        <= 1
+                } else {
+                    self.is_independent(self.player)
+                        && self
+                            .factions
+                            .values()
+                            .filter(|faction| faction.id != self.player)
+                            .all(|faction| {
+                                faction.status == FactionStatus::Eliminated
+                                    || faction.status
+                                        == FactionStatus::Vassal {
+                                            sovereign: self.player,
+                                        }
+                            })
+                }
             }
         };
         require(valid, "terminal outcome contradicts faction status")

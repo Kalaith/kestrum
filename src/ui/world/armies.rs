@@ -11,6 +11,12 @@ pub(super) fn display_bounds(ctx: &Context<'_>, target: &ArmyTarget) -> Rect {
         return target.bounds;
     }
     let at = target.bounds.center();
+    if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        return Rect::new(at.x - 88.0, at.y - 24.0, 176.0, 68.0);
+    }
     Rect::new(at.x - 57.0, at.y - 24.0, 114.0, 60.0)
 }
 
@@ -18,11 +24,15 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
     let (Some(campaign), Some(overview)) = (ctx.campaign_view, ctx.overview) else {
         return;
     };
-    let attention = super::super::overview::attention_bounds(
-        ctx.overview_ui,
-        panel.is_some(),
-        overview.attention.len(),
-    );
+    let attention = if campaign.observer_mode {
+        Rect::new(0.0, 0.0, 0.0, 0.0)
+    } else {
+        super::super::overview::attention_bounds(
+            ctx.overview_ui,
+            panel.is_some(),
+            overview.attention.len(),
+        )
+    };
     for target in ctx
         .navigation
         .army_targets(&campaign.world, ctx.view, &campaign.armies)
@@ -39,6 +49,11 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
             continue;
         };
         let at = target.bounds.center();
+        let factions = if campaign.observer_mode {
+            observer_factions(ctx, &target.armies)
+        } else {
+            Vec::new()
+        };
         let selected = target
             .armies
             .iter()
@@ -68,6 +83,9 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
         if target.grouping != ArmyGrouping::Site {
             draw_circle_lines(at.x, at.y, 17.0, 1.0, color);
         }
+        if campaign.observer_mode {
+            faction_ticks(ctx, at, &factions);
+        }
         let status = if armies
             .iter()
             .any(|army| army.status == ArmyMapStatus::Siege || !army.supplied)
@@ -93,7 +111,15 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
         if ctx.view.band() != MapScaleBand::Overview
             && banner_visible(display_bounds(ctx, &target), panel, attention)
         {
-            let identity = if target.grouping == ArmyGrouping::Region {
+            let identity = if campaign.observer_mode && factions.len() == 1 {
+                campaign
+                    .factions
+                    .iter()
+                    .find(|faction| faction.id == factions[0])
+                    .map_or_else(|| first.name.clone(), |faction| faction.name.clone())
+            } else if campaign.observer_mode && factions.len() > 1 {
+                format!("{} {}", factions.len(), ctx.text("observer_factions_count"))
+            } else if target.grouping == ArmyGrouping::Region {
                 ctx.text("map_regional_forces")
                     .replace("{count}", &armies.len().to_string())
             } else if armies.len() == 1 {
@@ -101,9 +127,44 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
             } else {
                 format!("{} {}", armies.len(), ctx.data.map.text("armies"))
             };
-            let label = truncate_text_to_width_ex(&identity, 106.0, ctx.body_font(), 16.0);
+            let width = if campaign.observer_mode { 168.0 } else { 106.0 };
+            let label = truncate_text_to_width_ex(&identity, width, ctx.body_font(), 16.0);
             short_label(ctx, &label, at + vec2(0.0, 28.0), CREAM);
         }
+    }
+}
+
+fn observer_factions(
+    ctx: &Context<'_>,
+    armies: &[kestrum::state::military::ArmyId],
+) -> Vec<kestrum::data::world::FactionId> {
+    let Some(campaign) = ctx.campaign_view else {
+        return Vec::new();
+    };
+    let mut factions: Vec<_> = campaign
+        .armies
+        .iter()
+        .filter(|army| armies.contains(&army.id))
+        .map(|army| army.faction)
+        .collect();
+    factions.sort_unstable();
+    factions.dedup();
+    factions
+}
+
+fn faction_ticks(ctx: &Context<'_>, center: Vec2, factions: &[kestrum::data::world::FactionId]) {
+    for (index, faction) in factions.iter().enumerate() {
+        let angle = std::f32::consts::TAU * index as f32 / factions.len().max(1) as f32;
+        let direction = vec2(angle.cos(), angle.sin());
+        let color = super::faction_color(ctx, Some(*faction));
+        draw_line(
+            center.x + direction.x * 18.0,
+            center.y + direction.y * 18.0,
+            center.x + direction.x * 24.0,
+            center.y + direction.y * 24.0,
+            4.0,
+            color,
+        );
     }
 }
 

@@ -173,6 +173,9 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
                             kestrum::engine::SiegeRole::Defender => {
                                 [SiegeAction::Sortie, SiegeAction::Escape]
                             }
+                            kestrum::engine::SiegeRole::Observer => {
+                                panic!("participant siege projection cannot have observer role")
+                            }
                         };
                         preferred.into_iter().find_map(|action| {
                             let option = view.actions.iter().find(|option| {

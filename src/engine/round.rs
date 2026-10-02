@@ -32,7 +32,7 @@ pub(super) fn reconcile_phase(
         .find(|id| campaign.is_independent(*id) && !campaign.acted.contains(id));
     if let Some(next_faction) = next {
         let paused = matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. });
-        campaign.phase = if next_faction == campaign.player {
+        campaign.phase = if next_faction == campaign.player && !campaign.observer_mode {
             CampaignPhase::PlayerTurn
         } else {
             CampaignPhase::NpcTurn {
@@ -79,7 +79,19 @@ fn complete_round(
     super::knowledge::prune_knowledge(campaign, data);
     campaign.acted.clear();
     campaign.round_order = campaign.independent_order();
-    campaign.phase = CampaignPhase::PlayerTurn;
+    let paused = matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. });
+    campaign.phase = if campaign.observer_mode {
+        CampaignPhase::NpcTurn {
+            faction: campaign
+                .round_order
+                .first()
+                .copied()
+                .unwrap_or(campaign.player),
+            paused,
+        }
+    } else {
+        CampaignPhase::PlayerTurn
+    };
     for formation in campaign.formations.values_mut() {
         formation.movement_spent = 0;
     }

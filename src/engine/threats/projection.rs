@@ -8,6 +8,8 @@ pub struct VisibleThreat {
     pub site: SiteId,
     pub kind: ThreatKind,
     pub name: String,
+    /// Threat size is revealed only on a full observer map projection.
+    pub headcount: Option<u32>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ThreatArmyOption {
@@ -53,6 +55,7 @@ pub fn visible_threats(campaign: &StrategicCampaign, observer: FactionId) -> Vec
             site: threat.site,
             kind: threat.kind,
             name: threat.name.clone(),
+            headcount: None,
         })
         .collect()
 }

@@ -117,7 +117,13 @@ impl StrategicCampaign {
             "unsupported faction count",
         )?;
         require(
-            self.is_independent(self.player)
+            self.factions.contains_key(&self.player),
+            "player",
+            "unknown founding faction",
+        )?;
+        require(
+            self.observer_mode
+                || self.is_independent(self.player)
                 || self
                     .diplomacy
                     .ending
@@ -176,13 +182,19 @@ impl StrategicCampaign {
     fn validate_phase(&self) -> Result<(), String> {
         let unique: BTreeSet<_> = self.round_order.iter().copied().collect();
         require(
-            self.round_order.first() == Some(&self.player)
+            (!self.observer_mode
+                || !self.round_order.is_empty()
+                || self.diplomacy.ending.is_some())
+                && (self.observer_mode || self.round_order.first() == Some(&self.player))
                 && unique.len() == self.round_order.len()
                 && self
                     .round_order
                     .iter()
                     .all(|id| self.factions.contains_key(id))
-                && self.round_order[1..]
+                && self
+                    .round_order
+                    .get(1..)
+                    .unwrap_or_default()
                     .windows(2)
                     .all(|pair| pair[0] < pair[1]),
             "round_order",
@@ -206,11 +218,18 @@ impl StrategicCampaign {
             "phase",
             "active faction is not next in the round",
         )?;
+        if self.observer_mode {
+            require(
+                matches!(self.phase, CampaignPhase::NpcTurn { .. }) || self.diplomacy.is_blocked(),
+                "phase",
+                "observer campaigns require an automatic faction phase",
+            )?;
+        }
         if let CampaignPhase::NpcTurn { faction, .. } = self.phase {
             require(
-                faction != self.player,
+                (self.observer_mode || faction != self.player) && self.active_faction() == faction,
                 "phase",
-                "player cannot have an NPC phase",
+                "invalid active NPC faction",
             )?;
         }
         Ok(())

@@ -113,7 +113,8 @@ impl Game {
     }
 
     pub(super) fn progress_npcs(&mut self, dt: f32) {
-        if self.capture
+        if self.is_observer()
+            || self.capture
             || self.error.is_some()
             || self.state.screen != Screen::Campaign
             || self.state.overlay != Overlay::None

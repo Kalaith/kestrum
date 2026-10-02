@@ -171,6 +171,7 @@ impl Game {
         assert_eq!(vec2(screen_width(), screen_height()), vec2(WIDTH, HEIGHT));
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let ctx = ui::Context {
+            observer: &self.observer,
             overview: self.overview.as_ref(),
             overview_ui: &self.overview_ui,
             kingdom: &self.kingdom,

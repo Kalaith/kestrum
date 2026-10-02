@@ -37,12 +37,13 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     let entries = [
         ("continue", UiAction::Continue, can_continue),
         ("new_game", UiAction::NewGame, true),
+        ("observer", UiAction::OpenObserverSetup, true),
         ("settings", UiAction::Open(Overlay::Settings), true),
         ("help", UiAction::Open(Overlay::Help), true),
         ("credits", UiAction::Open(Overlay::Credits), true),
     ];
     for (index, (key, action, enabled)) in entries.into_iter().enumerate() {
-        let rect = Rect::new(318.0, 502.0 + index as f32 * 60.0, 324.0, 52.0);
+        let rect = Rect::new(318.0, 482.0 + index as f32 * 54.0, 324.0, 48.0);
         let primary = if can_continue {
             key == "continue"
         } else {
@@ -64,7 +65,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     #[cfg(not(target_arch = "wasm32"))]
     if button(
         ctx,
-        Rect::new(318.0, 802.0, 324.0, 52.0),
+        Rect::new(318.0, 820.0, 324.0, 52.0),
         &ctx.text("quit"),
         active,
         false,
@@ -136,6 +137,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Credits => "credits",
         Overlay::ConfirmNew => "new_title",
         Overlay::Setup
+        | Overlay::ObserverSetup
+        | Overlay::ObserverKingdoms
         | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery
@@ -154,7 +157,16 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
     centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
     horizontal_rule(vec2(640.0, 184.0), 206.0);
     let action = match ctx.state.overlay {
-        Overlay::Menu => pause(ctx),
+        Overlay::Menu => {
+            if ctx
+                .campaign_view
+                .is_some_and(|campaign| campaign.observer_mode)
+            {
+                super::observer::observer_pause_menu(ctx)
+            } else {
+                pause(ctx)
+            }
+        }
         Overlay::Settings => settings(ctx),
         Overlay::Help => help::draw(ctx),
         Overlay::Credits => {
@@ -163,6 +175,8 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         }
         Overlay::ConfirmNew => confirm(ctx),
         Overlay::Setup
+        | Overlay::ObserverSetup
+        | Overlay::ObserverKingdoms
         | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery

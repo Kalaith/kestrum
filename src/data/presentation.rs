@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 mod life_text;
 mod map_presentation;
+mod observer_text;
 mod overview_text;
 mod progression_text;
 mod required_text;
@@ -55,6 +56,7 @@ impl PresentationData {
             .chain(PROGRESSION_TEXT)
             .chain(tutorial_text::TUTORIAL_TEXT)
             .chain(overview_text::OVERVIEW_TEXT)
+            .chain(observer_text::OBSERVER_TEXT)
         {
             if self
                 .text

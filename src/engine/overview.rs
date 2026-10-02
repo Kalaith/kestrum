@@ -1,4 +1,4 @@
-//! Read-only map summaries of discovered places and observer-owned forces.
+//! Read-only map summaries of discovered places and visible forces.
 
 use super::VisibleCampaign;
 use crate::{
@@ -71,6 +71,7 @@ pub enum ArmyMapStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArmyOverview {
+    pub faction: FactionId,
     pub site: SiteId,
     pub name: String,
     pub troops: u32,
@@ -110,7 +111,7 @@ pub struct MapOverview {
 }
 
 /// Independent discovery filtering makes this safe for both projection entry points.
-/// No summary consults authoritative enemy records, hidden orders or hidden land.
+/// Full observer map views may summarize every faction's visible records.
 pub fn map_overview(view: &VisibleCampaign) -> MapOverview {
     let sites: BTreeMap<_, _> = view
         .world
@@ -130,7 +131,10 @@ pub fn map_overview(view: &VisibleCampaign) -> MapOverview {
     let armies: BTreeMap<_, _> = view
         .armies
         .iter()
-        .filter(|army| army.faction == view.observer && sites.contains_key(&army.site))
+        .filter(|army| {
+            (view.full_map_visibility || army.faction == view.observer)
+                && sites.contains_key(&army.site)
+        })
         .map(|army| (army.id, army_overview(view, army)))
         .collect();
     let attention = attention(view, &sites, &armies);
@@ -243,11 +247,11 @@ fn marker_overview(
 }
 
 fn army_overview(view: &VisibleCampaign, army: &Army) -> ArmyOverview {
-    let status = if view
-        .sieges
-        .iter()
-        .any(|siege| siege.own_armies.contains(&army.id))
-    {
+    let status = if view.sieges.iter().any(|siege| {
+        siege.own_armies.contains(&army.id)
+            || siege.defending_armies.contains(&army.id)
+            || siege.besieging_armies.contains(&army.id)
+    }) {
         ArmyMapStatus::Siege
     } else if view
         .movement_plans
@@ -259,6 +263,7 @@ fn army_overview(view: &VisibleCampaign, army: &Army) -> ArmyOverview {
         ArmyMapStatus::Idle
     };
     ArmyOverview {
+        faction: army.faction,
         site: army.site,
         name: army.name.clone(),
         troops: army
@@ -266,7 +271,7 @@ fn army_overview(view: &VisibleCampaign, army: &Army) -> ArmyOverview {
             .filter_map(|id| {
                 view.formations
                     .iter()
-                    .find(|formation| formation.id == id && formation.faction == view.observer)
+                    .find(|formation| formation.id == id && formation.faction == army.faction)
             })
             .map(|formation| formation.headcount)
             .sum(),
@@ -282,8 +287,9 @@ fn attention(
 ) -> Vec<MapAttention> {
     let mut result = Vec::new();
     for (&id, site) in sites {
-        let concerns_observer =
-            site.controller == Some(view.observer) || site.political_owner == Some(view.observer);
+        let concerns_observer = view.full_map_visibility
+            || site.controller == Some(view.observer)
+            || site.political_owner == Some(view.observer);
         let kind = if site.danger.sieges > 0 {
             Some(AttentionKind::Siege)
         } else if site.danger.hostile_contacts > 0 {

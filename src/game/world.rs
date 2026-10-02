@@ -19,6 +19,13 @@ impl Game {
     }
 
     pub(super) fn focus_home(&mut self) {
+        if self.is_observer() {
+            self.navigation.reset(&mut self.view);
+            if let Some(view) = &self.projection {
+                self.navigation.toggle_overview(&view.world, &mut self.view);
+            }
+            return;
+        }
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
             return;
         };
@@ -40,14 +47,19 @@ impl Game {
         {
             return true;
         }
-        if ui::overview_controls_contain(
-            point,
-            &self.overview_ui,
-            self.navigation.selection().is_some() || self.movement.stage == ui::MoveStage::Map,
-            self.overview
-                .as_ref()
-                .map_or(0, |overview| overview.attention.len()),
-        ) {
+        if self.is_observer() && ui::observer_controls_contain(point) {
+            return true;
+        }
+        if !self.is_observer()
+            && ui::overview_controls_contain(
+                point,
+                &self.overview_ui,
+                self.navigation.selection().is_some() || self.movement.stage == ui::MoveStage::Map,
+                self.overview
+                    .as_ref()
+                    .map_or(0, |overview| overview.attention.len()),
+            )
+        {
             return true;
         }
         let world = self
@@ -80,8 +92,10 @@ impl Game {
         self.state.overlay = Overlay::None;
         self.navigation
             .focus_site(&view.world, site, &mut self.view);
-        if let engine::AttentionTarget::Army(id) = target {
-            self.begin_move(id);
+        if !self.is_observer() {
+            if let engine::AttentionTarget::Army(id) = target {
+                self.begin_move(id);
+            }
         }
     }
 
@@ -113,14 +127,18 @@ impl Game {
         if let Some(action) = self.group_focus_action(origin, pointer.position, panel) {
             return Some(action);
         }
-        if campaign.player_turn {
-            let attention = ui::attention_bounds(
-                &self.overview_ui,
-                panel.is_some(),
-                self.overview
-                    .as_ref()
-                    .map_or(0, |overview| overview.attention.len()),
-            );
+        if campaign.player_turn || campaign.observer_mode {
+            let attention = if campaign.observer_mode {
+                Rect::default()
+            } else {
+                ui::attention_bounds(
+                    &self.overview_ui,
+                    panel.is_some(),
+                    self.overview
+                        .as_ref()
+                        .map_or(0, |overview| overview.attention.len()),
+                )
+            };
             if let Some(target) = self
                 .navigation
                 .army_targets(world, &self.view, &campaign.armies)
@@ -133,6 +151,17 @@ impl Game {
             {
                 if let Some(position) = target.focus {
                     return Some(UiAction::FocusMapGroup(position, self.view.working_zoom()));
+                }
+                if campaign.observer_mode {
+                    let id = target.armies.first()?;
+                    let army = campaign.armies.iter().find(|army| army.id == *id)?;
+                    let selection = match self.navigation.scope() {
+                        kestrum::navigation::MapScope::World => {
+                            MapSelection::Marker(world.site(army.site)?.marker)
+                        }
+                        kestrum::navigation::MapScope::Region(_) => MapSelection::Site(army.site),
+                    };
+                    return Some(UiAction::SelectMap(selection));
                 }
                 return target.armies.first().copied().map(UiAction::BeginMove);
             }
@@ -185,7 +214,7 @@ impl Game {
             self.error = Some(error);
             return;
         }
-        if self.movement.stage == ui::MoveStage::Map {
+        if !self.is_observer() && self.movement.stage == ui::MoveStage::Map {
             match selection {
                 MapSelection::Site(id) => self.select_move_destination(id),
                 MapSelection::Marker(id) => self.select_world_destination(id),

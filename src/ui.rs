@@ -10,6 +10,7 @@ mod history;
 mod kingdom;
 mod menus;
 mod movement;
+mod observer;
 mod overview;
 mod saves;
 mod selection;
@@ -52,6 +53,7 @@ pub use movement::{
     draw_map_overlay as draw_move_map_overlay, panel_bounds as movement_panel_bounds,
 };
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
+pub use observer::controls_contain as observer_controls_contain;
 pub use overview::attention_bounds;
 pub use overview::{controls_contain as overview_controls_contain, OverviewView};
 pub use saves::{SaveMode, SaveRow, SaveView};
@@ -200,6 +202,13 @@ pub enum UiAction {
     WorldMap,
     CloseSelection,
     NewGame,
+    OpenObserverSetup,
+    StartObserver,
+    ToggleObserverPaused,
+    StepObserver,
+    SetObserverSpeed(u8),
+    OpenObserverKingdoms,
+    FocusObserverFaction(kestrum::data::world::FactionId),
     ConfirmNew,
     OpenSetupName,
     EditSetupName(macroquad_toolkit::ui::text_entry::TextEntryAction),
@@ -369,6 +378,7 @@ pub struct Context<'a> {
     pub save_error: &'a str,
     pub setup: &'a SetupView,
     pub campaign_view: Option<&'a kestrum::engine::VisibleCampaign>,
+    pub observer: &'a kestrum::state::observer::ObserverPlayback,
 }
 
 impl Context<'_> {
@@ -390,6 +400,11 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     atlas::draw_landscape(ctx);
     let action = if ctx.state.screen == Screen::Title {
         menus::title(ctx)
+    } else if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        observer::draw_hud(ctx)
     } else {
         atlas::hud(ctx)
     };
@@ -430,6 +445,8 @@ fn draw_sheet(ctx: &Context<'_>) -> Option<UiAction> {
     match ctx.state.overlay {
         Overlay::Kingdom => kingdom::draw(ctx),
         Overlay::Setup => setup::draw(ctx),
+        Overlay::ObserverSetup => observer::draw_setup(ctx),
+        Overlay::ObserverKingdoms => observer::draw_kingdoms(ctx),
         Overlay::CampaignEnd => campaign_end::draw(ctx),
         Overlay::Threat => threat::draw(ctx),
         Overlay::Siege => siege::draw(ctx),

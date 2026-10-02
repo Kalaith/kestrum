@@ -9,7 +9,7 @@ use kestrum::{
     state::{world::CampaignWorld, FactionStatus, Overlay},
 };
 use macroquad::prelude::*;
-use macroquad_toolkit::ui::wrap_text_ex;
+use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 
 /// Drawing and input use the same side, opposite the selected map target.
 pub fn bounds(navigation: &MapNavigation, world: &CampaignWorld, view: &MapView) -> Option<Rect> {
@@ -46,12 +46,19 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         }
     };
     let mut sections = Vec::new();
+    if campaign.observer_mode {
+        observer_army_details(ctx, marker.id, site.map(|site| site.id), &mut sections);
+    }
     if let Some(site) = site {
         site_details(ctx, site, &mut sections);
     } else {
         region_details(ctx, marker.id, &mut sections);
     }
-    panel(ctx, rect, name, sections);
+    if campaign.observer_mode {
+        observer_panel(ctx, rect, name, &sections);
+    } else {
+        panel(ctx, rect, name, sections);
+    }
     controls(ctx, rect, marker.id, site)
 }
 
@@ -62,6 +69,12 @@ fn controls(
     site: Option<&Site>,
 ) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
+    if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        return observer_controls(ctx, rect, marker, site);
+    }
     if let Some(threat) = site.and_then(|site| {
         ctx.campaign_view?
             .threats
@@ -126,6 +139,111 @@ fn controls(
         return Some(UiAction::CloseSelection);
     }
     None
+}
+
+fn observer_controls(
+    ctx: &Context<'_>,
+    rect: Rect,
+    marker: MarkerId,
+    site: Option<&Site>,
+) -> Option<UiAction> {
+    let action = if site.is_some() {
+        UiAction::OpenObserverKingdoms
+    } else {
+        UiAction::EnterRegion(marker)
+    };
+    let key = if site.is_some() {
+        "observer_kingdoms"
+    } else {
+        "enter_region"
+    };
+    if button(
+        ctx,
+        Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
+        &ctx.text(key),
+        ctx.state.overlay == Overlay::None,
+        site.is_none(),
+    ) {
+        return Some(action);
+    }
+    if button(
+        ctx,
+        Rect::new(rect.x + 220.0, rect.y + rect.h - 62.0, 122.0, 48.0),
+        &ctx.text("close"),
+        ctx.state.overlay == Overlay::None,
+        false,
+    ) {
+        return Some(UiAction::CloseSelection);
+    }
+    None
+}
+
+fn observer_army_details(
+    ctx: &Context<'_>,
+    marker: MarkerId,
+    selected_site: Option<SiteId>,
+    sections: &mut Vec<String>,
+) {
+    let Some(view) = ctx.campaign_view else {
+        return;
+    };
+    let armies: Vec<_> = view
+        .armies
+        .iter()
+        .filter(|army| {
+            selected_site.map_or_else(
+                || {
+                    view.world
+                        .site(army.site)
+                        .is_some_and(|site| site.marker == marker)
+                },
+                |site| army.site == site,
+            )
+        })
+        .collect();
+    if armies.is_empty() {
+        return;
+    }
+    sections.push(ctx.text("armies"));
+    if selected_site.is_some() && armies.len() <= 4 {
+        for army in armies {
+            let owner = owner_name(ctx, Some(army.faction), "map_unknown_kingdom");
+            let troops = ctx
+                .overview
+                .and_then(|overview| overview.armies.get(&army.id))
+                .map_or(0, |summary| summary.troops);
+            sections.push(format!(
+                "{owner} · {}: {troops} {}",
+                army.name,
+                ctx.data.map.text("troops")
+            ));
+        }
+        return;
+    }
+    for faction in &view.factions {
+        let owned: Vec<_> = armies
+            .iter()
+            .filter(|army| army.faction == faction.id)
+            .collect();
+        if owned.is_empty() {
+            continue;
+        }
+        let troops: u32 = owned
+            .iter()
+            .filter_map(|army| {
+                ctx.overview
+                    .and_then(|overview| overview.armies.get(&army.id))
+                    .map(|summary| summary.troops)
+            })
+            .sum();
+        sections.push(format!(
+            "{}: {} {} · {troops} {}",
+            faction.name,
+            owned.len(),
+            ctx.data.map.text("armies"),
+            ctx.data.map.text("troops")
+        ));
+    }
 }
 
 fn threat_controls(
@@ -224,6 +342,39 @@ fn panel(ctx: &Context<'_>, rect: Rect, name: &str, sections: Vec<String>) {
     }
 }
 
+fn observer_panel(ctx: &Context<'_>, rect: Rect, name: &str, sections: &[String]) {
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        Color::new(INK.r, INK.g, INK.b, 0.98),
+    );
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
+    let title = truncate_text_to_width_ex(name, rect.w - 32.0, ctx.font(), 24.0);
+    text(ctx, &title, vec2(rect.x + 16.0, rect.y + 34.0), 24.0, CREAM);
+    draw_line(
+        rect.x + 16.0,
+        rect.y + 47.0,
+        rect.right() - 16.0,
+        rect.y + 47.0,
+        1.0,
+        BRASS,
+    );
+    let mut y = rect.y + 72.0;
+    let bottom = rect.bottom() - 82.0;
+    for section in sections {
+        for line in wrap_text_ex(section, rect.w - 32.0, ctx.body_font(), 18.0) {
+            if y + 23.0 > bottom {
+                return;
+            }
+            body(ctx, &line, vec2(rect.x + 16.0, y), 18.0, CREAM);
+            y += 23.0;
+        }
+        y += 4.0;
+    }
+}
+
 fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
     let Some(campaign) = ctx.campaign_view else {
         return;
@@ -265,23 +416,25 @@ fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
         sites.len(),
         ctx.text("region_sites")
     ));
-    if world.region_control(id).is_some() {
-        sections.push(format!(
-            "{}: {}",
-            ctx.text("anchor_requirements"),
-            anchor_description(ctx, anchors)
-        ));
-    } else {
-        sections.push(ctx.text("map_unexplored_region"));
+    if !campaign.observer_mode {
+        if world.region_control(id).is_some() {
+            sections.push(format!(
+                "{}: {}",
+                ctx.text("anchor_requirements"),
+                anchor_description(ctx, anchors)
+            ));
+        } else {
+            sections.push(ctx.text("map_unexplored_region"));
+        }
+        let mut gates: Vec<_> = entrances
+            .iter()
+            .filter_map(|entry| world.site(entry.site))
+            .map(|site| site.name.as_str())
+            .collect();
+        gates.sort_unstable();
+        gates.dedup();
+        sections.push(format!("{}: {}", ctx.text("entrances"), gates.join(", ")));
     }
-    let mut gates: Vec<_> = entrances
-        .iter()
-        .filter_map(|entry| world.site(entry.site))
-        .map(|site| site.name.as_str())
-        .collect();
-    gates.sort_unstable();
-    gates.dedup();
-    sections.push(format!("{}: {}", ctx.text("entrances"), gates.join(", ")));
 }
 
 fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
@@ -322,13 +475,24 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
             }
         ));
     }
-    if site.controller == Some(campaign.observer) {
+    if !campaign.observer_mode && site.controller == Some(campaign.observer) {
         sections.push(ctx.text(if campaign.supplied_sites.contains(&site.id) {
             "site_supplied"
         } else {
             "site_unsupplied"
         }));
     }
+    if !campaign.observer_mode {
+        site_connections(ctx, site, world, sections);
+    }
+}
+
+fn site_connections(
+    ctx: &Context<'_>,
+    site: &Site,
+    world: &CampaignWorld,
+    sections: &mut Vec<String>,
+) {
     if let Some(marker) = world.marker(site.marker) {
         if let MarkerLocation::Region {
             anchors, entrances, ..
@@ -380,6 +544,12 @@ fn owner_name(ctx: &Context<'_>, owner: Option<FactionId>, empty: &str) -> Strin
 
 fn owner_relation(ctx: &Context<'_>, owner: Option<FactionId>, empty: &str) -> String {
     let name = owner_name(ctx, owner, empty);
+    if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        return name;
+    }
     let Some(faction) = ctx.kingdom.data.as_ref().and_then(|view| {
         view.factions
             .iter()
@@ -399,6 +569,12 @@ fn owner_relation(ctx: &Context<'_>, owner: Option<FactionId>, empty: &str) -> S
 }
 
 fn border_help(ctx: &Context<'_>, owner: Option<FactionId>, sections: &mut Vec<String>) {
+    if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        return;
+    }
     let Some(faction) = ctx.kingdom.data.as_ref().and_then(|view| {
         view.factions.iter().find(|faction| {
             Some(faction.id) == owner && faction.status == FactionStatus::Independent

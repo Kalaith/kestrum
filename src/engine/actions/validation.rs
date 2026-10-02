@@ -8,7 +8,7 @@ pub(in crate::engine) fn validate_command(
 ) -> Result<(), RuleError> {
     let faction = match actor {
         Actor::Player => campaign.player,
-        Actor::Npc(faction) if faction != campaign.player => faction,
+        Actor::Npc(faction) if faction != campaign.player || campaign.observer_mode => faction,
         Actor::Npc(_) => return Err(RuleError::WrongActor),
     };
     if campaign.diplomacy.ending.is_some() {
@@ -58,7 +58,10 @@ pub(in crate::engine) fn validate_command(
             "Resolve the pending kingdom decision before issuing orders.".into(),
         ));
     }
-    if !campaign.is_independent(faction) {
+    let observer_control = campaign.observer_mode
+        && actor == Actor::Player
+        && matches!(command, Command::SetNpcPaused(_) | Command::StepNpc);
+    if !campaign.is_independent(faction) && !observer_control {
         return Err(RuleError::UnknownActor);
     }
     match command {
@@ -69,7 +72,7 @@ pub(in crate::engine) fn validate_command(
         | Command::ApplyBattleTemplate { .. }
         | Command::SwapFormationSlots { .. } => return Err(RuleError::NoPendingBattle),
         Command::RespondPeace { .. } | Command::ResolveDefeat { .. } => {
-            if actor != Actor::Player {
+            if actor != Actor::Player && !campaign.observer_mode {
                 return Err(RuleError::WrongActor);
             }
         }

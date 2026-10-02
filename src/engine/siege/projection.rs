@@ -60,6 +60,7 @@ pub fn siege_view(
             SiegeAction::Withdraw,
         ],
         SiegeRole::Defender => vec![SiegeAction::Sortie, SiegeAction::Escape],
+        SiegeRole::Observer => Vec::new(),
     };
     let actions = action_kinds
         .into_iter()

@@ -4,6 +4,9 @@ use super::*;
 
 impl Game {
     pub(super) fn apply(&mut self, action: UiAction) {
+        if self.apply_observer_action(action) {
+            return;
+        }
         if self.apply_tutorial_action(action) {
             return;
         }

@@ -131,7 +131,7 @@ fn offer(
             recipient: target,
         },
     )?;
-    if target == campaign.player {
+    if target == campaign.player && !campaign.observer_mode {
         campaign.diplomacy.pending_offers.push(PeaceOffer {
             proposer: owner,
             recipient: target,

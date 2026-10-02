@@ -23,6 +23,10 @@ and the latest scoped evidence take precedence over old milestone prose.
 
 ## Implemented campaign
 
+- Observe opens a separate AI-only session from the title menu. Watch the full
+  map without fog, inspect every kingdom, and use Pause, Step or 1×/2×/4× speed.
+  Leaving restores the human campaign. See the [Observer screen brief](#observer)
+  and [verification record](docs/verification/observer.md).
 - Production setup creates a seeded human kingdom with a name, botanical
   emblem, 4–8 factions and 80 major markers. The current authored world has
   eight ten-site regions and 152 physical sites. Rosemarch is a separate test
@@ -116,6 +120,26 @@ These are known design problems addressed by the active plan. The map's full
 canvas and unclipped controls alone do not establish strategic readability.
 
 ## Screen briefs
+
+### Observer
+
+Observer opens separately from the title menu. Choose an AI kingdom count and
+world seed, then Start observing. Every kingdom uses the AI, and the world and
+regional maps reveal all places, borders and armies without fog.
+
+| Question | Observer screen |
+| --- | --- |
+| Current decision | Where to look and how quickly the simulation advances. |
+| Dominant focus | The full atlas, with regional detail available on selection. |
+| Primary action | Pause or resume; advance one AI action while paused; choose 1×, 2× or 4× speed. |
+| Supporting information | Season, current AI kingdom, playback status and speed. |
+| Deferred information | All AI kingdoms in a separate roster; local detail on selection; help in the menu. |
+| Layout and camera | Full map at the sole supported 1920×1080 canvas; compact controls along the lower edge. |
+| Input and feedback | Visible tap controls, drag/pinch and zoom buttons; selected speed and paused status remain visible. |
+
+Opening a sheet suspends automatic turns. The simulation handles battles and
+diplomatic decisions without human orders. Observer sessions are separate from
+campaign saves; returning to the title restores any campaign already in memory.
 
 ### Strategic map
 

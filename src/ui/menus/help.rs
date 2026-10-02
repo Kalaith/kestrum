@@ -38,6 +38,33 @@ pub const HELP_PAGE_COUNT: usize = PAGES.len();
 pub const MAP_KEY_PAGE: usize = HELP_PAGE_COUNT - 1;
 
 pub(super) fn draw(ctx: &Context<'_>) -> Option<UiAction> {
+    if ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.observer_mode)
+    {
+        let mut y = 230.0;
+        let keys = if ctx.help_page == MAP_KEY_PAGE {
+            &[
+                "help_map_scales",
+                "help_map_symbols",
+                "observer_full_visibility",
+            ][..]
+        } else {
+            &[
+                "observer_full_visibility",
+                "observer_tutorial",
+                "observer_roster_help",
+            ][..]
+        };
+        for key in keys {
+            for line in wrap_text_ex(&ctx.text(key), 653.0, ctx.body_font(), 19.0) {
+                body(ctx, &line, vec2(314.0, y), 19.0, CREAM);
+                y += 28.0;
+            }
+            y += 14.0;
+        }
+        return None;
+    }
     let legacy = ctx.state.campaign.is_some() && ctx.campaign_view.is_none();
     let keys = if legacy {
         &["legacy_read_only", "help_pan", "help_zoom", "help_menu"][..]

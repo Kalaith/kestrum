@@ -7,6 +7,9 @@ pub(super) fn step_npc(
 ) -> Result<ActionOutcome, RuleError> {
     campaign.validate(data).map_err(RuleError::InvalidState)?;
     validate_command(campaign, actor, &Command::StepNpc)?;
+    if campaign.observer_mode {
+        return super::super::observer::step_observer(campaign, data);
+    }
     let mut candidate = campaign.clone();
     candidate.phase = CampaignPhase::NpcTurn {
         faction: candidate.active_faction(),

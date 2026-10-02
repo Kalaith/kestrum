@@ -1,0 +1,28 @@
+//! Required copy for the all-AI observer mode.
+
+pub(super) const OBSERVER_TEXT: &[&str] = &[
+    "observer",
+    "observer_setup_title",
+    "observer_setup_intro",
+    "observer_session_note",
+    "observer_factions",
+    "observer_factions_help",
+    "observer_all_ai",
+    "observer_full_visibility",
+    "observer_tutorial",
+    "observer_start",
+    "observer_marker",
+    "observer_kingdoms",
+    "observer_active",
+    "observer_pause",
+    "observer_resume",
+    "observer_step",
+    "observer_roster_title",
+    "observer_roster_help",
+    "observer_sites",
+    "observer_factions_count",
+    "observer_independent",
+    "observer_winner",
+    "observer_stopped",
+    "observer_siege_observing",
+];

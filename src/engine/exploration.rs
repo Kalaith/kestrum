@@ -100,6 +100,9 @@ pub fn project_map(
     campaign: &StrategicCampaign,
     observer: FactionId,
 ) -> Result<super::VisibleCampaign, super::RuleError> {
+    if campaign.is_observer() {
+        return super::projection::project_observer_map(campaign, observer);
+    }
     let mut view = super::project(campaign, observer)?;
     let known = explored_sites(campaign, observer);
     let contacts = known_factions(campaign, observer);

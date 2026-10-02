@@ -227,6 +227,8 @@ pub enum RuleError {
     NoCampaign,
     LegacyReadOnly,
     PlayObstructed,
+    ObserverControlOnly,
+    NotObserverCampaign,
     UnknownActor,
     WrongActor,
     NotYourTurn {
@@ -354,6 +356,12 @@ impl fmt::Display for RuleError {
             ),
             Self::PlayObstructed => {
                 formatter.write_str("Close the open panel and return to the campaign first.")
+            }
+            Self::ObserverControlOnly => {
+                formatter.write_str("Observer mode accepts playback controls, not faction orders.")
+            }
+            Self::NotObserverCampaign => {
+                formatter.write_str("Start an Observer campaign before advancing playback.")
             }
             Self::UnknownActor => formatter.write_str("That faction is unavailable."),
             Self::WrongActor => formatter.write_str("That faction cannot issue this command."),

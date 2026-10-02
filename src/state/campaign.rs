@@ -214,6 +214,9 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    /// All independent factions, including the original player faction, are AI controlled.
+    #[serde(default)]
+    pub observer_mode: bool,
     #[serde(default)]
     pub tutorial: super::tutorial::TutorialProgress,
     pub diplomacy: super::diplomacy::CampaignDiplomacy,
@@ -280,6 +283,14 @@ impl StrategicCampaign {
         Self::from_scenario(data, &data.scenario, &data.threats.initial)
     }
 
+    /// Creates the authored scenario with every faction controlled by the AI.
+    pub fn new_observer(data: &GameData) -> Result<Self, String> {
+        let mut campaign = Self::new(data)?;
+        campaign.enable_observer_mode();
+        campaign.validate(data)?;
+        Ok(campaign)
+    }
+
     pub fn new_production(
         data: &GameData,
         setup: &crate::data::generation::ProductionSetup,
@@ -287,6 +298,48 @@ impl StrategicCampaign {
         data.validate()?;
         let generated = data.production_layout.generate(data, setup)?;
         Self::from_scenario(data, &generated.scenario, &generated.initial_threats)
+    }
+
+    /// Creates a generated world for spectator play, with no human-controlled faction.
+    pub fn new_production_observer(
+        data: &GameData,
+        setup: &crate::data::generation::ProductionSetup,
+    ) -> Result<Self, String> {
+        let mut campaign = Self::new_production(data, setup)?;
+        campaign.enable_observer_mode();
+        campaign.validate(data)?;
+        Ok(campaign)
+    }
+
+    fn enable_observer_mode(&mut self) {
+        self.observer_mode = true;
+        self.tutorial.dismiss();
+        self.phase = CampaignPhase::NpcTurn {
+            faction: self.player,
+            paused: false,
+        };
+        self.ai.factions.extend(
+            self.independent_order()
+                .into_iter()
+                .map(|faction| (faction, Default::default())),
+        );
+    }
+
+    pub fn is_observer(&self) -> bool {
+        self.observer_mode
+    }
+
+    pub fn observer_finished(&self) -> bool {
+        self.observer_mode
+            && (self.diplomacy.ending.is_some()
+                || (self.pending_battle.is_none()
+                    && !self.diplomacy.has_pending_decision()
+                    && self
+                        .factions
+                        .keys()
+                        .filter(|faction| self.is_independent(**faction))
+                        .count()
+                        <= 1))
     }
 
     fn from_scenario(
@@ -317,6 +370,7 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            observer_mode: false,
             tutorial: super::tutorial::TutorialProgress::new(),
             diplomacy: Default::default(),
             ai: Default::default(),

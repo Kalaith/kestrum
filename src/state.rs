@@ -14,6 +14,7 @@ pub mod legacy;
 pub mod mentorship;
 pub mod military;
 pub mod movement;
+pub mod observer;
 pub mod people;
 pub mod persistence;
 pub mod relationships;
@@ -65,6 +66,8 @@ pub enum Overlay {
     Threat,
     Kingdom,
     CampaignEnd,
+    ObserverSetup,
+    ObserverKingdoms,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -194,6 +197,20 @@ impl GameState {
         self.load_campaign(Campaign::Strategic(Box::new(campaign)), data)
     }
 
+    pub fn new_observer(&mut self, data: &GameData) -> Result<(), String> {
+        let campaign = StrategicCampaign::new_observer(data)?;
+        self.load_campaign(Campaign::Strategic(Box::new(campaign)), data)
+    }
+
+    pub fn new_production_observer(
+        &mut self,
+        data: &GameData,
+        setup: &crate::data::generation::ProductionSetup,
+    ) -> Result<(), String> {
+        let campaign = StrategicCampaign::new_production_observer(data, setup)?;
+        self.load_campaign(Campaign::Strategic(Box::new(campaign)), data)
+    }
+
     pub fn load_campaign(&mut self, campaign: Campaign, data: &GameData) -> Result<(), String> {
         campaign.validate(data)?;
         self.campaign = Some(campaign);
@@ -211,6 +228,14 @@ impl GameState {
         data: &GameData,
         command: Command,
     ) -> Result<ActionOutcome, RuleError> {
+        let observer_mode = self
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .is_some_and(StrategicCampaign::is_observer);
+        if observer_mode && !matches!(&command, Command::SetNpcPaused(_) | Command::StepNpc) {
+            return Err(RuleError::ObserverControlOnly);
+        }
         let pending_battle = self
             .campaign
             .as_ref()
@@ -317,6 +342,16 @@ impl GameState {
     pub fn advance_npc(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
         let campaign = self.playing_campaign()?;
         engine::advance_npc(campaign, data)
+    }
+
+    pub fn advance_observer(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::advance_observer(campaign, data)
+    }
+
+    pub fn step_observer(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::step_observer(campaign, data)
     }
 
     fn playing_campaign(&mut self) -> Result<&mut StrategicCampaign, RuleError> {

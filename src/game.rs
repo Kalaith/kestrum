@@ -20,6 +20,8 @@ mod midgame_capture;
 mod military;
 mod military_capture;
 mod movement;
+mod observer;
+mod observer_capture;
 mod overview_capture;
 mod profiling;
 mod projection;
@@ -97,6 +99,8 @@ pub struct Game {
     retry_save_when_ready: bool,
     save_error: String,
     npc_delay: f32,
+    observer: kestrum::state::observer::ObserverPlayback,
+    observer_return: Option<observer::CampaignReturn>,
     capture: bool,
     notice: Option<(String, f32)>,
     error: Option<String>,
@@ -159,6 +163,8 @@ impl Game {
             retry_save_when_ready: false,
             save_error: String::new(),
             npc_delay: 0.0,
+            observer: Default::default(),
+            observer_return: None,
             data,
             assets,
             state: GameState::default(),
@@ -190,6 +196,9 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_observer(scene) {
+            return;
+        }
         if self.capture_spatial(scene) {
             return;
         }
@@ -383,6 +392,8 @@ impl Game {
     fn reset_capture_scene(&mut self) {
         self.capture = true;
         self.state = GameState::default();
+        self.observer = Default::default();
+        self.observer_return = None;
         self.preferences = Preferences::default();
         self.navigation.reset(&mut self.view);
         self.notice = None;
@@ -412,6 +423,7 @@ impl Game {
 
     pub fn frame(&mut self, dt: f32) {
         self.poll_storage();
+        self.progress_observer(dt);
         self.sync_pending_battle();
         self.progress_npcs(dt);
         self.advance_battlefield(dt);
@@ -444,6 +456,7 @@ impl Game {
         self.clamp_pages();
         self.kingdom_events();
         let ctx = ui::Context {
+            observer: &self.observer,
             overview: self.overview.as_ref(),
             overview_ui: &self.overview_ui,
             kingdom: &self.kingdom,

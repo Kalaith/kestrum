@@ -74,7 +74,7 @@ impl Game {
     }
 
     pub(super) fn save_checkpoint(&mut self) {
-        if self.capture {
+        if self.capture || self.is_observer() {
             return;
         }
         let Some(snapshot) = self.state.campaign.clone() else {

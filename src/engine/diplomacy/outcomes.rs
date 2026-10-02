@@ -33,7 +33,11 @@ pub(crate) fn reconcile(
             .filter(|id| {
                 *id != faction && campaign.is_independent(*id) && !campaign.defeat_eligible(*id)
             });
-        if faction != campaign.player && !player_defeated && victor == Some(campaign.player) {
+        if !campaign.observer_mode
+            && faction != campaign.player
+            && !player_defeated
+            && victor == Some(campaign.player)
+        {
             let pending = PendingDefeat {
                 faction,
                 victor: campaign.player,
@@ -68,7 +72,7 @@ pub(crate) fn reconcile(
                 .iter()
                 .any(|defeat| [offer.proposer, offer.recipient].contains(&defeat.faction))
     });
-    if player_defeated {
+    if player_defeated && !campaign.observer_mode {
         end(campaign, EndingKind::Defeat, outcome)?;
     } else {
         check_victory(campaign, outcome)?;
@@ -155,7 +159,7 @@ pub(super) fn resolve_choice(
     resolution: DefeatResolution,
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
-    if owner != campaign.player
+    if (owner != campaign.player && !campaign.observer_mode)
         || !campaign
             .diplomacy
             .pending_defeats
@@ -309,6 +313,17 @@ fn check_victory(
     campaign: &mut StrategicCampaign,
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
+    if campaign.observer_mode {
+        let independent_count = campaign
+            .factions
+            .keys()
+            .filter(|faction| campaign.is_independent(**faction))
+            .count();
+        if campaign.diplomacy.pending_defeats.is_empty() && independent_count <= 1 {
+            end(campaign, EndingKind::Victory, outcome)?;
+        }
+        return Ok(());
+    }
     if campaign.diplomacy.pending_defeats.is_empty()
         && campaign
             .factions

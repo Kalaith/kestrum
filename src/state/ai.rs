@@ -73,7 +73,7 @@ impl StrategicCampaign {
         data.ai.validate()?;
         for (faction, state) in &self.ai.factions {
             if !self.factions.contains_key(faction)
-                || *faction == self.player
+                || (*faction == self.player && !self.observer_mode)
                 || state.phase_round > self.completed_rounds
                 || state.accepted_commands > data.ai.max_commands_per_phase
                 || state.rejected_at_sequence > self.accepted_sequence

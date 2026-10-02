@@ -214,6 +214,12 @@ troop type and headcount when shortening names; People exposes full identity,
 Career, History and Transfer. Dedicated composition views remain appropriate
 when comparison is the decision. See [army membership](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 
+The [planned portrait workstream](hero-portrait-generator-plan.md#screen-brief-and-actual-sizes)
+starts with 64px People-row and 128px Career portraits in the existing sheets.
+Its shared descriptor preserves identity across contexts; enemy portraits follow
+dated knowledge. The plan owns art/caching details and optional 40px formation
+placement. It adds no permanent map portrait panel and is not yet implemented.
+
 ### Settlement and kingdom decisions
 
 Current Manage contains Overview, Build, Roads, Focus and Local Actions.

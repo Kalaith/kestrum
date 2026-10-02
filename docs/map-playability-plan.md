@@ -203,6 +203,14 @@ to the implemented camera and information hierarchy.
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
 | M05 | Integrated early and developed campaign acceptance | M01, M01A, M02–M04 | Not started |
 
+The [hero portrait generator](hero-portrait-generator-plan.md#outstanding-work-todo)
+adds G01-G04 as a planned companion graphics workstream after M01A. It starts with
+stable saved appearance and People/Career portraits, then expands authored parts
+and eligible identity contexts. M02 remains next; portraits neither replace these
+milestones nor become a new M05 prerequisite. Review portrait recognition in M05
+if that work has shipped. Detailed asset, compatibility and acceptance TODOs live
+only in the portrait plan.
+
 ### M01 Readable kingdom overview
 
 **Complete, 2026-10-01.** Native normal/minimum review, observer/movement checks,

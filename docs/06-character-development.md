@@ -85,7 +85,13 @@ Meaningful recognition can come from:
 
 Recognized figures may gain distinctive portrait treatment, a biography, command ability, relationships, rivalries, epithets, political importance, event involvement, battlefield influence, and historical records. Their capture or death carries greater strategic and emotional weight.
 
-**Implemented baseline:** recognition uses actual evidence, notable service and progression thresholds, and records its result once. The presentation should name the deed and any available role. Rich portrait treatment, additional political benefits and captivity remain future possibilities rather than automatic consequences of recognition.
+**Implemented baseline:** recognition uses actual evidence, notable service and
+progression thresholds, and records its result once. The presentation should
+name the deed and any available role. The
+[planned portrait generator](hero-portrait-generator-plan.md) assigns stable
+appearance to tracked people before recognition; becoming a Hero preserves the
+face. Portraits are not implemented. Additional political benefits and captivity
+remain future possibilities rather than automatic consequences of recognition.
 
 ## Class eligibility and opportunities
 

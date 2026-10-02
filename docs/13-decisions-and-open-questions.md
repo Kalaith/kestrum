@@ -124,6 +124,13 @@ GDD. Numerical balance remains tunable; avoid unrelated system expansion.
 
 ## Deferred work and validation limits
 
+The [portrait generator plan](hero-portrait-generator-plan.md#defaults-decisions-and-later-expansion)
+adds a planned human-only graphics workstream. Persistent feature choices,
+campaign-wide duplicate reservations and finite-space fallback are recommended
+defaults. G02's proof settles art treatment and thumbnail similarity tuning;
+cosmetic aging remains optional later work. These choices do not reopen the
+implemented character rules or reorder M02-M05.
+
 The map plan does not add richer vassal diplomacy, alliances, tribute, other
 races, advanced classes, multiplayer, claimant factions or additional world
 locations. A larger navigable presentation of the existing world is in scope.

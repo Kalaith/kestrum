@@ -16,6 +16,10 @@ the opening guide in M03/M04.
 The [notification feature plan](docs/notification-plan.md) details M02's proposed
 top event bar, compact clickable details, hero and controlled-place updates,
 advance warnings and per-type mute controls. It is planned, not implemented.
+The [hero portrait generator plan](docs/hero-portrait-generator-plan.md) adds a
+planned graphics workstream: persistent per-person features, layered human art
+and a first People/Career portrait slice. Its outstanding G01-G04 TODOs preserve
+the existing M02-M05 sequence; no portrait assets or runtime feature exist yet.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 

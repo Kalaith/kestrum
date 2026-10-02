@@ -406,13 +406,17 @@ tactics and histories retain dedicated views with a reliable return path.
 Show persistent route/order status, arrivals, idle or blocked own forces and
 supply problems using M01A's scale bands. Emphasize the selected route; aggregate
 other orders at overview scale so the expanded map does not become covered in
-lines and cards. End Turn remains available during selection. Provide a compact
-seasonal outcome list whose entries focus their affected places or people.
-Prioritize action-required outcomes; informational entries can collapse or be
-dismissed. Keep unresolved conditions until resolved. Store sufficient receipt
-and acknowledgement state to survive save/reload without duplicate notices;
-derive current warnings from authoritative state. Do not replay commands to
-reconstruct feedback or turn every historical event into an alert.
+lines and cards. End Turn remains available during selection.
+
+The [notification plan](notification-plan.md) specifies M02's seasonal feedback:
+a compact top event rail, clickable details within one small map inspector,
+hero emergence and controlled-place changes, conditional advance warnings and
+per-type delivery controls. M02-N1–N3 are its planned delivery packages; they do
+not mark other M02 work complete. Attention remains the current-condition view.
+Preserve receipt and acknowledgement state in saves, derive current warnings
+from authoritative observer-safe state, and avoid duplicate background toasts.
+Do not replay commands to reconstruct feedback or turn every historical event
+into an alert. Notification windows never cover the whole game view.
 
 Likely boundaries: `src/ui/movement/`, `src/game/movement.rs`, army/settlement
 inspectors, `src/game/campaign.rs`, `src/engine/notices.rs`, round outcomes and
@@ -549,6 +553,44 @@ the existing waiver. Visible touch-capable controls and supported browser sizing
 remain implementation requirements.
 
 ## Validation and completion
+
+### Campaign review cases
+
+The [early Stellaris review](stellaris-release-lessons.md) motivates these five
+M05 scenarios. They extend the questions above, not the feature scope or the
+deferred balance/platform work. Record observed failures and follow-up ownership
+without assuming the comparison establishes a Kestrum bug.
+
+1. **Established realm:** observe four consecutive seasons of a developed
+   campaign, including consolidation without new conquest. Ask for a worthwhile
+   next objective, an alternative use of resources and the consequence of a
+   choice. Record why the player waits when they choose to wait. Four seasons
+   are a bounded review sample, not proof of long-campaign balance.
+2. **Preparation and explanation:** before an encounter, record a formation's
+   intended role; afterward, ask which witnessed action or condition explains
+   the result and what the player would change. Follow losses, retreat and
+   control back to the map. Keep unobserved enemy details private and report
+   inherited battlefield limitations separately from map acceptance.
+3. **Interrupted commitment:** encounter changed access or an invalidated order,
+   inspect its reason, take a legal recovery action and reload. Confirm a clear
+   remaining order or resolved state without duplicate costs or outcomes.
+4. **Dismissed information:** dismiss a consequential seasonal receipt, then
+   retrieve its retained facts and inspect the subject after reload. Include
+   simultaneous outcomes and a changed, absent or forgotten subject; current
+   conditions must stay understandable within the documented retention limits.
+5. **Continuity and planning:** use a campaign with service, retirement or
+   succession evidence. Ask which existing person/place now matters, why, and
+   which legal next step advances the player's goal. Distinguish known career
+   requirements from uncertain opportunities. A fixture tests access to this
+   state; only played progression establishes its pacing and emotional payoff.
+
+Use the sole 1920×1080 canvas and existing visible-control requirements. Record
+campaign seed/save provenance, elapsed rounds, actions, the player's explanations
+and the limits of the sample. Separate human observation from an agent walkthrough
+and an engine-only simulation. This documentation review executes none of these
+scenarios or changes a milestone to complete.
+
+### Engineering and completion evidence
 
 Follow [delivery and validation](12-delivery-and-validation.md), the shared
 engineering rules and `UI_STYLE.md`. Use the actual checkout, shared Cargo pool,

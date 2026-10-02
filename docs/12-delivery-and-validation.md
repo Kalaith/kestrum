@@ -131,6 +131,20 @@ should be able to recall a meaningful place or person from actual events.
 Compile success, a feature checklist, or screenshots without overlap cannot
 stand in for these checks.
 
+Use the [M05 campaign cases](map-playability-plan.md#campaign-review-cases) to
+review decisions after discovery, preparation feedback, interrupted orders,
+retrievable information and continuity. Record both a meaningful action and
+deliberate waiting, including the player's reason and expected consequence.
+Distinguish a missing rule, an existing rule the interface fails to explain,
+and a balance/pacing question before proposing work.
+
+Report engineering correctness, interaction coverage, player comprehension and
+campaign pacing separately. Passing one is not evidence that the others passed.
+The [early Stellaris review](stellaris-release-lessons.md) supplies rationale;
+it adds no automatic requirement for new systems or a full campaign playtest
+to every map milestone. Existing deferred checks and the physical-touch waiver
+retain their scope. Record unexecuted cases as unverified.
+
 ## Documentation maintenance
 
 The project README owns current behavior, the map plan owns next delivery, the

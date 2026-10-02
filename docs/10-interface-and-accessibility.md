@@ -175,16 +175,19 @@ interruption detail are M02 work. Unknown enemy strength and plans stay hidden.
 
 ### Seasonal outcomes and attention
 
-Planned seasonal feedback prioritizes problems requiring a decision, then
-completed orders and useful changes. Selecting an entry focuses the place,
-army or person. Unresolved conditions remain discoverable; informational entries
-can be dismissed. Preserve receipt/acknowledgement state across reload without
-repeating actions or misleading the player about which season changed a value.
+The [planned notification feature](notification-plan.md) owns M02's event rail,
+compact details and per-type delivery controls. New hero emergence, controlled
+place changes and conditional growth/decline warnings appear below the header.
+Tap opens one small card while the map stays visible; Show on map explicitly
+focuses its subject. Notification inspection does not automatically move the
+camera, open a fullscreen sheet or pause play.
 
-The existing M01 attention list provides current conditions. M02 adds the
-seasonal outcome path and supporting history where needed; full biographies
-remain deliberate inspection. Keep this compact route into the affected map
-objects separate from a full management dashboard.
+Attention remains the current-condition view. Event cards replace the current
+inspector temporarily and collapse Attention, preserving one contextual focus.
+Read/dismiss state travels with campaign saves; delivery preferences persist
+locally. Recent contains bounded event receipts, and existing Records remains
+the route to retained history. Full biographies remain deliberate inspection.
+This is planned behavior; current feedback still uses transient notices.
 
 ### Introduction and contextual help
 

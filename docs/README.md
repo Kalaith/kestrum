@@ -27,6 +27,8 @@ Historical speculative wording does not override the current request or plan.
 | Document | Owns |
 | --- | --- |
 | [Map playability plan](map-playability-plan.md) | Active milestones, dependencies, map scope, compatibility and acceptance |
+| [Early Stellaris lessons](stellaris-release-lessons.md) | Source-grounded design review and rationale for campaign acceptance; no gameplay changes or separate delivery queue |
+| [Campaign notifications](notification-plan.md) | Planned M02 event rail, compact details, controlled-place warnings, noise controls and delivery packages |
 | [01 Vision and experience](01-vision-and-experience.md) | Player role, core loops and generational identity |
 | [02 World, time, and control](02-world-time-and-control.md) | Physical graph, regions, ownership and seasonal turns |
 | [03 Kingdoms and economy](03-kingdoms-and-economy.md) | Setup, resources, development, diplomacy and AI |

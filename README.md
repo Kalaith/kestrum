@@ -13,6 +13,9 @@ are recorded. The full suite retains one inherited production-victory failure.
 It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
 M02's map orders and seasonal consequences follow, then regional geography and
 the opening guide in M03/M04.
+The [notification feature plan](docs/notification-plan.md) details M02's proposed
+top event bar, compact clickable details, hero and controlled-place updates,
+advance warnings and per-type mute controls. It is planned, not implemented.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 

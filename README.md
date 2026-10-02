@@ -280,7 +280,9 @@ exit. Use an actual 1920×1080 canvas plus browser interactions. See
 - `src/navigation/`: map targets, cameras and exploration.
 - `src/game/`: input/action coordination, projection, storage and capture.
 - `src/ui/`: rendering and explicit player intents.
-- `assets/data/`: setup, balance, world layout, scenarios and presentation text.
+- `assets/data/game_config.json`: save identity, asset paths, timing and atlas label placement.
+- `assets/data/game_text.json`: title copy, season names, geography names and interface text moved from `game_config.json`.
+- Other files in `assets/data/`: setup, balance, world layout and scenarios.
 - `assets/art/kestrum_atlas.png`: original atlas generated with OpenAI ImageGen.
 - `assets/fonts/`: Cinzel (SIL OFL) and DejaVu Sans (Bitstream Vera license).
 - `catalog_thumbnail.png`: stable publishing thumbnail.

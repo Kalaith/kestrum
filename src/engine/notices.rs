@@ -32,11 +32,11 @@ pub fn action_notices(
                 super::MovementBlock::InsufficientMovement { .. }
             )
         }) {
-            data.presentation
+            data.game_text
                 .text("move_plan_blocked_notice")
                 .replace("{reason}", &stop.reason.to_string())
         } else if moved.planned_destination.is_some() {
-            data.presentation.text("move_planned_notice").to_string()
+            data.game_text.text("move_planned_notice").to_string()
         } else if moved.path.last().is_some_and(|site| {
             campaign.sieges.contains_key(site)
                 || campaign
@@ -44,13 +44,11 @@ pub fn action_notices(
                     .as_ref()
                     .is_some_and(|pending| pending.report.site == *site)
         }) {
-            data.presentation
+            data.game_text
                 .text("move_plan_encounter_notice")
                 .to_string()
         } else {
-            data.presentation
-                .text("move_plan_arrived_notice")
-                .to_string()
+            data.game_text.text("move_plan_arrived_notice").to_string()
         };
         messages.push(format!("{names}: {message}"));
     }
@@ -63,7 +61,7 @@ pub fn action_notices(
     ] {
         let names = own_names(campaign, observer, ids);
         if !names.is_empty() {
-            messages.push(data.presentation.text(key).replace("{names}", &names));
+            messages.push(data.game_text.text(key).replace("{names}", &names));
         }
     }
     messages.extend(life_notices(campaign, data, observer, outcome));
@@ -78,7 +76,7 @@ pub fn action_notices(
         .join(", ");
     if !items.is_empty() {
         messages.push(
-            data.presentation
+            data.game_text
                 .text("legacy_item_transfer_notice")
                 .replace("{names}", &items),
         );
@@ -124,7 +122,7 @@ fn succession_notices(
                 "vacant_succession_notice"
             };
             Some(
-                data.presentation
+                data.game_text
                     .text(key)
                     .replace("{predecessor}", &predecessor.name)
                     .replace(
@@ -172,9 +170,9 @@ fn anniversary_notices(
                 }
             };
             Some(
-                data.presentation
+                data.game_text
                     .text("history_anniversary_notice")
-                    .replace("{kind}", data.presentation.text(key))
+                    .replace("{kind}", data.game_text.text(key))
                     .replace("{name}", name)
                     .replace("{years}", &years.to_string()),
             )
@@ -219,10 +217,7 @@ fn life_notices(
                 .find(|entry| entry.id == *person)?
                 .name
                 .as_str();
-            Some(format!(
-                "{name}: {}",
-                data.presentation.life_event_text(event)
-            ))
+            Some(format!("{name}: {}", data.game_text.life_event_text(event)))
         })
         .collect()
 }

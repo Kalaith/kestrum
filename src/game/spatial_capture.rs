@@ -179,6 +179,7 @@ impl Game {
             siege: &self.siege,
             threat: &self.threat,
             data: &self.data.presentation,
+            game_text: &self.data.game_text,
             battle_tactics: &self.data.battle_tactics,
             economy: &self.data.economy,
             rules: &self.data.rules,

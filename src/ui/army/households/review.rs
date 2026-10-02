@@ -45,7 +45,7 @@ pub(super) fn draw(
     let reason = option
         .and_then(|option| option.blocked.as_deref())
         .unwrap_or_else(|| {
-            ctx.data.text(if ready {
+            ctx.game_text.text(if ready {
                 "family_review_ready"
             } else {
                 "family_review_wait"

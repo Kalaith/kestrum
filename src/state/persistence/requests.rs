@@ -36,7 +36,7 @@ impl SaveLibrary {
             .strategic()
             .ok_or("Empty-atlas campaigns are read-only.")?;
         require_checkpoint(strategic)?;
-        let season = &data.presentation.seasons[strategic.season_index()];
+        let season = &data.game_text.seasons[strategic.season_index()];
         let name = format!(
             "{season}, Year {}",
             strategic.year(data.presentation.start_year)

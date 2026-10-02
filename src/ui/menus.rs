@@ -22,12 +22,12 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
         );
     }
     emblem(vec2(480.0, 258.0), 48.0);
-    centered(ctx, &ctx.data.title, vec2(480.0, 382.0), 88.0, CREAM);
+    centered(ctx, &ctx.game_text.title, vec2(480.0, 382.0), 88.0, CREAM);
     horizontal_rule(vec2(480.0, 414.0), 236.0);
-    let subtitle_width = measure_text(&ctx.data.subtitle, ctx.body_font(), 23, 1.0).width;
+    let subtitle_width = measure_text(&ctx.game_text.subtitle, ctx.body_font(), 23, 1.0).width;
     body(
         ctx,
-        &ctx.data.subtitle,
+        &ctx.game_text.subtitle,
         vec2(480.0 - subtitle_width * 0.5, 454.0),
         23.0,
         CREAM,
@@ -103,7 +103,7 @@ pub fn title(ctx: &Context<'_>) -> Option<UiAction> {
     {
         return Some(UiAction::ImportCampaign);
     }
-    text(ctx, &ctx.data.edition, vec2(48.0, 1040.0), 17.0, BRASS);
+    text(ctx, &ctx.game_text.edition, vec2(48.0, 1040.0), 17.0, BRASS);
     body(ctx, "WebHatchery", vec2(1734.0, 1040.0), 18.0, CREAM);
     None
 }

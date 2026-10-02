@@ -226,6 +226,6 @@ impl Game {
                 _ => None,
             })
             .unwrap_or("diplomacy_success");
-        self.data.presentation.text(key).into()
+        self.data.game_text.text(key).into()
     }
 }

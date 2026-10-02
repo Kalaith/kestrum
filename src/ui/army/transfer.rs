@@ -50,7 +50,7 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
             .filter(|_| view.army.is_none() && matches!(subject, TransferSubject::Formation(_)))
             .or(view.blocked.as_ref())
             .map(String::as_str)
-            .unwrap_or_else(|| ctx.data.text("transfer_preserves_movement"));
+            .unwrap_or_else(|| ctx.game_text.text("transfer_preserves_movement"));
         for (index, line) in wrap_text_ex(reason, 1040.0, ctx.body_font(), 18.0)
             .iter()
             .take(2)

@@ -88,7 +88,7 @@ fn current_report<'a>(ctx: &'a Context<'_>) -> Option<&'a BattleReport> {
 }
 
 fn report_heading(ctx: &Context<'_>, report: &BattleReport) -> String {
-    let season = &ctx.data.seasons[report.completed_rounds as usize % 4];
+    let season = &ctx.game_text.seasons[report.completed_rounds as usize % 4];
     let year = ctx
         .data
         .start_year

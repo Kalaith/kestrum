@@ -21,7 +21,7 @@ mod world_layout_validation;
 mod world_validation;
 
 mod presentation;
-pub use presentation::{GeographyLabel, MapCameraSettings, PresentationData};
+pub use presentation::{GameTextData, GeographyLabel, MapCameraSettings, PresentationData};
 
 #[derive(Debug, Clone)]
 pub struct GameData {
@@ -40,6 +40,7 @@ pub struct GameData {
     pub troops: combat::Troops,
     pub combat: combat::CombatRules,
     pub presentation: PresentationData,
+    pub game_text: GameTextData,
     pub economy: economy::Economy,
     pub rules: rules::CampaignRules,
     /// Small authored warfare fixture retained for tests and captures.
@@ -67,6 +68,7 @@ impl GameData {
             troops: macroquad_toolkit::include_json!("../assets/data/troops.json")?,
             combat: macroquad_toolkit::include_json!("../assets/data/combat_rules.json")?,
             presentation: macroquad_toolkit::include_json!("../assets/data/game_config.json")?,
+            game_text: macroquad_toolkit::include_json!("../assets/data/game_text.json")?,
             economy: macroquad_toolkit::include_json!("../assets/data/economy.json")?,
             rules: macroquad_toolkit::include_json!("../assets/data/campaign_rules.json")?,
             scenario: macroquad_toolkit::include_json!("../assets/data/scenarios/rosemarch.json")?,
@@ -105,6 +107,7 @@ impl GameData {
         self.troops.validate()?;
         self.combat.validate()?;
         self.presentation.validate()?;
+        self.game_text.validate(&self.presentation.geography)?;
         self.economy.validate()?;
         self.rules.validate()?;
         self.scenario.validate(&self.rules, &self.economy)?;

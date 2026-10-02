@@ -1,5 +1,5 @@
 //! The same life-event wording appears in dated history and accepted-action notices.
-use super::PresentationData;
+use super::GameTextData;
 use crate::{
     data::{
         economy::TroopKind,
@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-impl PresentationData {
+impl GameTextData {
     pub fn life_event_text(&self, event: &LifeEvent) -> String {
         let (key, detail) = match event {
             LifeEvent::Emerged { troop } => {

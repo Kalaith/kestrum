@@ -106,7 +106,7 @@ impl Game {
                 self.siege.action = None;
                 self.siege.destination = None;
                 self.siege.page = 0;
-                self.siege.status = self.data.presentation.text("siege_order_done").into();
+                self.siege.status = self.data.game_text.text("siege_order_done").into();
                 if outcome.battle_pending {
                     self.open_pending_battlefield();
                 }

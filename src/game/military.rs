@@ -171,7 +171,7 @@ impl Game {
                         .unwrap_or(0);
                     self.army.selected = Some(recruited.formation);
                 }
-                self.army.status = self.data.presentation.text("recruit_success").into();
+                self.army.status = self.data.game_text.text("recruit_success").into();
                 self.refresh_army();
             }
             Err(error) => self.army.status = error.to_string(),
@@ -186,7 +186,7 @@ impl Game {
             Ok(_) => {
                 self.army.mode = ui::ArmyMode::Roster;
                 self.army.selected = None;
-                self.army.status = self.data.presentation.text("disband_success").into();
+                self.army.status = self.data.game_text.text("disband_success").into();
                 self.refresh_army();
             }
             Err(error) => self.army.status = error.to_string(),

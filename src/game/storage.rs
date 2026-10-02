@@ -20,7 +20,7 @@ impl Game {
         }
         self.storage_checked = false;
         self.saves.ready = false;
-        self.saves.status = self.data.presentation.text("storage_waiting").into();
+        self.saves.status = self.data.game_text.text("storage_waiting").into();
         let result = if let Some(store) = &mut self.storage {
             store.retry_writer().map(|_| ())
         } else {
@@ -55,7 +55,7 @@ impl Game {
                 self.saves.ready = status == WriterStatus::Ready;
                 self.update_save_rows();
                 if !self.saves.ready {
-                    self.saves.status = self.data.presentation.text("storage_busy").into();
+                    self.saves.status = self.data.game_text.text("storage_busy").into();
                 }
             }
             Err(error) => self.saves.status = error,
@@ -83,7 +83,7 @@ impl Game {
         let name = snapshot
             .strategic()
             .filter(|campaign| campaign.completed_rounds == 0)
-            .map(|_| self.data.presentation.text("founding_save").to_owned());
+            .map(|_| self.data.game_text.text("founding_save").to_owned());
         self.pending_save = Some(PendingWrite {
             snapshot,
             name,
@@ -138,7 +138,7 @@ impl Game {
                 self.saves.mode = ui::SaveMode::Browse;
                 self.save_error.clear();
                 self.error = None;
-                self.notice = Some((self.data.presentation.text("save_success").into(), 3.0));
+                self.notice = Some((self.data.game_text.text("save_success").into(), 3.0));
                 self.update_save_rows();
                 self.saves.selected = Some(receipt.id);
                 self.saves.page = 0;

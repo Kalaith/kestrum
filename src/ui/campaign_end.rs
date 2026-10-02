@@ -24,7 +24,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         30.0,
         CREAM,
     );
-    let season = &ctx.data.seasons[(ending.completed_rounds % 4) as usize];
+    let season = &ctx.game_text.seasons[(ending.completed_rounds % 4) as usize];
     body(
         ctx,
         &format!(

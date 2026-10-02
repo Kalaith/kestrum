@@ -335,10 +335,7 @@ impl Game {
                 if let Some(movement) = outcome.movement {
                     let selected = movement.armies;
                     let message = if movement.planned_destination.is_some() {
-                        self.data
-                            .presentation
-                            .text("move_planned_notice")
-                            .to_string()
+                        self.data.game_text.text("move_planned_notice").to_string()
                     } else if let Some(stop) = movement.stop {
                         format!("Movement interrupted: {}", stop.reason)
                     } else {

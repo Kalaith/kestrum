@@ -382,7 +382,7 @@ impl Game {
                 self.state.overlay = Overlay::Menu;
                 self.error = Some(format!(
                     "{}: storage is unavailable",
-                    self.data.presentation.text("save_failed")
+                    self.data.game_text.text("save_failed")
                 ));
             }
             _ => panic!("Unknown Kestrum capture scene: {scene}"),
@@ -464,6 +464,7 @@ impl Game {
             siege: &self.siege,
             threat: &self.threat,
             data: &self.data.presentation,
+            game_text: &self.data.game_text,
             battle_tactics: &self.data.battle_tactics,
             economy: &self.data.economy,
             rules: &self.data.rules,
@@ -677,7 +678,7 @@ impl Game {
         if let Err(error) = save_json_key("kestrum", "preferences", &self.preferences) {
             self.error = Some(format!(
                 "{}: {error}",
-                self.data.presentation.text("settings_failed")
+                self.data.game_text.text("settings_failed")
             ));
         }
     }

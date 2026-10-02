@@ -18,15 +18,17 @@ pub(super) async fn load(data: &GameData) -> Result<AssetManager, String> {
     let mut characters: Vec<char> = (b' '..=b'~').map(char::from).collect();
     characters.extend("…—–×·→".chars());
     for text in data
-        .presentation
+        .game_text
         .text
         .values()
         .chain(data.presentation.map.text.values())
         .chain([
-            &data.presentation.title,
-            &data.presentation.subtitle,
-            &data.presentation.edition,
+            &data.game_text.title,
+            &data.game_text.subtitle,
+            &data.game_text.edition,
         ])
+        .chain(data.game_text.seasons.iter())
+        .chain(data.game_text.geography.values())
     {
         characters.extend(text.chars());
     }
@@ -45,13 +47,13 @@ pub(super) async fn load(data: &GameData) -> Result<AssetManager, String> {
             .map(|size| (*size, common_text.as_str()))
             .collect();
         if key == "cinzel" {
-            samples.push((88, &data.presentation.title));
-            samples.extend(
-                data.presentation
+            samples.push((88, data.game_text.title.as_str()));
+            samples.extend(data.presentation.geography.iter().filter_map(|label| {
+                data.game_text
                     .geography
-                    .iter()
-                    .map(|label| (label.size as u16, label.name.as_str())),
-            );
+                    .get(&label.id)
+                    .map(|name| (label.size as u16, name.as_str()))
+            }));
         }
         macroquad_toolkit::ui::prepare_font_text(font, &samples);
     }

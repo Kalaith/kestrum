@@ -54,7 +54,7 @@ pub(super) fn events(ctx: &Context<'_>) -> Vec<HistoryRow> {
 
 pub(super) fn kind(ctx: &Context<'_>, kind: &HistoryKind) -> String {
     match kind {
-        HistoryKind::Life { event, .. } => ctx.data.life_event_text(event),
+        HistoryKind::Life { event, .. } => ctx.game_text.life_event_text(event),
         HistoryKind::Diplomacy { receipt } => diplomacy_label(ctx, receipt),
         HistoryKind::Development { receipt } => development_label(ctx, receipt),
         HistoryKind::Siege {

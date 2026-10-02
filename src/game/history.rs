@@ -120,7 +120,7 @@ impl Game {
 
     fn refresh_records(&mut self) {
         let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
-            self.history.status = self.data.presentation.text("legacy_read_only").into();
+            self.history.status = self.data.game_text.text("legacy_read_only").into();
             return;
         };
         let per_page = ui::HISTORY_ROWS_PER_SCREEN;

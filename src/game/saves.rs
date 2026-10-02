@@ -23,7 +23,7 @@ impl Game {
             })
             .collect();
         self.saves.selected = Some(17);
-        self.saves.status = self.data.presentation.text("storage_ready").into();
+        self.saves.status = self.data.game_text.text("storage_ready").into();
         match scene.trim_end_matches("_minimum") {
             "save_name" | "save_symbols" => {
                 self.saves.name = "Rosemarch after the long winter".into();
@@ -34,7 +34,7 @@ impl Game {
             }
             "save_busy" => {
                 self.saves.ready = false;
-                self.saves.status = self.data.presentation.text("storage_busy").into();
+                self.saves.status = self.data.game_text.text("storage_busy").into();
             }
             "save_invalid" => self.saves.status = "Could not load campaign: Unsupported campaign schema version 999. Your current game and saved bytes are unchanged.".into(),
             "save_delete" => self.saves.mode = ui::SaveMode::ConfirmDelete(17),
@@ -66,9 +66,9 @@ impl Game {
             .into_iter()
             .map(|entry| {
                 let meta = &entry.metadata;
-                let season = &self.data.presentation.seasons[meta.completed_rounds as usize % 4];
+                let season = &self.data.game_text.seasons[meta.completed_rounds as usize % 4];
                 let year = self.data.presentation.start_year + meta.completed_rounds / 4;
-                let kind = self.data.presentation.text(match meta.kind {
+                let kind = self.data.game_text.text(match meta.kind {
                     SaveKind::Manual => "manual_save",
                     SaveKind::RoundCheckpoint => "round_save",
                     SaveKind::Imported => "imported_save",
@@ -78,7 +78,7 @@ impl Game {
                     name: meta.name.clone(),
                     detail: format!(
                         "{kind}  ·  {season}, {year}  ·  {} {}  ·  #{}",
-                        self.data.presentation.text("round"),
+                        self.data.game_text.text("round"),
                         meta.completed_rounds.saturating_add(1),
                         entry.id
                     ),
@@ -89,7 +89,7 @@ impl Game {
         self.saves.select_visible();
         self.saves.status = self
             .data
-            .presentation
+            .game_text
             .text(if !self.saves.ready {
                 "storage_busy"
             } else if self.saves.can_save {
@@ -136,7 +136,7 @@ impl Game {
             .unwrap_or_else(|| {
                 format!(
                     "{} {}",
-                    self.data.presentation.text("saved_name"),
+                    self.data.game_text.text("saved_name"),
                     self.state
                         .campaign
                         .as_ref()
@@ -251,13 +251,13 @@ impl Game {
                 self.focus_initial_home();
                 self.npc_delay = 0.0;
                 self.error = None;
-                self.notice = Some((self.data.presentation.text("load_success").into(), 3.0));
+                self.notice = Some((self.data.game_text.text("load_success").into(), 3.0));
                 self.update_save_rows();
             }
             Err(error) => {
                 self.error = Some(format!(
                     "{}: {error}",
-                    self.data.presentation.text("load_failed")
+                    self.data.game_text.text("load_failed")
                 ))
             }
         }
@@ -301,7 +301,7 @@ impl Game {
                 store,
                 &self.data,
                 &raw,
-                self.data.presentation.text("imported_save"),
+                self.data.game_text.text("imported_save"),
             )?;
             let snapshot = kestrum::state::persistence::load_legacy(&raw, &self.data)?;
             Ok::<_, String>(storage::PendingWrite {

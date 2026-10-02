@@ -294,7 +294,7 @@ pub fn prepare_text(ctx: &Context<'_>) {
 fn date(ctx: &Context<'_>, round: u32) -> String {
     format!(
         "{} / {} {}",
-        ctx.data.seasons[round as usize % 4],
+        ctx.game_text.seasons[round as usize % 4],
         ctx.text("year"),
         ctx.data.start_year.saturating_add(round / 4)
     )

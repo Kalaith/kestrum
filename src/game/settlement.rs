@@ -143,7 +143,7 @@ impl Game {
             Ok(_) => {
                 self.settlement.mode = SettlementMode::Overview;
                 self.settlement.page = 0;
-                self.settlement.status = self.data.presentation.text(success).into();
+                self.settlement.status = self.data.game_text.text(success).into();
                 self.invalidate_projection();
             }
             Err(error) => self.settlement.status = error.to_string(),

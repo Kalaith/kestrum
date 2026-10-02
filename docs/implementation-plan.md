@@ -93,7 +93,7 @@ direct map orders with saved routes, exploration and the integrated battlefield.
 | `src/game.rs`: action dispatch, assets, input, save/load, capture scenes | Keep it as application coordination; extract domain work into library services |
 | `src/navigation.rs`, `src/ui/atlas.rs` | Full-bleed atlas, bounded camera, mouse/touch pan and zoom; overlay strategic geometry in the same coordinate space |
 | `src/ui.rs`, `src/ui/menus.rs`, `src/ui/components.rs` | Existing action-returning UI, typography, title, menus, settings, Help, confirmations, error feedback |
-| `src/data.rs`, `assets/data/game_config.json` | Toolkit-loaded presentation data and semantic checks |
+| `src/data.rs`, `assets/data/game_config.json`, `assets/data/game_text.json` | Toolkit-loaded presentation settings and player-facing copy with semantic checks |
 | `assets/data/economy.json` | Six human formation types and delegated balance values; not loaded by the pre-K01 runtime |
 | `tests/campaign.rs`, `tests/navigation.rs`, `tests/asset_registry.rs`, `tests/code_standards.rs` | Existing regressions and source-size gate; tests already live in `tests/` |
 | Real workspace registration, correct sibling toolkit path, Macroquad `=0.4.16` | Onboarding is complete; do not recreate it or change workspace membership |

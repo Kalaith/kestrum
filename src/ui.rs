@@ -28,7 +28,7 @@ use kestrum::{
         progression::FormationSpecialization,
         progression::TrainingDiscipline,
         world::{PersonClass, SiteId},
-        PresentationData,
+        GameTextData, PresentationData,
     },
     navigation::{MapNavigation, MapSelection, MapView},
     state::{
@@ -350,6 +350,7 @@ pub struct Context<'a> {
     pub siege: &'a SiegePanel,
     pub settlement: &'a SettlementView,
     pub data: &'a PresentationData,
+    pub game_text: &'a GameTextData,
     pub battle_tactics: &'a kestrum::data::battle_tactics::BattleTacticsRules,
     pub economy: &'a Economy,
     pub rules: &'a kestrum::data::rules::CampaignRules,
@@ -389,7 +390,7 @@ impl Context<'_> {
         self.assets.get_font("body")
     }
     pub fn text(&self, key: &str) -> String {
-        self.data.text(key).to_owned()
+        self.game_text.text(key).to_owned()
     }
 }
 

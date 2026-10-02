@@ -271,7 +271,7 @@ fn factors(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 .commander
                 .as_ref()
                 .map(|person| person.name.as_str())
-                .unwrap_or_else(|| ctx.data.text("no_commander"));
+                .unwrap_or_else(|| ctx.game_text.text("no_commander"));
             rows.push(row(
                 format!("{role} · {}", army.name),
                 format!(

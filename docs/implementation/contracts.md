@@ -135,8 +135,9 @@ turn is not a date. Round timing is specified in strategic rule P02.
 
 ## C05 — Data and validation
 
-Keep `game_config.json` for presentation and `economy.json` for existing economic
-defaults. Add cohesive definition files as consumed: `campaign_rules.json`,
+Keep `game_config.json` for identity, asset paths, timing and presentation
+geometry; keep player-facing copy in `game_text.json`. Keep `economy.json` for
+existing economic defaults. Add cohesive definition files as consumed: `campaign_rules.json`,
 `world_layout.json`, `scenarios/rosemarch.json`, `troops.json`, `combat_rules.json`,
 `progression.json`, `development.json`, `lifecycle.json`, and `history_rules.json`.
 These are planned assets, not files this documentation change creates.

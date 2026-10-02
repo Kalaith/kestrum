@@ -65,7 +65,8 @@ From `rust_management/`:
    information, viewport/camera plan, and touch interaction. Recompose the
    demo screen before expanding content; relocate utilities and remove demo
    copy and unused surfaces.
-5. Update `assets/data/game_config.json`.
+5. Update `assets/data/game_config.json` and put player-facing copy in
+   `assets/data/game_text.json`.
 6. Replace `actions.json` with your game data.
 7. Add externally loaded textures to both
    `assets/data/texture_manifest.json` and `asset_registry.json`. Keep embedded

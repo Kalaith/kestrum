@@ -40,7 +40,7 @@ pub fn draw_hud(ctx: &Context<'_>) -> Option<UiAction> {
     if ctx.navigation.scope() == MapScope::World {
         emblem(vec2(44.0, 43.0), 19.0);
         text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
-        body(ctx, &ctx.data.title, vec2(81.0, 60.0), 16.0, BRASS);
+        body(ctx, &ctx.game_text.title, vec2(81.0, 60.0), 16.0, BRASS);
     }
     if ctx.navigation.selection().is_none() {
         compass(ctx);
@@ -103,7 +103,7 @@ fn header(ctx: &Context<'_>) -> Option<UiAction> {
         return Some(UiAction::Open(Overlay::Menu));
     }
     if let Some(campaign) = ctx.state.campaign.as_ref() {
-        let season = &ctx.data.seasons[campaign.season_index()];
+        let season = &ctx.game_text.seasons[campaign.season_index()];
         centered(
             ctx,
             &format!(

@@ -115,11 +115,14 @@ pub fn draw_landscape(ctx: &Context<'_>) {
 
 fn geography(ctx: &Context<'_>) {
     for label in &ctx.data.geography {
+        let Some(name) = ctx.game_text.geography.get(&label.id) else {
+            continue;
+        };
         let at = ctx.view.project_normalized(label.position);
         if !(100.0..HEIGHT - 160.0).contains(&at.y) {
             continue;
         }
-        let width = measure_text(&label.name, ctx.font(), label.size as u16, 1.0).width;
+        let width = measure_text(name, ctx.font(), label.size as u16, 1.0).width;
         if at.x - width * 0.5 < 18.0 || at.x + width * 0.5 > WIDTH - 18.0 {
             continue;
         }
@@ -138,9 +141,9 @@ fn geography(ctx: &Context<'_>) {
             vec2(0.0, -1.0),
             vec2(0.0, 1.0),
         ] {
-            centered(ctx, &label.name, at + offset, label.size, CREAM);
+            centered(ctx, name, at + offset, label.size, CREAM);
         }
-        centered(ctx, &label.name, at, label.size, INK);
+        centered(ctx, name, at, label.size, INK);
     }
 }
 
@@ -162,7 +165,7 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     if ctx.navigation.scope() == MapScope::World {
         emblem(vec2(44.0, 43.0), 19.0);
         text(ctx, &ctx.text("world_map"), vec2(80.0, 40.0), 24.0, CREAM);
-        body(ctx, &ctx.data.title, vec2(81.0, 60.0), 16.0, BRASS);
+        body(ctx, &ctx.game_text.title, vec2(81.0, 60.0), 16.0, BRASS);
     }
     if let Some(campaign) = ctx
         .state
@@ -170,7 +173,7 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
         .as_ref()
         .filter(|_| super::tutorial_bounds(ctx.state).is_none())
     {
-        let season = &ctx.data.seasons[campaign.season_index()];
+        let season = &ctx.game_text.seasons[campaign.season_index()];
         centered(
             ctx,
             &format!(

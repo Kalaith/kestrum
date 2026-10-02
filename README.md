@@ -153,6 +153,8 @@ controls, Menu and End Turn remain reachable; the selected-place inspector and
 movement card retain direct destination-tap movement. M01A establishes useful
 working and overview scales with smaller unselected symbols and fewer full
 cards. M02 brings common actions and seasonal consequences into that context.
+Known political borders show each kingdom's color on its own side of a dark
+outline. They retain the existing fog rules and world atlas shoreline mask.
 
 The border-access correction keeps the selected army's next decision beside
 the map: Enter Region exposes local attack targets without losing its route.

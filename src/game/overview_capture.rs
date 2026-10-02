@@ -4,6 +4,7 @@ use super::*;
 use kestrum::{
     data::{
         economy::{Habitation, Resources},
+        rules::Emblem,
         world::{MarkerId, MarkerLocation, SiteId},
     },
     engine::Actor,
@@ -29,6 +30,7 @@ impl Game {
             scene,
             "production_world"
                 | "overview_urgent"
+                | "overview_border_yellow"
                 | "overview_region"
                 | "overview_attention"
                 | "overview_siege"
@@ -100,6 +102,33 @@ impl Game {
         self.view.reset();
         self.apply(UiAction::Overview);
         self.overview_ui.expanded = scene == "overview_urgent";
+        if scene == "overview_border_yellow" {
+            let campaign = self.state.campaign.as_ref().unwrap().strategic().unwrap();
+            let yellow = campaign
+                .factions
+                .values()
+                .find(|faction| faction.emblem == Emblem::Oak)
+                .expect("eight-faction fixture includes Oak");
+            let yellow_region = campaign
+                .world
+                .markers
+                .iter()
+                .find(|marker| {
+                    matches!(&marker.location, MarkerLocation::Region { .. })
+                        && campaign
+                            .world
+                            .region_control
+                            .get(&marker.id)
+                            .is_some_and(|control| control.political_owner == Some(yellow.id))
+                })
+                .expect("authored fixture gives Oak a regional claim");
+            let focus = [
+                yellow_region.position[0] - 0.12,
+                yellow_region.position[1] + 0.12,
+            ];
+            let zoom = self.view.working_zoom();
+            self.view.focus(focus, zoom);
+        }
         if scene == "overview_region" {
             self.enter_region(fixture.region);
             self.view.reset();

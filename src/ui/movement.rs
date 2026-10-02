@@ -70,6 +70,11 @@ fn cost_summary(ctx: &Context<'_>, preview: &MovementPreview) -> String {
 }
 
 fn route_consequence(ctx: &Context<'_>, preview: &MovementPreview) -> String {
+    if let Some(faction) = peaceful_border(ctx, preview) {
+        return ctx
+            .text("move_peaceful_border")
+            .replace("{kingdom}", &faction.name);
+    }
     if let Some(blocked) = &preview.blocked {
         blocked.reason.to_string()
     } else if let Some(stop) = &preview.stop {
@@ -99,6 +104,22 @@ fn route_consequence(ctx: &Context<'_>, preview: &MovementPreview) -> String {
     } else {
         ctx.text("move_route_clear")
     }
+}
+
+fn peaceful_border<'a>(
+    ctx: &'a Context<'_>,
+    preview: &MovementPreview,
+) -> Option<&'a kestrum::engine::VisibleFaction> {
+    let blocked = preview.blocked.as_ref()?;
+    if blocked.reason != kestrum::engine::MovementBlock::PeaceBoundary {
+        return None;
+    }
+    let campaign = ctx.campaign_view?;
+    let controller = campaign.world.site(blocked.site)?.controller?;
+    campaign
+        .factions
+        .iter()
+        .find(|faction| faction.id == controller)
 }
 
 fn lines(ctx: &Context<'_>, label: &str, at: Vec2, width: f32, limit: usize, color: Color) {

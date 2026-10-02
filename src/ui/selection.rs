@@ -2,9 +2,11 @@
 
 use super::{components::*, world::is_anchor, Context, UiAction};
 use kestrum::{
-    data::world::{AnchorExpression, FactionId, MarkerId, MarkerLocation, Site, SiteId},
+    data::world::{
+        AnchorExpression, DiplomaticState, FactionId, MarkerId, MarkerLocation, Site, SiteId,
+    },
     navigation::{MapNavigation, MapSelection, MapView, WIDTH},
-    state::{world::CampaignWorld, Overlay},
+    state::{world::CampaignWorld, FactionStatus, Overlay},
 };
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::wrap_text_ex;
@@ -77,7 +79,16 @@ fn controls(
     }) {
         return owned_controls(ctx, rect, site.id, siege);
     }
-    if let Some(owner) = site.and_then(|site| site.controller) {
+    let owner = site.and_then(|site| site.controller).or_else(|| {
+        ctx.campaign_view?
+            .world
+            .region_control(marker)?
+            .political_owner
+    });
+    if let Some(owner) = owner.filter(|owner| {
+        ctx.campaign_view
+            .is_some_and(|campaign| *owner != campaign.observer)
+    }) {
         if button(
             ctx,
             Rect::new(rect.x + 16.0, rect.y + rect.h - 118.0, 326.0, 48.0),
@@ -233,8 +244,9 @@ fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
         sections.push(format!(
             "{}: {}",
             ctx.text("political_claim"),
-            owner_name(ctx, control.political_owner, "unclaimed")
+            owner_relation(ctx, control.political_owner, "unclaimed")
         ));
+        border_help(ctx, control.political_owner, sections);
         sections.push(ctx.text(if control.contested {
             "contested"
         } else {
@@ -259,7 +271,6 @@ fn region_details(ctx: &Context<'_>, id: MarkerId, sections: &mut Vec<String>) {
             ctx.text("anchor_requirements"),
             anchor_description(ctx, anchors)
         ));
-        sections.push(ctx.text("anchors_help"));
     } else {
         sections.push(ctx.text("map_unexplored_region"));
     }
@@ -291,8 +302,9 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
     sections.push(format!(
         "{}: {}",
         ctx.text("local_control"),
-        owner_name(ctx, site.controller, "uncontrolled")
+        owner_relation(ctx, site.controller, "uncontrolled")
     ));
+    border_help(ctx, site.controller, sections);
     if campaign.sieges.iter().any(|siege| siege.site == site.id) {
         sections.push(ctx.text("siege_underway"));
     } else if world.contested_sites.contains(&site.id) {
@@ -302,7 +314,7 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
         sections.push(format!(
             "{}: {}{}",
             ctx.text("political_claim"),
-            owner_name(ctx, control.political_owner, "unclaimed"),
+            owner_relation(ctx, control.political_owner, "unclaimed"),
             if control.contested {
                 format!(" ({})", ctx.text("contested"))
             } else {
@@ -310,11 +322,13 @@ fn site_details(ctx: &Context<'_>, site: &Site, sections: &mut Vec<String>) {
             }
         ));
     }
-    sections.push(ctx.text(if campaign.supplied_sites.contains(&site.id) {
-        "site_supplied"
-    } else {
-        "site_unsupplied"
-    }));
+    if site.controller == Some(campaign.observer) {
+        sections.push(ctx.text(if campaign.supplied_sites.contains(&site.id) {
+            "site_supplied"
+        } else {
+            "site_unsupplied"
+        }));
+    }
     if let Some(marker) = world.marker(site.marker) {
         if let MarkerLocation::Region {
             anchors, entrances, ..
@@ -362,6 +376,40 @@ fn owner_name(ctx: &Context<'_>, owner: Option<FactionId>, empty: &str) -> Strin
         })
         .map(|faction| faction.name.clone())
         .unwrap_or_else(|| ctx.text(empty))
+}
+
+fn owner_relation(ctx: &Context<'_>, owner: Option<FactionId>, empty: &str) -> String {
+    let name = owner_name(ctx, owner, empty);
+    let Some(faction) = ctx.kingdom.data.as_ref().and_then(|view| {
+        view.factions
+            .iter()
+            .find(|faction| Some(faction.id) == owner)
+    }) else {
+        return name;
+    };
+    let key = match faction.status {
+        FactionStatus::Eliminated => "kingdom_eliminated",
+        FactionStatus::Vassal { .. } => "kingdom_subordinate",
+        FactionStatus::Independent => match faction.relation {
+            DiplomaticState::War => "war",
+            DiplomaticState::Peace => "peace",
+        },
+    };
+    format!("{name} · {}", ctx.text(key))
+}
+
+fn border_help(ctx: &Context<'_>, owner: Option<FactionId>, sections: &mut Vec<String>) {
+    let Some(faction) = ctx.kingdom.data.as_ref().and_then(|view| {
+        view.factions.iter().find(|faction| {
+            Some(faction.id) == owner && faction.status == FactionStatus::Independent
+        })
+    }) else {
+        return;
+    };
+    sections.push(ctx.text(match faction.relation {
+        DiplomaticState::Peace => "peaceful_border_help",
+        DiplomaticState::War => "war_border_help",
+    }));
 }
 
 fn anchor_description(ctx: &Context<'_>, expression: &AnchorExpression) -> String {

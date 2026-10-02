@@ -19,6 +19,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Regional border access](border-access.md) records the later correction for
+selected-army regional navigation, supply explanations and diplomatic access.
+It does not claim completion of the broader M02 inspector work.
+
 [M01A spatial scale](spatial-scale.md) is complete under its recorded scope and
 is the latest runtime record. Formatting, strict Clippy, source-size checks and 14 final native
 captures passed. The full suite retains one production-victory failure and one
@@ -33,6 +37,7 @@ remain historical evidence and do not define another acceptance target.
 
 | Record | What it establishes |
 | --- | --- |
+| [Regional border access — 2026-10-02](border-access.md) | Selected-army region entry, retained orders and camera framing, explicit Peace/War and closed-border diplomacy |
 | [M01A spatial scale — 2026-10-02](spatial-scale.md) | Independent extents, three scale bands, compact marks and retained cameras; engineering results, 14 actual 1920×1080 native captures, native actions, browser gameplay/capture and publishing/reload |
 | [M01 kingdom overview — 2026-10-01](kingdom-overview.md) | Known political/control layers, symbols/labels/banners, actual accounts and attention; full-suite result, final focused checks, nine native states at both sizes, publishing and browser gameplay/reload evidence |
 | [Movement plans — 2026-10-01](movement-plans.md) | Latest immediate destination taps, queued continuation, selected-unit End Turn and native action-harness checks; distinguishes the final focused checks from the preceding engine-change full suite and browser review |

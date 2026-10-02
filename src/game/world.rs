@@ -217,8 +217,47 @@ impl Game {
             .enter_region(&visible.world, region, &mut self.view)
         {
             self.error = Some(error);
+            return;
         }
+        self.keep_region_army_visible(&visible);
         self.refresh_move_options();
+    }
+
+    fn keep_region_army_visible(&mut self, visible: &engine::VisibleCampaign) {
+        if self.movement.stage != ui::MoveStage::Map {
+            return;
+        }
+        let Some(site) = self.movement.site.and_then(|id| visible.world.site(id)) else {
+            return;
+        };
+        if self.navigation.scope() != kestrum::navigation::MapScope::Region(site.marker) {
+            return;
+        }
+        let selectable = self
+            .navigation
+            .army_targets(&visible.world, &self.view, &visible.armies)
+            .iter()
+            .any(|target| {
+                target
+                    .armies
+                    .iter()
+                    .any(|army| self.movement.armies.contains(army))
+                    && [
+                        vec2(target.bounds.x, target.bounds.y),
+                        vec2(target.bounds.right(), target.bounds.y),
+                        vec2(target.bounds.x, target.bounds.bottom()),
+                        vec2(target.bounds.right(), target.bounds.bottom()),
+                    ]
+                    .into_iter()
+                    .all(|point| !self.map_controls_block(point))
+            });
+        if !selectable {
+            // Region entry already saved the world camera. Only repair a regional
+            // view that hides the selected force, retaining useful saved framing.
+            self.navigation
+                .focus_army_site(&visible.world, site.id, &mut self.view);
+            self.navigation.clear_selection();
+        }
     }
 
     pub(super) fn capture_world(&mut self, scene: &str) {

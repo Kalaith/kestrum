@@ -2,6 +2,7 @@
 
 use super::*;
 use kestrum::{navigation::MapSelection, state::military::ArmyId};
+mod borders;
 mod world_orders;
 
 impl Game {
@@ -42,6 +43,9 @@ impl Game {
     }
 
     pub(super) fn capture_map_movement(&mut self, scene: &str) -> bool {
+        if self.capture_border_access(scene) {
+            return true;
+        }
         let scene = scene.trim_end_matches("_minimum");
         if !matches!(
             scene,

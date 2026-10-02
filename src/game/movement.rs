@@ -244,6 +244,9 @@ impl Game {
             self.movement.destination = None;
             self.movement.preview = None;
             self.movement.status.clear();
+            if campaign.world.physical_site(marker).is_none() {
+                self.enter_region(marker);
+            }
             return;
         }
         let preview = engine::world_movement_preview(

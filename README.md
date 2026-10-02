@@ -54,6 +54,17 @@ movement and continues those orders; encounters and changed access can pause the
 A destination can also be queued when no movement remains. Cancel Route stops
 it; another destination replaces it. Review Route inspects the saved order.
 
+For orders inside a region, select the army and tap **Enter Region**. Tapping
+its current region also opens the local sites. These navigation actions retain
+the selected army and any queued route. Tap a hostile site to advance: an
+undefended site is captured and defenders trigger battle or a siege. A peaceful
+border names the kingdom blocking passage and offers **Kingdom** to review
+**Declare War**. Place inspectors show Peace or War beside foreign control.
+
+An army's site can be yours while the surrounding political claim belongs to
+a rival. **No supply** means there is no secure friendly route to headquarters;
+it prevents normal recovery, not movement or attacks.
+
 Tap a place to inspect it. Enter Region and World Map retain their respective
 camera contexts. Drag to pan; pinch, the mouse wheel, or visible +/− controls
 zoom. Overview fits known land and changes to Return View, which restores the
@@ -118,6 +129,12 @@ controls, Menu and End Turn remain reachable; the selected-place inspector and
 movement card retain direct destination-tap movement. M01A establishes useful
 working and overview scales with smaller unselected symbols and fewer full
 cards. M02 brings common actions and seasonal consequences into that context.
+
+The border-access correction keeps the selected army's next decision beside
+the map: Enter Region exposes local attack targets without losing its route.
+Supply warnings explain recovery, foreign control shows the diplomatic state,
+and a closed peaceful border opens that kingdom's war review. The existing
+confirmation remains the point where war is declared.
 
 **1920×1080 is the sole design and acceptance resolution**, including logical
 UI coordinates, per the user's 2026-10-01 correction. Native and browser checks

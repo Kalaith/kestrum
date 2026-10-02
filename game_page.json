@@ -33,7 +33,7 @@
     },
     {
       "key": "Enter Region / World Map",
-      "desc": "Inspect regional sites and return to the previous world camera"
+      "desc": "With an army selected, Enter Region exposes local movement and attack targets; World Map returns to the previous world camera"
     },
     {
       "key": "Close",
@@ -137,7 +137,7 @@
     },
     {
       "key": "Kingdom",
-      "desc": "Menu > Kingdom opens discovered kingdoms and confirmations for war, peace and a defeated rival’s permanent outcome"
+      "desc": "Kingdom on a foreign place or blocked peaceful move opens war and peace options; Menu > Kingdom lists discovered kingdoms"
     }
   ],
   "details": [

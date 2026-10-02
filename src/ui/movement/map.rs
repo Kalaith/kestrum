@@ -21,20 +21,43 @@ pub fn panel_bounds(
     let left = position.is_none_or(|position| view.project_normalized(position).x >= WIDTH * 0.5);
     let choosing_region = matches!(navigation.selection(), Some(kestrum::navigation::MapSelection::Marker(id))
         if world.physical_site(id).is_none());
+    let region = order_region(movement, navigation, world);
     let height = if movement.preview.is_some()
         || movement.planned_destination.is_some()
         || choosing_region
     {
         480.0
     } else {
-        350.0
+        390.0
     };
     Rect::new(
         if left { 24.0 } else { WIDTH - 382.0 },
         126.0,
         358.0,
-        height,
+        height + if region.is_some() { 56.0 } else { 0.0 },
     )
+}
+
+fn order_region(
+    movement: &MoveView,
+    navigation: &MapNavigation,
+    world: &CampaignWorld,
+) -> Option<kestrum::data::world::MarkerId> {
+    if navigation.scope() != MapScope::World {
+        return None;
+    }
+    let selected = match navigation.selection() {
+        Some(kestrum::navigation::MapSelection::Marker(id))
+            if world.physical_site(id).is_none() =>
+        {
+            Some(id)
+        }
+        _ => None,
+    };
+    selected.or_else(|| {
+        let region = world.site(movement.site?)?.marker;
+        world.physical_site(region).is_none().then_some(region)
+    })
 }
 
 pub fn draw_map_overlay(ctx: &Context<'_>) -> Option<UiAction> {
@@ -159,7 +182,9 @@ fn draw_route_preview(
         .threats
         .iter()
         .find(|threat| Some(threat.site) == ctx.movement.destination);
-    let primary = if preview.reachable_steps == 0 {
+    let primary = if let Some(faction) = peaceful_border(ctx, preview) {
+        Some(("kingdom", UiAction::OpenKingdom(Some(faction.id))))
+    } else if preview.reachable_steps == 0 {
         threat.map(|threat| ("clear_threat", UiAction::OpenThreat(threat.id)))
     } else {
         None
@@ -217,7 +242,7 @@ fn draw_route_consequence(ctx: &Context<'_>, rect: Rect, preview: &MovementPrevi
         &consequence,
         vec2(x, rect.y + if exit_cost > 0 { 273.0 } else { 245.0 }),
         width,
-        if exit_cost > 0 { 2 } else { 3 },
+        3,
         CREAM,
     );
 }
@@ -236,15 +261,27 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
             .unwrap_or_default();
         ctx.text("move_planned_destination").replace("{site}", name)
     } else if ctx.movement.status.is_empty() {
-        ctx.text(if remaining == 0 {
+        let instruction = ctx.text(if remaining == 0 {
             "map_move_exhausted"
+        } else if order_region(ctx.movement, ctx.navigation, &campaign.world).is_some() {
+            "map_move_in_region"
         } else {
             "map_pick_destination"
-        })
+        });
+        if ctx
+            .movement
+            .armies
+            .iter()
+            .any(|id| !campaign.supplied_armies.contains(id))
+        {
+            format!("{}\n{instruction}", ctx.text("map_army_supply_cutoff"))
+        } else {
+            instruction
+        }
     } else {
         ctx.movement.status.clone()
     };
-    lines(ctx, &label, vec2(x, rect.y + 165.0), width, 5, CREAM);
+    lines(ctx, &label, vec2(x, rect.y + 165.0), width, 6, CREAM);
     if ctx.movement.planned_destination.is_some() {
         if button(
             ctx,
@@ -267,19 +304,6 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
         }
         return None;
     }
-    if let Some(kestrum::navigation::MapSelection::Marker(id)) = ctx.navigation.selection() {
-        if campaign.world.physical_site(id).is_none()
-            && button(
-                ctx,
-                Rect::new(x, rect.y + 326.0, width, 48.0),
-                &ctx.text("enter_region"),
-                active,
-                true,
-            )
-        {
-            return Some(UiAction::EnterRegion(id));
-        }
-    }
     None
 }
 
@@ -292,7 +316,10 @@ fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     } else {
         ("map_army_details", UiAction::OpenArmies(ctx.movement.site?))
     };
-    let secondary_y = rect.bottom() - 90.0;
+    let region = ctx
+        .campaign_view
+        .and_then(|campaign| order_region(ctx.movement, ctx.navigation, &campaign.world));
+    let secondary_y = rect.bottom() - if region.is_some() { 146.0 } else { 90.0 };
     if button(
         ctx,
         Rect::new(x, secondary_y, 158.0, 48.0),
@@ -325,6 +352,17 @@ fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
             2,
             MUTED,
         );
+    }
+    if let Some(region) = region {
+        if button(
+            ctx,
+            Rect::new(x, rect.bottom() - 90.0, rect.w - 32.0, 48.0),
+            &ctx.text("enter_region"),
+            active,
+            ctx.movement.preview.is_none() && ctx.movement.planned_destination.is_none(),
+        ) {
+            return Some(UiAction::EnterRegion(region));
+        }
     }
     None
 }

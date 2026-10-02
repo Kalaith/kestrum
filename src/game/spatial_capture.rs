@@ -155,14 +155,14 @@ impl Game {
         self.setup = setup;
     }
 
-    fn capture_sheet_tap(&self, screen_position: Vec2) -> UiAction {
+    pub(in crate::game) fn capture_sheet_tap(&self, screen_position: Vec2) -> UiAction {
         self.capture_sheet_pointer(screen_position, Some(screen_position), true)
             .expect("displayed sheet control must accept its screen-coordinate release")
     }
 
     /// Exercise the real draw/action path, including both viewport and sheet
     /// translation. This injects a pointer frame, not an operating-system event.
-    fn capture_sheet_pointer(
+    pub(in crate::game) fn capture_sheet_pointer(
         &self,
         screen_position: Vec2,
         screen_origin: Option<Vec2>,

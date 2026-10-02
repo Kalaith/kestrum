@@ -3,6 +3,13 @@
 pub(super) const REQUIRED_TEXT: &[&str] = &[
     "map_move_group",
     "map_pick_destination",
+    "map_move_in_region",
+    "map_army_supply_cutoff",
+    "move_peaceful_border",
+    "peaceful_border_help",
+    "war_border_help",
+    "peace",
+    "war",
     "map_supply_connected",
     "map_supply_cutoff",
     "map_army",

@@ -84,10 +84,18 @@ handling and application actions; they do not establish hardware touch timing.
 
 `publish.ps1` completed the Windows, WASM, Preview and Roost publish steps. The
 published game page loaded and showed the Observe entry alongside the existing
-Continue save. The browser canvas reported **1920×1080**. A coordinate click
-while entering Continue exited full screen without opening the save, so the
+Continue save. The browser canvas reported **1920×1080**. After an attempted
+coordinate click on Continue, the browser had left fullscreen without opening
+the save; the exact exit trigger was not established. Therefore the
 remaining published-browser flow—Observer setup, playback, roster and return to
 Continue—was not verified. Browser interaction stopped at that point.
+
+Source inspection confirmed that the page's Full Screen button invokes
+`requestFullscreen()`. On exit, `fullscreenchange` removes its `game-playing`
+class and resizes the canvas back into the page. Invoking the button took over
+the user's display despite the tab starting hidden. The test tab was closed and
+the temporary viewport override reset. Future checks must remain headless, as
+recorded in [project guidance](../../PROJECT_AGENTS.md).
 
 ## Review limits
 

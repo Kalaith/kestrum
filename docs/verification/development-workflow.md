@@ -141,3 +141,27 @@ classification) was syntax/review checked without a fourth browser rerun.
 The browser's `finally` closes it after failure. The two task-generated
 Chromium `debug.log` additions were removed by restoring its exact original
 tracked bytes, preserving the pre-existing diagnostic line.
+
+## Seed-88 bounded diagnosis
+
+The test player's recruitment ceiling is six formations across all armies
+(`tests/k18_production_battle.rs:211`), while the configured AI can fill two
+six-formation armies. A focused experiment increased only that script ceiling
+to the configured army count times six. The source-size gate passed, but the
+production battle test still failed at round 240 in 78.94s (6.65s compilation).
+Command: `..\rust_management\cargo.ps1 test -p kestrum --locked --test k18_production_battle --test code_standards`.
+The initial sandbox attempt could not acquire a pool lease and ran no Cargo;
+the authorized retry produced these results.
+
+The final trace still had factions 1/2/3 independent and faction 4 eliminated;
+only faction 2 had live armies, both full. Late player moves repeatedly changed
+targets around sites 1071/1072/1073 while attempting to reach site 1078. The
+script ranks enemy holding count ahead of route cost (lines 284, 320 and 359).
+This suggests investigating target selection and route commitment, but does
+not prove a game-rule defect or an adequate strategy fix.
+
+The unsuccessful recruitment experiment was removed completely: the test's
+HEAD, index and worktree blob hashes all matched
+`75c8b4635cf50ac7d7d79728ac3fda31828fdfcd`. No cap, assertion or production
+balance was changed. The original baseline exception remains outstanding;
+no full-suite rerun was needed after restoring the tested original source.

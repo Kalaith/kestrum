@@ -99,3 +99,6 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
   `tests/k18_production_battle.rs`. Preserve meaningful victory/save-roundtrip
   assertions; do not merely raise the cap or weaken the test. The user allowed
   this documented baseline exception for current commits, not a claimed pass.
+  A larger recruitment ceiling still failed and was reverted. Investigate
+  target/path commitment using the trace in the current verification record;
+  a strategy or game-rule root cause has not been established.

@@ -12,6 +12,7 @@ use kestrum::{
     state::{
         military::ArmyId,
         threat::{Threat, ThreatStatus},
+        tutorial::TutorialStep,
         CampaignPhase, StrategicCampaign,
     },
 };
@@ -109,23 +110,27 @@ impl Game {
                 .values()
                 .find(|faction| faction.emblem == Emblem::Oak)
                 .expect("eight-faction fixture includes Oak");
-            let yellow_region = campaign
+            let focus = campaign
                 .world
-                .markers
+                .sites
                 .iter()
-                .find(|marker| {
-                    matches!(&marker.location, MarkerLocation::Region { .. })
-                        && campaign
-                            .world
-                            .region_control
-                            .get(&marker.id)
-                            .is_some_and(|control| control.political_owner == Some(yellow.id))
+                .filter(|site| site.controller == Some(yellow.id))
+                .find_map(|site| {
+                    let from = campaign.world.marker(site.marker)?.position;
+                    campaign
+                        .world
+                        .adjacent_sites(site.id)
+                        .into_iter()
+                        .find_map(|neighbor| {
+                            let other = campaign.world.site(neighbor)?;
+                            if other.controller == Some(yellow.id) {
+                                return None;
+                            }
+                            let to = campaign.world.marker(other.marker)?.position;
+                            Some([(from[0] + to[0]) * 0.5, (from[1] + to[1]) * 0.5])
+                        })
                 })
-                .expect("authored fixture gives Oak a regional claim");
-            let focus = [
-                yellow_region.position[0] - 0.12,
-                yellow_region.position[1] + 0.12,
-            ];
+                .expect("authored countryside has an Oak border with a neighboring kingdom");
             let zoom = self.view.working_zoom();
             self.view.focus(focus, zoom);
         }
@@ -137,9 +142,8 @@ impl Game {
                 .as_ref()
                 .unwrap()
                 .world
-                .site(fixture.threat)
-                .unwrap()
-                .position;
+                .region_site_position(fixture.region, fixture.threat)
+                .expect("local threat occupies a known city-neighborhood site");
             self.view.focus(position, 1.6);
         }
         if scene == "overview_attention" {
@@ -197,7 +201,18 @@ impl Game {
         self.apply(UiAction::FocusAttention(engine::AttentionTarget::Site(
             site,
         )));
-        assert_eq!(self.navigation.selection(), Some(MapSelection::Site(site)));
+        let marker = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .and_then(|campaign| campaign.world.site(site))
+            .expect("attention site remains a known production marker")
+            .marker;
+        assert_eq!(
+            self.navigation.selection(),
+            Some(MapSelection::Marker(marker))
+        );
         assert!(self.movement.armies.is_empty());
         assert_eq!(self.state.overlay, Overlay::None);
         assert_eq!(
@@ -210,8 +225,16 @@ impl Game {
 fn overview_fixture(mut campaign: StrategicCampaign, data: &GameData) -> OverviewFixture {
     campaign.tutorial.dismiss();
     let player = campaign.player;
-    let home = campaign.factions[&player].headquarters;
-    let region = campaign.world.site(home).expect("capital site").marker;
+    let capital = campaign.factions[&player].capital;
+    let region = campaign.world.site(capital).expect("capital site").marker;
+    engine::apply(
+        &mut campaign,
+        data,
+        Actor::Player,
+        Command::DevelopCity { site: capital },
+    )
+    .expect("overview city view uses an ordinary paid production investment");
+    campaign.tutorial.record(TutorialStep::CityDevelopment);
     let army = campaign
         .armies
         .values()
@@ -233,10 +256,12 @@ fn overview_fixture(mut campaign: StrategicCampaign, data: &GameData) -> Overvie
         .threats
         .values()
         .find(|threat| {
-            campaign.world.site(threat.site).unwrap().marker == region
-                && campaign.world.adjacent_sites(threat.site).contains(&home)
+            campaign
+                .world
+                .adjacent_sites(capital)
+                .contains(&threat.site)
         })
-        .expect("known local threat beside regional capital")
+        .expect("known local threat beside the production capital")
         .clone();
     author_developed_holdings(&mut campaign, data);
     // Economy is a real closed season for the authored holdings, never a forecast.
@@ -258,7 +283,7 @@ fn overview_fixture(mut campaign: StrategicCampaign, data: &GameData) -> Overvie
         .world
         .sites
         .iter_mut()
-        .find(|site| site.id == home)
+        .find(|site| site.id == capital)
         .unwrap()
         .name = "The High Seat of Silver Hawthorns".into();
     campaign
@@ -274,19 +299,15 @@ fn overview_fixture(mut campaign: StrategicCampaign, data: &GameData) -> Overvie
 
 fn author_local_pressure(campaign: &mut StrategicCampaign, data: &GameData, local_threat: Threat) {
     let player = campaign.player;
-    let home = campaign.factions[&player].headquarters;
-    let region = campaign.world.site(home).unwrap().marker;
+    let capital = campaign.factions[&player].capital;
     let threat = local_threat.site;
     campaign.threats.insert(local_threat.id, local_threat);
     campaign.reconcile_region_control();
     let contact = campaign
         .world
-        .adjacent_sites(home)
+        .adjacent_sites(capital)
         .into_iter()
-        .find(|site| {
-            campaign.world.site(*site).unwrap().marker == region
-                && campaign.active_threat(*site).is_none()
-        })
+        .find(|site| campaign.active_threat(*site).is_none())
         .expect("safe founding exit for observed contact");
     let enemy = campaign
         .armies
@@ -314,6 +335,7 @@ fn author_local_pressure(campaign: &mut StrategicCampaign, data: &GameData, loca
 }
 
 fn author_developed_holdings(campaign: &mut StrategicCampaign, data: &GameData) {
+    let capital = campaign.factions[&campaign.player].capital;
     let homes: Vec<_> = campaign
         .factions
         .values()
@@ -336,13 +358,17 @@ fn author_developed_holdings(campaign: &mut StrategicCampaign, data: &GameData) 
                 distance_squared(left.1, position).total_cmp(&distance_squared(right.1, position))
             })
             .map(|(faction, _)| *faction);
-        site.habitation = match site.id.0 % 4 {
-            0 => Habitation::Town,
-            1 => Habitation::Village,
-            2 => Habitation::Camp,
-            _ => Habitation::City,
-        }
-        .min(data.development.geography_caps[&site.geography]);
+        site.habitation = if site.id == capital {
+            Habitation::City
+        } else {
+            match site.id.0 % 4 {
+                0 => Habitation::Town,
+                1 => Habitation::Village,
+                2 => Habitation::Camp,
+                _ => Habitation::Town,
+            }
+            .min(data.development.geography_caps[&site.geography])
+        };
     }
     campaign.factions.get_mut(&campaign.player).unwrap().name =
         "Kingdom of the Silver Hawthorns".into();

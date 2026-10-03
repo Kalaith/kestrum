@@ -5,7 +5,7 @@ use kestrum::{
     data::world::{
         AnchorExpression, DiplomaticState, FactionId, MarkerId, MarkerLocation, Site, SiteId,
     },
-    navigation::{MapNavigation, MapSelection, MapView, WIDTH},
+    navigation::{MapNavigation, MapScope, MapSelection, MapView, WIDTH},
     state::{world::CampaignWorld, FactionStatus, Overlay},
 };
 use macroquad::prelude::*;
@@ -15,12 +15,18 @@ use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 pub fn bounds(navigation: &MapNavigation, world: &CampaignWorld, view: &MapView) -> Option<Rect> {
     let position = match navigation.selection()? {
         MapSelection::Marker(id) => world.marker(id)?.position,
-        MapSelection::Site(id) => world.site(id)?.position,
+        MapSelection::Site(id) => {
+            let site = world.site(id)?;
+            match navigation.scope() {
+                MapScope::World => site.position,
+                MapScope::Region(region) => world.region_site_position(region, id)?,
+            }
+        }
     };
     let left = view.project_normalized(position).x >= WIDTH * 0.5;
     Some(Rect::new(
         if left { 24.0 } else { WIDTH - 382.0 },
-        126.0,
+        180.0,
         358.0,
         620.0,
     ))
@@ -69,11 +75,15 @@ fn controls(
     site: Option<&Site>,
 ) -> Option<UiAction> {
     let active = ctx.state.overlay == Overlay::None;
+    let can_enter_region = ctx.navigation.scope() == MapScope::World
+        && ctx
+            .campaign_view
+            .is_some_and(|campaign| campaign.world.is_region_available(marker));
     if ctx
         .campaign_view
         .is_some_and(|campaign| campaign.observer_mode)
     {
-        return observer_controls(ctx, rect, marker, site);
+        return observer_controls(ctx, rect, marker, site, can_enter_region);
     }
     if let Some(threat) = site.and_then(|site| {
         ctx.campaign_view?
@@ -81,7 +91,7 @@ fn controls(
             .iter()
             .find(|threat| threat.site == site.id)
     }) {
-        return threat_controls(ctx, rect, threat.id);
+        return threat_controls(ctx, rect, threat.id, marker, can_enter_region);
     }
     let siege = site.is_some_and(|site| {
         ctx.campaign_view
@@ -90,7 +100,7 @@ fn controls(
     if let Some(site) = site.filter(|site| {
         siege || Some(site.controller) == ctx.campaign_view.map(|view| Some(view.observer))
     }) {
-        return owned_controls(ctx, rect, site.id, siege);
+        return owned_controls(ctx, rect, site.id, siege, can_enter_region);
     }
     let owner = site.and_then(|site| site.controller).or_else(|| {
         ctx.campaign_view?
@@ -104,7 +114,12 @@ fn controls(
     }) {
         if button(
             ctx,
-            Rect::new(rect.x + 16.0, rect.y + rect.h - 118.0, 326.0, 48.0),
+            Rect::new(
+                rect.x + 16.0,
+                rect.y + rect.h - if can_enter_region { 174.0 } else { 118.0 },
+                326.0,
+                48.0,
+            ),
             &ctx.text("kingdom"),
             active,
             true,
@@ -112,20 +127,33 @@ fn controls(
             return Some(UiAction::OpenKingdom(Some(owner)));
         }
     }
-    let (key, action) = if let Some(site) = site {
+    if can_enter_region
+        && site.is_some()
+        && button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.bottom() - 118.0, rect.w - 32.0, 48.0),
+            &ctx.text("enter_region"),
+            active,
+            true,
+        )
+    {
+        return Some(UiAction::EnterRegion(marker));
+    }
+    let (key, action, primary) = if let Some(site) = site {
         (
             "history",
             UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site.id)),
+            false,
         )
     } else {
-        ("enter_region", UiAction::EnterRegion(marker))
+        ("enter_region", UiAction::EnterRegion(marker), true)
     };
     if button(
         ctx,
         Rect::new(rect.x + 16.0, rect.y + rect.h - 62.0, 192.0, 48.0),
         &ctx.text(key),
         active,
-        site.is_none(),
+        primary,
     ) {
         return Some(action);
     }
@@ -146,7 +174,20 @@ fn observer_controls(
     rect: Rect,
     marker: MarkerId,
     site: Option<&Site>,
+    can_enter_region: bool,
 ) -> Option<UiAction> {
+    if can_enter_region
+        && site.is_some()
+        && button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.bottom() - 118.0, rect.w - 32.0, 48.0),
+            &ctx.text("enter_region"),
+            ctx.state.overlay == Overlay::None,
+            true,
+        )
+    {
+        return Some(UiAction::EnterRegion(marker));
+    }
     let action = if site.is_some() {
         UiAction::OpenObserverKingdoms
     } else {
@@ -250,7 +291,20 @@ fn threat_controls(
     ctx: &Context<'_>,
     rect: Rect,
     threat: kestrum::state::threat::ThreatId,
+    marker: MarkerId,
+    can_enter_region: bool,
 ) -> Option<UiAction> {
+    if can_enter_region
+        && button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.bottom() - 118.0, rect.w - 32.0, 48.0),
+            &ctx.text("enter_region"),
+            ctx.state.overlay == Overlay::None,
+            true,
+        )
+    {
+        return Some(UiAction::EnterRegion(marker));
+    }
     for (x, key, action) in [
         (16.0, "clear_threat", UiAction::OpenThreat(threat)),
         (220.0, "close", UiAction::CloseSelection),
@@ -273,30 +327,45 @@ fn threat_controls(
     None
 }
 
-fn owned_controls(ctx: &Context<'_>, rect: Rect, site: SiteId, siege: bool) -> Option<UiAction> {
+fn owned_controls(
+    ctx: &Context<'_>,
+    rect: Rect,
+    site: SiteId,
+    siege: bool,
+    can_enter_region: bool,
+) -> Option<UiAction> {
     let primary = if siege {
         ("siege", UiAction::OpenSiege(site))
     } else {
         ("settlement_manage", UiAction::OpenSettlement(site))
     };
-    for (index, (key, action)) in [
+    let mut actions = vec![
         primary,
         ("armies", UiAction::OpenArmies(site)),
         (
             "history",
             UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site)),
         ),
-        ("close", UiAction::CloseSelection),
-    ]
-    .into_iter()
-    .enumerate()
-    {
-        let bounds = Rect::new(
-            rect.x + 16.0 + (index % 2) as f32 * 170.0,
-            rect.y + rect.h - 118.0 + (index / 2) as f32 * 56.0,
-            154.0,
-            48.0,
-        );
+    ];
+    if can_enter_region {
+        actions.push((
+            "enter_region",
+            UiAction::EnterRegion(ctx.campaign_view?.world.site(site)?.marker),
+        ));
+    }
+    actions.push(("close", UiAction::CloseSelection));
+    for (index, (key, action)) in actions.into_iter().enumerate() {
+        let bounds = if can_enter_region && index == 4 {
+            Rect::new(rect.x + 16.0, rect.bottom() - 62.0, rect.w - 32.0, 48.0)
+        } else {
+            Rect::new(
+                rect.x + 16.0 + (index % 2) as f32 * 170.0,
+                rect.bottom() - if can_enter_region { 174.0 } else { 118.0 }
+                    + (index / 2) as f32 * 56.0,
+                154.0,
+                48.0,
+            )
+        };
         if button(
             ctx,
             bounds,

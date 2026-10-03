@@ -15,10 +15,19 @@ use macroquad_toolkit::ui::truncate_text_to_width_ex;
 mod armies;
 mod fog;
 mod labels;
+mod local_terrain;
 mod routes;
 mod symbols;
 mod territory;
 pub use fog::{draw as draw_fog, exploration as map_exploration};
+
+pub(super) fn draw_local_terrain_background(ctx: &Context<'_>) -> bool {
+    local_terrain::draw_background(ctx)
+}
+
+pub(super) fn draw_local_terrain(ctx: &Context<'_>) {
+    local_terrain::draw(ctx);
+}
 
 pub const WORLD_MAP: Rect = Rect::new(24.0, 20.0, 194.0, 48.0);
 

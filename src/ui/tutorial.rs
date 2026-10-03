@@ -1,11 +1,11 @@
 //! One contextual next action in the existing header, with visible touch controls.
 
 use super::{components::*, ArmyMode, Context, MoveStage, UiAction};
+use kestrum::navigation::MapScope;
 use kestrum::state::{
     tutorial::{TutorialStep, TUTORIAL_STEPS},
     Campaign, GameState, Overlay, Screen,
 };
-use kestrum::{data::world::MarkerLocation, navigation::MapScope};
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 
@@ -19,7 +19,7 @@ pub fn bounds(state: &GameState) -> Option<Rect> {
         return None;
     }
     match state.overlay {
-        Overlay::None => Some(Rect::new(400.0, 24.0, 1120.0, 64.0)),
+        Overlay::None | Overlay::Settlement => Some(Rect::new(400.0, 24.0, 1120.0, 64.0)),
         Overlay::Armies | Overlay::MoveGroup | Overlay::MoveReview => {
             Some(Rect::new(412.0, 220.0, 1096.0, 56.0))
         }
@@ -31,7 +31,10 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     let rect = bounds(ctx.state)?;
     let campaign = ctx.state.campaign.as_ref()?.strategic()?;
     let step = campaign.tutorial.current()?;
-    let show_hq = step == TutorialStep::Headquarters;
+    let show_capital = matches!(
+        step,
+        TutorialStep::Headquarters | TutorialStep::CityDevelopment | TutorialStep::Region
+    );
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
     draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
     let close = Rect::new(
@@ -40,8 +43,13 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         100.0,
         48.0,
     );
-    let hq = Rect::new(close.x - 132.0, close.y, 124.0, 48.0);
-    let width = if show_hq { hq.x } else { close.x } - rect.x - 26.0;
+    let capital_button = Rect::new(close.x - 176.0, close.y, 168.0, 48.0);
+    let width = if show_capital {
+        capital_button.x
+    } else {
+        close.x
+    } - rect.x
+        - 26.0;
     let label = prompt(ctx, step);
     let lines = wrap_text_ex(&label, width, ctx.body_font(), 18.0);
     let y = rect.y + (rect.h - lines.len() as f32 * 22.0) / 2.0 + 17.0;
@@ -57,7 +65,15 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     if button(ctx, close, &ctx.text("close"), true, false) {
         return Some(UiAction::DismissTutorial);
     }
-    if show_hq && button(ctx, hq, &ctx.text("tutorial_show_hq"), true, true) {
+    if show_capital
+        && button(
+            ctx,
+            capital_button,
+            &ctx.text("tutorial_show_capital"),
+            true,
+            true,
+        )
+    {
         return Some(UiAction::TutorialHeadquarters);
     }
     None
@@ -80,6 +96,7 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
     } else {
         match step {
             TutorialStep::Headquarters => "tutorial_headquarters",
+            TutorialStep::CityDevelopment => city_development_prompt(ctx, campaign),
             TutorialStep::Movement => match ctx.movement.stage {
                 MoveStage::Group => "tutorial_move_group",
                 MoveStage::Review if ctx.movement.reviewing_plan => "move_planned_notice",
@@ -97,20 +114,7 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
                 MoveStage::Inactive => "tutorial_find_army",
             },
             TutorialStep::Region if in_army => "tutorial_back_map",
-            TutorialStep::Region if matches!(ctx.navigation.scope(), MapScope::Region(_)) => {
-                "tutorial_region_return"
-            }
-            TutorialStep::Region
-                if !ctx.campaign_view.is_some_and(|view| {
-                    view.world
-                        .markers
-                        .iter()
-                        .any(|marker| matches!(marker.location, MarkerLocation::Region { .. }))
-                }) =>
-            {
-                "tutorial_region_explore"
-            }
-            TutorialStep::Region => "tutorial_region",
+            TutorialStep::Region => region_prompt(ctx, campaign),
             TutorialStep::WorldMap if in_army => "tutorial_back_map",
             TutorialStep::WorldMap => "tutorial_world",
             TutorialStep::Career if !in_army => "tutorial_find_army",
@@ -138,7 +142,7 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
     };
     let name = campaign
         .world
-        .site(campaign.factions[&campaign.player].headquarters)
+        .site(campaign.factions[&campaign.player].capital)
         .map(|site| site.name.as_str())
         .unwrap_or_default();
     let name = truncate_text_to_width_ex(name, 220.0, ctx.body_font(), 18.0);
@@ -152,4 +156,45 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
         TUTORIAL_STEPS.len(),
         ctx.text(key).replace("{name}", &name)
     )
+}
+
+fn city_development_prompt(
+    ctx: &Context<'_>,
+    campaign: &kestrum::state::StrategicCampaign,
+) -> &'static str {
+    let capital = campaign.factions[&campaign.player].capital;
+    if ctx.state.overlay != Overlay::Settlement || ctx.settlement.site != Some(capital) {
+        return "tutorial_city_find_capital";
+    }
+    match ctx.settlement.mode {
+        crate::ui::SettlementMode::Overview => "tutorial_city_overview",
+        crate::ui::SettlementMode::LocalActions => "tutorial_city_actions",
+        crate::ui::SettlementMode::LocalReview
+            if ctx.settlement.local_action == Some(crate::ui::LocalAction::DevelopCity) =>
+        {
+            if ctx.settlement.blocked.is_some() {
+                "tutorial_city_blocked_review"
+            } else {
+                "tutorial_city_review"
+            }
+        }
+        _ => "tutorial_city_other_mode",
+    }
+}
+
+fn region_prompt(ctx: &Context<'_>, campaign: &kestrum::state::StrategicCampaign) -> &'static str {
+    let capital = campaign.factions[&campaign.player].capital;
+    let Some(marker) = campaign.world.site(capital).map(|site| site.marker) else {
+        return "tutorial_region_city_required";
+    };
+    if !campaign.world.is_region_available(marker) {
+        return "tutorial_region_city_required";
+    }
+    if ctx.state.overlay == Overlay::Settlement {
+        return "tutorial_region_back_settlement";
+    }
+    if matches!(ctx.navigation.scope(), MapScope::Region(_)) {
+        return "tutorial_region_return";
+    }
+    "tutorial_region"
 }

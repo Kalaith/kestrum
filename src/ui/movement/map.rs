@@ -15,12 +15,11 @@ pub fn panel_bounds(
     let origin = movement.site.and_then(|id| world.site(id));
     let position = origin.and_then(|site| match navigation.scope() {
         MapScope::World => world.marker(site.marker).map(|marker| marker.position),
-        MapScope::Region(region) if region == site.marker => Some(site.position),
-        _ => None,
+        MapScope::Region(region) => world.region_site_position(region, site.id),
     });
     let left = position.is_none_or(|position| view.project_normalized(position).x >= WIDTH * 0.5);
     let choosing_region = matches!(navigation.selection(), Some(kestrum::navigation::MapSelection::Marker(id))
-        if world.physical_site(id).is_none());
+        if world.is_region_available(id));
     let region = order_region(movement, navigation, world);
     let height = if movement.preview.is_some()
         || movement.planned_destination.is_some()
@@ -32,7 +31,7 @@ pub fn panel_bounds(
     };
     Rect::new(
         if left { 24.0 } else { WIDTH - 382.0 },
-        126.0,
+        180.0,
         358.0,
         height + if region.is_some() { 56.0 } else { 0.0 },
     )
@@ -47,16 +46,14 @@ fn order_region(
         return None;
     }
     let selected = match navigation.selection() {
-        Some(kestrum::navigation::MapSelection::Marker(id))
-            if world.physical_site(id).is_none() =>
-        {
+        Some(kestrum::navigation::MapSelection::Marker(id)) if world.is_region_available(id) => {
             Some(id)
         }
         _ => None,
     };
     selected.or_else(|| {
         let region = world.site(movement.site?)?.marker;
-        world.physical_site(region).is_none().then_some(region)
+        world.is_region_available(region).then_some(region)
     })
 }
 
@@ -212,15 +209,19 @@ fn draw_route_consequence(ctx: &Context<'_>, rect: Rect, preview: &MovementPrevi
     } else {
         ctx.movement.status.clone()
     };
+    let origin_region = ctx
+        .movement
+        .site
+        .and_then(|site| campaign.world.site(site))
+        .map(|site| site.marker);
     let exit_cost: u32 = if ctx.navigation.scope() == MapScope::World {
         preview
             .steps
             .iter()
             .position(|step| {
-                campaign
-                    .world
-                    .route(step.route)
-                    .is_some_and(|route| route.major_connection.is_some())
+                origin_region
+                    .and_then(|region| campaign.world.entrance(region, step.route))
+                    .is_some()
             })
             .map(|crossing| preview.steps[..crossing].iter().map(|step| step.cost).sum())
             .unwrap_or(0)

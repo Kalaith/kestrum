@@ -166,7 +166,8 @@ fn candidates(
                     (
                         marker.name.as_str(),
                         summary.capital,
-                        matches!(marker.location, MarkerLocation::Region { .. }),
+                        matches!(marker.location, MarkerLocation::Region { .. })
+                            || campaign.world.is_region_available(id),
                         summary.danger.any(),
                         summary.political_owner == Some(campaign.observer),
                         summary.habitation,
@@ -178,7 +179,8 @@ fn candidates(
                     (
                         site.name.as_str(),
                         summary.capital,
-                        false,
+                        campaign.world.is_region_available(site.marker)
+                            && campaign.world.physical_site(site.marker) == Some(site.id),
                         summary.danger.any(),
                         summary.controller == Some(campaign.observer),
                         summary.habitation,

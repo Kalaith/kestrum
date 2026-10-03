@@ -45,7 +45,7 @@ impl Game {
         };
         self.navigation.clear_selection();
         if matches!(self.navigation.scope(), kestrum::navigation::MapScope::Region(region)
-            if campaign.world.site(site).is_none_or(|site| site.marker != region))
+            if campaign.world.region_site_position(region, site).is_none())
         {
             self.navigation
                 .focus_army_site(&campaign.world, site, &mut self.view);
@@ -244,7 +244,7 @@ impl Game {
             self.movement.destination = None;
             self.movement.preview = None;
             self.movement.status.clear();
-            if campaign.world.physical_site(marker).is_none() {
+            if campaign.world.is_region_available(marker) {
                 self.enter_region(marker);
             }
             return;

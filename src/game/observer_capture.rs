@@ -1,7 +1,12 @@
 //! Durable Observer review scenes through the real setup and action dispatcher.
 
 use super::*;
-use kestrum::navigation::MapScope;
+use kestrum::{
+    data::world::{FactionId, SiteId},
+    engine::{Actor, Command},
+    navigation::{MapScope, MapSelection},
+    state::CampaignPhase,
+};
 
 impl Game {
     pub(super) fn capture_observer(&mut self, scene: &str) -> bool {
@@ -29,8 +34,6 @@ impl Game {
         assert_eq!(self.state.overlay, Overlay::None);
         assert_eq!(self.navigation.scope(), MapScope::World);
         self.capture_observer_playback();
-        let campaign = self.state.campaign.as_ref().unwrap().strategic().unwrap();
-        let faction = campaign.factions.keys().next_back().copied().unwrap();
         match scene {
             "observer_world" => {
                 self.apply(UiAction::MainMenu);
@@ -50,14 +53,85 @@ impl Game {
             }
             "observer_kingdoms" => self.apply(UiAction::OpenObserverKingdoms),
             "observer_region" => {
+                let (faction, city) = self.obtain_observer_city();
+                self.refresh_projection();
                 self.apply(UiAction::FocusObserverFaction(faction));
+                let marker = self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .unwrap()
+                    .strategic()
+                    .unwrap()
+                    .world
+                    .site(city)
+                    .unwrap()
+                    .marker;
+                self.apply(UiAction::EnterRegion(marker));
+                self.apply(UiAction::SelectMap(MapSelection::Site(city)));
                 assert!(matches!(self.navigation.scope(), MapScope::Region(_)));
+                assert_eq!(
+                    self.navigation.selection(),
+                    Some(MapSelection::Site(city)),
+                    "Observer focuses the developed city's local center"
+                );
             }
             "observer_developed" => self.capture_observer_developed(),
             "observer_help" => self.apply(UiAction::Open(Overlay::Help)),
             _ => panic!("Unsupported Observer capture scene: {scene}"),
         }
         true
+    }
+
+    fn obtain_observer_city(&mut self) -> (FactionId, SiteId) {
+        let data = &self.data;
+        let Campaign::Strategic(campaign) = self.state.campaign.as_mut().unwrap() else {
+            unreachable!("Observer capture has a strategic campaign")
+        };
+        if let Some(city) = campaign.world.sites.iter().find(|site| {
+            site.habitation >= kestrum::data::economy::Habitation::City
+                && !campaign.site_is_ruined(site.id)
+        }) {
+            let faction = city.controller.expect("Observer city has an owner");
+            return (faction, city.id);
+        }
+        let candidates: Vec<_> = campaign
+            .factions
+            .values()
+            .flat_map(|faction| {
+                campaign
+                    .world
+                    .sites
+                    .iter()
+                    .filter(move |site| site.controller == Some(faction.id))
+                    .map(move |site| (faction.id, site.id))
+            })
+            .collect();
+        for (faction, site) in candidates {
+            if !engine::city_development_option(campaign, data, faction, site)
+                .is_some_and(|option| option.blocked.is_none())
+            {
+                continue;
+            }
+            let previous_phase = campaign.phase;
+            campaign.phase = CampaignPhase::NpcTurn {
+                faction,
+                paused: false,
+            };
+            engine::apply(
+                campaign,
+                data,
+                Actor::Npc(faction),
+                Command::DevelopCity { site },
+            )
+            .expect("Observer obtains a city through the ordinary AI command");
+            campaign.phase = previous_phase;
+            campaign
+                .validate(data)
+                .expect("validated Observer city investment");
+            return (faction, site);
+        }
+        panic!("Observer production fixture has no safe, supplied city investment");
     }
 
     fn capture_observer_playback(&mut self) {

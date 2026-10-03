@@ -1,7 +1,7 @@
 # Map playability implementation plan
 
-Updated 2026-10-03. **Status: M01 and M01A complete under their recorded scope;
-city-created regions are the current user-requested change before M02.**
+Updated 2026-10-04. **Status: M01, M01A and city-created regions are implemented
+under their recorded scope and verification; M02–M05 remain unstarted.**
 
 The 2026-10-03 request supersedes the eight fixed production regions assumed
 below. New campaigns show all physical nodes on the country map, with no region
@@ -9,6 +9,8 @@ unlocked. Paid development makes a Village or Town a City; cities cannot be
 direct neighbors. A functioning city opens its connected countryside as a local
 view of the existing graph. The tutorial develops and enters the capital first.
 The [world chapter](02-world-time-and-control.md#city-regions) owns this rule.
+The [city-region evidence](verification/city-regions.md) records engine checks,
+native tutorial completion and browser investment/region navigation at 1920×1080.
 M03's earlier requirement to complete eight authored regional graphs is
 superseded by local city geography. The remaining map-order and readability
 work stays in scope.
@@ -154,9 +156,10 @@ Source entry points: [world rendering](../src/ui/world.rs),
 
 ## Scope and implementation decisions
 
-- Keep 80 major markers and 4–8 factions. Initially reuse the 152 physical sites
-  and their identities. Expand their presentation space in M01A; varied
-  connections and control objectives follow in M03.
+- Keep 4–8 factions and the 152 physical site identities. The city-region change
+  exposes one country marker per site and replaces the earlier 80-marker limit.
+  M01A expands their presentation space; varied connections and control
+  objectives follow in M03.
 - Keep the world/region distinction for this delivery. Give regions coherent
   local terrain and a visible breadcrumb. A seamless zoom transition can be
   considered later if these views still break orientation.
@@ -226,7 +229,7 @@ to the implemented camera and information hierarchy.
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
 | M05 | Integrated early and developed campaign acceptance | M01, M01A, M02–M04 | Not started |
 
-The [hero portrait generator](hero-portrait-generator-plan.md#outstanding-work-todo)
+The [hero portrait generator](hero-portrait-generator-plan.md#remaining-delivery)
 adds G01-G04 as a planned companion graphics workstream after M01A. It starts with
 stable saved appearance and People/Career portraits, then expands authored parts
 and eligible identity contexts. M02 remains next; portraits neither replace these
@@ -465,15 +468,17 @@ not only direct engine tests. Review multiple armies and simultaneous outcomes.
 
 ### M03 Distinct regions and local terrain
 
-Implement the compatibility boundary below before changing topology. Prototype
-three contrasting regions, then complete all eight using the same validated
-content model. Keep an authored reason for each route, resource, entrance and
-control objective. At least two meaningful internal approaches must exist in
-each region; a choke point can restrict a key objective within a branching map.
+Implement the compatibility boundary below before changing physical topology.
+Prototype city regions in three contrasting landscapes, then extend their
+geographic variety across the country using the same validated content model.
+Regions remain unlocked by city investment at eligible nodes; do not restore
+eight fixed region bundles. Keep an authored reason for each route, resource,
+crossing and control objective. Branching approaches should offer meaningful
+choices around major objectives, with choke points that reward local planning.
 
 These are authoring briefs, adjustable while keeping their strategic distinction:
 
-| Region | Strategic decision |
+| Geographic area | Strategic decision |
 | --- | --- |
 | Northwatch | Defend a wooded approach or take a longer route to bypass its fort. |
 | Alder Vale | Protect a productive basin while choosing between exposed fast roads and a safer outer route. |
@@ -498,10 +503,11 @@ Likely boundaries: `world_layout.json`, world/layout schemas and validators,
 `src/state/validation/world.rs`, generation, map navigation, atlas assets and
 their registry, `src/ui/world/routes.rs`, and `tests/atlas_revision.rs`.
 
-**Acceptance:** all eight regions offer distinct route/control choices and no
-longer share one chain/layout. Three contrasting regions demonstrate why an
-approach matters in actual play. Every 4–8 faction start retains a viable first
-action, reachable resources and fair access; AI can enter, operate and leave.
+**Acceptance:** the country offers distinct route/control choices beyond its
+repeated authored chains. City regions in three contrasting landscapes
+demonstrate why an approach matters in actual play. Every 4–8 faction start
+retains a viable first action, reachable resources and fair access; AI can
+enter, operate and leave.
 
 **Five behavioral cases:** all regional graphs and anchors reachable; meaningful
 alternative paths and geographically valid crossings; all supported starts and
@@ -511,8 +517,10 @@ supply, construction and siege integration. Use table-driven cases across region
 #### Save and topology compatibility
 
 Current campaigns embed their physical world and validate it against authored
-content. Layout revisions 1–3 cover earlier geometry and terrain-tag differences. A new topology
-cannot be handled by changing marker positions or loosening validation.
+content. Layout revisions 1–3 cover earlier geometry and terrain-tag differences;
+revision 4 derives country markers for each physical site without changing route
+endpoints or costs. A new graph cannot be handled by changing marker positions
+or loosening validation.
 
 - Introduce an explicit topology revision separate from presentation geometry
   and the existing strictly validated rules `content_version`. Changing the

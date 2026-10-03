@@ -2,11 +2,15 @@
 
 use kestrum::{
     data::{
+        economy::{Habitation, Resources},
+        generation::ProductionSetup,
+        rules::Emblem,
         world::{MarkerId, MarkerLocation, SiteId},
         GameData,
     },
+    engine::{self, Actor, Command},
     navigation::{MapNavigation, MapScope, MapSelection, MapView, HEIGHT, MAP_TAP_SIZE, WIDTH},
-    state::world::CampaignWorld,
+    state::{world::CampaignWorld, StrategicCampaign},
 };
 use macroquad::prelude::{vec2, Vec2};
 use macroquad_toolkit::ui::VirtualUi;
@@ -283,6 +287,196 @@ fn assert_release_selection(
     for (origin, release) in [(Vec2::NAN, center), (center, Vec2::NAN)] {
         assert_eq!(navigation.pick_release(world, view, origin, release), None);
     }
+}
+
+#[test]
+fn paid_production_city_navigation_uses_local_sites_and_preserves_armies_and_cameras() {
+    let data = GameData::load().unwrap();
+    let mut campaign = production_campaign(&data);
+    let player = campaign.player;
+    let city = campaign.factions[&player].capital;
+    let marker = campaign.world.site(city).unwrap().marker;
+    let before = campaign.factions[&player].resources;
+    engine::apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::DevelopCity { site: city },
+    )
+    .unwrap();
+    let cost = data.development.city_development.cost;
+    assert_eq!(
+        campaign.factions[&player].resources,
+        Resources {
+            gold: before.gold - cost.gold,
+            wood: before.wood - cost.wood,
+            stone: before.stone - cost.stone,
+        }
+    );
+    assert_eq!(
+        campaign.world.site(city).unwrap().habitation,
+        Habitation::City
+    );
+
+    let visible = engine::project_map(&campaign, player).unwrap();
+    let mut navigation = MapNavigation::configured(&data.presentation.map.camera);
+    let mut view = MapView::configured(&data.presentation.map.camera, MapScope::World);
+    view.zoom(vec2(920.0, 510.0), 1.3);
+    view.pan(vec2(83.0, -31.0));
+    let world_view = view;
+    navigation
+        .enter_region(&visible.world, marker, &mut view)
+        .unwrap();
+    assert_eq!(navigation.scope(), MapScope::Region(marker));
+    assert_eq!(view.extent(), vec2(3360.0, 1890.0));
+    let members = visible.world.region_sites(marker);
+    assert!(members.contains(&city));
+    let targets = navigation.targets(&visible.world, &view);
+    for site in &members {
+        let position = visible.world.region_site_position(marker, *site).unwrap();
+        let target = targets
+            .iter()
+            .find(|target| target.selection == MapSelection::Site(*site))
+            .expect("every known city-region site has a local target");
+        assert_eq!(target.center, view.project_normalized(position));
+    }
+
+    let neighbors = visible.world.adjacent_sites(city);
+    let hidden = *neighbors
+        .iter()
+        .next()
+        .expect("capital has a known neighbor");
+    let hidden_position = visible.world.region_site_position(marker, hidden).unwrap();
+    let mut partial = visible.world.clone();
+    let hidden_marker = partial.site(hidden).unwrap().marker;
+    partial.sites.retain(|site| site.id != hidden);
+    partial
+        .routes
+        .retain(|route| route.from != hidden && route.to != hidden);
+    partial.development.remove(&hidden);
+    partial.population.remove(&hidden);
+    partial.focus.remove(&hidden);
+    if !partial
+        .sites
+        .iter()
+        .any(|site| site.marker == hidden_marker)
+    {
+        partial.markers.retain(|marker| marker.id != hidden_marker);
+    }
+    assert!(!navigation
+        .targets(&partial, &view)
+        .iter()
+        .any(|target| target.selection == MapSelection::Site(hidden)));
+    assert!(navigation
+        .select(&partial, MapSelection::Site(hidden))
+        .is_err());
+    assert_ne!(
+        navigation.pick(&partial, &view, view.project_normalized(hidden_position)),
+        Some(MapSelection::Site(hidden))
+    );
+
+    let army = campaign
+        .armies
+        .values()
+        .find(|army| army.faction == player && army.site == city)
+        .expect("founding army remains at the city")
+        .id;
+    assert!(navigation
+        .army_targets(&visible.world, &view, &visible.armies)
+        .iter()
+        .any(|target| target.armies.contains(&army)));
+    view.zoom(vec2(960.0, 540.0), 1.6);
+    view.pan(vec2(-75.0, 22.0));
+    let regional_view = view;
+    navigation.show_world(&mut view);
+    assert_eq!(navigation.scope(), MapScope::World);
+    assert_eq!(navigation.selection(), Some(MapSelection::Marker(marker)));
+    assert_eq!(view, world_view);
+    navigation
+        .enter_region(&visible.world, marker, &mut view)
+        .unwrap();
+    assert_eq!(view, regional_view);
+    navigation.focus_army_site(&visible.world, city, &mut view);
+    assert_eq!(navigation.scope(), MapScope::Region(marker));
+    assert_eq!(navigation.selection(), Some(MapSelection::Site(city)));
+}
+
+#[test]
+fn production_city_views_close_for_towns_declined_cities_and_ruins() {
+    let data = GameData::load().unwrap();
+    let mut uninvested = production_campaign(&data);
+    let uninvested_city = uninvested.factions[&uninvested.player].capital;
+    let uninvested_marker = uninvested.world.site(uninvested_city).unwrap().marker;
+    uninvested
+        .world
+        .sites
+        .iter_mut()
+        .find(|site| site.id == uninvested_city)
+        .unwrap()
+        .habitation = Habitation::Town;
+    assert_city_region_is_closed(&uninvested.world, uninvested_marker);
+
+    let mut declined = production_campaign(&data);
+    let declined_city = declined.factions[&declined.player].capital;
+    let declined_marker = declined.world.site(declined_city).unwrap().marker;
+    engine::apply(
+        &mut declined,
+        &data,
+        Actor::Player,
+        Command::DevelopCity {
+            site: declined_city,
+        },
+    )
+    .unwrap();
+    assert!(declined.world.is_region_available(declined_marker));
+    declined
+        .world
+        .sites
+        .iter_mut()
+        .find(|site| site.id == declined_city)
+        .unwrap()
+        .habitation = Habitation::Town;
+    assert_city_region_is_closed(&declined.world, declined_marker);
+
+    let mut ruined = production_campaign(&data);
+    let ruined_city = ruined.factions[&ruined.player].capital;
+    let ruined_marker = ruined.world.site(ruined_city).unwrap().marker;
+    engine::apply(
+        &mut ruined,
+        &data,
+        Actor::Player,
+        Command::DevelopCity { site: ruined_city },
+    )
+    .unwrap();
+    ruined
+        .world
+        .development
+        .get_mut(&ruined_city)
+        .unwrap()
+        .ruined = true;
+    assert_city_region_is_closed(&ruined.world, ruined_marker);
+}
+
+fn assert_city_region_is_closed(world: &CampaignWorld, marker: MarkerId) {
+    assert!(!world.is_region_available(marker));
+    assert!(world.region_sites(marker).is_empty());
+    let mut navigation = MapNavigation::default();
+    let mut view = MapView::default();
+    assert!(navigation.enter_region(world, marker, &mut view).is_err());
+    assert_eq!(navigation.scope(), MapScope::World);
+}
+
+fn production_campaign(data: &GameData) -> StrategicCampaign {
+    StrategicCampaign::new_production(
+        data,
+        &ProductionSetup {
+            kingdom_name: "Navigation Rose".into(),
+            emblem: Emblem::Rose,
+            factions: data.rules.min_factions,
+            seed: data.production_layout.default_seed,
+        },
+    )
+    .unwrap()
 }
 
 #[test]

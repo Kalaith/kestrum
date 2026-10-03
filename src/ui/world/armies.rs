@@ -199,7 +199,7 @@ fn leader_line(ctx: &Context<'_>, site_id: SiteId, rect: Rect) {
                 .world
                 .marker(site.marker)
                 .map(|marker| marker.position),
-            MapScope::Region(_) => Some(site.position),
+            MapScope::Region(region) => campaign.world.region_site_position(region, site_id),
         }
         .map(|position| ctx.view.project_normalized(position));
         if let Some(origin) = projected_origin {

@@ -7,20 +7,22 @@ use std::collections::BTreeSet;
 #[serde(rename_all = "snake_case")]
 pub enum TutorialStep {
     Headquarters,
-    Movement,
+    CityDevelopment,
     Region,
     WorldMap,
+    Movement,
     Career,
     Household,
     FirstTurn,
     Records,
 }
 
-pub const TUTORIAL_STEPS: [TutorialStep; 8] = [
+pub const TUTORIAL_STEPS: [TutorialStep; 9] = [
     TutorialStep::Headquarters,
-    TutorialStep::Movement,
+    TutorialStep::CityDevelopment,
     TutorialStep::Region,
     TutorialStep::WorldMap,
+    TutorialStep::Movement,
     TutorialStep::Career,
     TutorialStep::Household,
     TutorialStep::FirstTurn,

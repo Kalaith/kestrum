@@ -8,7 +8,7 @@ mod labels;
 use super::{components::*, Context, UiAction};
 use kestrum::{
     data::{economy::Resources, world::SiteId},
-    engine::ConstructionOption,
+    engine::{CityDevelopmentOption, ConstructionOption},
     state::{
         construction::{ConstructionKind, ConstructionOrder, ConstructionTarget, Focus, OrderId},
         military::ArmyId,
@@ -39,6 +39,7 @@ pub enum SettlementMode {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LocalAction {
+    DevelopCity,
     Rename,
     Resettle,
     MoveCapital,
@@ -76,6 +77,7 @@ pub struct FocusChoice {
 pub struct SettlementView {
     pub site: Option<SiteId>,
     pub development: Option<kestrum::engine::DevelopmentView>,
+    pub city_development: Option<CityDevelopmentOption>,
     pub local_action: Option<LocalAction>,
     pub destination: Option<SiteId>,
     pub destinations: Vec<LocalDestination>,
@@ -97,7 +99,9 @@ pub struct SettlementView {
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     draw_rectangle(80.0, 38.0, 1120.0, 650.0, INK);
-    heading(ctx);
+    if let Some(action) = heading(ctx) {
+        return Some(action);
+    }
     let action = match ctx.settlement.mode {
         SettlementMode::Overview => details::overview(ctx),
         SettlementMode::LocalActions => development::actions(ctx),
@@ -133,16 +137,21 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     .then_some(UiAction::SettlementBack)
 }
 
-fn heading(ctx: &Context<'_>) {
+fn heading(ctx: &Context<'_>) -> Option<UiAction> {
     let name = ctx
         .campaign_view
         .and_then(|view| view.world.site(ctx.settlement.site?))
         .map(|site| site.name.as_str())
         .unwrap_or("");
     let title = format!("{} / {name}", ctx.text("settlement"));
+    let title_width = if ctx.settlement.mode == SettlementMode::Overview {
+        500.0
+    } else {
+        1056.0
+    };
     text(
         ctx,
-        &truncate_text_to_width_ex(&title, 1056.0, ctx.font(), 28.0),
+        &truncate_text_to_width_ex(&title, title_width, ctx.font(), 28.0),
         vec2(112.0, 83.0),
         28.0,
         CREAM,
@@ -164,6 +173,43 @@ fn heading(ctx: &Context<'_>) {
             BRASS,
         );
     }
+    if ctx.settlement.mode == SettlementMode::Overview {
+        if let Some(option) = &ctx.settlement.city_development {
+            if control(
+                ctx,
+                Rect::new(652.0, 96.0, 210.0, 48.0),
+                "develop_city",
+                true,
+                true,
+            ) {
+                return Some(UiAction::SelectLocalAction(LocalAction::DevelopCity));
+            }
+            let cost = truncate_text_to_width_ex(
+                &resources(ctx, option.cost),
+                292.0,
+                ctx.body_font(),
+                18.0,
+            );
+            let hint = option
+                .blocked
+                .as_deref()
+                .map(str::to_owned)
+                .unwrap_or_else(|| ctx.text("city_development_available"));
+            body(ctx, &cost, vec2(876.0, 108.0), 18.0, BRASS);
+            body(
+                ctx,
+                &truncate_text_to_width_ex(&hint, 292.0, ctx.body_font(), 18.0),
+                vec2(876.0, 131.0),
+                18.0,
+                if option.blocked.is_some() {
+                    BRASS
+                } else {
+                    MUTED
+                },
+            );
+        }
+    }
+    None
 }
 
 fn tabs(ctx: &Context<'_>) -> Option<UiAction> {

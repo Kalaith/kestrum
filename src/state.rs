@@ -287,6 +287,7 @@ impl GameState {
                         | Command::SetFocus { .. }
                         | Command::RenameSite { .. }
                         | Command::Resettle { .. }
+                        | Command::DevelopCity { .. }
                         | Command::MoveCapital { .. }
                         | Command::RelocateHeadquarters { .. }
                 ));
@@ -322,6 +323,10 @@ impl GameState {
         if self.screen != Screen::Campaign || (self.overlay != Overlay::None && !military_order) {
             return Err(RuleError::PlayObstructed);
         }
+        let capital_investment = match &command {
+            Command::DevelopCity { site } => Some(*site),
+            _ => None,
+        };
         let lesson = match &command {
             Command::Move(_) => Some(tutorial::TutorialStep::Movement),
             Command::EndTurn => Some(tutorial::TutorialStep::FirstTurn),
@@ -338,6 +343,17 @@ impl GameState {
                 || outcome.battle.is_some()
         }) {
             campaign.tutorial.record(step);
+        }
+        if capital_investment.is_some_and(|site| {
+            campaign.factions[&campaign.player].capital == site
+                && campaign
+                    .world
+                    .site(site)
+                    .is_some_and(|location| campaign.world.is_region_available(location.marker))
+        }) {
+            campaign
+                .tutorial
+                .record(tutorial::TutorialStep::CityDevelopment);
         }
         Ok(outcome)
     }

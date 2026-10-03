@@ -80,31 +80,29 @@ Each external route can connect to a specific internal node. Arrival from the no
 
 Rosemarch is the retained small authored scenario used by regression tests and captures. New Game uses the production world. The original 8–12-site regional sketch describes scale; it is not a requirement to repeat one local layout throughout the world.
 
-### Planned spatial scale and geographic variety
+### Spatial scale and geographic variety
 
-M01A first enlarges the navigable presentation of the existing world and
-regional scopes. Map extent becomes independent of the sole 1920×1080 UI spec.
+M01A enlarges the navigable presentation of the existing world and
+regional scopes. Map extent is independent of the sole 1920×1080 UI spec.
 Ordinary play frames a connected neighborhood; Overview deliberately frames
 known land. This changes no site count, identity, graph, route cost, supply rule
 or discovered state. Physical travel remains governed by authored connections.
 The [map plan](map-playability-plan.md#m01a-spatial-scale-and-map-navigation)
 owns the camera and scale work.
 
-All eight current production regions use the same ten-site chain, two entrances
-and anchor pattern, with repeated local coordinates. Geography types and
-development caps vary, but their route choices repeat. The
-[map playability plan](map-playability-plan.md) replaces that repetition with
-authored regional identities: branching approaches, defensible crossings,
-resource concentrations and different relationships between an objective and
-its supply route. Each region must present a distinct decision, not merely a new
-name or terrain cost.
+Production now exposes 152 separate country nodes. A developed city uses its
+country position and actual route neighbors to frame a local view. Fields,
+woods and settlement buildings reflect observed geography and development;
+they do not create extra holdings, facilities or income. Authored prototype
+regions retain their existing local coordinates and continental background.
 
-This is planned content and presentation work. Keep the confirmed 80-major-node
-scale, fixed graph during a campaign, valid physical entrances and deterministic
-movement. New geography needs revision-selected topology validation before
-content changes; a layout-revision bump alone is insufficient. Existing saves
-retain their established graph, routes and locations. The current world/region views reuse the
-continental background; meaningful local terrain and roads remain plan work.
+The original eight clusters still influence the physical route network.
+Broader route variety remains work for the
+[map playability plan](map-playability-plan.md): branching approaches,
+defensible crossings and different relationships between an objective and its
+supply route. Preserve fixed identities and deterministic movement. New graph
+content needs revision-specific topology validation; a layout-revision bump
+alone is insufficient. Supported historical saves retain their graph and routes.
 
 ## Occupancy, control, and ownership
 

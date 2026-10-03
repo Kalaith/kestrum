@@ -5,6 +5,7 @@ use macroquad_toolkit::ui::text_entry::keyboard_keys;
 pub(super) fn actions(ctx: &Context<'_>) -> Option<UiAction> {
     let view = ctx.settlement.development.as_ref()?;
     for (index, action) in [
+        LocalAction::DevelopCity,
         LocalAction::Rename,
         LocalAction::Resettle,
         LocalAction::MoveCapital,
@@ -13,18 +14,35 @@ pub(super) fn actions(ctx: &Context<'_>) -> Option<UiAction> {
     .into_iter()
     .enumerate()
     {
-        let y = 225.0 + index as f32 * 88.0;
+        let y = 205.0 + index as f32 * 76.0;
         if control(
             ctx,
             Rect::new(112.0, y, 292.0, 48.0),
             action_key(action),
             true,
-            false,
+            action == LocalAction::DevelopCity,
         ) {
             return Some(UiAction::SelectLocalAction(action));
         }
-        let cost = action_cost(view, action);
+        let cost = if action == LocalAction::DevelopCity {
+            ctx.settlement
+                .city_development
+                .as_ref()
+                .map(|option| option.cost)
+                .unwrap_or(Resources {
+                    gold: 0,
+                    wood: 0,
+                    stone: 0,
+                })
+        } else {
+            action_cost(view, action)
+        };
         let reason = match action {
+            LocalAction::DevelopCity => ctx
+                .settlement
+                .city_development
+                .as_ref()
+                .and_then(|option| option.blocked.as_deref()),
             LocalAction::MoveCapital => view.capital_blocked.as_deref(),
             LocalAction::RelocateHeadquarters => view.headquarters_blocked.as_deref(),
             _ => None,
@@ -135,6 +153,9 @@ pub(super) fn rename(ctx: &Context<'_>) -> Option<UiAction> {
 
 pub(super) fn review(ctx: &Context<'_>) -> Option<UiAction> {
     let action = ctx.settlement.local_action?;
+    if action == LocalAction::DevelopCity {
+        return city_review(ctx);
+    }
     let view = ctx.settlement.development.as_ref()?;
     body(
         ctx,
@@ -182,6 +203,36 @@ pub(super) fn review(ctx: &Context<'_>) -> Option<UiAction> {
     confirm(ctx)
 }
 
+fn city_review(ctx: &Context<'_>) -> Option<UiAction> {
+    let option = ctx.settlement.city_development.as_ref()?;
+    body(
+        ctx,
+        &ctx.text("develop_city"),
+        vec2(112.0, 240.0),
+        20.0,
+        CREAM,
+    );
+    lines(
+        ctx,
+        &ctx.text("develop_city_help"),
+        vec2(112.0, 280.0),
+        1056.0,
+        3,
+        CREAM,
+    );
+    body(
+        ctx,
+        &format!("{}: {}", ctx.text("cost"), resources(ctx, option.cost)),
+        vec2(112.0, 370.0),
+        20.0,
+        BRASS,
+    );
+    if let Some(reason) = &ctx.settlement.blocked {
+        lines(ctx, reason, vec2(112.0, 491.0), 1056.0, 3, BRASS);
+    }
+    confirm(ctx)
+}
+
 fn confirm(ctx: &Context<'_>) -> Option<UiAction> {
     control(
         ctx,
@@ -195,6 +246,7 @@ fn confirm(ctx: &Context<'_>) -> Option<UiAction> {
 
 pub(super) fn action_key(action: LocalAction) -> &'static str {
     match action {
+        LocalAction::DevelopCity => "develop_city",
         LocalAction::Rename => "rename_place",
         LocalAction::Resettle => "resettle",
         LocalAction::MoveCapital => "move_capital",
@@ -204,6 +256,7 @@ pub(super) fn action_key(action: LocalAction) -> &'static str {
 
 fn help_key(action: LocalAction) -> &'static str {
     match action {
+        LocalAction::DevelopCity => "develop_city_help",
         LocalAction::Rename => "rename_place_help",
         LocalAction::Resettle => "resettle_help",
         LocalAction::MoveCapital => "move_capital_help",
@@ -213,6 +266,11 @@ fn help_key(action: LocalAction) -> &'static str {
 
 fn action_cost(view: &kestrum::engine::DevelopmentView, action: LocalAction) -> Resources {
     match action {
+        LocalAction::DevelopCity => Resources {
+            gold: 0,
+            wood: 0,
+            stone: 0,
+        },
         LocalAction::Rename => Resources {
             gold: 0,
             wood: 0,
@@ -226,6 +284,14 @@ fn action_cost(view: &kestrum::engine::DevelopmentView, action: LocalAction) -> 
 
 pub(super) fn dynamic_text(ctx: &Context<'_>) -> Vec<String> {
     let mut text = Vec::new();
+    if let Some(reason) = ctx
+        .settlement
+        .city_development
+        .as_ref()
+        .and_then(|option| option.blocked.as_ref())
+    {
+        text.push(reason.clone());
+    }
     if let Some(view) = &ctx.settlement.development {
         text.extend(view.causes.iter().map(|cause| cause.label.clone()));
         text.extend(view.growth_blocked.iter().cloned());

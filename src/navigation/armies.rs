@@ -25,15 +25,17 @@ impl MapNavigation {
         let Some(place) = world.site(site) else {
             return;
         };
-        if self.scope() == MapScope::Region(place.marker) {
-            view.focus(place.position, view.working_zoom());
-            self.selection = Some(MapSelection::Site(site));
-        } else {
-            self.show_world(view);
-            if let Some(marker) = world.marker(place.marker) {
-                view.focus(marker.position, view.working_zoom());
-                self.selection = Some(MapSelection::Marker(place.marker));
+        if let MapScope::Region(region) = self.scope() {
+            if let Some(position) = world.region_site_position(region, site) {
+                view.focus(position, view.working_zoom());
+                self.selection = Some(MapSelection::Site(site));
+                return;
             }
+        }
+        if let Some(marker) = world.marker(place.marker) {
+            self.show_world(view);
+            view.focus(marker.position, view.working_zoom());
+            self.selection = Some(MapSelection::Marker(place.marker));
         }
     }
 
@@ -168,8 +170,10 @@ impl MapNavigation {
         if world.physical_site(place.marker) == Some(site) {
             self.selection = Some(MapSelection::Marker(place.marker));
         } else if self.enter_region(world, place.marker, view).is_ok() {
-            view.focus(place.position, view.working_zoom());
-            self.selection = Some(MapSelection::Site(site));
+            if let Some(position) = world.region_site_position(place.marker, site) {
+                view.focus(position, view.working_zoom());
+                self.selection = Some(MapSelection::Site(site));
+            }
         }
     }
 }

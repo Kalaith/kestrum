@@ -294,7 +294,14 @@ impl Game {
         let Some(site) = self.movement.site.and_then(|id| visible.world.site(id)) else {
             return;
         };
-        if self.navigation.scope() != kestrum::navigation::MapScope::Region(site.marker) {
+        let kestrum::navigation::MapScope::Region(region) = self.navigation.scope() else {
+            return;
+        };
+        if visible
+            .world
+            .region_site_position(region, site.id)
+            .is_none()
+        {
             return;
         }
         let selectable = self

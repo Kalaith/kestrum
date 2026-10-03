@@ -25,6 +25,13 @@ impl Game {
             }
             self.projection_revision = Some(revision);
         }
+        if let (kestrum::navigation::MapScope::Region(region), Some(projection)) =
+            (self.navigation.scope(), self.projection.as_ref())
+        {
+            if !projection.world.is_region_available(region) {
+                self.navigation.show_world(&mut self.view);
+            }
+        }
         changed
     }
 }

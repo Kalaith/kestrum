@@ -80,15 +80,16 @@ An army's site can be yours while the surrounding political claim belongs to
 a rival. **No supply** means there is no secure friendly route to headquarters;
 it prevents normal recovery, not movement or attacks.
 
-Tap a place to inspect it. Enter Region and World Map retain their respective
+Tap a place to inspect it. Enter Region and Country Map retain their respective
 camera contexts. Drag to pan; pinch, the mouse wheel, or visible +/− controls
 zoom. Overview fits known land and changes to Return View, which restores the
 working camera. Recenter focuses the selected army or headquarters at campaign
 scale. Close dismisses selection. Selection, End Turn and returning from a sheet
 retain the camera; End Turn remains reachable during movement selection.
 
-At world scope, the fill shows known regional political claims. Inside a region,
-it follows each revealed site's physical controller; rings show local control.
+On the production country map, fill and rings show known physical control.
+Inside a city region, fill follows each revealed site's physical controller.
+Legacy authored regions retain their political claims on the country map.
 Occupation and contested marks remain separate. Labels respond to zoom,
 importance and available space. Compact owned force marks expose route,
 siege, idle and supply state; selection opens full counts and order details.
@@ -111,13 +112,20 @@ tap an entry to focus its exact observed place or owned army. World-region warni
 internal threats, participant sieges and hostile contact cues.
 
 Army Details opens composition, recruitment and people. Manage opens a place's
-construction, roads, focus and local actions. Menu contains Kingdom, Records,
+construction, roads, focus and local actions. Develop City costs 250 Gold,
+100 Wood and 75 Stone. It requires a safe, supplied Village or Town with usable
+conditions and no directly neighboring City or Major City. A city then offers
+Enter Region, showing the city and its connected countryside. Fields, woods and
+buildings reflect observed development; country and local views share the same
+places, routes and resources. Menu contains Kingdom, Records,
 save/load, settings and help. These are the **current** paths; the map plan brings
 common decisions and context closer to the world.
 
-The current introduction walks through headquarters, movement, regional
-navigation, careers, household review, the first turn and Records. It can be
-dismissed or resumed from How to Play. Its replacement is M04 of the map plan.
+The introduction starts by managing the capital and paying for city development,
+then enters that capital's region and returns to the Country Map. Movement,
+careers, household review, the first turn and Records follow. It can be dismissed
+or resumed from How to Play; an already developed capital does not require a
+second investment. Further contextual teaching remains M04 of the map plan.
 
 ## Current map limitations
 
@@ -320,6 +328,7 @@ hidden and omit fullscreen/visible options.
 - `assets/fonts/`: Cinzel (SIL OFL) and DejaVu Sans (Bitstream Vera license).
 - `catalog_thumbnail.png`: stable publishing thumbnail.
 
-Current new campaigns use atlas layout revision 3. Existing saves retain their
-supported geography. The map plan requires versioned topology compatibility
-before new regional connections are introduced.
+Current new campaigns use derived country layout revision 4 from the authored
+revision-3 geography. Existing saves retain their supported geography. The map
+plan requires versioned topology compatibility before new physical connections
+are introduced.

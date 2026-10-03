@@ -81,10 +81,9 @@ impl MapNavigation {
         let positions: Vec<_> = match self.scope {
             MapScope::World => world.markers.iter().map(|marker| marker.position).collect(),
             MapScope::Region(region) => world
-                .sites
-                .iter()
-                .filter(|site| site.marker == region)
-                .map(|site| site.position)
+                .region_sites(region)
+                .into_iter()
+                .filter_map(|site| world.region_site_position(region, site))
                 .collect(),
         };
         view.toggle_overview(&positions);
@@ -114,8 +113,7 @@ impl MapNavigation {
                 world.markers.iter().any(|marker| marker.id == id)
             }
             (MapScope::Region(region), MapSelection::Site(id)) => {
-                self.region_sites(world, region).contains(&id)
-                    && world.site(id).is_some_and(|site| site.marker == region)
+                world.region_site_position(region, id).is_some()
             }
             _ => false,
         };
@@ -133,29 +131,31 @@ impl MapNavigation {
         view: &mut MapView,
     ) -> Result<(), String> {
         if self.scope != MapScope::World {
-            return Err("Return to the World Map before entering another region.".into());
+            return Err("Return to the Country Map before entering another region.".into());
         }
         let Some(marker) = world.marker(id) else {
-            return Err("That world location does not contain a regional map.".into());
+            return Err("This location has no available region.".into());
         };
-        let MarkerLocation::Region {
-            sites, entrances, ..
-        } = &marker.location
-        else {
-            return Err("That world location does not contain a regional map.".into());
-        };
+        if !world.is_region_available(id) {
+            return Err("This location has no available region.".into());
+        }
         self.world_view = *view;
         *view = self.region_views.get(&id).copied().unwrap_or_else(|| {
             let mut initial = MapView::configured(&self.world_view.settings, MapScope::Region(id));
-            // The caller supplies known geography. A new region can have only
-            // one visible entrance outside the middle of its larger extent.
-            if let Some(site) = entrances
-                .iter()
-                .map(|entry| entry.site)
-                .chain(sites.iter().copied())
-                .find_map(|site| world.site(site))
-            {
-                initial.focus(site.position, initial.working_zoom());
+            // Authored regions keep their local atlas coordinates. A city uses
+            // the center of its stable, normalized neighborhood view.
+            let focus = match &marker.location {
+                MarkerLocation::Region {
+                    sites, entrances, ..
+                } => entrances
+                    .iter()
+                    .map(|entry| entry.site)
+                    .chain(sites.iter().copied())
+                    .find_map(|site| world.site(site).map(|site| site.position)),
+                MarkerLocation::Site { site } => world.region_site_position(id, *site),
+            };
+            if let Some(position) = focus {
+                initial.focus(position, initial.working_zoom());
             }
             initial
         });
@@ -186,14 +186,15 @@ impl MapNavigation {
                     center: view.project_normalized(marker.position),
                 })
                 .collect(),
-            MapScope::Region(region) => self
-                .region_sites(world, region)
-                .iter()
-                .filter_map(|id| world.site(*id))
-                .filter(|site| site.marker == region)
-                .map(|site| MapTarget {
-                    selection: MapSelection::Site(site.id),
-                    center: view.project_normalized(site.position),
+            MapScope::Region(region) => world
+                .region_sites(region)
+                .into_iter()
+                .filter_map(|id| {
+                    let position = world.region_site_position(region, id)?;
+                    Some(MapTarget {
+                        selection: MapSelection::Site(id),
+                        center: view.project_normalized(position),
+                    })
                 })
                 .collect(),
         };
@@ -247,18 +248,5 @@ impl MapNavigation {
         let pressed = self.pick(world, view, origin)?;
         let released = self.pick(world, view, release)?;
         (pressed == released).then_some(released)
-    }
-
-    fn region_sites<'a>(&self, world: &'a CampaignWorld, region: MarkerId) -> &'a [SiteId] {
-        world
-            .markers
-            .iter()
-            .find_map(|marker| match &marker.location {
-                MarkerLocation::Region { sites, .. } if marker.id == region => {
-                    Some(sites.as_slice())
-                }
-                _ => None,
-            })
-            .unwrap_or_default()
     }
 }

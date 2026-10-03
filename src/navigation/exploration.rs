@@ -3,6 +3,7 @@
 use super::{MapScope, MapView};
 use crate::state::world::CampaignWorld;
 use macroquad::prelude::Vec2;
+use std::collections::BTreeSet;
 
 /// Presentation geometry only: hidden sites never become selection or move targets.
 pub struct MapExploration {
@@ -32,10 +33,12 @@ impl MapExploration {
                 .map(|marker| (marker.position, visible.marker(marker.id).is_some()))
                 .collect(),
             MapScope::Region(region) => world
-                .sites
-                .iter()
-                .filter(|site| site.marker == region)
-                .map(|site| (site.position, visible.site(site.id).is_some()))
+                .region_sites(region)
+                .into_iter()
+                .filter_map(|site| {
+                    let position = world.region_site_position(region, site)?;
+                    Some((position, visible.site(site).is_some()))
+                })
                 .collect(),
         };
         for (position, revealed) in positions {
@@ -80,6 +83,10 @@ fn connection_hints(
     view: &MapView,
 ) -> Vec<Vec<Vec2>> {
     let mut hints = Vec::new();
+    let local_sites: BTreeSet<_> = match scope {
+        MapScope::World => BTreeSet::new(),
+        MapScope::Region(region) => world.region_sites(region).into_iter().collect(),
+    };
     for route in &world.routes {
         if visible.routes.iter().any(|known| known.id == route.id) {
             continue;
@@ -92,12 +99,18 @@ fn connection_hints(
                     .filter(|_| visible.marker(from).is_some() || visible.marker(to).is_some())
                     .map(|(a, b)| (a.position, b.position))
             }),
-            MapScope::Region(region) => world
-                .site(route.from)
-                .zip(world.site(route.to))
-                .filter(|(a, b)| a.marker == region && b.marker == region)
-                .filter(|_| visible.site(route.from).is_some() || visible.site(route.to).is_some())
-                .map(|(a, b)| (a.position, b.position)),
+            MapScope::Region(region) => {
+                if local_sites.contains(&route.from) && local_sites.contains(&route.to) {
+                    world
+                        .region_site_position(region, route.from)
+                        .zip(world.region_site_position(region, route.to))
+                        .filter(|_| {
+                            visible.site(route.from).is_some() || visible.site(route.to).is_some()
+                        })
+                } else {
+                    None
+                }
+            }
         };
         let Some((from, to)) = endpoints else {
             continue;

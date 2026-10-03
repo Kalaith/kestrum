@@ -15,7 +15,7 @@
   "about": [
     "A world waiting for its history. Kestrum is a generational strategy game about kingdoms, armies, and the places their stories leave behind.",
     "Observer is a separate mode for watching every AI kingdom on the fully revealed atlas. Choose the kingdom count and world seed, pause to inspect, or speed up automatic turns. Observer sessions leave your campaign saves untouched.",
-    "Found a human kingdom on the 80-location atlas with a chosen emblem, four to eight factions and a repeatable world seed. Recruit six-slot armies, inspect land routes and supply, build settlements, clear local threats and decide war or peace. Battles and sieges leave persistent casualties, wounds and dated reports.",
+    "Found a human kingdom on a 152-node country map with no regions unlocked. Invest in eligible settlements to create cities and open their surrounding countryside. Cities need at least one intervening node. Recruit six-slot armies, build settlements, clear local threats and decide war or peace; battles and sieges leave persistent casualties, wounds and dated reports.",
     "Service earns classes, formation specializations and recognition. Teach apprentices, form households, raise or adopt dependents and choose qualified successors as people age. Local training focus discounts courses by 25%. Biographies and place histories retain witnessed milestones; rival details come from actual encounters.",
     "Each full round advances one season and creates a checkpoint. Save named copies, reload earlier moments and continue a campaign through its kingdom victory or defeat. The sole design and acceptance canvas is 1920 by 1080. Other host sizes scale or letterbox the same composition; use Full Screen to reach the intended play area."
   ],
@@ -26,15 +26,15 @@
     },
     {
       "key": "Kingdom overview",
-      "desc": "Tint shows known political claims; rings show local control. Crown marks your capital, / occupation, X contested control and ? an unknown claim. The lower strip shows current resources and actual last-season accounts"
+      "desc": "Tint and rings show known local control on the country and city maps. Crown marks your capital, / occupation and X contested control. The lower strip shows current resources and actual last-season accounts"
     },
     {
       "key": "Tap / Click",
       "desc": "Tap Army, then a destination to move immediately; unfinished routes continue after End Turn"
     },
     {
-      "key": "Enter Region / World Map",
-      "desc": "With an army selected, Enter Region exposes local movement and attack targets; World Map returns to the previous world camera"
+      "key": "Enter Region / Country Map",
+      "desc": "Select a functioning city and Enter Region to inspect its connected countryside; Country Map restores the previous country camera"
     },
     {
       "key": "Close",
@@ -47,6 +47,10 @@
     {
       "key": "Manage",
       "desc": "Open an owned place's work orders, population, facilities, Build, Roads and Focus"
+    },
+    {
+      "key": "Develop City",
+      "desc": "In Manage, review a safe, supplied Village or Town's city investment and Confirm Action; directly neighboring cities block development"
     },
     {
       "key": "Confirm Build",

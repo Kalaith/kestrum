@@ -54,31 +54,34 @@ pub fn map_controls_contain(
 }
 
 pub fn draw_landscape(ctx: &Context<'_>) {
-    if let Some(texture) = ctx.assets.get_texture("atlas") {
-        let campaign = ctx.state.screen == Screen::Campaign;
-        let corner = if campaign {
-            ctx.view.project(Vec2::ZERO)
-        } else {
-            Vec2::ZERO
-        };
-        let size = if campaign {
-            ctx.view.extent() * ctx.view.camera.zoom()
-        } else {
-            vec2(WIDTH, HEIGHT)
-        };
-        draw_texture_ex(
-            texture,
-            corner.x,
-            corner.y,
-            WHITE,
-            DrawTextureParams {
-                dest_size: Some(size),
-                ..Default::default()
-            },
-        );
+    let campaign = ctx.state.screen == Screen::Campaign;
+    let local_city = campaign && world::draw_local_terrain_background(ctx);
+    if !local_city {
+        if let Some(texture) = ctx.assets.get_texture("atlas") {
+            let corner = if campaign {
+                ctx.view.project(Vec2::ZERO)
+            } else {
+                Vec2::ZERO
+            };
+            let size = if campaign {
+                ctx.view.extent() * ctx.view.camera.zoom()
+            } else {
+                vec2(WIDTH, HEIGHT)
+            };
+            draw_texture_ex(
+                texture,
+                corner.x,
+                corner.y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(size),
+                    ..Default::default()
+                },
+            );
+        }
     }
-    if ctx.state.screen == Screen::Campaign {
-        if matches!(ctx.navigation.scope(), MapScope::Region(_)) {
+    if campaign {
+        if matches!(ctx.navigation.scope(), MapScope::Region(_)) && !local_city {
             draw_rectangle(
                 0.0,
                 0.0,
@@ -101,6 +104,9 @@ pub fn draw_landscape(ctx: &Context<'_>) {
             })
         {
             geography(ctx);
+        }
+        if local_city {
+            world::draw_local_terrain(ctx);
         }
         let exploration = world::map_exploration(ctx);
         if let Some(area) = &exploration {

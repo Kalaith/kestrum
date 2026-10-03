@@ -247,15 +247,15 @@ fn claims(ctx: &Context<'_>) -> Vec<Claim> {
             .collect(),
         MapScope::Region(region) => view
             .world
-            .sites
-            .iter()
-            .filter(|site| site.marker == region)
+            .region_sites(region)
+            .into_iter()
             .filter_map(|site| {
-                let summary = overview.sites.get(&site.id)?;
+                let summary = overview.sites.get(&site)?;
+                let position = view.world.region_site_position(region, site)?;
                 Some(Claim {
-                    at: ctx.view.normalized_world(site.position),
+                    at: ctx.view.normalized_world(position),
                     owner: summary.controller,
-                    known: view.known_sites.contains(&site.id),
+                    known: view.known_sites.contains(&site),
                 })
             })
             .collect(),

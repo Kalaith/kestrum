@@ -75,10 +75,8 @@ fn endpoints(
                 .map(|(a, b)| (a.position, b.position))
         }),
         MapScope::Region(region) => world
-            .site(route.from)
-            .zip(world.site(route.to))
-            .filter(|(a, b)| a.marker == region && b.marker == region)
-            .map(|(a, b)| (a.position, b.position)),
+            .region_site_position(region, route.from)
+            .zip(world.region_site_position(region, route.to)),
     }
 }
 

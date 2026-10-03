@@ -1,10 +1,16 @@
 //! Required labels for the action-driven introductory guide.
 
 pub const TUTORIAL_TEXT: &[&str] = &[
-    "tutorial_show_hq",
+    "tutorial_show_capital",
     "tutorial_resume",
     "tutorial_restart",
     "tutorial_headquarters",
+    "tutorial_city_find_capital",
+    "tutorial_city_overview",
+    "tutorial_city_actions",
+    "tutorial_city_review",
+    "tutorial_city_other_mode",
+    "tutorial_city_blocked_review",
     "tutorial_move_orders",
     "tutorial_move_begin",
     "tutorial_move_group",
@@ -16,8 +22,9 @@ pub const TUTORIAL_TEXT: &[&str] = &[
     "tutorial_back_roster",
     "tutorial_back_map",
     "tutorial_region",
+    "tutorial_region_back_settlement",
     "tutorial_region_return",
-    "tutorial_region_explore",
+    "tutorial_region_city_required",
     "tutorial_world",
     "tutorial_career_orders",
     "tutorial_people",

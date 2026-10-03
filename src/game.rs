@@ -8,6 +8,7 @@ mod battle_capture;
 mod battlefield;
 mod battlefield_capture;
 mod campaign;
+mod city_capture;
 mod composition;
 mod development_capture;
 mod founder_capture;
@@ -242,6 +243,9 @@ impl Game {
         if self.capture_tutorial(scene) {
             return;
         }
+        if self.capture_city(scene) {
+            return;
+        }
         if self.capture_kingdom_scene(scene) {
             return;
         }
@@ -264,7 +268,7 @@ impl Game {
                 self.state.overlay = Overlay::Setup;
                 self.setup.editing_name = true;
             }
-            "production_world" | "production_region" | "atlas_coast" | "atlas_river" => {
+            "production_world" | "atlas_coast" | "atlas_river" => {
                 self.setup.factions = 8;
                 self.setup.seed = self.data.production_layout.default_seed;
                 self.start_game();
@@ -276,34 +280,6 @@ impl Game {
                     };
                     self.view.camera = macroquad_toolkit::camera::CameraTransform::new(center, 2.0)
                         .expect("valid atlas capture camera");
-                }
-                if scene.trim_end_matches("_minimum") == "production_region" {
-                    use kestrum::{data::world::MarkerId, navigation::MapSelection};
-                    if let Some(campaign) =
-                        self.state.campaign.as_ref().and_then(Campaign::strategic)
-                    {
-                        let _ = self.navigation.enter_region(
-                            &campaign.world,
-                            MarkerId(73),
-                            &mut self.view,
-                        );
-                        let _ = self.navigation.select(
-                            &campaign.world,
-                            MapSelection::Site(kestrum::data::world::SiteId(1001)),
-                        );
-                    }
-                }
-            }
-            "production_region_map" => {
-                self.setup.factions = 8;
-                self.setup.seed = self.data.production_layout.default_seed;
-                self.start_game();
-                use kestrum::data::world::MarkerId;
-                if let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
-                    let _ =
-                        self.navigation
-                            .enter_region(&campaign.world, MarkerId(73), &mut self.view);
-                    self.navigation.clear_selection();
                 }
             }
             "gameplay" => self.capture_campaign(),

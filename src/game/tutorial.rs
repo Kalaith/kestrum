@@ -21,14 +21,14 @@ impl Game {
             UiAction::DismissTutorial => campaign.tutorial.dismiss(),
             UiAction::ReopenTutorial => {
                 campaign.tutorial.reopen();
+                reconcile_city_development(campaign);
                 self.state.screen = Screen::Campaign;
                 self.state.overlay = Overlay::None;
             }
             UiAction::TutorialHeadquarters => {
-                let site = campaign.factions[&campaign.player].headquarters;
+                let site = campaign.factions[&campaign.player].capital;
                 self.navigation
                     .focus_site(&campaign.world, site, &mut self.view);
-                self.navigation.clear_selection();
                 self.movement = ui::MoveView::default();
                 self.state.overlay = Overlay::None;
             }
@@ -44,19 +44,21 @@ impl Game {
         let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
             return;
         };
+        reconcile_city_development(campaign);
+        let capital = campaign.factions[&campaign.player].capital;
+        let capital_marker = campaign.world.site(capital).map(|site| site.marker);
         let step = match action {
-            UiAction::BeginMove(_) if self.movement.stage == ui::MoveStage::Map => {
-                Some(TutorialStep::Headquarters)
-            }
-            UiAction::OpenArmies(site)
-                if self.state.overlay == Overlay::Armies
-                    && self.army.site == Some(site)
-                    && site == campaign.factions[&campaign.player].headquarters =>
+            UiAction::OpenSettlement(site)
+                if self.state.overlay == Overlay::Settlement
+                    && self.settlement.site == Some(site)
+                    && site == capital =>
             {
                 Some(TutorialStep::Headquarters)
             }
             UiAction::EnterRegion(region)
-                if self.navigation.scope() == MapScope::Region(region) =>
+                if self.navigation.scope() == MapScope::Region(region)
+                    && capital_marker == Some(region)
+                    && campaign.world.is_region_available(region) =>
             {
                 Some(TutorialStep::Region)
             }
@@ -90,5 +92,15 @@ impl Game {
         if let Some(step) = step {
             campaign.tutorial.record(step);
         }
+    }
+}
+
+fn reconcile_city_development(campaign: &mut kestrum::state::StrategicCampaign) {
+    let capital_marker = campaign
+        .world
+        .site(campaign.factions[&campaign.player].capital)
+        .map(|capital| capital.marker);
+    if capital_marker.is_some_and(|marker| campaign.world.is_region_available(marker)) {
+        campaign.tutorial.record(TutorialStep::CityDevelopment);
     }
 }

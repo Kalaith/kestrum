@@ -97,10 +97,14 @@ Compact place histories can show retained founding, fortification, sieges, growt
 
 ## Evolving map presentation
 
-**Current gap:** place growth, economic value and much damage are visible mainly
-through inspection and management text. Faction-letter circles do not distinguish
-a village from a major city. The region view also reuses the continental atlas,
-so visible scenery does not reliably explain a local bridge or settlement.
+City regions show fields, woods and buildings from observed geography,
+population and development. City silhouettes distinguish their centers, and
+damage and ruin affect local settlement presentation. These cues describe
+existing state; they add no facility or resource bonus.
+
+**Remaining gap:** much economic value and development pressure still require
+inspection and management. Country-scale symbols and local terrain do not yet
+explain every important crossing, facility or seasonal consequence.
 
 **Planned:** the [map playability plan](map-playability-plan.md) gives settlements
 recognizable development levels, independent fortifications, resource/facility
@@ -112,9 +116,8 @@ help the current decision.
 
 Early and developed campaigns should therefore look different for reasons the
 player can explain. Keep changes attached to fixed sites and routes under D06;
-new art cannot imply a new facility, road, resource or combat bonus. Distinct
-regional topology and local geography are also planned; cosmetic variety alone
-does not resolve the repeated regional chain.
+new art cannot imply a new facility, road, resource or combat bonus. Broader
+physical route variety remains planned; city views retain the existing graph.
 
 ## Acceptance cases
 

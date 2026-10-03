@@ -33,7 +33,13 @@ impl Game {
             UiAction::EditPlaceName(action) => self.edit_place_name(action),
             UiAction::ConfirmLocalAction => {
                 if let Some(command) = local_command(&self.settlement) {
-                    self.settlement_command(command, "local_action_success");
+                    let success =
+                        if self.settlement.local_action == Some(ui::LocalAction::DevelopCity) {
+                            "city_development_success"
+                        } else {
+                            "local_action_success"
+                        };
+                    self.settlement_command(command, success);
                 }
             }
             _ => return false,
@@ -68,6 +74,8 @@ impl Game {
         };
         self.settlement.development =
             engine::development_view(campaign, &self.data, campaign.player, site);
+        self.settlement.city_development =
+            engine::city_development_option(campaign, &self.data, campaign.player, site);
         if matches!(
             self.settlement.mode,
             SettlementMode::Rename | SettlementMode::Resettle | SettlementMode::LocalReview
@@ -111,6 +119,12 @@ impl Game {
 }
 
 fn projected_blocker(view: &ui::SettlementView) -> Option<String> {
+    if view.local_action == Some(ui::LocalAction::DevelopCity) {
+        return view
+            .city_development
+            .as_ref()
+            .and_then(|option| option.blocked.clone());
+    }
     let development = view.development.as_ref()?;
     match view.local_action? {
         ui::LocalAction::MoveCapital => development.capital_blocked.clone(),
@@ -130,6 +144,7 @@ fn local_command(view: &ui::SettlementView) -> Option<Command> {
             from: site,
             to: view.destination?,
         },
+        ui::LocalAction::DevelopCity => Command::DevelopCity { site },
         ui::LocalAction::MoveCapital => Command::MoveCapital { site },
         ui::LocalAction::RelocateHeadquarters => Command::RelocateHeadquarters { site },
     })

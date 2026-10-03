@@ -126,7 +126,13 @@ a richer illustrated direction; it is not an interchangeable production layer
 set. An explicitly configured Astra high review recommends detailed near-front
 art on the existing rig, with real aligned face/eye/nose/hair assets and mask QA.
 No exposed control selects the built-in imagegen model, so no image-model upgrade
-is claimed. Runtime integration and the release artwork remain pending.
+is claimed. The user then selected a cleaner anime treatment closer to the supplied
+reference. The [current concept](portrait_direction.png) uses crisp linework,
+restrained cel shading and front-facing original characters. Its complete
+[generation prompt and provenance](../../assets/art-source/portraits/concept.json)
+are retained with the artwork sources. This concept is a reference for component
+production; it does not prove aligned layers, thumbnail recognition or runtime
+rendering. Runtime integration and the release artwork remain pending.
 
 ## Verification boundaries
 

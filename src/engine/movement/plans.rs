@@ -90,14 +90,20 @@ pub(in crate::engine) fn resume_plans(
                 super::super::actions::merge_outcome(outcome, continued);
             }
             Err(RuleError::MovementBlocked { site, reason }) => {
-                outcome.continued_movements.push(MovementOutcome {
+                let blocked = MovementOutcome {
+                    requested_destination: plan.path.last().copied(),
                     armies: plan.armies,
                     path: vec![plan.path[0]],
                     spent: 0,
                     battle: None,
                     planned_destination: None,
                     stop: Some(MovementStop { site, reason }),
-                });
+                };
+                crate::engine::notifications::collect_blocked_continuation(
+                    campaign, data, &blocked,
+                )
+                .map_err(RuleError::InvalidState)?;
+                outcome.continued_movements.push(blocked);
             }
             Err(error) => return Err(error),
         }

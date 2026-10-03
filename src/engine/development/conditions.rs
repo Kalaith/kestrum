@@ -4,7 +4,7 @@ use super::*;
 use crate::data::world::{Facility, MilitaryLayer};
 
 #[derive(Clone)]
-pub(super) struct LocalConditions {
+pub(crate) struct LocalConditions {
     pub owner: Option<FactionId>,
     pub habitation: Habitation,
     pub ruined: bool,
@@ -24,7 +24,7 @@ pub(super) struct LocalConditions {
     pub focus: Option<Focus>,
 }
 
-pub(super) fn at(campaign: &StrategicCampaign, data: &GameData, site: &Site) -> LocalConditions {
+pub(crate) fn at(campaign: &StrategicCampaign, data: &GameData, site: &Site) -> LocalConditions {
     let battle = campaign.battles.values().any(|battle| {
         battle.site == site.id && battle.completed_rounds == campaign.completed_rounds
     });
@@ -132,7 +132,7 @@ fn trade(campaign: &StrategicCampaign, data: &GameData, site: &Site) -> bool {
     })
 }
 
-pub(super) fn causes(data: &GameData, conditions: &LocalConditions) -> Vec<DevelopmentCause> {
+pub(crate) fn causes(data: &GameData, conditions: &LocalConditions) -> Vec<DevelopmentCause> {
     let p = &data.development.pressure;
     let entries = [
         (conditions.safe, "Safe", p.safe),
@@ -173,7 +173,7 @@ pub(super) fn causes(data: &GameData, conditions: &LocalConditions) -> Vec<Devel
         .collect()
 }
 
-pub(super) fn contribution(data: &GameData, conditions: &LocalConditions) -> i32 {
+pub(crate) fn contribution(data: &GameData, conditions: &LocalConditions) -> i32 {
     causes(data, conditions)
         .iter()
         .map(|cause| cause.amount)

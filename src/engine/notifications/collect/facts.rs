@@ -7,7 +7,7 @@ use crate::state::{
     diplomacy::DiplomacyReceipt,
     siege::SiegeChange,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn collect(
     before: &StrategicCampaign,
@@ -15,6 +15,8 @@ pub(super) fn collect(
     data: &GameData,
     outcome: &ActionOutcome,
 ) -> Result<(), String> {
+    let mut construction_states = BTreeMap::new();
+    let mut used_movement_results = BTreeSet::new();
     for fact in &outcome.facts {
         match &fact.kind {
             DomainFactKind::DevelopmentChanged { receipt } => {
@@ -55,7 +57,12 @@ pub(super) fn collect(
                 }
             }
             DomainFactKind::ConstructionChanged { order } => {
-                construction(before, candidate, data, fact, order)?;
+                let previous = construction_states
+                    .get(&order.id)
+                    .copied()
+                    .unwrap_or_else(|| before.construction.get(&order.id).map(|work| work.status));
+                construction(candidate, data, fact, order, previous)?;
+                construction_states.insert(order.id, Some(order.status));
             }
             DomainFactKind::BattleResolved {
                 battle: battle_id, ..
@@ -65,16 +72,91 @@ pub(super) fn collect(
             DomainFactKind::DiplomacyChanged { receipt } => {
                 diplomacy(candidate, data, fact, receipt)?;
             }
-            DomainFactKind::ArmiesMoved {
-                faction,
-                armies,
-                path,
-                ..
-            } if *faction == candidate.player => {
-                movement(before, candidate, data, outcome, fact, armies, path)?;
+            DomainFactKind::ArmiesMoved { faction, .. } if *faction == candidate.player => {
+                movement(
+                    before,
+                    candidate,
+                    data,
+                    outcome,
+                    fact,
+                    &mut used_movement_results,
+                )?;
             }
             _ => {}
         }
+    }
+    unmatched_blocked_movements(before, candidate, data, outcome, &used_movement_results)?;
+    Ok(())
+}
+
+fn unmatched_blocked_movements(
+    before: &StrategicCampaign,
+    candidate: &mut StrategicCampaign,
+    data: &GameData,
+    outcome: &ActionOutcome,
+    used_results: &BTreeSet<usize>,
+) -> Result<(), String> {
+    let results = outcome
+        .movement
+        .iter()
+        .chain(outcome.continued_movements.iter())
+        .collect::<Vec<_>>();
+    let mut emitted = Vec::new();
+    for (index, result) in results.iter().enumerate() {
+        if used_results.contains(&index)
+            || results
+                .iter()
+                .enumerate()
+                .any(|(used_index, prior)| used_results.contains(&used_index) && *prior == *result)
+            || emitted.contains(result)
+        {
+            continue;
+        }
+        let Some(stop) = &result.stop else {
+            continue;
+        };
+        let snapshots = result
+            .armies
+            .iter()
+            .filter_map(|id| {
+                super::army_snapshot(candidate, *id).or_else(|| super::army_snapshot(before, *id))
+            })
+            .collect::<Vec<_>>();
+        let Some(army) = snapshots.first() else {
+            continue;
+        };
+        emitted.push(*result);
+        let ordinal = u32::try_from(index)
+            .map_err(|_| "too many movement results in one action".to_owned())?;
+        let destination_id = result
+            .requested_destination
+            .or_else(|| result.path.last().copied())
+            .or(Some(stop.site));
+        let destination = destination_id
+            .and_then(|id| super::place(candidate, id).or_else(|| super::place(before, id)));
+        let source = NotificationSourceId::Transition {
+            accepted_sequence: candidate.accepted_sequence.max(1),
+            kind: NotificationKind::MovementBlocked,
+            subject: NotificationEntity::Army(army.id),
+            ordinal,
+        };
+        append(
+            candidate,
+            data,
+            NotificationDraft {
+                source,
+                kind: NotificationKind::MovementBlocked,
+                round: candidate.completed_rounds,
+                sequence: candidate.accepted_sequence,
+                subject: Some(NotificationSubjectSnapshot::Army(army.clone())),
+                detail: NotificationDetail::Movement {
+                    armies: snapshots,
+                    destination,
+                    cause: Some(format!("movement_{:?}", stop.reason).to_lowercase()),
+                },
+                active: false,
+            },
+        )?;
     }
     Ok(())
 }
@@ -106,15 +188,15 @@ fn development(
         DevelopmentReceipt::CapitalMoved { owner, from, to } if *owner == player => (
             NotificationKind::CapitalRelocated,
             *to,
-            Some(format!("site_{}", from.0)),
-            Some(format!("site_{}", to.0)),
+            site_name(before, candidate, *from),
+            site_name(before, candidate, *to),
             Some(*owner),
         ),
         DevelopmentReceipt::HeadquartersMoved { owner, from, to } if *owner == player => (
             NotificationKind::HeadquartersRelocated,
             *to,
-            Some(format!("site_{}", from.0)),
-            Some(format!("site_{}", to.0)),
+            site_name(before, candidate, *from),
+            site_name(before, candidate, *to),
             Some(*owner),
         ),
         _ => return Ok(()),
@@ -148,6 +230,16 @@ fn development(
     Ok(())
 }
 
+fn site_name(
+    before: &StrategicCampaign,
+    candidate: &StrategicCampaign,
+    id: crate::data::world::SiteId,
+) -> Option<String> {
+    super::place(candidate, id)
+        .or_else(|| super::place(before, id))
+        .map(|place| place.name)
+}
+
 fn development_key(receipt: &DevelopmentReceipt) -> String {
     match receipt {
         DevelopmentReceipt::HabitationChanged { .. } => "habitation_changed",
@@ -161,17 +253,16 @@ fn development_key(receipt: &DevelopmentReceipt) -> String {
 }
 
 fn construction(
-    before: &StrategicCampaign,
     candidate: &mut StrategicCampaign,
     data: &GameData,
     fact: &DomainFact,
     order: &crate::state::construction::ConstructionOrder,
+    previous: Option<crate::state::construction::ConstructionStatus>,
 ) -> Result<(), String> {
     if order.owner != candidate.player {
         return Ok(());
     }
-    let previous = before.construction.get(&order.id);
-    let (kind, cause) = match (previous.map(|work| work.status), order.status) {
+    let (kind, cause) = match (previous, order.status) {
         (None, crate::state::construction::ConstructionStatus::Active) => return Ok(()),
         (
             Some(crate::state::construction::ConstructionStatus::Active),
@@ -212,7 +303,7 @@ fn construction(
             subject: Some(subject),
             detail: NotificationDetail::Work {
                 work: snapshot,
-                before: previous.map(|work| work.status),
+                before: previous,
                 cause,
                 forecast_round: None,
             },
@@ -295,6 +386,7 @@ fn battle(
         (NotificationKind::ArmyDestroyed, destroyed),
     ] {
         for army in entries {
+            let destination = army.site.clone();
             let source =
                 super::transition_source(candidate, kind, NotificationEntity::Army(army.id));
             append(
@@ -308,7 +400,7 @@ fn battle(
                     subject: Some(NotificationSubjectSnapshot::Army(army.clone())),
                     detail: NotificationDetail::Movement {
                         armies: vec![army],
-                        destination: Some(site.clone()),
+                        destination,
                         cause: Some("battle_resolution".into()),
                     },
                     active: false,
@@ -422,64 +514,89 @@ fn movement(
     data: &GameData,
     outcome: &ActionOutcome,
     fact: &DomainFact,
-    armies: &[crate::state::military::ArmyId],
-    path: &[crate::data::world::SiteId],
+    used_results: &mut BTreeSet<usize>,
 ) -> Result<(), String> {
-    let results = outcome
+    let DomainFactKind::ArmiesMoved {
+        armies,
+        path,
+        spent,
+        ..
+    } = &fact.kind
+    else {
+        return Ok(());
+    };
+    let Some((index, result)) = outcome
         .movement
         .iter()
         .chain(outcome.continued_movements.iter())
-        .filter(|movement| movement.armies.iter().any(|id| armies.contains(id)));
-    for (ordinal, result) in results.enumerate() {
-        let snapshots = result
-            .armies
-            .iter()
-            .filter_map(|id| {
-                super::army_snapshot(candidate, *id).or_else(|| super::army_snapshot(before, *id))
-            })
-            .collect::<Vec<_>>();
-        if snapshots.is_empty() {
-            continue;
-        }
-        let destination = result
-            .path
-            .last()
-            .or_else(|| path.last())
-            .copied()
-            .and_then(|id| super::place(candidate, id).or_else(|| super::place(before, id)));
-        let (kind, cause) = match &result.stop {
-            Some(stop) => (
-                NotificationKind::MovementBlocked,
-                Some(format!("movement_{:?}", stop.reason).to_lowercase()),
-            ),
-            None if result.planned_destination.is_some() => {
-                (NotificationKind::MovementArrived, None)
-            }
-            None => continue,
-        };
-        let subject_id = snapshots[0].id;
-        let source = if ordinal == 0 {
-            NotificationSourceId::Fact { id: fact.id }
-        } else {
-            super::transition_source(candidate, kind, NotificationEntity::Army(subject_id))
-        };
-        append(
-            candidate,
-            data,
-            NotificationDraft {
-                source,
-                kind,
-                round: fact.completed_rounds,
-                sequence: fact.sequence,
-                subject: Some(NotificationSubjectSnapshot::Army(snapshots[0].clone())),
-                detail: NotificationDetail::Movement {
-                    armies: snapshots,
-                    destination,
-                    cause,
-                },
-                active: false,
-            },
-        )?;
+        .enumerate()
+        .find(|(index, result)| {
+            !used_results.contains(index)
+                && result.armies.as_slice() == armies
+                && result.path.as_slice() == path
+                && result.spent == *spent
+        })
+    else {
+        return Ok(());
+    };
+    used_results.insert(index);
+    let snapshots = result
+        .armies
+        .iter()
+        .filter_map(|id| {
+            super::army_snapshot(candidate, *id).or_else(|| super::army_snapshot(before, *id))
+        })
+        .collect::<Vec<_>>();
+    if snapshots.is_empty() {
+        return Ok(());
     }
+    let arrived = result.requested_destination.is_some_and(|destination| {
+        result.armies.iter().all(|id| {
+            candidate
+                .armies
+                .get(id)
+                .is_some_and(|army| army.site == destination)
+        })
+    });
+    let destination_id = result
+        .requested_destination
+        .or_else(|| result.stop.as_ref().map(|stop| stop.site))
+        .or_else(|| result.path.last().copied());
+    let destination = destination_id
+        .and_then(|id| super::place(candidate, id).or_else(|| super::place(before, id)));
+    let (kind, cause) = match &result.stop {
+        Some(stop)
+            if result.planned_destination.is_some()
+                && matches!(
+                    &stop.reason,
+                    crate::engine::MovementBlock::InsufficientMovement { .. }
+                ) =>
+        {
+            return Ok(())
+        }
+        Some(stop) => (
+            NotificationKind::MovementBlocked,
+            Some(format!("movement_{:?}", stop.reason).to_lowercase()),
+        ),
+        None if arrived => (NotificationKind::MovementArrived, None),
+        None => return Ok(()),
+    };
+    append(
+        candidate,
+        data,
+        NotificationDraft {
+            source: NotificationSourceId::Fact { id: fact.id },
+            kind,
+            round: fact.completed_rounds,
+            sequence: fact.sequence,
+            subject: Some(NotificationSubjectSnapshot::Army(snapshots[0].clone())),
+            detail: NotificationDetail::Movement {
+                armies: snapshots,
+                destination,
+                cause,
+            },
+            active: false,
+        },
+    )?;
     Ok(())
 }

@@ -3,9 +3,8 @@
 use super::collect::{place, set_warning};
 use crate::{
     data::{economy::Habitation, GameData},
-    engine::development::development_view,
+    engine::{construction::forecast_projection, development, recovery},
     state::{
-        construction::{ConstructionKind, ConstructionTarget},
         notifications::{NotificationDetail, NotificationKind, WarningKey, WarningSubject},
         StrategicCampaign,
     },
@@ -17,6 +16,10 @@ pub(super) fn reconcile(
     baseline: bool,
 ) -> Result<(), String> {
     let player = candidate.player;
+    let development_snapshot = development::snapshot(candidate, data);
+    let observed = development::observed_safety_sites(candidate, player);
+    let supply = recovery::snapshot(candidate);
+    let construction = forecast_projection(candidate, data, &supply, &observed);
     let ids = candidate
         .world
         .sites
@@ -49,47 +52,28 @@ pub(super) fn reconcile(
             }
             continue;
         }
-        let Some(view) = development_view(candidate, data, player, id) else {
-            continue;
-        };
-        // Unknown local safety is not a negative result. Preserve any active
-        // warning until the player can observe enough to reassess it.
-        if view.safe.is_none() || view.contribution.is_none() {
+        if !observed.contains(&id) || construction.uncertain_sites.contains(&id) {
             continue;
         }
-        let place = place(candidate, id).expect("owned site exists");
-        let ineligible_boundary = candidate
-            .world
+        let Some(conditions) = development_snapshot.conditions.get(&id) else {
+            continue;
+        };
+        let site = candidate.world.site(id).expect("owned site exists");
+        let state = construction
             .development
             .get(&id)
-            .is_none_or(|state| state.last_resolved_round == Some(candidate.completed_rounds))
-            || active_site_work(candidate, id);
-        let pressure = view
-            .pressure
-            .saturating_add(view.contribution.unwrap_or_default());
-        let expected_growth = !ineligible_boundary
-            && !view.ruined
-            && pressure >= data.development.pressure.upgrade_threshold
-            && next_tier(view.habitation).is_some_and(|next| {
-                next <= view.maximum_habitation
-                    && view.population >= data.construction.population.minimum[&next]
-            });
-        let expected_decline = !ineligible_boundary
-            && !view.ruined
-            && pressure <= -data.development.pressure.downgrade_threshold
-            && previous_tier(view.habitation).is_some();
-        let ruin = &data.development.conditions;
-        let next_ruin_streak = if view.structural_damage >= ruin.ruin_damage
-            && view.population < ruin.ruin_population
-        {
-            view.ruin_streak.saturating_add(1).min(ruin.ruin_steps)
-        } else {
-            0
-        };
-        let imminent_ruin =
-            !ineligible_boundary && !view.ruined && next_ruin_streak >= ruin.ruin_steps;
-        let conditions = view
-            .causes
+            .cloned()
+            .unwrap_or_else(|| development::step_state(candidate, id));
+        let forecast = development::forecast_step(
+            candidate.completed_rounds,
+            data,
+            site,
+            state.clone(),
+            conditions,
+        )
+        .map_err(|error| format!("development forecast for site {}: {error}", id.0))?;
+        let place = place(candidate, id).expect("owned site exists");
+        let cause_conditions = development::conditions::causes(data, conditions)
             .iter()
             .map(|cause| cause_key(&cause.label))
             .collect::<Vec<_>>();
@@ -97,17 +81,22 @@ pub(super) fn reconcile(
         for (kind, present, before_tier, after_tier) in [
             (
                 NotificationKind::GrowthApproaching,
-                expected_growth,
-                Some(view.habitation),
-                next_tier(view.habitation),
+                forecast.habitation > state.habitation,
+                Some(state.habitation),
+                Some(forecast.habitation),
             ),
             (
                 NotificationKind::DeclineRisk,
-                expected_decline,
-                Some(view.habitation),
-                previous_tier(view.habitation),
+                forecast.habitation < state.habitation,
+                Some(state.habitation),
+                Some(forecast.habitation),
             ),
-            (NotificationKind::RuinRisk, imminent_ruin, None, None),
+            (
+                NotificationKind::RuinRisk,
+                forecast.ruined && !state.development.ruined,
+                None,
+                None,
+            ),
         ] {
             let detail = NotificationDetail::Place {
                 place: place.clone(),
@@ -119,7 +108,7 @@ pub(super) fn reconcile(
                     "pressure_crosses_development_threshold".into()
                 }),
                 forecast_round: Some(forecast_round),
-                conditions: conditions.clone(),
+                conditions: cause_conditions.clone(),
             };
             set_warning(
                 candidate,
@@ -134,7 +123,7 @@ pub(super) fn reconcile(
             )?;
         }
     }
-    construction_forecasts(candidate, data, baseline)?;
+    construction_forecasts(candidate, data, baseline, &construction)?;
     Ok(())
 }
 
@@ -142,59 +131,46 @@ fn construction_forecasts(
     candidate: &mut StrategicCampaign,
     data: &GameData,
     baseline: bool,
+    projection: &crate::engine::construction::ForecastProjection,
 ) -> Result<(), String> {
-    let eligible = candidate
-        .construction
-        .values()
-        .filter(|work| {
-            work.owner == candidate.player
-                && work.is_open()
-                && matches!(
-                    work.status,
-                    crate::state::construction::ConstructionStatus::Active
-                )
-                && work.progress.saturating_add(1) >= work.required_steps
-                && work.last_progress_round != Some(candidate.completed_rounds)
-                && forecast_target_owned(candidate, work.target)
-                && !matches!(work.kind, ConstructionKind::Outpost)
-        })
-        .map(|work| work.id)
-        .collect::<Vec<_>>();
-    let active = candidate
-        .notifications
-        .warning_episodes
-        .iter()
-        .filter_map(|episode| match episode.key.subject {
-            WarningSubject::Construction(id)
-                if episode.key.kind == NotificationKind::ConstructionExpected =>
-            {
-                Some(id)
-            }
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-    for id in active.into_iter().chain(eligible.iter().copied()) {
-        let present = eligible.contains(&id);
+    let mut ids = projection.completed_next.clone();
+    ids.extend(
+        candidate
+            .notifications
+            .warning_episodes
+            .iter()
+            .filter_map(|episode| match episode.key.subject {
+                WarningSubject::Construction(id)
+                    if episode.key.kind == NotificationKind::ConstructionExpected =>
+                {
+                    Some(id)
+                }
+                _ => None,
+            }),
+    );
+    for id in ids {
+        if projection.unknown_orders.contains(&id) {
+            continue;
+        }
+        let present = projection.completed_next.contains(&id);
         let Some(work) = candidate.construction.get(&id) else {
-            let existing = candidate
+            let episode = candidate
                 .notifications
                 .warning_episodes
                 .iter()
-                .find(|episode| {
-                    episode.key.subject == WarningSubject::Construction(id)
-                        && episode.key.kind == NotificationKind::ConstructionExpected
-                })
-                .and_then(|episode| episode.active_receipt)
-                .and_then(|receipt| candidate.notifications.receipt(receipt))
-                .map(|receipt| receipt.detail.clone());
-            if let Some(detail) = existing {
+                .find(|episode| episode.key == construction_warning_key(id));
+            if let Some(episode) = episode {
+                let detail = episode
+                    .active_receipt
+                    .and_then(|receipt| candidate.notifications.receipt(receipt))
+                    .map(|receipt| receipt.detail.clone())
+                    .unwrap_or_else(|| NotificationDetail::Facts {
+                        values: Default::default(),
+                    });
                 set_warning(
                     candidate,
                     data,
-                    WarningKey {
-                        subject: WarningSubject::Construction(id),
-                        kind: NotificationKind::ConstructionExpected,
-                    },
+                    construction_warning_key(id),
                     false,
                     detail,
                     baseline,
@@ -208,10 +184,7 @@ fn construction_forecasts(
         set_warning(
             candidate,
             data,
-            WarningKey {
-                subject: WarningSubject::Construction(id),
-                kind: NotificationKind::ConstructionExpected,
-            },
+            construction_warning_key(id),
             present,
             NotificationDetail::Work {
                 work: snapshot,
@@ -225,38 +198,11 @@ fn construction_forecasts(
     Ok(())
 }
 
-fn forecast_target_owned(campaign: &StrategicCampaign, target: ConstructionTarget) -> bool {
-    let owner = campaign.player;
-    match target {
-        ConstructionTarget::Site(site) => campaign
-            .world
-            .site(site)
-            .is_some_and(|site| site.controller == Some(owner)),
-        ConstructionTarget::Route(route) => campaign.world.route(route).is_some_and(|route| {
-            campaign
-                .world
-                .site(route.from)
-                .is_some_and(|site| site.controller == Some(owner))
-                && campaign
-                    .world
-                    .site(route.to)
-                    .is_some_and(|site| site.controller == Some(owner))
-        }),
+fn construction_warning_key(id: crate::state::construction::OrderId) -> WarningKey {
+    WarningKey {
+        subject: WarningSubject::Construction(id),
+        kind: NotificationKind::ConstructionExpected,
     }
-}
-
-fn active_site_work(campaign: &StrategicCampaign, site: crate::data::world::SiteId) -> bool {
-    campaign.construction.values().any(|work| {
-        work.owner == campaign.player
-            && work.is_open()
-            && match work.target {
-                ConstructionTarget::Site(target) => target == site,
-                ConstructionTarget::Route(route) => campaign
-                    .world
-                    .route(route)
-                    .is_some_and(|route| route.from == site || route.to == site),
-            }
-    })
 }
 
 fn empty_detail(
@@ -293,32 +239,4 @@ fn cause_key(label: &str) -> String {
 
 fn habitation_key(value: Habitation) -> String {
     format!("{:?}", value).to_lowercase()
-}
-
-fn next_tier(value: Habitation) -> Option<Habitation> {
-    use Habitation::*;
-    match value {
-        Unsettled => None,
-        Camp => Some(Outpost),
-        Outpost => Some(Hamlet),
-        Hamlet => Some(Village),
-        Village => Some(Town),
-        Town => Some(City),
-        City => Some(MajorCity),
-        MajorCity => None,
-    }
-}
-
-fn previous_tier(value: Habitation) -> Option<Habitation> {
-    use Habitation::*;
-    match value {
-        Unsettled => None,
-        Camp => Some(Unsettled),
-        Outpost => Some(Camp),
-        Hamlet => Some(Outpost),
-        Village => Some(Hamlet),
-        Town => Some(Village),
-        City => Some(Town),
-        MajorCity => Some(City),
-    }
 }

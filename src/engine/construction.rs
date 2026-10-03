@@ -5,6 +5,7 @@ mod progress;
 mod query;
 mod settlers;
 pub(super) use commands::{cancel, reassign, set_focus, start, validate_focus, validate_start};
+pub(in crate::engine) use progress::forecast_projection;
 pub(super) use progress::{reconcile, resolve};
 pub use query::{construction_options, construction_refund, ConstructionOption};
 
@@ -17,7 +18,17 @@ use crate::{
     },
     state::{construction::*, military::ArmyId, StrategicCampaign},
 };
-use std::fmt;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt,
+};
+
+pub(crate) struct ForecastProjection {
+    pub(crate) completed_next: BTreeSet<OrderId>,
+    pub(crate) unknown_orders: BTreeSet<OrderId>,
+    pub(crate) uncertain_sites: BTreeSet<SiteId>,
+    pub(crate) development: BTreeMap<SiteId, super::development::DevelopmentStepState>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConstructionBlock {

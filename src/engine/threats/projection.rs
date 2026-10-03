@@ -41,14 +41,7 @@ pub fn visible_threats(campaign: &StrategicCampaign, observer: FactionId) -> Vec
         .values()
         .filter(|threat| {
             threat.status == ThreatStatus::Active
-                && campaign.armies.values().any(|army| {
-                    army.faction == observer
-                        && (army.site == threat.site
-                            || campaign
-                                .world
-                                .connected_route(army.site, threat.site)
-                                .is_some())
-                })
+                && super::threat_site_observed(campaign, observer, threat.site)
         })
         .map(|threat| VisibleThreat {
             id: threat.id,

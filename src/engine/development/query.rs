@@ -46,7 +46,8 @@ pub fn development_view(
     let location = commands::owned(campaign, observer, site).ok()?;
     let state = &campaign.world.development[&site];
     let c = conditions::at(campaign, data, location);
-    let known = safety_observed(campaign, observer, site);
+    let observed = observed_safety_sites(campaign, observer);
+    let known = observed.contains(&site);
     let rules = &data.development;
     let snapshot = snapshot(campaign, data);
     let resettle_targets = if state.displaced == 0 {
@@ -54,7 +55,7 @@ pub fn development_view(
     } else {
         migration::destinations(campaign, data, &snapshot, site)
             .into_iter()
-            .filter(|id| safety_observed(campaign, observer, *id))
+            .filter(|id| observed.contains(id))
             .filter(|id| {
                 let target = campaign.world.site(*id).expect("destination");
                 campaign.world.population[id] < population_capacity(data, target)
@@ -138,14 +139,25 @@ fn growth_blocked(
     Some(reason.into())
 }
 
-fn safety_observed(campaign: &StrategicCampaign, observer: FactionId, site: SiteId) -> bool {
+pub(crate) fn observed_safety_sites(
+    campaign: &StrategicCampaign,
+    observer: FactionId,
+) -> BTreeSet<SiteId> {
     let visible: BTreeSet<_> = campaign
         .armies
         .values()
         .filter(|army| army.faction == observer && !army.is_empty())
         .flat_map(|army| std::iter::once(army.site).chain(campaign.world.adjacent_sites(army.site)))
         .collect();
-    std::iter::once(site)
-        .chain(campaign.world.adjacent_sites(site))
-        .all(|id| visible.contains(&id))
+    campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| {
+            std::iter::once(site.id)
+                .chain(campaign.world.adjacent_sites(site.id))
+                .all(|id| visible.contains(&id))
+        })
+        .map(|site| site.id)
+        .collect()
 }

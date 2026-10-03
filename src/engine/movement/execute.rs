@@ -21,6 +21,7 @@ pub(crate) fn execute(
     let mut armies = order.armies.clone();
     armies.sort();
     let mut outcome = MovementOutcome {
+        requested_destination: order.path.last().copied(),
         planned_destination: None,
         battle: None,
         armies,

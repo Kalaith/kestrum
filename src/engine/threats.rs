@@ -20,6 +20,17 @@ use crate::{
     },
 };
 
+pub(crate) fn threat_site_observed(
+    campaign: &StrategicCampaign,
+    observer: FactionId,
+    site: SiteId,
+) -> bool {
+    campaign.armies.values().any(|army| {
+        army.faction == observer
+            && (army.site == site || campaign.world.connected_route(army.site, site).is_some())
+    })
+}
+
 pub(crate) fn validate_order(
     campaign: &StrategicCampaign,
     data: &GameData,
@@ -97,6 +108,7 @@ pub(crate) fn execute(
     let mut armies = armies.to_vec();
     armies.sort();
     let moved = MovementOutcome {
+        requested_destination: Some(site),
         planned_destination: None,
         battle: None,
         armies,

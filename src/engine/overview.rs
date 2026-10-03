@@ -91,6 +91,8 @@ pub enum AttentionKind {
     Siege,
     HostileContact,
     LocalThreat,
+    RuinRisk,
+    DeclineRisk,
     Contested,
     Occupied,
     Unsupplied,

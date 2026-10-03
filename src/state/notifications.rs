@@ -1,10 +1,15 @@
 //! Durable, observer-safe campaign event receipts and local delivery choices.
 
+mod view;
+pub use view::{
+    NotificationGroup, NotificationProjection, NotificationSettingsCategory, NotificationTab,
+    RenderedNotification,
+};
+
 use crate::{
     data::{
         economy::Habitation,
         portraits::AppearanceDescriptor,
-        progression::TrainingDiscipline,
         world::{FactionId, FounderClass, PersonClass, RouteId, SiteId},
     },
     state::{
@@ -77,6 +82,8 @@ pub enum NotificationKind {
     ControlLost,
     ContestEntered,
     ContestCleared,
+    LocalThreatStarted,
+    LocalThreatCleared,
     OccupationStarted,
     OccupationCleared,
     SiegeStarted,
@@ -103,7 +110,7 @@ pub enum NotificationKind {
 pub type NotificationType = NotificationKind;
 
 impl NotificationKind {
-    pub const ALL: [Self; 44] = [
+    pub const ALL: [Self; 46] = [
         Self::NewHero,
         Self::PersonClassCompleted,
         Self::PersonRecognized,
@@ -127,6 +134,8 @@ impl NotificationKind {
         Self::ControlLost,
         Self::ContestEntered,
         Self::ContestCleared,
+        Self::LocalThreatStarted,
+        Self::LocalThreatCleared,
         Self::OccupationStarted,
         Self::OccupationCleared,
         Self::SiegeStarted,
@@ -176,6 +185,8 @@ impl NotificationKind {
             | Self::ControlLost
             | Self::ContestEntered
             | Self::ContestCleared
+            | Self::LocalThreatStarted
+            | Self::LocalThreatCleared
             | Self::OccupationStarted
             | Self::OccupationCleared
             | Self::SiegeStarted
@@ -251,6 +262,8 @@ pub struct PersonNotificationSnapshot {
     pub id: PersonId,
     pub faction: FactionId,
     pub name: String,
+    #[serde(default)]
+    pub age_years: Option<u32>,
     pub class: FounderClass,
     pub site: Option<PlaceNotificationSnapshot>,
     pub army: Option<ArmyNotificationSnapshot>,
@@ -483,6 +496,11 @@ impl NotificationInbox {
             .max()
             .unwrap_or(0);
         let ids: BTreeSet<_> = self.receipts.iter().map(|receipt| receipt.id).collect();
+        let orders: BTreeSet<_> = self
+            .receipts
+            .iter()
+            .map(|receipt| receipt.occurred_order)
+            .collect();
         let sources: BTreeSet<_> = self
             .receipts
             .iter()
@@ -498,6 +516,7 @@ impl NotificationInbox {
             || self.next_order == 0
             || self.next_order <= max_order
             || ids.len() != self.receipts.len()
+            || orders.len() != self.receipts.len()
             || sources.len() != self.receipts.len()
             || max_active > rules.max_active_warnings
             || self.receipts.len() > rules.max_receipts.saturating_add(rules.max_active_warnings)
@@ -509,6 +528,7 @@ impl NotificationInbox {
         }
         for receipt in &self.receipts {
             if receipt.occurred_order == 0
+                || receipt.id.0 == 0
                 || receipt.occurred_sequence == 0
                 || (receipt.is_active && receipt.closed_round.is_some())
                 || (receipt.is_active && !receipt.kind.is_forecast())
@@ -516,6 +536,14 @@ impl NotificationInbox {
                     && receipt.kind.is_forecast()
                     && receipt.closed_round.is_none())
                 || (!receipt.kind.is_forecast() && receipt.closed_round.is_some())
+                || matches!(
+                    &receipt.source,
+                    NotificationSourceId::Transition { kind, .. }
+                        | NotificationSourceId::Warning { kind, .. }
+                        if *kind != receipt.kind
+                )
+                || (receipt.kind.is_forecast()
+                    && !matches!(&receipt.source, NotificationSourceId::Warning { .. }))
             {
                 return Err(
                     "campaign.notifications.receipts: invalid lifecycle or source order".into(),
@@ -531,6 +559,12 @@ impl NotificationInbox {
                 || (episode.active_receipt.is_some() && !episode.is_present)
                 || episode.active_receipt.is_some_and(|id| {
                     !ids.contains(&id)
+                        || self
+                            .receipts
+                            .iter()
+                            .filter(|receipt| receipt.is_active && receipt.id == id)
+                            .count()
+                            != 1
                         || self.receipt(id).is_none_or(|receipt| {
                             !receipt.is_active
                                 || receipt.kind != key.kind
@@ -552,6 +586,46 @@ impl NotificationInbox {
             {
                 return Err(
                     "campaign.notifications.warning_episodes: invalid active episode".into(),
+                );
+            }
+        }
+        for receipt in self.receipts.iter().filter(|receipt| receipt.is_active) {
+            let NotificationSourceId::Warning {
+                subject,
+                kind,
+                episode,
+            } = &receipt.source
+            else {
+                return Err(
+                    "campaign.notifications.receipts: active warning has no episode source".into(),
+                );
+            };
+            let warning_subject = match subject {
+                NotificationEntity::Site(id) => WarningSubject::Site(*id),
+                NotificationEntity::Construction(id) => WarningSubject::Construction(*id),
+                _ => {
+                    return Err("campaign.notifications.receipts: invalid warning subject".into());
+                }
+            };
+            let key = WarningKey {
+                subject: warning_subject,
+                kind: *kind,
+            };
+            if self
+                .warning_episodes
+                .iter()
+                .filter(|entry| entry.key == key && entry.active_receipt == Some(receipt.id))
+                .count()
+                != 1
+                || self
+                    .warning_episodes
+                    .iter()
+                    .find(|entry| entry.key == key)
+                    .is_none_or(|entry| entry.next_episode != episode.saturating_add(1))
+            {
+                return Err(
+                    "campaign.notifications.receipts: active warning episode is not reverse-linked"
+                        .into(),
                 );
             }
         }
@@ -587,12 +661,6 @@ impl NotificationInbox {
         let Some(receipt) = self.receipt_mut(id) else {
             return false;
         };
-        if !receipt.is_read
-            || receipt.is_active
-            || receipt.priority != NotificationPriority::Information
-        {
-            return false;
-        }
         let changed = !receipt.is_dismissed;
         receipt.is_dismissed = true;
         changed
@@ -691,69 +759,4 @@ impl NotificationPreferences {
     pub fn restore_defaults(&mut self) {
         self.choices.clear();
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RenderedNotification {
-    pub id: NotificationId,
-    pub kind: NotificationKind,
-    pub category: NotificationCategory,
-    pub priority: NotificationPriority,
-    pub completed_rounds: u32,
-    pub occurred_order: u64,
-    pub is_read: bool,
-    pub is_dismissed: bool,
-    pub is_active: bool,
-    pub title: String,
-    pub body: String,
-    pub subject: Option<NotificationSubjectSnapshot>,
-    pub detail: NotificationDetail,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct NotificationGroup {
-    pub kind: NotificationKind,
-    pub category: NotificationCategory,
-    pub priority: NotificationPriority,
-    pub completed_rounds: u32,
-    pub receipt_ids: Vec<NotificationId>,
-    pub unread_count: usize,
-    pub label: String,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct NotificationProjection {
-    pub rail: Vec<NotificationGroup>,
-    pub recent: Vec<RenderedNotification>,
-    pub unread_count: usize,
-    pub omitted_count: u64,
-    pub omitted_unread_count: u64,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationTab {
-    Recent,
-    Settings,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NotificationSettingsCategory {
-    All,
-    People,
-    Places,
-    Security,
-    Orders,
-    Military,
-    EconomyDiplomacy,
-    Remembrance,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct PersonCareerSnapshot {
-    pub person: PersonId,
-    pub class: PersonClass,
-    pub mentorship: Option<TrainingDiscipline>,
 }

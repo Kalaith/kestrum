@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::data::world::{Facility, MilitaryLayer};
+use crate::state::threat::ThreatStatus;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn collect(
@@ -11,6 +12,8 @@ pub(super) fn collect(
 ) -> Result<(), String> {
     control(before, candidate, data)?;
     territory_states(before, candidate, data)?;
+    site_reclamation(before, candidate, data)?;
+    local_threats(before, candidate, data)?;
     facilities(before, candidate, data)?;
     supply(before, candidate, data)?;
     economy(before, candidate, data)?;
@@ -155,6 +158,142 @@ fn territory_states(
             );
             append(candidate, data, draft)?;
         }
+    }
+    Ok(())
+}
+
+fn site_reclamation(
+    before: &StrategicCampaign,
+    candidate: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<(), String> {
+    let player = candidate.player;
+    let sites = before
+        .world
+        .sites
+        .iter()
+        .chain(candidate.world.sites.iter())
+        .map(|site| site.id)
+        .collect::<BTreeSet<_>>();
+    for id in sites {
+        if !before.site_is_ruined(id)
+            || candidate.site_is_ruined(id)
+            || candidate.world.site(id).and_then(|site| site.controller) != Some(player)
+        {
+            continue;
+        }
+        let Some(place) = super::place(candidate, id) else {
+            continue;
+        };
+        let draft = transition_draft(
+            candidate,
+            NotificationKind::SiteReclaimed,
+            NotificationEntity::Site(id),
+            Some(NotificationSubjectSnapshot::Place(place.clone())),
+            NotificationDetail::Place {
+                place,
+                before: Some("ruined".into()),
+                after: Some("outpost".into()),
+                cause: Some("reclaimed".into()),
+                forecast_round: None,
+                conditions: Vec::new(),
+            },
+        );
+        append(candidate, data, draft)?;
+    }
+    Ok(())
+}
+
+fn local_threats(
+    before: &StrategicCampaign,
+    candidate: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<(), String> {
+    let player = candidate.player;
+    let visible_before = crate::engine::visible_threats(before, player)
+        .into_iter()
+        .map(|threat| threat.id)
+        .collect::<BTreeSet<_>>();
+    let visible_after = crate::engine::visible_threats(candidate, player)
+        .into_iter()
+        .map(|threat| threat.id)
+        .collect::<BTreeSet<_>>();
+    let ids = before
+        .threats
+        .keys()
+        .chain(candidate.threats.keys())
+        .copied()
+        .collect::<BTreeSet<_>>();
+    for id in ids {
+        let started = visible_after.contains(&id)
+            && !visible_before.contains(&id)
+            && candidate
+                .threats
+                .get(&id)
+                .is_some_and(|threat| threat.status == ThreatStatus::Active);
+        let cleared = visible_before.contains(&id)
+            && before
+                .threats
+                .get(&id)
+                .is_some_and(|threat| threat.status == ThreatStatus::Active)
+            && candidate
+                .threats
+                .get(&id)
+                .is_none_or(|threat| threat.status != ThreatStatus::Active)
+            && crate::engine::threats::threat_site_observed(
+                candidate,
+                player,
+                candidate
+                    .threats
+                    .get(&id)
+                    .or_else(|| before.threats.get(&id))
+                    .expect("visible threat exists before or after")
+                    .site,
+            );
+        let (kind, site, threat_name) = if started {
+            let threat = candidate.threats.get(&id).expect("visible threat exists");
+            (
+                NotificationKind::LocalThreatStarted,
+                threat.site,
+                threat.name.clone(),
+            )
+        } else if cleared {
+            let threat = before.threats.get(&id).expect("known threat exists");
+            (
+                NotificationKind::LocalThreatCleared,
+                threat.site,
+                threat.name.clone(),
+            )
+        } else {
+            continue;
+        };
+        let place_campaign = if started { &*candidate } else { before };
+        let Some(place) = super::place(place_campaign, site) else {
+            continue;
+        };
+        let source = NotificationSourceId::Transition {
+            accepted_sequence: candidate.accepted_sequence.max(1),
+            kind,
+            subject: NotificationEntity::Site(site),
+            ordinal: id.0,
+        };
+        let round = candidate.completed_rounds;
+        let sequence = candidate.accepted_sequence;
+        append(
+            candidate,
+            data,
+            NotificationDraft {
+                source,
+                kind,
+                round,
+                sequence,
+                subject: Some(NotificationSubjectSnapshot::Place(place)),
+                detail: NotificationDetail::Facts {
+                    values: BTreeMap::from([("threat".into(), threat_name)]),
+                },
+                active: false,
+            },
+        )?;
     }
     Ok(())
 }

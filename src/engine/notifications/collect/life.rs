@@ -5,7 +5,7 @@ use crate::state::{
     history::{AnniversarySubject, HistoryKind, LifeEvent},
     legacy::{LegacyItemCustody, LegacyItemId},
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn collect(
     before: &StrategicCampaign,
@@ -13,10 +13,34 @@ pub(super) fn collect(
     data: &GameData,
     outcome: &ActionOutcome,
 ) -> Result<(), String> {
-    for id in &outcome.life_events {
-        let Some(record) = candidate.history.events.get(id) else {
-            continue;
-        };
+    let life_records = outcome
+        .life_events
+        .iter()
+        .filter_map(|id| candidate.history.events.get(id).cloned())
+        .collect::<Vec<_>>();
+    let emerged_people = life_records
+        .iter()
+        .filter_map(|record| match &record.kind {
+            HistoryKind::Life {
+                person,
+                event: LifeEvent::Emerged { .. },
+                ..
+            } => Some(*person),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let recognitions = life_records
+        .iter()
+        .filter_map(|record| match &record.kind {
+            HistoryKind::Life {
+                person,
+                event: LifeEvent::Recognized { epithet, cause },
+                ..
+            } => Some((*person, (epithet.clone(), *cause))),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    for record in &life_records {
         let HistoryKind::Life {
             owner,
             person,
@@ -33,6 +57,9 @@ pub(super) fn collect(
         else {
             continue;
         };
+        if matches!(event, LifeEvent::Recognized { .. }) && emerged_people.contains(person) {
+            continue;
+        }
         let kind = match event {
             LifeEvent::Emerged { .. } => Some(NotificationKind::NewHero),
             LifeEvent::Arrived { .. } => Some(NotificationKind::PersonArrived),
@@ -44,21 +71,20 @@ pub(super) fn collect(
         };
         let Some(kind) = kind else { continue };
         let (reason_key, reason) = match event {
-            LifeEvent::Emerged { troop } => (
-                Some("emerged".into()),
-                Some(format!("troop_{troop:?}").to_lowercase()),
-            ),
-            LifeEvent::Arrived { origin } => (
-                Some("arrived".into()),
-                Some(format!("origin_{origin:?}").to_lowercase()),
-            ),
+            LifeEvent::Emerged { troop } => recognitions
+                .get(person)
+                .map(|(epithet, _)| (Some("emerged_and_recognized".into()), Some(epithet.clone())))
+                .unwrap_or_else(|| (Some("emerged".into()), Some(troop_key(*troop).into()))),
+            LifeEvent::Arrived { origin } => {
+                (Some("arrived".into()), Some(origin_key(*origin).into()))
+            }
             LifeEvent::ClassCompleted { class } => (
                 Some("class_completed".into()),
-                Some(format!("class_{class:?}").to_lowercase()),
+                Some(class_key(*class).into()),
             ),
             LifeEvent::Recognized { epithet, cause } => (
-                Some("recognized".into()),
-                Some(format!("{epithet}|{cause:?}")),
+                Some(format!("recognized_{cause:?}").to_lowercase()),
+                Some(epithet.clone()),
             ),
             LifeEvent::Retired => (Some("retired".into()), None),
             LifeEvent::NaturalDeath => (Some("natural_death".into()), None),
@@ -88,36 +114,43 @@ pub(super) fn collect(
     }
     succession(before, candidate, data, outcome)?;
     career_opportunities(before, candidate, data)?;
-    anniversaries(candidate, data, outcome)?;
-    legacy_transfers(candidate, data, outcome, &outcome.legacy_items_changed)?;
+    anniversaries(before, candidate, data, outcome)?;
+    legacy_transfers(
+        before,
+        candidate,
+        data,
+        outcome,
+        &outcome.legacy_items_changed,
+    )?;
     Ok(())
 }
 
 fn anniversaries(
+    before: &StrategicCampaign,
     campaign: &mut StrategicCampaign,
     data: &GameData,
     outcome: &ActionOutcome,
 ) -> Result<(), String> {
-    for subject in &outcome.anniversary_reminders {
-        let Some(record) = campaign
-            .history
-            .events
-            .values()
-            .find(|record| {
-                record.visible_to.contains(&campaign.player)
-                    && matches!(
-                        &record.kind,
-                        HistoryKind::Anniversary { subject: candidate, .. } if candidate == subject
-                    )
-            })
-            .cloned()
-        else {
+    let records = campaign
+        .history
+        .events
+        .values()
+        .filter(|record| record.id >= before.next_ids.history)
+        .filter(|record| {
+            record.visible_to.contains(&campaign.player)
+                && matches!(
+                    &record.kind,
+                    HistoryKind::Anniversary { subject, .. }
+                        if outcome.anniversary_reminders.contains(subject)
+                )
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    for record in records {
+        let HistoryKind::Anniversary { subject, years } = record.kind else {
             continue;
         };
-        let HistoryKind::Anniversary { years, .. } = record.kind else {
-            continue;
-        };
-        let subject_snapshot = match subject {
+        let subject_snapshot = match &subject {
             AnniversarySubject::Person(id) => super::person(campaign, *id)
                 .map(|snapshot| NotificationSubjectSnapshot::Person(Box::new(snapshot))),
             AnniversarySubject::Site(id) => {
@@ -149,41 +182,50 @@ fn anniversaries(
 }
 
 fn legacy_transfers(
+    before: &StrategicCampaign,
     campaign: &mut StrategicCampaign,
     data: &GameData,
     outcome: &ActionOutcome,
     changed: &[LegacyItemId],
 ) -> Result<(), String> {
-    for item_id in changed {
+    let changed = changed
+        .iter()
+        .copied()
+        .collect::<std::collections::BTreeSet<_>>();
+    let records = campaign
+        .history
+        .events
+        .values()
+        .filter(|record| record.id >= before.next_ids.history)
+        .filter(|record| {
+            record.visible_to.contains(&campaign.player)
+                && matches!(
+                    &record.kind,
+                    HistoryKind::ItemCustodyChanged { item, .. } if changed.contains(item)
+                )
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    for record in records {
+        let HistoryKind::ItemCustodyChanged {
+            item: item_id,
+            from,
+            to,
+        } = record.kind
+        else {
+            continue;
+        };
         let Some(item) = campaign
             .legacy_items
-            .get(item_id)
+            .get(&item_id)
             .filter(|item| item.faction == campaign.player)
         else {
             continue;
         };
-        let Some(record) = campaign
-            .history
-            .events
-            .values()
-            .find(|record| {
-                record.visible_to.contains(&campaign.player)
-                    && matches!(
-                        &record.kind,
-                        HistoryKind::ItemCustodyChanged { item, .. } if item == item_id
-                    )
-            })
-            .cloned()
-        else {
-            continue;
-        };
-        let HistoryKind::ItemCustodyChanged { from, to, .. } = record.kind else {
-            continue;
-        };
         let details = BTreeMap::from([
             ("item".into(), item.name.clone()),
-            ("from".into(), custody_key(from)),
-            ("to".into(), custody_key(to)),
+            ("from".into(), custody_label(before, campaign, data, from)),
+            ("to".into(), custody_label(before, campaign, data, to)),
         ]);
         append(
             campaign,
@@ -205,10 +247,63 @@ fn legacy_transfers(
     Ok(())
 }
 
-fn custody_key(custody: LegacyItemCustody) -> String {
+fn custody_label(
+    before: &StrategicCampaign,
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    custody: LegacyItemCustody,
+) -> String {
     match custody {
-        LegacyItemCustody::Person(id) => format!("person_{}", id.0),
-        LegacyItemCustody::SiteEstate(id) => format!("site_{}", id.0),
+        LegacyItemCustody::Person(id) => super::person(campaign, id)
+            .or_else(|| super::person(before, id))
+            .map(|person| person.name)
+            .unwrap_or_else(|| authored_unknown_subject(data)),
+        LegacyItemCustody::SiteEstate(id) => super::place(campaign, id)
+            .or_else(|| super::place(before, id))
+            .map(|place| place.name)
+            .unwrap_or_else(|| authored_unknown_subject(data)),
+    }
+}
+
+fn authored_unknown_subject(data: &GameData) -> String {
+    data.notifications
+        .terms
+        .get("ui_unknown_subject")
+        .cloned()
+        .unwrap_or_else(|| "Unknown subject".into())
+}
+
+fn troop_key(troop: crate::data::economy::TroopKind) -> &'static str {
+    use crate::data::economy::TroopKind;
+    match troop {
+        TroopKind::Warriors => "troop_warriors",
+        TroopKind::Spearmen => "troop_spearmen",
+        TroopKind::Archers => "troop_archers",
+        TroopKind::Riders => "troop_riders",
+        TroopKind::Medics => "troop_medics",
+        TroopKind::SiegeEngines => "troop_siege_engines",
+    }
+}
+
+fn origin_key(origin: crate::state::relationships::FamilyOrigin) -> &'static str {
+    use crate::state::relationships::FamilyOrigin;
+    match origin {
+        FamilyOrigin::Birth => "origin_birth",
+        FamilyOrigin::AdoptedWard => "origin_adopted_ward",
+        FamilyOrigin::LocalApprentice => "origin_local_apprentice",
+    }
+}
+
+fn class_key(class: crate::data::world::PersonClass) -> &'static str {
+    use crate::data::world::PersonClass;
+    match class {
+        PersonClass::Recruit => "class_recruit",
+        PersonClass::Infantry => "class_infantry",
+        PersonClass::Archer => "class_archer",
+        PersonClass::Scout => "class_scout",
+        PersonClass::Cavalry => "class_cavalry",
+        PersonClass::Medic => "class_medic",
+        PersonClass::Officer => "class_officer",
     }
 }
 
@@ -299,12 +394,23 @@ fn career_opportunities(
     data: &GameData,
 ) -> Result<(), String> {
     let mut newly_eligible = Vec::new();
+    let minimum_age = data.households.service_minimum_age_years;
     for person in candidate
         .people
         .values()
         .filter(|person| person.faction == candidate.player && person.is_alive())
     {
         let previous = before.people.get(&person.id);
+        let age = person.age_years(candidate.completed_rounds);
+        let entered_service_age = previous.is_some_and(|previous| {
+            previous.age_years(before.completed_rounds) < minimum_age && age >= minimum_age
+        });
+        if previous == Some(person) && !entered_service_age {
+            continue;
+        }
+        if age < minimum_age {
+            continue;
+        }
         let before_options = if previous.is_some() {
             crate::engine::progression::career_options(before, data, person.id)
                 .map_err(|error| error.to_string())?
@@ -316,17 +422,14 @@ fn career_opportunities(
         let classes: Vec<_> = after
             .iter()
             .filter(|option| {
-                if option.class == person.class
-                    || person.age_years(candidate.completed_rounds) < 17
-                    || !requirements_satisfied(&option.requirements)
-                {
+                if option.class == person.class || !requirements_satisfied(&option.requirements) {
                     return false;
                 }
                 let previously_satisfied = before_options
                     .iter()
                     .find(|old| old.class == option.class)
                     .is_some_and(|old| requirements_satisfied(&old.requirements));
-                !previously_satisfied
+                !previously_satisfied || entered_service_age
             })
             .map(|option| option.class)
             .collect();

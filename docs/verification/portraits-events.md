@@ -120,8 +120,8 @@ artwork remain unstaged at this portrait migration commit boundary.
 ## Revised artwork direction
 
 The user rejected the flat vector proof in favor of the supplied detailed
-tactical-RPG portrait reference. Its experimental source and exports are preserved
-in place and are not production-approved. A built-in imagegen concept demonstrates
+tactical-RPG portrait reference. Its experimental vector source is retained, while
+the illustrated exporter replaces the rejected runtime exports. A built-in imagegen concept demonstrates
 a richer illustrated direction; it is not an interchangeable production layer
 set. An explicitly configured Astra high review recommends detailed near-front
 art on the existing rig, with real aligned face/eye/nose/hair assets and mask QA.
@@ -134,6 +134,107 @@ are retained with the artwork sources. This concept is a reference for component
 production; it does not prove aligned layers, thumbnail recognition or runtime
 rendering. Runtime integration and the release artwork remain pending.
 
+## Illustrated component proof
+
+The cleaner anime direction is now represented by real transparent components,
+not just the concept sheet. The G02 export review composited all 336 legal color
+combinations across its 24 geometry tuples. It validated 111 runtime PNGs and 44
+aligned source/mask pairs. The reviewed [40/64/128px contact sheet](portrait_contact_sheet.png)
+is 880x1814 pixels; its G02 SHA256 is
+`F229E7D013FE52D09CB53F9FE8B578893CA69146B0A02B69D9BDFD6FB5D15439`.
+The illustrated exporter replaces the rejected vector exports; retained source
+code is not an approval of that earlier treatment.
+
+The lead accepted the crisp contours, illustrated hair and restrained shading as
+the production direction. The near pair differing only in face silhouette is
+subtle at 40px, and dark hair/skin on the dark surface is subdued at 64px. These
+are observed limits, not evidence of human recognition or campaign-wide perceptual
+uniqueness. The bounded G03 expansion adds rounder features and varied hair
+silhouettes while preserving the approved G02 exported bytes. Runtime compositor
+parity, integrated UI captures and the full release matrix remain pending.
+
+## Event and rendering integration review
+
+The integrated full `test --locked --no-fail-fast` run reached every target.
+All targets passed except the documented seed-88 victory-cap case and two new
+notification fixture failures. The seed-88 outcome remained round 240 with
+factions 1 and 2 independent and factions 3 and 4 eliminated (69.23 seconds).
+The 400-round replay passed in 160.96 seconds. These timings are observations,
+not a controlled performance comparison.
+
+The notification fixture review corrected suppression-cutoff expectations and
+used an actual blocking threat to exercise facility forecast clearance. It also
+exposed a production issue: an undelivered construction warning could lose its
+episode counter while its order remained open. Retention now preserves that
+counter until the order closes, with explicit clear/recur assertions for both
+delivered and capacity-omitted warnings. Validation of this correction and hidden
+runtime captures are in progress; the earlier full run does not validate this
+later change.
+
+After that correction, formatting, strict all-target/all-feature Clippy, the
+source-size gate and all 19 focused event tests passed. The first hidden native
+capture attempt used the shared wrapper with the release binary, `-SkipBuild`,
+`-Frames 20`, `-WindowWidth 1920`, and `-WindowHeight 1080` for `notifications`,
+`notification_details`, `notification_warning`, `notification_settings`, and
+`notifications_dense`. No `-Visible` or `-Fullscreen` option was passed.
+Kestrum's capture assertion at `src/game/spatial_capture.rs:171` measured a
+1920x1061 framebuffer, 19 pixels shorter than the requested 1920x1080. The audit
+stopped before writing any of the five screenshots. Game PID 24052 and wrapper
+PID 24160 both exited; the wrapper removed its temporary scene manifest. Its
+failed-run diagnostic files remain at `.capture_stdout_24160.log` (0 bytes) and
+`.capture_stderr_24160.log` (247 bytes) until the sizing repair is proven. No
+fullscreen or visible-window retry was attempted. An exact hidden-client resize
+fix is being made in the shared capture tool, and the captures remain
+unverified.
+
+The illustrated source/export checkpoint is committed as `36cea85`. Its 111
+frozen layer files are not yet enabled by the runtime catalog. The source set
+also includes the authored expansion masters; release-matrix validation remains
+pending. The reference compositor produced the durable 128px/256px fixtures
+documented in [the art notes](../portrait-art.md).
+
+## Current event-engine checkpoint
+
+The current focused run passes all 20 notification tests: six shared-boundary
+forecast cases plus receipt/lifecycle, Attention, migration, movement,
+transaction and warning-retention regressions. The added decline/ruin case
+establishes a real owned observer at the subject site, checks the conditional
+receipt, then compares an unchanged seasonal boundary with recovery before that
+boundary. The authored habitation sequence is Village to Hamlet. Early fixture
+failures omitted observation or expected Camp; they did not justify changing the
+game's visibility or development rules.
+Separate cases retain independent coverage for save migration, observer boundaries,
+continued movement, construction ordering and omitted-warning recurrence; these
+failure modes warrant more than the five-case feature target.
+
+The 11 current CPU rendering cases pass. The Rust compositor matches every
+reference alpha and premultiplied RGB byte at both 128px and 256px (maximum
+delta zero). Metadata-only tests explicitly use the frozen legacy catalog now
+that the current v1 catalog enables real artwork. Formatting, strict Clippy and
+the source-size gate pass. The mandatory post-fixture full rerun completed with
+exactly the documented seed-88 round-240 victory-cap failure; all other targets
+passed, including all 15 portrait identity tests and the 400-round replay
+(149.43 seconds). The user explicitly allowed this documented baseline exception
+for validated slices. This is not a full-suite pass. The no-argument publisher
+remains unrun because it can update an external deployment record and the user
+prohibited publication and external tracker writes.
+
+The first resize repair still measured 1920x1061, before any scene rendered.
+The second repair preserves visibility, focus and stacking order while skipping
+the hidden window's default size-clamping message. Its targeted toolkit test
+and strict Clippy pass. The subsequent hidden run produced eight verified
+1920x1080 PNGs before an inherited battle-capture fixture failed in
+portraits_known. A separate hidden run produced missing-source, life-history
+and Career captures at the same dimensions. Both game processes exited.
+The runtime reports a 1920x1080 canvas at DPI 1. No visible or fullscreen
+retry was used. The remaining known-enemy scene needs its real-battle fixture
+repaired; the first visual review also found rail/settings label clipping.
+
+Before the rendering code is committed, its tests will be moved onto a public
+production rendering API. The current private test-module declarations under
+src/game/portraits/ do not satisfy the shared test-placement standard. This
+correction is separate from the event-engine checkpoint.
+
 ## Verification boundaries
 
 All rendering checks must remain headless, use the supported 1920×1080 canvas,
@@ -143,4 +244,4 @@ Automated checks do not establish human portrait recognition, human playtesting,
 or physical-touch verification.
 
 Implementation and integrated verification are in progress. This document does
-not yet claim feature acceptance, rendered artwork, or a full-suite pass.
+not yet claim feature acceptance or a full-suite pass.

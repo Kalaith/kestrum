@@ -177,6 +177,8 @@ fn attention_row(
         AttentionKind::Siege => "map_attention_siege",
         AttentionKind::HostileContact => "map_attention_contact",
         AttentionKind::LocalThreat => "map_attention_threat",
+        AttentionKind::RuinRisk => "map_attention_ruin",
+        AttentionKind::DeclineRisk => "map_attention_decline",
         AttentionKind::Contested => "map_attention_contested",
         AttentionKind::Occupied => "map_attention_occupied",
         AttentionKind::Unsupplied => "map_attention_unsupplied",

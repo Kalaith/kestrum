@@ -1,6 +1,7 @@
 //! Plan each site's natural change, then route displaced people from fixed budgets.
 
 use super::*;
+use super::{DevelopmentForecast, DevelopmentStepState};
 use conditions::LocalConditions;
 
 pub(crate) fn resolve(
@@ -55,26 +56,64 @@ fn plan(
     c: &LocalConditions,
 ) -> Result<SitePlan, RuleError> {
     let site = campaign.world.site(id).expect("snapshot site");
+    plan_step(
+        campaign.completed_rounds,
+        data,
+        site,
+        DevelopmentStepState {
+            development: campaign.world.development[&id].clone(),
+            population: campaign.world.population[&id],
+            habitation: site.habitation,
+            damage: campaign.world.structural_damage(id),
+            occupation: campaign.world.occupation.get(&id).copied().unwrap_or(0),
+            fort_damage: campaign.world.fort_damage.get(&id).copied().unwrap_or(0),
+        },
+        c,
+    )
+}
+
+pub(crate) fn forecast_step(
+    round: u32,
+    data: &GameData,
+    site: &Site,
+    state: DevelopmentStepState,
+    c: &LocalConditions,
+) -> Result<DevelopmentForecast, RuleError> {
+    let plan = plan_step(round, data, site, state, c)?;
+    Ok(DevelopmentForecast {
+        habitation: plan.habitation,
+        ruined: plan.state.ruined,
+    })
+}
+
+fn plan_step(
+    round: u32,
+    data: &GameData,
+    site: &Site,
+    initial: DevelopmentStepState,
+    c: &LocalConditions,
+) -> Result<SitePlan, RuleError> {
+    let id = site.id;
     let mut plan = SitePlan {
         id,
-        state: campaign.world.development[&id].clone(),
-        population: campaign.world.population[&id],
-        habitation: site.habitation,
-        damage: campaign.world.structural_damage(id),
-        occupation: campaign.world.occupation.get(&id).copied().unwrap_or(0),
-        fort_damage: campaign.world.fort_damage.get(&id).copied().unwrap_or(0),
+        state: initial.development,
+        population: initial.population,
+        habitation: initial.habitation,
+        damage: initial.damage,
+        occupation: initial.occupation,
+        fort_damage: initial.fort_damage,
         receipts: Vec::new(),
     };
-    if plan.state.last_resolved_round == Some(campaign.completed_rounds) {
+    if plan.state.last_resolved_round == Some(round) {
         return Ok(plan);
     }
-    plan.state.last_resolved_round = Some(campaign.completed_rounds);
+    plan.state.last_resolved_round = Some(round);
     // Construction has already applied its conserved settlers and reclamation this boundary.
-    if site.habitation != c.habitation || plan.state.ruined != c.ruined {
+    if plan.habitation != c.habitation || plan.state.ruined != c.ruined {
         return Ok(plan);
     }
     if !c.ruined {
-        pressure(campaign, data, c, &mut plan)?;
+        pressure(round, data, site, c, &mut plan)?;
     }
     population(data, site, c, &mut plan)?;
     repair(data, c, &mut plan);
@@ -83,15 +122,15 @@ fn plan(
 }
 
 fn pressure(
-    campaign: &StrategicCampaign,
+    round: u32,
     data: &GameData,
+    site: &Site,
     c: &LocalConditions,
     plan: &mut SitePlan,
 ) -> Result<(), RuleError> {
     let rules = &data.development;
     plan.state.pressure = (plan.state.pressure + conditions::contribution(data, c))
         .clamp(rules.pressure.minimum, rules.pressure.maximum);
-    let site = campaign.world.site(plan.id).expect("site");
     let next = if plan.state.pressure >= rules.pressure.upgrade_threshold {
         next_tier(c.habitation).filter(|next| {
             *next <= maximum_habitation(data, site)
@@ -132,7 +171,7 @@ fn pressure(
                 field: "ruination identity",
             })?;
         plan.state.ruined = true;
-        plan.state.ruined_round = Some(campaign.completed_rounds);
+        plan.state.ruined_round = Some(round);
         plan.state.threat_created = false;
         plan.state.lawless_rounds = 0;
         plan.receipts.push(DevelopmentReceipt::Ruined {

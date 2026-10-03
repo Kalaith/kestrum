@@ -111,6 +111,8 @@ pub enum MovementEncounter {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MovementOutcome {
+    /// The order's requested endpoint, distinct from a route saved across turns.
+    pub requested_destination: Option<SiteId>,
     pub planned_destination: Option<SiteId>,
     pub battle: Option<BattleId>,
     pub armies: Vec<ArmyId>,

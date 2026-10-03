@@ -4,6 +4,18 @@ use super::*;
 use crate::state::world::CampaignWorld;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Clone, Copy)]
+pub(super) struct SettlerTransfer {
+    pub(super) source: SiteId,
+    pub(super) target: SiteId,
+    pub(super) count: u32,
+}
+
+pub(super) enum ForecastSource {
+    Known(Option<SettlerTransfer>),
+    Unknown(BTreeSet<SiteId>),
+}
+
 pub(super) struct SettlerSnapshot {
     world: CampaignWorld,
     remaining: BTreeMap<SiteId, u32>,
@@ -89,6 +101,78 @@ impl SettlerSnapshot {
         None
     }
 
+    pub(super) fn forecast_source(
+        &self,
+        data: &GameData,
+        supply: &SupplySnapshot,
+        order: &ConstructionOrder,
+        observed: &BTreeSet<SiteId>,
+        uncertain_budgets: &BTreeSet<SiteId>,
+    ) -> ForecastSource {
+        let ConstructionTarget::Site(target) = order.target else {
+            return ForecastSource::Known(None);
+        };
+        let reachable = self.reachable_sites(supply, order.owner, target);
+        let potential_donors = reachable
+            .iter()
+            .copied()
+            .filter(|id| *id != target)
+            .collect::<BTreeSet<_>>();
+        // Do not derive uncertainty from unseen settlement state. Every
+        // reachable owned site may affect donor selection until it is observed.
+        if reachable.iter().any(|id| !observed.contains(id)) {
+            return ForecastSource::Unknown(potential_donors);
+        }
+        let donors = reachable
+            .iter()
+            .copied()
+            .filter(|id| *id != target)
+            .filter(|id| {
+                let site = self.world.site(*id).expect("reachable donor");
+                site.habitation != Habitation::Unsettled
+                    && !self.world.development[id].ruined
+                    && self.remaining[id] > 0
+            })
+            .collect::<BTreeSet<_>>();
+        if donors.is_empty() {
+            return ForecastSource::Known(None);
+        }
+        if donors.iter().any(|id| uncertain_budgets.contains(id)) {
+            return ForecastSource::Unknown(donors);
+        }
+        ForecastSource::Known(self.source(data, supply, order).map(|(source, count)| {
+            SettlerTransfer {
+                source,
+                target,
+                count,
+            }
+        }))
+    }
+
+    fn reachable_sites(
+        &self,
+        supply: &SupplySnapshot,
+        owner: FactionId,
+        target: SiteId,
+    ) -> BTreeSet<SiteId> {
+        let mut reachable = BTreeSet::from([target]);
+        let mut queue = vec![target];
+        while let Some(id) = queue.pop() {
+            for adjacent in self.world.adjacent_sites(id) {
+                if supply.contains(owner, adjacent)
+                    && self
+                        .world
+                        .site(adjacent)
+                        .is_some_and(|site| site.controller == Some(owner))
+                    && reachable.insert(adjacent)
+                {
+                    queue.push(adjacent);
+                }
+            }
+        }
+        reachable
+    }
+
     pub(super) fn transfer(
         &mut self,
         campaign: &mut StrategicCampaign,
@@ -102,6 +186,7 @@ impl SettlerSnapshot {
         let (source, count) = self.source(data, supply, order).ok_or_else(|| {
             RuleError::InvalidState("Eligible settlers disappeared during completion.".into())
         })?;
+        self.consume(source, count)?;
         let destination = campaign.world.population[&target]
             .checked_add(count)
             .ok_or(RuleError::Overflow {
@@ -112,7 +197,6 @@ impl SettlerSnapshot {
             .population
             .get_mut(&source)
             .expect("donor exists") -= count;
-        *self.remaining.get_mut(&source).expect("donor budget") -= count;
         campaign.world.population.insert(target, destination);
         let state = campaign
             .world
@@ -120,6 +204,14 @@ impl SettlerSnapshot {
             .get_mut(&source)
             .expect("donor development");
         state.displaced = state.displaced.saturating_sub(count);
+        Ok(())
+    }
+
+    pub(super) fn consume(&mut self, source: SiteId, count: u32) -> Result<(), RuleError> {
+        let remaining = self.remaining.get_mut(&source).expect("donor budget");
+        *remaining = remaining.checked_sub(count).ok_or_else(|| {
+            RuleError::InvalidState("Construction settler budget was already consumed.".into())
+        })?;
         Ok(())
     }
 }

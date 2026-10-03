@@ -1,13 +1,14 @@
 //! Frozen local conditions with simultaneous civilian changes at the seasonal boundary.
 
 mod commands;
-mod conditions;
+pub(crate) mod conditions;
 mod migration;
 mod progress;
 mod query;
 
 pub(crate) use commands::execute;
-pub(crate) use progress::resolve;
+pub(crate) use progress::{forecast_step, resolve};
+pub(crate) use query::observed_safety_sites;
 pub use query::{development_view, DevelopmentCause, DevelopmentView};
 
 use super::{actions::record_fact, ActionOutcome, Command, RuleError};
@@ -27,7 +28,34 @@ use crate::{
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) struct DevelopmentSnapshot {
-    conditions: BTreeMap<SiteId, conditions::LocalConditions>,
+    pub(crate) conditions: BTreeMap<SiteId, conditions::LocalConditions>,
+}
+
+#[derive(Clone)]
+pub(crate) struct DevelopmentStepState {
+    pub(crate) development: SiteDevelopment,
+    pub(crate) population: u32,
+    pub(crate) habitation: Habitation,
+    pub(crate) damage: u32,
+    pub(crate) occupation: u32,
+    pub(crate) fort_damage: u32,
+}
+
+pub(crate) struct DevelopmentForecast {
+    pub(crate) habitation: Habitation,
+    pub(crate) ruined: bool,
+}
+
+pub(crate) fn step_state(campaign: &StrategicCampaign, id: SiteId) -> DevelopmentStepState {
+    let site = campaign.world.site(id).expect("development site");
+    DevelopmentStepState {
+        development: campaign.world.development[&id].clone(),
+        population: campaign.world.population[&id],
+        habitation: site.habitation,
+        damage: campaign.world.structural_damage(id),
+        occupation: campaign.world.occupation.get(&id).copied().unwrap_or(0),
+        fort_damage: campaign.world.fort_damage.get(&id).copied().unwrap_or(0),
+    }
 }
 
 pub(crate) fn snapshot(campaign: &StrategicCampaign, data: &GameData) -> DevelopmentSnapshot {

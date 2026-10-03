@@ -18,6 +18,7 @@ pub struct NotificationRules {
     pub max_rail_items: usize,
     pub categories: BTreeMap<NotificationCategory, String>,
     pub kinds: BTreeMap<NotificationKind, NotificationKindRule>,
+    pub terms: BTreeMap<String, String>,
     pub first_use_help: String,
 }
 
@@ -95,6 +96,16 @@ impl NotificationRules {
                     "{SOURCE}: invalid copy, category or grouping for {kind:?}"
                 ));
             }
+        }
+        if self.terms.len() < 20
+            || self.terms.iter().any(|(key, label)| {
+                key.trim().is_empty()
+                    || key.chars().count() > 64
+                    || label.trim().is_empty()
+                    || label.chars().count() > 120
+            })
+        {
+            return Err(format!("{SOURCE}: invalid authored event terms"));
         }
         Ok(())
     }

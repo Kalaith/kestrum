@@ -48,6 +48,63 @@ pub fn baseline_current_conditions(
     Ok(())
 }
 
+pub(crate) fn collect_blocked_continuation(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    result: &crate::engine::MovementOutcome,
+) -> Result<(), String> {
+    if campaign.observer_mode {
+        return Ok(());
+    }
+    let Some(stop) = &result.stop else {
+        return Ok(());
+    };
+    let snapshots = result
+        .armies
+        .iter()
+        .filter_map(|id| army_snapshot(campaign, *id))
+        .collect::<Vec<_>>();
+    let Some(army) = snapshots.first().cloned() else {
+        return Ok(());
+    };
+    let destination = result
+        .requested_destination
+        .or(Some(stop.site))
+        .or_else(|| result.path.last().copied())
+        .and_then(|id| place(campaign, id));
+    let kind = NotificationKind::MovementBlocked;
+    let source = NotificationSourceId::Transition {
+        accepted_sequence: campaign.accepted_sequence.max(1),
+        kind,
+        subject: NotificationEntity::Army(army.id),
+        ordinal: 0,
+    };
+    let round = campaign.completed_rounds;
+    let sequence = campaign.accepted_sequence;
+    append(
+        campaign,
+        data,
+        NotificationDraft {
+            source,
+            kind,
+            round,
+            sequence,
+            subject: Some(NotificationSubjectSnapshot::Army(army)),
+            detail: NotificationDetail::Movement {
+                armies: snapshots,
+                destination,
+                cause: Some(format!("movement_{:?}", stop.reason).to_lowercase()),
+            },
+            active: false,
+        },
+    )?;
+    trim(campaign, data);
+    campaign
+        .validate(data)
+        .map_err(|error| format!("campaign after blocked movement: {error}"))?;
+    Ok(())
+}
+
 pub(super) struct NotificationDraft {
     pub source: NotificationSourceId,
     pub kind: NotificationKind,
@@ -179,29 +236,41 @@ pub(super) fn set_warning(
             let round = campaign.completed_rounds;
             let sequence = campaign.accepted_sequence;
             let snapshot = subject_snapshot_for_entity(campaign, subject.clone());
-            let id = append(
-                campaign,
-                data,
-                NotificationDraft {
-                    source: NotificationSourceId::Warning {
-                        subject: subject.clone(),
+            if episode == u32::MAX
+                || campaign
+                    .notifications
+                    .receipts
+                    .iter()
+                    .filter(|receipt| receipt.is_active)
+                    .count()
+                    >= data.notifications.max_active_warnings
+            {
+                omit_warning(campaign);
+                campaign.notifications.warning_episodes[index].next_episode =
+                    episode.saturating_add(1);
+            } else {
+                let id = append(
+                    campaign,
+                    data,
+                    NotificationDraft {
+                        source: NotificationSourceId::Warning {
+                            subject: subject.clone(),
+                            kind: key.kind,
+                            episode,
+                        },
                         kind: key.kind,
-                        episode,
+                        round,
+                        sequence,
+                        subject: snapshot,
+                        detail: detail.clone(),
+                        active: true,
                     },
-                    kind: key.kind,
-                    round,
-                    sequence,
-                    subject: snapshot,
-                    detail: detail.clone(),
-                    active: true,
-                },
-            )?;
-            if let Some(id) = id {
-                let episode = &mut campaign.notifications.warning_episodes[index];
-                episode.active_receipt = Some(id);
-                episode.next_episode = episode.next_episode.checked_add(1).ok_or_else(|| {
-                    "campaign.notifications: warning episode exhausted".to_owned()
-                })?;
+                )?;
+                if let Some(id) = id {
+                    let episode_state = &mut campaign.notifications.warning_episodes[index];
+                    episode_state.active_receipt = Some(id);
+                    episode_state.next_episode = episode.saturating_add(1);
+                }
             }
         } else if let Some(id) = active_receipt {
             if let Some(receipt) = campaign.notifications.receipt_mut(id) {
@@ -221,6 +290,12 @@ pub(super) fn set_warning(
         episode.is_present = false;
     }
     Ok(())
+}
+
+fn omit_warning(campaign: &mut StrategicCampaign) {
+    campaign.notifications.pruned_count = campaign.notifications.pruned_count.saturating_add(1);
+    campaign.notifications.pruned_unread_count =
+        campaign.notifications.pruned_unread_count.saturating_add(1);
 }
 
 fn warning_entity(subject: WarningSubject) -> NotificationEntity {
@@ -268,6 +343,7 @@ pub(super) fn person(
         id,
         faction: person.faction,
         name: person.name.clone(),
+        age_years: Some(person.age_years(campaign.completed_rounds)),
         class: person.class,
         site: site_id.and_then(|site| place(campaign, site)),
         army: army_id.and_then(|army| army_snapshot(campaign, army)),
@@ -361,7 +437,21 @@ fn trim(campaign: &mut StrategicCampaign, data: &GameData) {
             .notifications
             .receipts
             .iter()
-            .position(|receipt| !receipt.is_active)
+            .position(|receipt| !receipt.is_active && receipt.is_dismissed)
+            .or_else(|| {
+                campaign
+                    .notifications
+                    .receipts
+                    .iter()
+                    .position(|receipt| !receipt.is_active && receipt.is_read)
+            })
+            .or_else(|| {
+                campaign
+                    .notifications
+                    .receipts
+                    .iter()
+                    .position(|receipt| !receipt.is_active)
+            })
         else {
             break;
         };
@@ -369,7 +459,13 @@ fn trim(campaign: &mut StrategicCampaign, data: &GameData) {
         prune_count(campaign, &receipt);
     }
     campaign.notifications.warning_episodes.retain(|episode| {
-        episode.is_present
+        matches!(episode.key.subject, WarningSubject::Site(_))
+            || matches!(
+                episode.key.subject,
+                WarningSubject::Construction(id)
+                    if campaign.construction.get(&id).is_some_and(|order| order.is_open())
+            )
+            || episode.is_present
             || episode.active_receipt.is_some()
             || campaign.notifications.receipts.iter().any(|receipt| {
                 matches!(

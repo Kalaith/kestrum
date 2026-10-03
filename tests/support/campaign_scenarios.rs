@@ -182,7 +182,7 @@ pub(super) fn run_to_round(
 
     assert_eq!(campaign.completed_rounds, target);
     assert!(campaign.diplomacy.ending.is_none());
-    assert_eq!(campaign.world.markers.len(), 80);
+    assert_eq!(campaign.world.markers.len(), 152);
     assert_eq!(campaign.world.sites.len(), 152);
     assert_eq!(campaign.factions.len(), factions);
     assert!(campaign.history.events.len() <= data.history.detail_max_entries);

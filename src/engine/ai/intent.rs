@@ -65,6 +65,7 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
         Command::DeclareWar { faction } => (AiIntentKind::War, vec![faction.0]),
         Command::RelocateHeadquarters { site } => (AiIntentKind::Headquarters, vec![site.0]),
         Command::Resettle { from, to } => (AiIntentKind::Resettle, vec![from.0, to.0]),
+        Command::DevelopCity { site } => (AiIntentKind::CityDevelopment, vec![site.0]),
         _ => return progression(command),
     };
     Some(AiIntent { kind, targets })

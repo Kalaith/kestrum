@@ -37,6 +37,12 @@ impl Planner<'_> {
                 *focus,
             )
             .map(|_| ()),
+            Command::DevelopCity { site } => super::super::development::city_development_check(
+                self.campaign,
+                self.data,
+                self.owner,
+                *site,
+            ),
             _ => Ok(()),
         }
     }

@@ -16,12 +16,36 @@ pub struct DevelopmentRules {
     pub schema_version: u32,
     #[serde(deserialize_with = "unique_table")]
     pub geography_caps: BTreeMap<Geography, Habitation>,
+    pub city_development: CityDevelopmentRules,
     pub pressure: PressureRules,
     pub population: PopulationRules,
     pub conditions: ConditionRules,
     pub administration: AdministrationRules,
     pub income_focus_bonus_percent: u32,
     pub occupation_income_percent: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CityDevelopmentRules {
+    pub cost: Resources,
+    pub minimum_habitation: Habitation,
+    pub messages: CityDevelopmentMessages,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CityDevelopmentMessages {
+    pub ruined: String,
+    pub minimum_habitation: String,
+    pub already_city: String,
+    pub contested: String,
+    pub unsafe_site: String,
+    pub unsupplied: String,
+    pub occupation: String,
+    pub damaged: String,
+    pub adjacent_city: String,
+    pub city_advancement: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -116,6 +140,45 @@ impl DevelopmentRules {
                         .is_some_and(|cap| *cap >= Habitation::Village)
                 }),
             "must contain every geography with Village or higher capacity",
+        )?;
+        self.city_development
+            .cost
+            .validate(SOURCE, "city_development.cost")?;
+        require(
+            SOURCE,
+            "city_development.cost",
+            self.city_development.cost.gold > 0
+                || self.city_development.cost.wood > 0
+                || self.city_development.cost.stone > 0,
+            "must include a positive resource cost",
+        )?;
+        require(
+            SOURCE,
+            "city_development.minimum_habitation",
+            matches!(
+                self.city_development.minimum_habitation,
+                Habitation::Village | Habitation::Town
+            ),
+            "must be Village or Town",
+        )?;
+        require(
+            SOURCE,
+            "city_development.messages",
+            [
+                &self.city_development.messages.ruined,
+                &self.city_development.messages.minimum_habitation,
+                &self.city_development.messages.already_city,
+                &self.city_development.messages.contested,
+                &self.city_development.messages.unsafe_site,
+                &self.city_development.messages.unsupplied,
+                &self.city_development.messages.occupation,
+                &self.city_development.messages.damaged,
+                &self.city_development.messages.adjacent_city,
+                &self.city_development.messages.city_advancement,
+            ]
+            .iter()
+            .all(|message| !message.trim().is_empty()),
+            "all city development messages must be nonempty",
         )?;
         self.validate_pressure()?;
         self.validate_population()?;

@@ -81,6 +81,7 @@ pub(in crate::engine) fn validate_command(
         | Command::OfferPeace { .. }
         | Command::ClearThreat { .. }
         | Command::Resettle { .. }
+        | Command::DevelopCity { .. }
         | Command::RenameSite { .. }
         | Command::MoveCapital { .. }
         | Command::RelocateHeadquarters { .. }

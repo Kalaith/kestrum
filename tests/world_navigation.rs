@@ -287,25 +287,11 @@ fn assert_release_selection(
 
 #[test]
 fn entering_new_region_frames_its_known_entrance_then_retains_the_camera() {
-    use kestrum::{
-        data::{generation::ProductionSetup, rules::Emblem},
-        engine,
-        navigation::MAP_RECT,
-        state::StrategicCampaign,
-    };
+    use kestrum::{engine, navigation::MAP_RECT, state::StrategicCampaign};
     let data = GameData::load().unwrap();
-    let mut campaign = StrategicCampaign::new_production(
-        &data,
-        &ProductionSetup {
-            kingdom_name: "Northward".into(),
-            emblem: Emblem::Rose,
-            factions: 4,
-            seed: data.production_layout.default_seed,
-        },
-    )
-    .unwrap();
-    // Visiting external site 1 reveals this entrance through authored route 22.
-    let entrance = SiteId(1001);
+    let mut campaign = StrategicCampaign::new(&data).unwrap();
+    // A known authored entrance starts outside the working regional camera.
+    let entrance = SiteId(5);
     campaign
         .knowledge
         .explored

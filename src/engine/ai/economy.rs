@@ -227,6 +227,28 @@ impl Planner<'_> {
         self.focus()
     }
 
+    pub(super) fn develop_city(&self) -> Option<AiDecision> {
+        let cost = self.data.development.city_development.cost;
+        if !self.reserve(cost, 0, false) {
+            return None;
+        }
+        self.view
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                site.controller == Some(self.owner)
+                    && site.habitation >= self.data.development.city_development.minimum_habitation
+                    && site.habitation < Habitation::City
+            })
+            .find_map(|site| {
+                self.choose(
+                    Command::DevelopCity { site: site.id },
+                    self.objective.clone(),
+                )
+            })
+    }
+
     fn site_work(&self, army: &Army) -> Option<AiDecision> {
         let site = self.view.world.site(army.site)?;
         let target = ConstructionTarget::Site(site.id);

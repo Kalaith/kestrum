@@ -14,7 +14,12 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
                   River Settlement
 ```
 
-**Confirmed decision (O01):** the world map has 80 major nodes; regional internal sites are additional. The current authored production layout has 72 simple locations and eight regions of ten physical sites each, for 152 physical sites and 191 routes. Seeded setup assigns campaign contents to this geography. Each campaign preserves its graph and stable IDs while site contents change.
+**Current decision (2026-10-03):** new production campaigns begin with no regions.
+All 152 physical sites appear as country-map nodes. The eight older authored
+clusters supply geography, not pre-unlocked regions. Seeded setup assigns
+contents while retaining physical site IDs, connections and travel costs.
+Each eligible node can become a city through resource investment; cities must
+have at least one intervening node, regardless of who owns the other city.
 
 **Confirmed decision (D06):** a new settlement develops on an existing site, and a new road improves an existing connection. Visual density can increase substantially without changing graph topology. Persistent node and route identities support this rule.
 
@@ -24,7 +29,25 @@ The player begins from a headquarters or equivalent core territory. It initially
 
 Headquarters is a functional role. The capital is a separate, relocatable seat of government. Capital capture alone does not cause defeat: the implemented defeat check considers surviving settled holdings and military strength. See [kingdom outcomes](03-kingdoms-and-economy.md#victory-defeat-and-continuity).
 
-## Nested regions
+## City regions
+
+The country map is the main view. A functioning City or Major City unlocks a
+local view of its own node and connected countryside. This is another view of
+the same physical places, armies, ownership and resources, never extra land or
+duplicate income. Villages, outposts and other smaller settlements do not open
+regions. Decline below City, or ruination, closes regional access while retaining
+the places and their history. Resource investment makes city locations a player
+decision instead of an inherited map designation.
+
+The opening guide must develop the player's capital using the ordinary paid
+action, enter that capital's region, and return to the country before teaching
+movement. Capital is still an administrative role, not a starting City grant.
+
+The following nested-region boundary contract remains specific to the retained
+Rosemarch prototype and historical saves; it does not describe new production
+campaigns.
+
+## Authored prototype regions
 
 Some world nodes contain a local graph. Entering the region places the army on its internal map rather than capturing the whole region.
 

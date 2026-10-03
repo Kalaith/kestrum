@@ -38,9 +38,10 @@ and the latest scoped evidence take precedence over old milestone prose.
   Leaving restores the human campaign. See the [Observer screen brief](#observer)
   and [verification record](docs/verification/observer.md).
 - Production setup creates a seeded human kingdom with a name, botanical
-  emblem, 4–8 factions and 80 major markers. The current authored world has
-  eight ten-site regions and 152 physical sites. Rosemarch is a separate test
-  scenario.
+  emblem, 4–8 factions and 152 country-map nodes. New campaigns have no regions.
+  Every node can receive city investment once it reaches Village; a city cannot
+  directly neighbor another City or Major City. Rosemarch is a separate authored
+  test scenario.
 - Seasonal faction rounds use deterministic commands and state-owned randomness.
   Rivals recruit, move, build, fight and progress through the campaign rules.
   Pause, Step and Resume control their atomic actions.
@@ -123,9 +124,10 @@ dismissed or resumed from How to Play. Its replacement is M04 of the map plan.
 M01A provides spatial navigation; common management actions and full seasonal
 consequences still need M02's contextual inspector and outcome work. Saved routes
 retain their existing selection-based detail; an unselected force mark reports a
-queued route without displaying its full destination/path. All eight regional
-graphs still repeat the same ten-site chain, and their local view reuses the
-continental background. M03 owns that geography change.
+queued route without displaying its full destination/path. The current
+city-region change replaces the eight pre-unlocked production regions with
+country nodes and local views earned through investment. The underlying
+authored route clusters remain; broader route variety remains M03 work.
 
 These are known design problems addressed by the active plan. The map's full
 canvas and unclipped controls alone do not establish strategic readability.

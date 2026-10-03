@@ -1,6 +1,7 @@
 //! Instantiated fixed geography with campaign-owned mutable site contents.
 
 mod control;
+mod regions;
 mod supply;
 
 use crate::data::world::{

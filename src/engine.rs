@@ -76,7 +76,10 @@ pub use recovery::{recovery_preview, RecoveryPreview};
 pub use recruitment::{recruit_options, RecruitOption, RecruitmentResult};
 pub use transfer::person_site;
 
-pub use development::{development_view, DevelopmentCause, DevelopmentView};
+pub use development::{
+    city_development_option, development_view, CityDevelopmentOption, DevelopmentCause,
+    DevelopmentView,
+};
 pub use siege::{reconcile_sieges, siege_view, SiegeActionOption, SiegeView};
 pub use threats::{
     threat_preview, threat_view, visible_threats, ThreatArmyOption, ThreatPreview, ThreatView,

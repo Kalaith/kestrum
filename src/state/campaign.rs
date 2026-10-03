@@ -5,7 +5,7 @@ mod compatibility;
 use crate::data::{
     economy::{Resources, TroopKind},
     rules::Emblem,
-    world::{FactionId, MarkerId, Relation, RouteId, ScenarioKind, SiteId},
+    world::{FactionId, MarkerId, Relation, RouteId, ScenarioKind, SiteId, WorldLayout},
     GameData,
 };
 use macroquad_toolkit::rng::SeededRng;
@@ -283,7 +283,7 @@ pub struct StrategicCampaign {
 impl StrategicCampaign {
     pub fn new(data: &GameData) -> Result<Self, String> {
         data.validate()?;
-        Self::from_scenario(data, &data.scenario, &data.threats.initial)
+        Self::from_scenario(data, &data.scenario, &data.threats.initial, None)
     }
 
     /// Creates the authored scenario with every faction controlled by the AI.
@@ -300,7 +300,12 @@ impl StrategicCampaign {
     ) -> Result<Self, String> {
         data.validate()?;
         let generated = data.production_layout.generate(data, setup)?;
-        Self::from_scenario(data, &generated.scenario, &generated.initial_threats)
+        Self::from_scenario(
+            data,
+            &generated.scenario,
+            &generated.initial_threats,
+            Some(&generated.topology),
+        )
     }
 
     /// Creates a generated world for spectator play, with no human-controlled faction.
@@ -349,6 +354,7 @@ impl StrategicCampaign {
         data: &GameData,
         scenario: &crate::data::world::Scenario,
         initial_threats: &[crate::data::threats::InitialThreat],
+        production_topology: Option<&WorldLayout>,
     ) -> Result<Self, String> {
         let factions = scenario
             .factions
@@ -446,8 +452,10 @@ impl StrategicCampaign {
             relation.factions.sort();
         }
         if scenario.kind == ScenarioKind::Production {
-            campaign.world.layout_revision = data.production_layout.layout_revision;
-            campaign.world.atlas_paths = data.production_layout.atlas_paths.clone();
+            let topology =
+                production_topology.ok_or("production campaign is missing its derived topology")?;
+            campaign.world.layout_revision = topology.layout_revision;
+            campaign.world.atlas_paths = topology.atlas_paths.clone();
         }
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.initialize_diplomacy();

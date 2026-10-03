@@ -23,6 +23,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[City-created regions](city-regions.md) tracks the region-free opening, paid
+city development, spacing and capital tutorial, with check status recorded per
+implementation slice.
+
 [Capital fill and borders](capital-border-colours.md) records the local-control
 rendering correction and fresh/developed regional captures, with world political
 claims and fog unchanged.

@@ -13,6 +13,7 @@ pub(crate) fn execute(
     match command {
         Command::RenameSite { site, name } => rename(campaign, owner, site, name, outcome),
         Command::Resettle { from, to } => resettle(campaign, data, owner, from, to, outcome),
+        Command::DevelopCity { site } => develop_city(campaign, data, owner, site, outcome),
         Command::MoveCapital { site } => move_capital(campaign, data, owner, site, outcome),
         Command::RelocateHeadquarters { site } => relocate(campaign, data, owner, site, outcome),
         _ => Err(blocked("Choose a settlement administration order.")),
@@ -36,6 +37,19 @@ fn pay(
     owner: FactionId,
     required: Resources,
 ) -> Result<(), RuleError> {
+    can_pay(campaign, owner, required)?;
+    let balance = &mut campaign.factions.get_mut(&owner).expect("owner").resources;
+    balance.gold -= required.gold;
+    balance.wood -= required.wood;
+    balance.stone -= required.stone;
+    Ok(())
+}
+
+fn can_pay(
+    campaign: &StrategicCampaign,
+    owner: FactionId,
+    required: Resources,
+) -> Result<(), RuleError> {
     let available = campaign
         .factions
         .get(&owner)
@@ -50,11 +64,86 @@ fn pay(
             available,
         });
     }
-    let balance = &mut campaign.factions.get_mut(&owner).expect("owner").resources;
-    balance.gold -= required.gold;
-    balance.wood -= required.wood;
-    balance.stone -= required.stone;
     Ok(())
+}
+
+pub(crate) fn city_development_check(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    site: SiteId,
+) -> Result<(), RuleError> {
+    let location = owned(campaign, owner, site)?;
+    let rules = &data.development.city_development;
+    if campaign.site_is_ruined(site) {
+        return Err(blocked(&rules.messages.ruined));
+    }
+    if location.habitation < rules.minimum_habitation {
+        return Err(blocked(&rules.messages.minimum_habitation));
+    }
+    if location.habitation >= Habitation::City {
+        return Err(blocked(&rules.messages.already_city));
+    }
+    if campaign.world.contested_sites.contains(&site) || campaign.sieges.contains_key(&site) {
+        return Err(blocked(&rules.messages.contested));
+    }
+    let local = conditions::at(campaign, data, location);
+    if !local.safe {
+        return Err(blocked(&rules.messages.unsafe_site));
+    }
+    if !local.supplied {
+        return Err(blocked(&rules.messages.unsupplied));
+    }
+    if local.occupation >= data.development.conditions.occupation_threshold {
+        return Err(blocked(&rules.messages.occupation));
+    }
+    if local.damage >= data.economy.facility_failure_damage {
+        return Err(blocked(&rules.messages.damaged));
+    }
+    if campaign
+        .world
+        .adjacent_sites(site)
+        .into_iter()
+        .any(|neighbor| {
+            campaign
+                .world
+                .site(neighbor)
+                .is_some_and(|neighbor| neighbor.habitation >= Habitation::City)
+        })
+    {
+        return Err(blocked(&rules.messages.adjacent_city));
+    }
+    can_pay(campaign, owner, rules.cost)
+}
+
+fn develop_city(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+    site: SiteId,
+    outcome: &mut ActionOutcome,
+) -> Result<(), RuleError> {
+    city_development_check(campaign, data, owner, site)?;
+    let cost = data.development.city_development.cost;
+    let from = owned(campaign, owner, site)?.habitation;
+    pay(campaign, owner, cost)?;
+    campaign
+        .world
+        .sites
+        .iter_mut()
+        .find(|entry| entry.id == site)
+        .expect("validated site")
+        .habitation = Habitation::City;
+    record(
+        campaign,
+        outcome,
+        DevelopmentReceipt::HabitationChanged {
+            site,
+            owner: Some(owner),
+            from,
+            to: Habitation::City,
+        },
+    )
 }
 
 fn rename(

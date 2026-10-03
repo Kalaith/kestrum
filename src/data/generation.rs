@@ -26,6 +26,7 @@ pub struct ProductionSetup {
 pub struct GeneratedProduction {
     pub scenario: Scenario,
     pub initial_threats: Vec<InitialThreat>,
+    pub topology: WorldLayout,
 }
 
 impl ProductionSetup {
@@ -60,12 +61,13 @@ impl WorldLayout {
         setup.validate(data)?;
         data.rules.validate()?;
         self.validate(&data.rules, &data.economy)?;
+        let topology = self.flat_country_topology(&data.economy)?;
         let mut rng = SeededRng::new(setup.seed);
-        let mut candidates = self.headquarters_candidates.clone();
+        let mut candidates = topology.headquarters_candidates.clone();
         shuffle(&mut rng, &mut candidates);
         candidates.truncate(setup.factions);
 
-        let mut sites = self.sites.clone();
+        let mut sites = topology.sites.clone();
         let candidate_set: std::collections::BTreeSet<_> = candidates.iter().copied().collect();
         for site in &mut sites {
             if candidate_set.contains(&site.id) {
@@ -142,16 +144,16 @@ impl WorldLayout {
             }
         }
         let scenario = Scenario {
-            schema_version: self.schema_version,
-            content_version: self.content_version,
+            schema_version: topology.schema_version,
+            content_version: topology.content_version,
             kind: ScenarioKind::Production,
             name: "Kestrum Production Campaign".into(),
             seed: setup.seed,
             difficulty: data.rules.difficulty,
             player: FactionId(1),
-            markers: self.markers.clone(),
+            markers: topology.markers.clone(),
             sites,
-            routes: self.routes.clone(),
+            routes: topology.routes.clone(),
             factions,
             relations,
         };
@@ -162,6 +164,7 @@ impl WorldLayout {
         Ok(GeneratedProduction {
             scenario,
             initial_threats,
+            topology,
         })
     }
 }
@@ -237,28 +240,19 @@ fn production_threats(
                 faction.headquarters
             ));
         }
-        // Keep one first journey open inside the home region. Its other nearby
-        // threat waits one route farther out, rather than sealing both exits.
+        // Leave one direct neighbor clear so the first move can introduce travel.
         let home = scenario.site(faction.headquarters).unwrap();
-        let safe = neighbors
-            .iter()
-            .copied()
-            .filter(|id| {
+        let safe = neighbors.iter().copied().min_by_key(|id| {
+            (
                 scenario
-                    .site(*id)
-                    .is_some_and(|site| site.marker == home.marker)
-            })
-            .min_by_key(|id| {
-                (
-                    scenario
-                        .routes
-                        .iter()
-                        .find(|route| route.other_endpoint(home.id) == Some(*id))
-                        .map(|route| route.terrain_cost)
-                        .unwrap_or(u32::MAX),
-                    *id,
-                )
-            });
+                    .routes
+                    .iter()
+                    .find(|route| route.other_endpoint(home.id) == Some(*id))
+                    .map(|route| route.terrain_cost)
+                    .unwrap_or(u32::MAX),
+                *id,
+            )
+        });
         if let Some(safe) = safe {
             let mut farther: Vec<_> = scenario
                 .routes
@@ -282,8 +276,13 @@ fn production_threats(
                 .first()
                 .copied()
                 .ok_or("regional start needs a threat within two routes")?;
-            neighbors.retain(|id| *id != safe);
-            neighbors.truncate(1);
+            let exposed = neighbors
+                .iter()
+                .copied()
+                .find(|id| *id != safe)
+                .ok_or("headquarters needs a second neighboring threat site")?;
+            neighbors.clear();
+            neighbors.push(exposed);
             neighbors.push(next);
         }
         threats.push(InitialThreat {

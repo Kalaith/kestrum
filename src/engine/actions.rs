@@ -476,6 +476,7 @@ fn execute(
                 .battle_leader = leader;
         }
         command @ (Command::Resettle { .. }
+        | Command::DevelopCity { .. }
         | Command::RenameSite { .. }
         | Command::MoveCapital { .. }
         | Command::RelocateHeadquarters { .. }) => {

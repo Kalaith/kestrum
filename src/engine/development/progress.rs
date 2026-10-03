@@ -133,7 +133,8 @@ fn pressure(
         .clamp(rules.pressure.minimum, rules.pressure.maximum);
     let next = if plan.state.pressure >= rules.pressure.upgrade_threshold {
         next_tier(c.habitation).filter(|next| {
-            *next <= maximum_habitation(data, site)
+            *next != Habitation::City
+                && *next <= maximum_habitation(data, site)
                 && plan.population >= data.construction.population.minimum[next]
         })
     } else if plan.state.pressure <= -rules.pressure.downgrade_threshold {

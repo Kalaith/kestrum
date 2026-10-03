@@ -33,7 +33,7 @@ fn four_faction_production_campaign_reaches_and_keeps_a_real_defeat_ending() {
         .filter(|faction| *faction != player)
         .collect();
     assert_eq!(campaign.factions.len(), 4);
-    assert_eq!(campaign.world.markers.len(), 80);
+    assert_eq!(campaign.world.markers.len(), 152);
     assert_eq!(campaign.world.sites.len(), 152);
 
     // Put the ordinary AI policy at war with the unarmed player. The player

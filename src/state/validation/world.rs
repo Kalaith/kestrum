@@ -4,6 +4,16 @@ use crate::data::world::{MajorMarker, Route, Site};
 
 impl StrategicCampaign {
     pub(super) fn validate_world(&self, data: &GameData) -> Result<(), String> {
+        let flat_production =
+            if self.scenario_kind == ScenarioKind::Production && self.world.layout_revision == 4 {
+                Some(
+                    data.production_layout
+                        .flat_country_topology(&data.economy)?,
+                )
+            } else {
+                None
+            };
+        let authored_production = flat_production.as_ref().unwrap_or(&data.production_layout);
         let (markers, sites, routes): (&[_], &[_], &[_]) = match self.scenario_kind {
             ScenarioKind::RosemarchPrototype => (
                 &data.scenario.markers,
@@ -11,12 +21,12 @@ impl StrategicCampaign {
                 &data.scenario.routes,
             ),
             ScenarioKind::Production => (
-                &data.production_layout.markers,
-                &data.production_layout.sites,
-                &data.production_layout.routes,
+                &authored_production.markers,
+                &authored_production.sites,
+                &authored_production.routes,
             ),
         };
-        self.validate_layout_revision(data)?;
+        self.validate_layout_revision(data, flat_production.as_ref())?;
         require(
             self.world.sites.len() == sites.len()
                 && self.world.routes.len() == routes.len()
@@ -152,15 +162,20 @@ impl StrategicCampaign {
         Ok(())
     }
 
-    fn validate_layout_revision(&self, data: &GameData) -> Result<(), String> {
+    fn validate_layout_revision(
+        &self,
+        data: &GameData,
+        flat_production: Option<&crate::data::world::WorldLayout>,
+    ) -> Result<(), String> {
         let valid = match (self.scenario_kind, self.world.layout_revision) {
             (ScenarioKind::RosemarchPrototype, 1) | (ScenarioKind::Production, 1) => {
                 self.world.atlas_paths.is_empty()
             }
-            (ScenarioKind::Production, revision)
-                if revision == 2 || revision == data.production_layout.layout_revision =>
-            {
+            (ScenarioKind::Production, 2 | 3) => {
                 self.world.atlas_paths == data.production_layout.atlas_paths
+            }
+            (ScenarioKind::Production, 4) => {
+                flat_production.is_some_and(|layout| self.world.atlas_paths == layout.atlas_paths)
             }
             _ => false,
         };

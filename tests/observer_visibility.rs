@@ -1,7 +1,7 @@
 //! Observer map projections reveal campaign state without changing faction knowledge.
 
 use kestrum::{
-    data::{generation::ProductionSetup, rules::Emblem, GameData},
+    data::{generation::ProductionSetup, rules::Emblem, world::SiteId, GameData},
     engine,
     navigation::{MapNavigation, MapScope, MapSelection, MapView},
     state::StrategicCampaign,
@@ -161,15 +161,17 @@ fn map_overview_counts_and_labels_every_faction_army() {
 
 #[test]
 fn foreign_armies_can_be_targeted_on_world_and_regional_maps() {
-    let (_, campaign) = observer_fixture();
+    let data = GameData::load().unwrap();
+    let mut campaign = StrategicCampaign::new_observer(&data).unwrap();
     let foreign_army = campaign
         .armies
         .values()
         .find(|army| army.faction != campaign.player)
         .unwrap();
-    let site = foreign_army.site;
     let foreign_army_id = foreign_army.id;
     let foreign_faction = foreign_army.faction;
+    let site = SiteId(5);
+    campaign.armies.get_mut(&foreign_army_id).unwrap().site = site;
     let visible = engine::project_map(&campaign, campaign.player).unwrap();
     let marker = visible.world.site(site).unwrap().marker;
     let mut navigation = MapNavigation::default();

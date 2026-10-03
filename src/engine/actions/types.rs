@@ -76,6 +76,9 @@ pub enum Command {
         from: SiteId,
         to: SiteId,
     },
+    DevelopCity {
+        site: SiteId,
+    },
     RenameSite {
         site: SiteId,
         name: String,

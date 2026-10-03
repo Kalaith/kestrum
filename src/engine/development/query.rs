@@ -9,6 +9,12 @@ pub struct DevelopmentCause {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CityDevelopmentOption {
+    pub cost: Resources,
+    pub blocked: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DevelopmentView {
     pub site: SiteId,
     pub population: u32,
@@ -35,6 +41,21 @@ pub struct DevelopmentView {
     pub headquarters_cost: Resources,
     pub headquarters_blocked: Option<String>,
     pub headquarters_available_round: u32,
+}
+
+pub fn city_development_option(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    observer: FactionId,
+    site: SiteId,
+) -> Option<CityDevelopmentOption> {
+    commands::owned(campaign, observer, site).ok()?;
+    Some(CityDevelopmentOption {
+        cost: data.development.city_development.cost,
+        blocked: commands::city_development_check(campaign, data, observer, site)
+            .err()
+            .map(|error| error.to_string()),
+    })
 }
 
 pub fn development_view(
@@ -123,6 +144,12 @@ fn growth_blocked(
         "Reclaim these ruins with an Outpost order."
     } else if c.habitation == Habitation::Unsettled {
         "An Outpost order is required to establish habitation."
+    } else if c.habitation == Habitation::Town {
+        data.development
+            .city_development
+            .messages
+            .city_advancement
+            .as_str()
     } else if c.habitation >= maximum_habitation(data, site) {
         "This site has reached its terrain's habitation limit."
     } else if next_tier(c.habitation).is_some_and(|next| {

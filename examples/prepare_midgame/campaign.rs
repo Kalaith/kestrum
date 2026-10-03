@@ -46,7 +46,6 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
         )?;
     }
     let mut opening_complete = false;
-    let mut patrol = expansion::Patrol::default();
     for _ in 0..20_000 {
         if campaign.diplomacy.ending.is_some() {
             return Err(format!(
@@ -113,7 +112,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
                     }
                 }
                 roster::develop(&mut campaign, data, home)?;
-                expansion::develop(&mut campaign, data, army, home, &mut patrol)?;
+                expansion::develop(&mut campaign, data, army, home)?;
                 issue(&mut campaign, data, Command::EndTurn)?;
             }
             CampaignPhase::NpcTurn { .. } => {

@@ -4,25 +4,18 @@ use super::issue;
 use kestrum::{
     data::{
         economy::TroopKind,
-        world::{DiplomaticState, SiteId},
+        world::{DiplomaticState, PersonClass, SiteId},
         GameData,
     },
     engine::{self, Command},
-    state::{military::ArmyId, StrategicCampaign},
+    state::{military::ArmyId, people::PersonStatus, StrategicCampaign},
 };
-
-#[derive(Default)]
-pub(super) struct Patrol {
-    returning: bool,
-    complete: bool,
-}
 
 pub(super) fn develop(
     campaign: &mut StrategicCampaign,
     data: &GameData,
     host: ArmyId,
     home: SiteId,
-    patrol: &mut Patrol,
 ) -> Result<(), String> {
     // The first new army remains at headquarters for recruits and courses;
     // two later companies explore separate routes with normal movement/supply.
@@ -62,7 +55,9 @@ pub(super) fn develop(
         .map(|army| army.id)
         .collect();
     if !learners.is_empty() && campaign.completed_rounds >= 40 {
-        patrol.advance(campaign, data, &learners, home)?;
+        for army in learners.iter().copied() {
+            advance_patrol(campaign, data, army, home)?;
+        }
     }
     let travelers: Vec<_> = campaign
         .armies
@@ -92,71 +87,76 @@ pub(super) fn develop(
     Ok(())
 }
 
-impl Patrol {
-    fn advance(
-        &mut self,
-        campaign: &mut StrategicCampaign,
-        data: &GameData,
-        armies: &[ArmyId],
-        home: SiteId,
-    ) -> Result<(), String> {
-        if self.complete {
-            return Ok(());
+fn advance_patrol(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    army: ArmyId,
+    home: SiteId,
+) -> Result<(), String> {
+    let route_goal = data.progression.careers.scout_routes as usize;
+    for _ in 0..6 {
+        let route_history: Vec<_> = campaign.armies[&army]
+            .formation_ids()
+            .filter_map(|id| campaign.formation_person(id))
+            .filter(|person| {
+                person.faction == campaign.player
+                    && person.class == PersonClass::Recruit
+                    && person.is_alive()
+                    && person.status == PersonStatus::Fit
+                    && !person.career.retired
+                    && person.career.course.is_none()
+                    && person.age_years(campaign.completed_rounds) >= 17
+            })
+            .map(|person| person.evidence.traversed_routes.clone())
+            .collect();
+        if route_history.is_empty() {
+            break;
         }
-        for _ in 0..6 {
-            let formation = campaign.armies[&armies[0]]
-                .formation_ids()
-                .next()
-                .ok_or("Patrol has no formation")?;
-            let traveled = &campaign.formations[&formation]
-                .service
-                .ledger
-                .traversed_routes;
-            self.returning |= traveled.len() >= data.progression.careers.scout_routes as usize;
-            if self.returning && campaign.armies[&armies[0]].site == home {
-                self.complete = true;
-                break;
-            }
-            let target = if self.returning {
-                Some(home)
-            } else {
-                campaign
-                    .supplied_sites(campaign.player)
-                    .into_iter()
-                    .filter_map(|site| {
-                        engine::movement_preview(campaign, data, campaign.player, armies, site).ok()
-                    })
-                    .filter(|preview| {
-                        preview.reachable_steps > 0
-                            && preview
-                                .steps
-                                .iter()
-                                .take(preview.reachable_steps)
-                                .any(|step| !traveled.contains(&step.route))
-                            && preview
-                                .order
-                                .path
-                                .iter()
-                                .all(|site| campaign.world.is_secure(*site, campaign.player))
-                    })
-                    .min_by_key(|preview| (preview.total_cost, preview.order.path.last().copied()))
-                    .and_then(|preview| preview.order.path.last().copied())
-            };
-            let Some(destination) = target else {
-                break;
-            };
-            let Ok(preview) =
-                engine::movement_preview(campaign, data, campaign.player, armies, destination)
-            else {
-                break;
-            };
-            if preview.reachable_steps == 0 {
-                break;
-            }
-            move_order(campaign, data, preview.order)?;
-        }
-        Ok(())
+        let returning = route_history
+            .iter()
+            .all(|routes| routes.len() >= route_goal);
+        let preview = if returning {
+            engine::movement_preview(campaign, data, campaign.player, &[army], home)
+                .ok()
+                .filter(|preview| {
+                    preview
+                        .order
+                        .path
+                        .iter()
+                        .all(|site| campaign.world.is_secure(*site, campaign.player))
+                })
+        } else {
+            campaign
+                .supplied_sites(campaign.player)
+                .into_iter()
+                .filter_map(|site| {
+                    engine::movement_preview(campaign, data, campaign.player, &[army], site).ok()
+                })
+                .filter(|preview| {
+                    preview.reachable_steps > 0
+                        && preview
+                            .steps
+                            .iter()
+                            .take(preview.reachable_steps)
+                            .any(|step| {
+                                route_history
+                                    .iter()
+                                    .any(|routes| !routes.contains(&step.route))
+                            })
+                        && preview
+                            .order
+                            .path
+                            .iter()
+                            .all(|site| campaign.world.is_secure(*site, campaign.player))
+                })
+                .min_by_key(|preview| (preview.total_cost, preview.order.path.last().copied()))
+        };
+        let Some(preview) = preview.filter(|preview| preview.reachable_steps > 0) else {
+            break;
+        };
+        move_order(campaign, data, preview.order)?;
     }
+    Ok(())
 }
 
 fn march(campaign: &mut StrategicCampaign, data: &GameData, army: ArmyId) -> Result<bool, String> {

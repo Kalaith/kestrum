@@ -35,7 +35,7 @@ fn four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save
     )
     .unwrap();
     let player = campaign.player;
-    assert_eq!(campaign.world.markers.len(), 80);
+    assert_eq!(campaign.world.markers.len(), 152);
     assert_eq!(campaign.world.sites.len(), 152);
     let mut npc_actions = 0_u64;
     let mut boundaries = 0_u32;

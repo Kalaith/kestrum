@@ -29,7 +29,14 @@ arcane institutions and the full civil-identity taxonomy remain future content.
 
 ## Growth from conditions
 
-Growth comes mainly from favorable conditions held long enough: safe roads, food surplus, nearby population, protection, political importance, trade, religious importance, and stability. The player creates opportunities rather than pressing a button that guarantees the next city tier.
+Ordinary growth comes from favorable conditions held long enough: safe roads,
+food surplus, protection, political importance, trade and stability. Becoming a
+City additionally requires deliberate resource investment. A controlled,
+supplied, functioning Village or Town can be developed into a City, provided no
+directly connected node is already a City or Major City. Investment buys urban
+infrastructure and preserves the existing population; it does not create free
+settlers. Every terrain permits investment. Passive growth cannot bypass this
+city decision or the spacing rule.
 
 Development pressure can combine positive safety, trade, food, population, and administrative role with negative war damage, isolation, and raiding. Source plus/minus signs show relative direction, not a numerical equation.
 

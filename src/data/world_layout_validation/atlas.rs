@@ -2,11 +2,19 @@
 use super::*;
 
 impl WorldLayout {
-    pub(super) fn validate_atlas(&self) -> Result<(), String> {
+    pub(in crate::data) fn validate_atlas(&self) -> Result<(), String> {
+        self.validate_atlas_revision(3)
+    }
+
+    pub(in crate::data) fn validate_country_atlas(&self) -> Result<(), String> {
+        self.validate_atlas_revision(4)
+    }
+
+    fn validate_atlas_revision(&self, revision: u32) -> Result<(), String> {
         require(
             LAYOUT_SOURCE,
             "layout_revision",
-            self.layout_revision == 3,
+            self.layout_revision == revision,
             "unsupported atlas revision",
         )?;
         for (marker, position) in &self.legacy_marker_positions {
@@ -28,7 +36,7 @@ impl WorldLayout {
             require(
                 LAYOUT_SOURCE,
                 "atlas_paths",
-                path.waypoints.len() <= 6
+                path.waypoints.len() <= if revision == 4 { 8 } else { 6 }
                     && path.bridges.len() <= 4
                     && (!path.waypoints.is_empty() || !path.bridges.is_empty())
                     && path

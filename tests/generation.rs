@@ -90,6 +90,71 @@ fn four_through_eight_factions_get_connected_separated_starts_and_local_threats(
         let scenario = &generated.scenario;
         assert_eq!(scenario.factions.len(), count);
         assert_eq!(scenario.relations.len(), count * (count - 1) / 2);
+        assert_eq!(scenario.markers.len(), 152);
+        assert_eq!(scenario.sites.len(), 152);
+        assert_eq!(scenario.routes.len(), 191);
+        assert!(scenario
+            .markers
+            .iter()
+            .all(|marker| matches!(marker.location, MarkerLocation::Site { .. })));
+        assert!(scenario.sites.iter().all(|site| {
+            site.position == scenario.marker(site.marker).unwrap().position
+                && site.habitation < Habitation::City
+        }));
+        for region in &data.production_layout.markers {
+            let MarkerLocation::Region { sites, .. } = &region.location else {
+                continue;
+            };
+            let headquarters = data
+                .production_layout
+                .headquarters_candidates
+                .iter()
+                .find(|candidate| {
+                    data.production_layout
+                        .site(**candidate)
+                        .is_some_and(|site| site.marker == region.id)
+                })
+                .copied()
+                .unwrap();
+            assert_eq!(
+                scenario.marker(region.id).unwrap().location,
+                MarkerLocation::Site { site: headquarters }
+            );
+            assert_eq!(
+                scenario.marker(region.id).unwrap().position,
+                region.position
+            );
+            for site_id in sites {
+                let site = scenario.site(*site_id).unwrap();
+                assert!((site.position[0] - region.position[0]).abs() <= 0.05 + f32::EPSILON);
+                assert!((site.position[1] - region.position[1]).abs() <= 0.05 + f32::EPSILON);
+                if *site_id == headquarters {
+                    assert_eq!(site.marker, region.id);
+                } else {
+                    assert!(site.marker.0 > 80);
+                }
+            }
+        }
+        for route in &scenario.routes {
+            let authored = data
+                .production_layout
+                .routes
+                .iter()
+                .find(|entry| entry.id == route.id)
+                .unwrap();
+            assert_eq!(
+                (route.from, route.to, route.terrain_cost),
+                (authored.from, authored.to, authored.terrain_cost)
+            );
+            assert_eq!(route.road, authored.road);
+            assert_eq!(
+                route.major_connection,
+                Some([
+                    scenario.site(route.from).unwrap().marker,
+                    scenario.site(route.to).unwrap().marker,
+                ])
+            );
+        }
         let mut starts = Vec::new();
         for faction in &scenario.factions {
             starts.push(faction.headquarters);
@@ -100,8 +165,22 @@ fn four_through_eight_factions_get_connected_separated_starts_and_local_threats(
             assert!(hq.tags.contains(&SiteTag::HorseAccess));
             assert!(matches!(
                 scenario.marker(hq.marker).unwrap().location,
+                MarkerLocation::Site { site } if site == hq.id
+            ));
+            let authored_start = data.production_layout.site(hq.id).unwrap();
+            let authored_region = data
+                .production_layout
+                .marker(authored_start.marker)
+                .unwrap();
+            assert!(matches!(
+                authored_region.location,
                 MarkerLocation::Region { .. }
             ));
+            assert_eq!(hq.marker, authored_region.id);
+            assert_eq!(
+                scenario.marker(hq.marker).unwrap().position,
+                authored_region.position
+            );
             assert_eq!(faction.capital, faction.headquarters);
             assert!((18..=24).contains(&faction.founder.age_years));
             assert_eq!(faction.founder.class, PersonClass::Officer);

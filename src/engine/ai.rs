@@ -96,6 +96,7 @@ pub fn propose(
         .or_else(|| planner.recruit(emergency))
         .or_else(|| planner.progression())
         .or_else(|| planner.construct())
+        .or_else(|| planner.develop_city())
         // A retained attack objective uses dated enemy strength and can remain
         // viable after a setback; do not offer peace ahead of that counterattack.
         .or_else(|| {

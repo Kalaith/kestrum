@@ -24,6 +24,7 @@ mod world_validation;
 
 mod presentation;
 pub use presentation::{GameTextData, GeographyLabel, MapCameraSettings, PresentationData};
+mod production_topology;
 
 #[derive(Debug, Clone)]
 pub struct GameData {

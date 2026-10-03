@@ -11,6 +11,26 @@
     "pass": "village",
     "island": "village"
   },
+  "city_development": {
+    "cost": {
+      "gold": 250,
+      "wood": 100,
+      "stone": 75
+    },
+    "minimum_habitation": "village",
+    "messages": {
+      "ruined": "A ruined site cannot receive a city investment.",
+      "minimum_habitation": "A Village or larger settlement is needed.",
+      "already_city": "This site is already a city.",
+      "contested": "A contested or besieged site cannot receive a city investment.",
+      "unsafe_site": "The site must be safe and free of local threats.",
+      "unsupplied": "A city investment needs a supply path to your headquarters.",
+      "occupation": "Occupation pressure is too high for a city investment.",
+      "damaged": "Repair structural damage before investing in a city.",
+      "adjacent_city": "Cities must leave at least one site between them.",
+      "city_advancement": "City advancement requires a city investment."
+    }
+  },
   "pressure": {
     "safe": 2,
     "connected": 1,

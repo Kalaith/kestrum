@@ -6,10 +6,14 @@ mod migration;
 mod progress;
 mod query;
 
+pub(crate) use commands::city_development_check;
 pub(crate) use commands::execute;
 pub(crate) use progress::{forecast_step, resolve};
 pub(crate) use query::observed_safety_sites;
-pub use query::{development_view, DevelopmentCause, DevelopmentView};
+pub use query::{
+    city_development_option, development_view, CityDevelopmentOption, DevelopmentCause,
+    DevelopmentView,
+};
 
 use super::{actions::record_fact, ActionOutcome, Command, RuleError};
 use crate::{
@@ -83,7 +87,12 @@ pub fn maximum_habitation(data: &GameData, site: &Site) -> Habitation {
     } else {
         site.geography
     };
-    data.development.geography_caps[&geography]
+    let cap = data.development.geography_caps[&geography];
+    if site.habitation >= Habitation::City {
+        cap.max(site.habitation)
+    } else {
+        cap
+    }
 }
 
 pub(crate) fn focus_suitable(site: &Site, focus: Focus) -> bool {

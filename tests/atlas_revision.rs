@@ -25,10 +25,16 @@ fn campaign(data: &GameData) -> StrategicCampaign {
 }
 
 #[test]
-fn corrected_coast_keeps_stable_ids_costs_entrances_and_connectivity() {
+fn flat_country_layout_keeps_stable_ids_costs_and_connectivity() {
     let data = GameData::load().unwrap();
     let current = campaign(&data);
-    assert_eq!(current.world.layout_revision, 3);
+    assert_eq!(current.world.layout_revision, 4);
+    assert_eq!(current.world.markers.len(), 152);
+    assert!(current
+        .world
+        .markers
+        .iter()
+        .all(|marker| matches!(marker.location, MarkerLocation::Site { .. })));
     assert_eq!(
         current.world.site(SiteId(40)).unwrap().position,
         [0.12, 0.55]
@@ -44,11 +50,6 @@ fn corrected_coast_keeps_stable_ids_costs_entrances_and_connectivity() {
     );
     assert!(!current.world.atlas_paths[&RouteId(99)].waypoints.is_empty());
     assert_eq!(data.production_layout.reachable_sites(SiteId(1)).len(), 152);
-    for marker in &current.world.markers {
-        if let MarkerLocation::Region { entrances, .. } = &marker.location {
-            assert!(entrances.len() >= 2);
-        }
-    }
 }
 
 #[test]
@@ -110,7 +111,13 @@ fn old_layout(data: &GameData) -> StrategicCampaign {
     let mut old = campaign(data);
     old.world.layout_revision = 1;
     old.world.atlas_paths.clear();
+    old.world.markers = data.production_layout.markers.clone();
+    old.world.routes = data.production_layout.routes.clone();
     for site in &mut old.world.sites {
+        let authored = data.production_layout.site(site.id).unwrap();
+        site.marker = authored.marker;
+        site.position = authored.position;
+        site.tags.clone_from(&authored.tags);
         if data
             .production_layout
             .headquarters_candidates
@@ -137,6 +144,7 @@ fn old_layout(data: &GameData) -> StrategicCampaign {
             }
         }
     }
+    old.reconcile_region_control();
     old
 }
 
@@ -172,7 +180,7 @@ fn missing_revision_decodes_as_original_without_moving_any_saved_site() {
 fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let data = GameData::load().unwrap();
     let original = campaign(&data);
-    for revision in [0, 1, 4] {
+    for revision in [0, 1, 2, 3, 5] {
         let mut invalid = original.clone();
         invalid.world.layout_revision = revision;
         assert!(invalid.validate(&data).is_err());
@@ -184,7 +192,7 @@ fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
         .iter_mut()
         .find(|s| s.id == SiteId(40))
         .unwrap()
-        .position = [0.12, 0.55];
+        .position = [0.121, 0.55];
     assert!(invalid.validate(&data).is_err());
     let mut invalid = original;
     invalid

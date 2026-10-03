@@ -6,7 +6,7 @@ mod review_campaign;
 use kestrum::{
     data::{economy::Habitation, world::DiplomaticState, GameData},
     engine::{apply, Actor, Command},
-    state::{Campaign, CampaignPhase, StrategicCampaign},
+    state::{evidence::EvidenceKind, Campaign, CampaignPhase, StrategicCampaign},
 };
 use std::sync::OnceLock;
 
@@ -17,6 +17,22 @@ fn fixture() -> (GameData, StrategicCampaign) {
         .get_or_init(|| review_campaign::generate(&data).unwrap())
         .clone();
     (data, campaign)
+}
+
+fn player_evidence_total(campaign: &StrategicCampaign, kind: EvidenceKind) -> u32 {
+    campaign
+        .people
+        .values()
+        .filter(|person| person.faction == campaign.player)
+        .map(|person| {
+            person
+                .evidence
+                .counts
+                .get(&kind)
+                .copied()
+                .unwrap_or_default()
+        })
+        .sum()
 }
 
 #[test]
@@ -176,7 +192,14 @@ fn review_save_has_real_progress_and_a_living_player_army() {
     assert_eq!(campaign.completed_rounds, 60);
     assert_eq!(campaign.phase, CampaignPhase::PlayerTurn);
     assert!(campaign.diplomacy.ending.is_none());
-    assert!(!campaign.battles.is_empty());
+    assert!(
+        player_evidence_total(&campaign, EvidenceKind::Battle) > 0,
+        "the review campaign preserves player battle evidence"
+    );
+    assert!(
+        player_evidence_total(&campaign, EvidenceKind::MeaningfulEncounter) > 0,
+        "the review campaign preserves meaningful battle evidence"
+    );
     assert!(campaign
         .battle_templates
         .iter()
@@ -188,13 +211,25 @@ fn review_save_has_real_progress_and_a_living_player_army() {
 }
 
 #[test]
-fn progressed_save_roundtrips_with_an_immutable_battle_history() {
+fn progressed_save_roundtrips_with_immutable_battle_evidence() {
     let (data, campaign) = fixture();
+    let battle_evidence = player_evidence_total(&campaign, EvidenceKind::Battle);
+    let encounter_evidence = player_evidence_total(&campaign, EvidenceKind::MeaningfulEncounter);
+    assert!(battle_evidence > 0);
+    assert!(encounter_evidence > 0);
     let snapshot = Campaign::Strategic(Box::new(campaign.clone()));
     let raw = serde_json::to_string(&snapshot).unwrap();
     let restored: Campaign = serde_json::from_str(&raw).unwrap();
     assert_eq!(restored, snapshot);
     let mut restored = restored.strategic().unwrap().clone();
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::Battle),
+        battle_evidence
+    );
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::MeaningfulEncounter),
+        encounter_evidence
+    );
     let history = restored.battles.clone();
     assert!(apply(
         &mut restored,
@@ -204,7 +239,23 @@ fn progressed_save_roundtrips_with_an_immutable_battle_history() {
     )
     .is_err());
     assert_eq!(restored, campaign);
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::Battle),
+        battle_evidence
+    );
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::MeaningfulEncounter),
+        encounter_evidence
+    );
     apply(&mut restored, &data, Actor::Player, Command::EndTurn).unwrap();
     assert_eq!(restored.battles, history);
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::Battle),
+        battle_evidence
+    );
+    assert_eq!(
+        player_evidence_total(&restored, EvidenceKind::MeaningfulEncounter),
+        encounter_evidence
+    );
     restored.validate(&data).unwrap();
 }

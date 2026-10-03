@@ -12,7 +12,7 @@ use support::{campaign, run_to_round};
 fn peaceful_four_faction_production_campaign_preserves_fifty_year_continuity() {
     let data = kestrum::data::GameData::load().unwrap();
     let starting = campaign(&data, 4, 180_018);
-    assert_eq!(starting.world.markers.len(), 80);
+    assert_eq!(starting.world.markers.len(), 152);
     assert_eq!(starting.world.sites.len(), 152);
 
     let metrics = run_to_round(starting, &data, 200, false);
@@ -60,7 +60,7 @@ fn saved_production_campaigns_retain_their_authored_topology() {
         let original = campaign(&data, factions, 180_500 + factions as u64);
         let restored = support::reload(&original, &data);
         assert_eq!(restored, original);
-        assert_eq!(restored.world.markers.len(), 80);
+        assert_eq!(restored.world.markers.len(), 152);
         assert_eq!(restored.world.sites.len(), 152);
         assert_eq!(restored.factions.len(), factions);
     }

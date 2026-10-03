@@ -1,6 +1,29 @@
 # Map playability implementation plan
 
-Updated 2026-10-02. **Status: M01 and M01A complete under their recorded scope; M02 is next.**
+Updated 2026-10-03. **Status: M01 and M01A complete under their recorded scope;
+city-created regions are the current user-requested change before M02.**
+
+The 2026-10-03 request supersedes the eight fixed production regions assumed
+below. New campaigns show all physical nodes on the country map, with no region
+unlocked. Paid development makes a Village or Town a City; cities cannot be
+direct neighbors. A functioning city opens its connected countryside as a local
+view of the existing graph. The tutorial develops and enters the capital first.
+The [world chapter](02-world-time-and-control.md#city-regions) owns this rule.
+M03's earlier requirement to complete eight authored regional graphs is
+superseded by local city geography. The remaining map-order and readability
+work stays in scope.
+
+### City development screen brief
+
+| Question | Current decision |
+| --- | --- |
+| Decision | Which eligible settlement should receive the resources to become a city? |
+| Dominant focus | Country geography during selection; the selected settlement during investment. |
+| Primary action | Develop City, with gold/wood/stone cost and spacing or condition blockers beside it. |
+| Supporting information | Existing habitation, ownership, supply and neighboring cities. |
+| Deferred information | Regional detail appears only after city development; management remains in its sheet. |
+| Layout and camera | The existing 1920×1080 canvas, independent country and local cameras, visible return control. |
+| Input and feedback | Tap Manage, review and confirm development, then Enter Region; tutorial receipts follow successful actions. |
 
 Kestrum needs a map that explains the kingdom, presents useful decisions, and
 shows their consequences. This is the active implementation sequence following

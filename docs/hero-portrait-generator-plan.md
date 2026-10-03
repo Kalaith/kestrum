@@ -1,6 +1,8 @@
 # Hero portrait generator
 
-Planned on 2026-10-02. **Design only; no implementation or portrait assets exist.**
+Planned on 2026-10-02. **Implementation in progress:** identity and migration
+foundations are committed; artwork, rendering and integrated acceptance remain
+pending. See [scoped verification](verification/portraits-events.md).
 This is the first graphics workstream alongside the
 [map roadmap](map-playability-plan.md#delivery-sequence). M02 remains next;
 G01-G04 below can be scheduled independently after M01A and do not replace or
@@ -289,12 +291,6 @@ duplicating the map milestone ledger. Identity and compatibility implementation
 is in progress; [scoped verification](verification/portraits-events.md) records
 the checkpoint and remaining acceptance work.
 
-- [ ] **G01 - Identity and compatibility.** Add descriptor/catalog schema,
-  immutable feature IDs, independent deterministic allocator and reservation
-  index; audit every person-creation path. Migrate retained people and observed
-  snapshots coherently through actual v2 decoding. Exit: old/new save fixtures,
-  promotion/retention/visibility and deterministic allocation tests pass with
-  all four gameplay RNG streams unchanged. Labelled fallback remains usable.
 - [ ] **G02 - Art proof and first visible slice.** Produce a proof set with
   2 faces, 2 noses, 2 eye styles and 3 hair silhouettes including bald, plus
   3 skin/3 hair/2 iris colors and required masks/adapters. Establish the frozen

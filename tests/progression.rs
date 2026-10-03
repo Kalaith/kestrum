@@ -112,7 +112,8 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
     use kestrum::data::progression::EpithetFact;
     let (data, mut campaign) = fixture();
     let mut companion = campaign.people[&PersonId(1)].clone();
-    companion.id = PersonId(4);
+    let companion_id = campaign.next_ids.person;
+    companion.id = companion_id;
     companion.appearance =
         appearance_support::allocate(&mut campaign, &data.portraits, companion.id);
     companion.class = PersonClass::Recruit;
@@ -126,7 +127,7 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
     campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(formation);
     companion.assignment = PersonAssignment::Formation { formation };
     campaign.people.insert(companion.id, companion);
-    campaign.next_ids.person = PersonId(5);
+    campaign.next_ids.person = PersonId(companion_id.0 + 1);
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
     encounter(&mut campaign, &data, 5, 6, 60);
     let seed = (0..100_000)
@@ -145,7 +146,7 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
         .values()
         .find(|person| person.faction == FactionId(1) && person.career.emergence.is_some())
         .expect("seeded emergence");
-    for person in [&campaign.people[&PersonId(4)], recruit] {
+    for person in [&campaign.people[&companion_id], recruit] {
         assert!(person.evidence.counts[&EvidenceKind::MeaningfulEncounter] > 0);
         for tag in [
             EvidenceKind::CommandedVictory,
@@ -406,7 +407,8 @@ fn person_course_pauses_for_wounds_and_refunds_only_before_progress() {
 fn a_known_rival_requires_two_actual_mutual_combats() {
     let (data, mut campaign) = fixture();
     let mut companion = campaign.people[&PersonId(1)].clone();
-    companion.id = PersonId(4);
+    let companion_id = campaign.next_ids.person;
+    companion.id = companion_id;
     companion.appearance =
         appearance_support::allocate(&mut campaign, &data.portraits, companion.id);
     companion.name = "Della Rose".into();
@@ -421,7 +423,7 @@ fn a_known_rival_requires_two_actual_mutual_combats() {
     companion.career = Default::default();
     companion.evidence = Default::default();
     campaign.people.insert(companion.id, companion);
-    campaign.next_ids.person = PersonId(5);
+    campaign.next_ids.person = PersonId(companion_id.0 + 1);
     encounter(&mut campaign, &data, 5, 6, 100);
     encounter(&mut campaign, &data, 8, 10, 100);
     finish(&mut campaign, &data);
@@ -430,7 +432,7 @@ fn a_known_rival_requires_two_actual_mutual_combats() {
     assert_eq!(first.mutual_combat_rounds, 2);
     assert_eq!(first.shared_service_seasons, 0);
     assert_eq!(first, second);
-    let service_link = &campaign.people[&PersonId(1)].career.relationships[&PersonId(4)];
+    let service_link = &campaign.people[&PersonId(1)].career.relationships[&companion_id];
     assert_eq!(service_link.shared_service_seasons, 1);
     assert_eq!(service_link.mutual_combat_rounds, 0);
     campaign.validate(&data).unwrap();

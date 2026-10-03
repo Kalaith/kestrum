@@ -43,7 +43,14 @@ pub(super) fn specialists(campaign: &mut StrategicCampaign) {
 pub(super) fn assert_legacy_military_migration(data: &GameData, mut campaign: StrategicCampaign) {
     campaign.completed_rounds = 7;
     let mut old = serde_json::to_value(Campaign::Strategic(Box::new(campaign.clone()))).unwrap();
-    for key in ["armies", "formations", "people", "legacy_items"] {
+    // This fixture predates retained person identities and their portrait reservations.
+    for key in [
+        "armies",
+        "formations",
+        "people",
+        "legacy_items",
+        "appearance_registry",
+    ] {
         old.as_object_mut().unwrap().remove(key);
     }
     for key in ["army", "formation", "person", "legacy_item"] {

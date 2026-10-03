@@ -44,7 +44,16 @@ example checks with analytics, and API documentation. The five new image cases
 cover PNG/JPEG/pack decoding, blending, mask coverage, downsampling and transparent
 edges against light/dark surfaces. These pixel tests do not verify portrait art.
 
+Toolkit follow-up `3ff2a1e` adds owned encoded-byte loading with the same pack
+precedence as decoded-image loading. This supports a game-owned compressed source
+cache without retaining every decoded layer. Its full all-feature tests, strict
+all-target/all-feature Clippy, formatting, source gate, native/WASM example checks
+and documentation passed. Six asset/image integration cases passed; loose-file
+loading still needs verification through the actual game runtime.
+
 ## First Kestrum implementation checkpoint
+
+Committed as `9d6173d` on `master`, with a clean tree after the commit.
 
 Required appearance descriptors now accompany people and retained encounter/battle
 snapshots. A seed-derived allocator owns campaign reservations, and wholly legacy
@@ -63,9 +72,61 @@ Focused checkpoint regressions passed: 47 tests across `portraits` (8),
 This is scoped evidence; it does not replace the complete regression run or
 the portrait migration and event lifecycle cases still being added.
 
+After the final snapshot-layout and fixture corrections, the changed-target pass
+also passed all 21 cases in `ai_review`, `campaign`, `code_standards`,
+`continuity_feedback`, and `portraits`. Across these passes, 57 distinct cases in
+nine targets passed. Long campaign scenarios and the complete suite remain for
+the integrated verification pass.
+
 Project formatting, strict shared-pool Clippy with `--all-targets -D warnings`,
 and whitespace checks passed. The source gate covers 432 Rust files; the largest
 is 794 physical lines. No assets or UI captures are part of this checkpoint.
+
+## Migration regression checkpoint
+
+The subsequent complete `..\rust_management\cargo.ps1 test --locked
+--no-fail-fast` run reached every target. The 400-round replay and actual version-2
+portrait migration/round-trip cases passed. Five targets failed: the event module
+source-size gate, the pre-person military migration fixture, a portrait golden
+value, two progression fixtures that reused an issued person ID, and the existing
+seed-88 production victory-cap case. The first four are regressions being fixed;
+the victory-cap test remains a failing required check, not a pass or waiver.
+
+The victory test still uses seed 88 and a 240-round cap. Its current outcome has
+factions 1 and 2 independent, factions 3 and 4 eliminated, and phase PlayerTurn,
+matching the baseline failure category. It took 277.21 seconds in this run;
+performance and the event query costs remain under review. No AI or victory-test
+behavior has been changed to mask this result.
+
+After correcting the source split, frozen golden expectation and historical
+fixtures, the full `test --locked --no-fail-fast` rerun passed every target except
+the unchanged seed-88 victory-cap case (258.29 seconds). Portrait tests passed
+15/15, progression 10/10, and the economy migration case passed. The 400-round
+replay passed in 180.76 seconds. The additional portrait cases cover distinct
+legacy/modern migration, optional notification snapshots and canonical allocation
+regressions rather than replacing useful existing coverage to meet a test count.
+
+Strict all-target/all-feature Clippy, project formatting and whitespace checks
+passed. The canonical source gate passed; a direct scan found 433 Rust files,
+maximum 793 physical lines, with none over 800. Fifty local documentation links
+and anchors across the edited feature documents and art notes passed review.
+
+The user explicitly authorized committing validated portrait/event slices with
+the documented pre-existing seed-88 failure retained. That exception does not
+cover new regressions or claim a full-suite pass. Publishing remains prohibited
+under the separate task constraint above. Unfinished event corrections and
+artwork remain unstaged at this portrait migration commit boundary.
+
+## Revised artwork direction
+
+The user rejected the flat vector proof in favor of the supplied detailed
+tactical-RPG portrait reference. Its experimental source and exports are preserved
+in place and are not production-approved. A built-in imagegen concept demonstrates
+a richer illustrated direction; it is not an interchangeable production layer
+set. An explicitly configured Astra high review recommends detailed near-front
+art on the existing rig, with real aligned face/eye/nose/hair assets and mask QA.
+No exposed control selects the built-in imagegen model, so no image-model upgrade
+is claimed. Runtime integration and the release artwork remain pending.
 
 ## Verification boundaries
 
@@ -75,6 +136,5 @@ fullscreen interaction, display takeover, or physical input is authorized.
 Automated checks do not establish human portrait recognition, human playtesting,
 or physical-touch verification.
 
-Implementation and integrated verification are in progress; this document does
-not yet claim feature acceptance, rendered artwork, or a successful integrated
-test run.
+Implementation and integrated verification are in progress. This document does
+not yet claim feature acceptance, rendered artwork, or a full-suite pass.

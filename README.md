@@ -13,13 +13,17 @@ are recorded. The full suite retains one inherited production-victory failure.
 It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
 M02's map orders and seasonal consequences follow, then regional geography and
 the opening guide in M03/M04.
-The [notification feature plan](docs/notification-plan.md) details M02's proposed
+The [notification feature plan](docs/notification-plan.md) details M02's
 top event bar, compact clickable details, hero and controlled-place updates,
-advance warnings and per-type mute controls. It is planned, not implemented.
+advance warnings and per-type mute controls. Durable event foundations are
+implemented; presentation and lifecycle acceptance remain in progress.
 The [hero portrait generator plan](docs/hero-portrait-generator-plan.md) adds a
-planned graphics workstream: persistent per-person features, layered human art
+graphics workstream: persistent per-person features, layered human art
 and a first People/Career portrait slice. Its outstanding G01-G04 TODOs preserve
-the existing M02-M05 sequence; no portrait assets or runtime feature exist yet.
+the existing M02-M05 sequence. Persistent identity and migration foundations are
+implemented; artwork and portrait rendering remain under development. The
+[implementation record](docs/verification/portraits-events.md) distinguishes
+completed checkpoints from pending runtime and visual acceptance.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 
@@ -192,6 +196,24 @@ in a centered 1280×720 content region of the 1920×1080 canvas, without enlarge
 The toolkit viewport handles the host boundary; sheet drawing and pointer input
 receive the same translation. Back, confirmations and on-screen text entry
 remain visible touch controls. Sheet navigation preserves map camera context.
+
+### Portrait and notification integration brief
+
+This integration is in progress. People and Career keep their existing decisions:
+choose a person, inspect their service, and act on available career or transfer
+options. A 64px roster portrait and 128px Career portrait support recognition;
+names, status, costs and visible actions remain readable beside them. Children
+and unknown identities use generic silhouettes. Dated memories render only their
+saved appearance. Portraits add no gameplay action or permanent map panel.
+
+Seasonal notifications support deciding whether a recent change needs attention
+before End Turn. The atlas remains dominant at the supported 1920x1080 canvas.
+A compact rail beneath the header opens one narrow, dismissible card; the card
+temporarily replaces the inspector/expanded Attention region. End Turn and map
+pan/zoom remain available outside it. Details, Recent and per-type delivery
+settings are deferred until selected. Visible Open, Close, Show on Map and paging
+controls support taps without hover; opening a receipt alone does not move the
+camera or issue an order. Counts, navigation and portraits use observer-safe facts.
 
 ### Battle screens
 

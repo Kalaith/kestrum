@@ -20,6 +20,7 @@ struct IdentityScan {
     descriptors: BTreeMap<PersonId, AppearanceDescriptor>,
     records_with_appearance: usize,
     records_without_appearance: usize,
+    notification_descriptors_without_registry: bool,
 }
 
 /// Initialize only wholly legacy saves; partial portrait state is a compatibility error.
@@ -29,6 +30,7 @@ pub fn migrate_legacy(value: &mut Value) -> Result<(), String> {
         .ok_or_else(|| "appearance migration: campaign must be an object".to_owned())?;
     let mut scan = IdentityScan::default();
     visit_records(value, |record, path| scan_record(record, path, &mut scan))?;
+    scan_notification_descriptors(value, &mut scan)?;
     let has_registry = root.contains_key("appearance_registry");
 
     if has_registry {
@@ -46,8 +48,99 @@ pub fn migrate_legacy(value: &mut Value) -> Result<(), String> {
             "appearance migration: descriptors exist without an appearance registry".into(),
         );
     }
+    if scan.notification_descriptors_without_registry {
+        return Err(
+            "appearance migration: notification descriptors exist without an appearance registry"
+                .into(),
+        );
+    }
 
     migrate_absent_state(value, &scan)
+}
+
+/// Notifications may contain optional, observer-safe person snapshots. Older
+/// notifications legitimately omit appearance, so they are never assigned or
+/// included in the identity union. A present descriptor, however, proves that
+/// the save contains partial modern portrait state and requires its registry.
+fn scan_notification_descriptors(root: &Value, scan: &mut IdentityScan) -> Result<(), String> {
+    let Some(notifications) = root.get("notifications") else {
+        return Ok(());
+    };
+    if notifications.is_null() {
+        return Ok(());
+    }
+    let notifications = object(notifications, "campaign.notifications")?;
+    let Some(receipts) = notifications.get("receipts") else {
+        return Ok(());
+    };
+    let receipts = array(receipts, "campaign.notifications.receipts")?;
+    for (index, receipt) in receipts.iter().enumerate() {
+        let path = format!("campaign.notifications.receipts[{index}]");
+        let receipt = object(receipt, &path)?;
+        if let Some(subject) = receipt.get("subject") {
+            scan_notification_subject(subject, &format!("{path}.subject"), scan)?;
+        }
+        if let Some(detail) = receipt.get("detail") {
+            scan_notification_detail(detail, &format!("{path}.detail"), scan)?;
+        }
+    }
+    Ok(())
+}
+
+fn scan_notification_subject(
+    subject: &Value,
+    path: &str,
+    scan: &mut IdentityScan,
+) -> Result<(), String> {
+    let Some(subject) = subject.as_object() else {
+        // `subject` is optional and old receipts may store it as null.
+        return Ok(());
+    };
+    if subject.get("kind").and_then(Value::as_str) == Some("person") {
+        if let Some(snapshot) = subject.get("snapshot") {
+            scan_notification_person(snapshot, &format!("{path}.snapshot"), scan)?;
+        }
+    }
+    Ok(())
+}
+
+fn scan_notification_detail(
+    detail: &Value,
+    path: &str,
+    scan: &mut IdentityScan,
+) -> Result<(), String> {
+    let Some(detail) = detail.as_object() else {
+        return Ok(());
+    };
+    match detail.get("kind").and_then(Value::as_str) {
+        Some("person") => {
+            if let Some(person) = detail.get("person") {
+                scan_notification_person(person, &format!("{path}.person"), scan)?;
+            }
+        }
+        Some("remembrance") => {
+            if let Some(subject) = detail.get("subject") {
+                scan_notification_subject(subject, &format!("{path}.subject"), scan)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn scan_notification_person(
+    person: &Value,
+    path: &str,
+    scan: &mut IdentityScan,
+) -> Result<(), String> {
+    let person = object(person, path)?;
+    if person
+        .get("appearance")
+        .is_some_and(|appearance| !appearance.is_null())
+    {
+        scan.notification_descriptors_without_registry = true;
+    }
+    Ok(())
 }
 
 fn validate_modern_fields(root: &Map<String, Value>, scan: &IdentityScan) -> Result<(), String> {

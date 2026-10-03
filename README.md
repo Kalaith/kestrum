@@ -290,18 +290,16 @@ path is `../macroquad-toolkit`. Follow [AGENTS.md](AGENTS.md),
 [CODE_STANDARDS.md](CODE_STANDARDS.md) and [UI_STYLE.md](UI_STYLE.md).
 Shared guidance is maintained in `rust_management/docs/`.
 
-```powershell
-cargo fmt -p kestrum -- --check
-..\rust_management\cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings
-..\rust_management\cargo.ps1 test -p kestrum --all-features
-.\publish.ps1
-```
+Follow the authorized [Kestrum validation override](PROJECT_AGENTS.md): choose
+focused checks before each slice and commit it after review. Broader integration
+checks run at meaningful boundaries, without repeating unchanged suites.
+The [delivery guide](docs/12-delivery-and-validation.md#required-engineering-checks)
+lists commands and evidence requirements. Publishing is not authorized for the
+current task because the wrapper updates an external deployment tracker.
 
-After meaningful game changes, no-parameter publishing is required. For UI
-changes, use supported scenes in `scripts/capture_ui.ps1`, write directly to
-`docs/verification/`, replace equivalent captures and confirm launched games
-exit. Use an actual 1920×1080 canvas plus browser interactions. See
-[delivery and validation](docs/12-delivery-and-validation.md) for completion rules.
+For UI changes, use affected scenes in `scripts/capture_ui.ps1`, write directly
+to `docs/verification/`, replace equivalent captures and confirm launched games
+exit. Use an actual 1920x1080 canvas plus relevant headless browser interactions.
 
 ## Code and artwork
 

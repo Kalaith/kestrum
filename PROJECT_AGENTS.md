@@ -2,6 +2,40 @@
 
 These project-specific instructions supplement the shared RustGames checklist.
 
+## Kestrum validation override (Daniel, 2026-10-03)
+
+Daniel explicitly authorizes resuming development with proportionate validation.
+For Kestrum this supersedes the shared full-suite/Clippy/publish-per-slice gate;
+do not edit shared policy or apply this exception to other games.
+
+- Before a slice, name its owned files, behavior, relevant checks and evidence.
+  Freeze those files for validation, review the complete diff, then commit the
+  buildable slice before starting the next independent feature. Update `todo.md`
+  with outstanding work only, including checks actually still missing.
+- Each Rust slice: formatting, source-size gate, and the smallest relevant
+  existing behavioral test targets. UI-only changes need an affected binary
+  build and relevant hidden 1920x1080 captures/interactions, not unrelated
+  campaign simulations. Documentation uses diff/link/command review.
+- Run the full project suite and strict all-target/all-feature Clippy once at
+  a meaningful integration boundary, or sooner for shared state, save/migration,
+  allocator, simulation or public API changes with broad impact. Record why.
+  Reuse unchanged results; rerun only after a relevant change or unresolved
+  failure. Do not run focused suites immediately before a full suite that
+  already contains them unless an earlier fast diagnosis is useful.
+- Keep deterministic, save/migration and core gameplay coverage. Test count is
+  not a deletion target. Measure wall time separately from compilation and
+  reported test time; consolidate coverage only with a concrete redundancy.
+- Build WASM once when browser acceptance is needed; reuse that exact output
+  across independent headless profiles. Capture only affected scenes and reuse
+  the current build with the wrapper's `-SkipBuild` when valid. Never treat a
+  dispatched click or a stale screenshot as acceptance.
+- Do not run `publish.ps1`: its deployment/tracker effects are outside this
+  task's authorization. Local pooled builds and headless verification are the
+  authorized substitute; report external publication as deliberately unrun.
+- The documented seed-88 round-240 failure remains an authorized baseline
+  exception, not a pass. Other failures need diagnosis; do not weaken tests or
+  claim unrun checks passed. Record blocked checks with their exact command.
+
 ## Delegation
 
 - Use Luna (`gpt-6-luna`) at extra-high (`xhigh`) effort for implementation and
@@ -31,5 +65,4 @@ These project-specific instructions supplement the shared RustGames checklist.
   finished. Keep genuinely exploratory or broken work uncommitted until its
   outcome is known, then finish and commit that part promptly.
 - Continue following the shared master-branch, commit-message and clean-tree
-  requirements. Preserve existing work and include all current project changes
-  at each appropriate commit boundary.
+  requirements. Preserve unrelated work; stage only files owned by the slice.

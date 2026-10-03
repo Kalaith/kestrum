@@ -35,13 +35,18 @@ A seamless transition between world/regional scopes remains deferred.
 
 ## Required engineering checks
 
-Run from the actual Kestrum checkout and its registered workspace:
+The user-authorized [project override](../PROJECT_AGENTS.md) supersedes the
+shared per-slice full-suite/publish requirement for Kestrum. Before each slice,
+record its affected behavior and focused checks. Review, validate and commit it
+before starting the next independent feature. Run from the actual checkout:
 
 ```powershell
 cargo fmt -p kestrum -- --check
+..\rust_management\cargo.ps1 test -p kestrum --locked --test code_standards
+# Add relevant --test <target> arguments to the same focused invocation.
+# At a justified integration boundary (not automatically for every slice):
 ..\rust_management\cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings
-..\rust_management\cargo.ps1 test -p kestrum --all-features
-.\publish.ps1
+..\rust_management\cargo.ps1 test -p kestrum --locked --all-features --no-fail-fast
 ```
 
 Choose focused behavioral suites while developing; run the relevant integration
@@ -54,9 +59,10 @@ ordinary Cargo. Do not change workspace membership, create alternate manifests,
 copy the project, fabricate placeholder crates, override target directories or
 clean shared caches to bypass a failure. Investigate and report the real path.
 
-No-parameter publishing is required after meaningful game changes. Report its
-actual result or blocker; a local run is not a substitute. Documentation-only
-changes use document checks and do not require an unchanged game to be published.
+Do not run `publish.ps1` during this task: it has external deployment/tracker
+effects. Pooled native/WASM builds and local hidden/headless checks are the
+authorized substitute. Report external publishing as unrun. Documentation-only
+changes use document checks without gameplay builds.
 
 ## Visual and interaction review
 
@@ -163,7 +169,7 @@ Work on `master` unless explicitly asked otherwise. Follow
 `rust_management/docs/COMMIT_STYLE.md`: a clear subject in the game's voice with
 a parenthetical tag, an honest body and AI co-authorship.
 
-After validation stage all modified and untracked project files, including
-pre-existing work as directed by AGENTS.md. Preserve existing work in place.
+After validation stage the slice's owned files, including required evidence
+and documentation. Preserve unrelated/pre-existing work without staging it.
 Before finishing, verify clean `git status --short` and report the commit and
 validation results. If something blocks this, state the blocker.

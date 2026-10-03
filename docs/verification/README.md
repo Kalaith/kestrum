@@ -23,6 +23,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Capital fill and borders](capital-border-colours.md) records the local-control
+rendering correction and fresh/developed regional captures, with world political
+claims and fog unchanged.
+
 [Title startup](title-startup.md) records the native debug startup correction,
 the explicit Continue route, and focused validation. The title capture does not
 exercise real catalogue polling because capture mode skips storage.

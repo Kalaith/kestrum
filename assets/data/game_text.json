@@ -723,7 +723,7 @@
     "help_region": "Select a named region marker, then Enter Region. World Map returns to your previous atlas view.",
     "help_navigation": "Drag to pan. Pinch or tap + / - to zoom. Overview fits known land; Return View restores your working view. Recenter focuses your selected army or home.",
     "help_map_scales": "Overview: claims and urgent activity. Campaign: routes and compact forces. Detail: local names and costs. Tap a numbered circle of places to focus.",
-    "help_map_symbols": "Crown: capital. Shape: settlement tier. Fill: claim. Ring: control. /: occupation. X: contested. ! beside a place: known danger. Select for details.",
+    "help_map_symbols": "Crown: capital. Shape: settlement. Fill: regional claim (world) / local control (region). Ring: control. /: occupation. X: contested. !: known danger. Select for details.",
     "help_map_contacts": "Flag: force. R with outer ring: forces across a region. +: nearby group; tap to focus. A plain count: armies at one site. >: saved route. ! on a flag: siege or cut off; select for exact details.",
     "enter_region": "Enter Region",
     "select_place": "Tap an Army marker to move, or a place to inspect.",

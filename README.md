@@ -86,9 +86,10 @@ working camera. Recenter focuses the selected army or headquarters at campaign
 scale. Close dismisses selection. Selection, End Turn and returning from a sheet
 retain the camera; End Turn remains reachable during movement selection.
 
-The overview shows known political claims separately from local occupation and
-contested control, settlement silhouettes and the owned capital. Labels respond
-to zoom, importance and available space. Compact owned force marks expose route,
+At world scope, the fill shows known regional political claims. Inside a region,
+it follows each revealed site's physical controller; rings show local control.
+Occupation and contested marks remain separate. Labels respond to zoom,
+importance and available space. Compact owned force marks expose route,
 siege, idle and supply state; selection opens full counts and order details.
 Overview aggregates nearby forces. Tap a crowded group to focus it before
 choosing an exact place or army. Regional force groups and armies sharing one

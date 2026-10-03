@@ -24,6 +24,6 @@
     "occupied": "Occupied", "contested": "Contested", "unknown_claim": "Claim unknown",
     "mixed": "Mixed control", "neutral": "Neutral", "work": "Work", "damage": "Damage",
     "wood": "Wood", "stone": "Stone",
-    "legend": "Crown: capital   Fill: claim   Ring: control (grey: neutral)   / occupation   X contested   ! known conditions   ? unknown claim"
+    "legend": "Crown: capital   Fill: world claim / local control   Ring: control (grey: neutral)   / occupation   X contested   ! known conditions   ? unknown claim"
   }
 }

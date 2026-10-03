@@ -254,8 +254,8 @@ fn claims(ctx: &Context<'_>) -> Vec<Claim> {
                 let summary = overview.sites.get(&site.id)?;
                 Some(Claim {
                     at: ctx.view.normalized_world(site.position),
-                    owner: summary.political_owner,
-                    known: summary.political_known,
+                    owner: summary.controller,
+                    known: view.known_sites.contains(&site.id),
                 })
             })
             .collect(),

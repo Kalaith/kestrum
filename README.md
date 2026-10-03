@@ -300,6 +300,9 @@ current task because the wrapper updates an external deployment tracker.
 For UI changes, use affected scenes in `scripts/capture_ui.ps1`, write directly
 to `docs/verification/`, replace equivalent captures and confirm launched games
 exit. Use an actual 1920x1080 canvas plus relevant headless browser interactions.
+Add `-ShowOutput` to the capture command to expose successful game metric lines
+through the shared wrapper (toolkit commit `0e495c0` or later). Keep verification
+hidden and omit fullscreen/visible options.
 
 ## Code and artwork
 

@@ -5,12 +5,14 @@ param(
     [int]$WindowWidth = 1920,
     [int]$WindowHeight = 1080,
     [switch]$Fullscreen,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [switch]$ShowOutput
 )
 
 $ErrorActionPreference = "Stop"
 $gameDir = Split-Path -Parent $PSScriptRoot
 $shared = Join-Path (Split-Path -Parent $gameDir) "macroquad-toolkit\scripts\capture_ui.ps1"
 & $shared -GameDir $gameDir -Prefix "KESTRUM" -Scenes $Scenes -Frames $Frames `
-    -WindowWidth $WindowWidth -WindowHeight $WindowHeight -OutputDir "docs\verification" -SkipBuild:$SkipBuild -Fullscreen:$Fullscreen
+    -WindowWidth $WindowWidth -WindowHeight $WindowHeight -OutputDir "docs\verification" `
+    -SkipBuild:$SkipBuild -Fullscreen:$Fullscreen -ShowOutput:$ShowOutput
 if (-not $?) { exit 1 }

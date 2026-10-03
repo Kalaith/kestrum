@@ -88,9 +88,9 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
   Instrument Rust input/action handling before later assertions; replace stable failed
   `ui_web_*` diagnostics only with reached states. Never invoke fullscreen.
 - [ ] Collect current native/WebGL portrait cache and frame-time metrics. The
-  shared capture wrapper deletes successful stdout logs without forwarding
-  game metric lines; it needs a supported output capability before this route
-  can collect them. No runtime cache measurements were collected in this pass.
+  native debug cache counters are now recorded through `-ShowOutput`; complete
+  cold/warm timing and WebGL measurements. Distinguish cache byte estimates
+  from actual process/GPU memory and release frame timing.
 - [ ] Finish any interaction coverage left unverified in the current scoped
   record: grouped/overflow navigation, last-page delivery settings, muting and
   re-enabling, save/reload acknowledgements, NPC progression with an open card,

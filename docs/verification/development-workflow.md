@@ -178,14 +178,48 @@ HEAD, index and worktree blob hashes all matched
 balance was changed. The original baseline exception remains outstanding;
 no full-suite rerun was needed after restoring the tested original source.
 
-## Native metric collection limit
+## Native metric output slice
 
-Source inspection explains the missing successful-run metric output:
+Source inspection identified the missing successful-run metric output:
 `src/main.rs` prints `KESTRUM_CAPTURE_METRICS` on the last capture frame, but
-the shared `macroquad-toolkit/scripts/capture_ui.ps1` redirects stdout to its
-managed log, exposes it only on failure, and deletes it after successful exit
-(lines 219, 271 and 338-339). Its optional process report records OS process/GPU
-counters, not the game's portrait-cache or frame-profile lines. A supported
-stdout forwarding/export capability is needed in the shared tool before using
-this capture route for those measurements. No alternate pipeline or repeated
-capture was introduced; shared tooling is outside this project's edit scope.
+the prior shared `macroquad-toolkit/scripts/capture_ui.ps1` redirected stdout to
+its managed log, exposed it only on failure, and deleted it after successful
+exit. Its optional process report records OS process/GPU
+counters, not the game's portrait-cache or frame-profile lines.
+
+Daniel's continuation explicitly authorized fixing this tooling gap. Toolkit
+commit `0e495c0` adds opt-in `-ShowOutput`, forwarding successful child stdout
+through PowerShell's information stream after exit validation and before the
+existing cleanup. Kestrum's wrapper forwards the switch. Default output,
+failure diagnostics and process reports are unchanged; no managed docs rollout
+or alternate capture pipeline was introduced.
+
+Both wrappers passed PowerShell parsing and whitespace review. One command ran:
+`& .\scripts\capture_ui.ps1 -Scenes portraits_dense -WindowWidth 1920 -WindowHeight 1080 -SkipBuild -ShowOutput`.
+It took 18.0s; PID 7728 exited 0, and the wrapper confirmed a 1920x1080 canvas.
+The existing debug binary's SHA-256 was
+`8aab56b2c1f170b24a933aff403d8a5c1c5758636080f7170f095e7336003ab3`.
+Its unchanged capture/metric code suffices to verify this script-only change;
+it does not validate the concurrent, opt-in Rust input diagnostics.
+
+The forwarded scene had four factions, round 0, nine people, three events,
+the Armies overlay and DPI 1. Exact cache counters were:
+
+| Metric | Observed value |
+| --- | ---: |
+| Compressed source bytes / budget | 1,347,336 / 67,108,864 |
+| Decoded source bytes / peak / budget | 33,554,432 / 33,554,432 / 33,554,432 |
+| Decoded entries / hits / decodes / evictions | 32 / 0 / 150 / 118 |
+| Thumbnail texture bytes / entries | 262,144 / 4 |
+| Detail texture bytes / entries | 0 / 0 |
+| Fallback texture bytes | 524,288 |
+| Pending / completed / failed jobs | 0 / 4 / 0 |
+| Peak estimated CPU bytes | 38,309,640 |
+| Last / peak job microseconds | 106,830 / 106,830 |
+
+These are debug-build cache counters and job elapsed time, not release frame
+percentiles, process RSS or measured driver/GPU allocation. Zero source hits
+and 118 evictions are observations, not a claimed warm-cache success. Cold/warm
+timings and WebGL measurements remain outstanding. The stable dense image was
+byte-identical to the existing capture: 767,099 bytes, SHA-256
+`2d62838e364a41f59da2d77a2db11cedf2aad3bea65d9fbeb22cc88eda54baed`.

@@ -199,6 +199,9 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
     if action.is_some() {
         return action;
     }
+    if notification_settings {
+        return None;
+    }
     let key = if ctx.state.overlay == Overlay::ConfirmNew {
         "cancel"
     } else {

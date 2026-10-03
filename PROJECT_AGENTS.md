@@ -23,8 +23,12 @@ do not edit shared policy or apply this exception to other games.
   Reuse unchanged results; rerun only after a relevant change or unresolved
   failure. Do not run focused suites immediately before a full suite that
   already contains them unless an earlier fast diagnosis is useful.
-- Keep deterministic, save/migration and core gameplay coverage. Test count is
-  not a deletion target. Measure wall time separately from compilation and
+- Keep useful existing deterministic and core gameplay coverage; test count is
+  not a deletion target. Backward save compatibility and migrations are optional
+  for this prototype (Daniel's clarification). Unsupported saves must show a
+  clear recoverable error without crashing. Do not build migration machinery
+  solely to satisfy earlier guidance or remove unrelated working code.
+  Measure wall time separately from compilation and
   reported test time; consolidate coverage only with a concrete redundancy.
 - Build WASM once when browser acceptance is needed; reuse that exact output
   across independent headless profiles. Capture only affected scenes and reuse

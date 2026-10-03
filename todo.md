@@ -73,12 +73,6 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
 
 ## Event and platform acceptance
 
-- [ ] Run the final full suite with the corrected launcher invocation:
-  `..\rust_management\cargo.ps1 test --locked --no-fail-fast` (no separator
-  before Cargo's `--no-fail-fast`). The wrap-up command incorrectly passed it
-  after `'--'`, so the test harness rejected the option after compilation and
-  no final tests ran. The earlier full suite only had the approved seed-88
-  failure; that does not validate the final rendering/API/UI changes.
 - [ ] Repair and validate `scripts/verify_portraits_events.cjs` import/navigation
   coordinates before using its later interaction assertions. The current run
   stayed on title/How to Play screens and failed the preference persistence
@@ -89,14 +83,6 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
 - [ ] Collect current native/WebGL portrait cache and frame-time metrics. The
   successful capture wrapper output did not expose the expected metrics lines;
   no runtime cache measurements were collected in the final run.
-- [ ] Remove the duplicated Back label in global notification settings
-  (`src/ui/menus.rs` / `src/ui/notifications/settings.rs`). The final native
-  capture shows both labels at the same control; preserve the already-audited
-  Back behavior and recapture `ui_notification_global_settings.png`.
-- [ ] Refine dense People row separators/spacing in `src/ui/army/people.rs`.
-  Metadata and actions are readable, but the separator crowds the next row's
-  name and portrait in `ui_portraits_dense.png`. Preserve full movement/status
-  information and existing touch targets; avoid adding another panel.
 - [ ] Finish any interaction coverage left unverified in the current scoped
   record: grouped/overflow navigation, last-page delivery settings, muting and
   re-enabling, save/reload acknowledgements, NPC progression with an open card,

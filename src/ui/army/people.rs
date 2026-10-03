@@ -144,7 +144,7 @@ fn person_rows(
                 ctx.text("movement_left"),
                 remaining
             ),
-            vec2(188.0, y + 42.0),
+            vec2(188.0, y + 39.0),
             16.0,
             MUTED,
         );
@@ -219,15 +219,7 @@ fn person_rows(
             epithet
         );
         let note = truncate_text_to_width_ex(&note, 980.0, ctx.body_font(), 14.0);
-        body(ctx, &note, vec2(188.0, y + 61.0), 14.0, MUTED);
-        draw_line(
-            112.0,
-            y + 68.0,
-            1168.0,
-            y + 68.0,
-            1.0,
-            Color::new(0.21, 0.29, 0.25, 1.0),
-        );
+        body(ctx, &note, vec2(188.0, y + 57.0), 14.0, MUTED);
     }
     None
 }

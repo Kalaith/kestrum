@@ -4,6 +4,10 @@
 
 ## How to use these records
 
+[Resumed development workflow](development-workflow.md) records the 2026-10-03
+validation-cost audit, corrected checkpoint baseline and subsequent TODO slices.
+Use it alongside the portrait/event checkpoint for current evidence.
+
 Verification reports record a dated change, checkout, test result and review
 scope. They are historical evidence, not an implementation queue or proof of
 current playability. An older report's unresolved issue may have a later fix;

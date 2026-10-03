@@ -22,11 +22,44 @@ fn runtime_artwork_is_registered_and_present() {
     ] {
         assert!(registered.contains(path.as_str()));
     }
+    let catalog = serde_json::to_value(&data.portraits).unwrap();
+    assert!(
+        data.portraits.supporting.is_some(),
+        "release portrait art is enabled"
+    );
+    let mut portrait_paths = BTreeSet::new();
+    collect_portrait_paths(&catalog, &mut portrait_paths);
+    assert!(!portrait_paths.is_empty());
+    for path in portrait_paths {
+        assert!(
+            registered.contains(path),
+            "Unregistered portrait asset: {path}"
+        );
+    }
     for path in registered {
         assert!(
             Path::new(env!("CARGO_MANIFEST_DIR")).join(path).is_file(),
             "Missing asset: {path}"
         );
+    }
+}
+
+fn collect_portrait_paths<'a>(value: &'a serde_json::Value, paths: &mut BTreeSet<&'a str>) {
+    match value {
+        serde_json::Value::String(path) if path.starts_with("assets/portraits/") => {
+            paths.insert(path);
+        }
+        serde_json::Value::Array(values) => {
+            for value in values {
+                collect_portrait_paths(value, paths);
+            }
+        }
+        serde_json::Value::Object(values) => {
+            for value in values.values() {
+                collect_portrait_paths(value, paths);
+            }
+        }
+        _ => {}
     }
 }
 

@@ -27,17 +27,55 @@ pub(in crate::ui::army) fn draw(
 }
 
 fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
-    body(
-        ctx,
-        &format!(
-            "{} · {}",
-            class_name(ctx, person.class),
-            person_name(ctx, person)
-        ),
-        vec2(112.0, 180.0),
-        22.0,
-        CREAM,
+    crate::ui::portraits::draw(
+        ctx.portraits,
+        Some(&person.appearance),
+        Some(person.age_years(campaign.completed_rounds)),
+        ctx.household_rules.service_minimum_age_years,
+        Rect::new(112.0, 160.0, 128.0, 128.0),
     );
+    let mut y = 170.0;
+    for line in wrap_text_ex(&person.name, 908.0, ctx.body_font(), 22.0) {
+        body(ctx, &line, vec2(260.0, y), 22.0, CREAM);
+        y += 24.0;
+    }
+
+    let age = person.age_years(campaign.completed_rounds);
+    let mut details = format!(
+        "{} | {} {} | {} {}",
+        class_name(ctx, person.class),
+        ctx.text("person_age_label"),
+        age,
+        ctx.text("history_service_start"),
+        person.service_start_round
+    );
+    if person.career.retired {
+        details.push_str(&format!(" | {}", ctx.text("person_retired")));
+    }
+    if person.career.site_role == Some(kestrum::state::people::PersonSiteRole::Governor) {
+        details.push_str(&format!(" | {}", ctx.text("person_governor")));
+    }
+    match person.status {
+        PersonStatus::Fit => details.push_str(&format!(" | {}", ctx.text("person_fit"))),
+        PersonStatus::Wounded {
+            remaining_steps, ..
+        } => details.push_str(&format!(
+            " | {} {remaining_steps} {}",
+            ctx.text("person_wounded"),
+            ctx.text("wound_steps_remaining")
+        )),
+        PersonStatus::Dead { .. } => details.push_str(&format!(" | {}", ctx.text("person_dead"))),
+        PersonStatus::Displaced { .. } => {}
+    }
+    if age >= 56 {
+        details.push_str(&format!(" | {}", ctx.text("elder_choice_help")));
+    }
+    for line in wrap_text_ex(&details, 908.0, ctx.body_font(), 15.0) {
+        body(ctx, &line, vec2(260.0, y), 15.0, MUTED);
+        y += 17.0;
+    }
+
+    let mut provenance = Vec::new();
     if person.career.founding_lord {
         let kingdom = campaign
             .factions
@@ -45,9 +83,8 @@ fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
             .find(|faction| faction.id == person.faction)
             .map(|faction| faction.name.as_str())
             .unwrap_or("?");
-        block(
-            ctx,
-            &ctx.text("person_founding_lord")
+        provenance.push(
+            ctx.text("person_founding_lord")
                 .replace("{kingdom}", kingdom)
                 .replace(
                     "{bonus}",
@@ -56,9 +93,6 @@ fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
                         ctx.rules.founder.commander_bonus_permille as f32 / 10.0
                     ),
                 ),
-            vec2(112.0, 207.0),
-            1030.0,
-            BRASS,
         );
     }
     if let Some(emergence) = &person.career.emergence {
@@ -69,56 +103,22 @@ fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
             .unwrap_or("?");
         let deed = emergence
             .distinguishing_deed
-            .map(|deed| format!(" · {}", ctx.text(epithet_key(deed))))
+            .map(|deed| format!(" | {}", ctx.text(epithet_key(deed))))
             .unwrap_or_default();
-        block(
-            ctx,
-            &format!(
-                "{} {} · {place}{deed}",
-                ctx.text("emerged_served_with"),
-                ctx.text(troop_key(emergence.source_troop))
-            ),
-            vec2(112.0, 211.0),
-            1030.0,
-            MUTED,
-        );
-    }
-    let age = person.age_years(campaign.completed_rounds);
-    let mut age_line = format!(
-        "{} {age} · {} {}",
-        ctx.text("person_age_label"),
-        ctx.text("history_service_start"),
-        person.service_start_round
-    );
-    if person.career.retired {
-        age_line.push_str(&format!(" · {}", ctx.text("person_retired")));
-    }
-    if person.career.site_role == Some(kestrum::state::people::PersonSiteRole::Governor) {
-        age_line.push_str(&format!(" · {}", ctx.text("person_governor")));
-    }
-    if let PersonStatus::Wounded {
-        remaining_steps, ..
-    } = person.status
-    {
-        age_line.push_str(&format!(
-            " · {} {remaining_steps} {}",
-            ctx.text("person_wounded"),
-            ctx.text("wound_steps_remaining")
+        provenance.push(format!(
+            "{} {} | {place}{deed}",
+            ctx.text("emerged_served_with"),
+            ctx.text(troop_key(emergence.source_troop))
         ));
     }
-    body(ctx, &age_line, vec2(112.0, 252.0), 18.0, MUTED);
-    if age >= 56 {
-        body(
-            ctx,
-            &ctx.text("elder_choice_help"),
-            vec2(600.0, 252.0),
-            14.0,
-            BRASS,
-        );
+    if !provenance.is_empty() {
+        for line in wrap_text_ex(&provenance.join(" | "), 908.0, ctx.body_font(), 14.0) {
+            body(ctx, &line, vec2(260.0, y), 14.0, BRASS);
+            y += 16.0;
+        }
     }
     draw_traits(ctx, person, campaign);
 }
-
 fn active_course(ctx: &Context<'_>, person: &Person) -> Option<UiAction> {
     let id = person.id;
     if let Some(course) = &person.career.course {
@@ -150,22 +150,23 @@ fn active_course(ctx: &Context<'_>, person: &Person) -> Option<UiAction> {
                 "course_free_cancel",
             ),
         };
-        body(
-            ctx,
-            &truncate_text_to_width_ex(
-                &format!(
-                    "{label} · {} {steps}/{total} · {}",
-                    ctx.text("course_steps"),
-                    ctx.text(refund)
-                ),
-                744.0,
-                ctx.body_font(),
-                18.0,
-            ),
-            vec2(112.0, 350.0),
-            18.0,
-            BRASS,
+        let status = format!(
+            "{label} | {} {steps}/{total} | {}",
+            ctx.text("course_steps"),
+            ctx.text(refund)
         );
+        for (line, copy) in wrap_text_ex(&status, 300.0, ctx.body_font(), 14.0)
+            .into_iter()
+            .enumerate()
+        {
+            body(
+                ctx,
+                &copy,
+                vec2(868.0, 350.0 + line as f32 * 16.0),
+                14.0,
+                BRASS,
+            );
+        }
         if button(
             ctx,
             Rect::new(868.0, 298.0, 300.0, 48.0),
@@ -185,13 +186,15 @@ fn class_options(
     campaign: &VisibleCampaign,
     person: &Person,
 ) -> Option<UiAction> {
-    body(
-        ctx,
-        &ctx.text("course_pause_help"),
-        vec2(112.0, 371.0),
-        18.0,
-        MUTED,
-    );
+    if person.career.course.is_none() {
+        body(
+            ctx,
+            &ctx.text("course_pause_help"),
+            vec2(112.0, 371.0),
+            18.0,
+            MUTED,
+        );
+    }
     let requirements =
         super::super::career_requirements::career_requirements(person, ctx.progression);
     for (index, (class, facts)) in requirements.into_iter().enumerate() {

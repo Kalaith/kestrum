@@ -20,6 +20,9 @@ impl Game {
         if changed {
             self.projection = engine::project_map(campaign, campaign.player).ok();
             self.overview = self.projection.as_ref().map(engine::map_overview);
+            if let Some(overview) = &mut self.overview {
+                engine::notifications::extend_attention(campaign, overview);
+            }
             self.projection_revision = Some(revision);
         }
         changed

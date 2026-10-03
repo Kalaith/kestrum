@@ -1,7 +1,9 @@
 # Campaign notifications
 
-Planned on 2026-10-02. **Implementation in progress.** Durable receipt foundations
-are being validated; UI and forecast acceptance remain outstanding. See
+Planned on 2026-10-02. **Implemented; acceptance remains partial.** Durable
+receipts, conditional forecasts, the compact rail/card and delivery settings are
+present. Native captures were reviewed; the final full-test invocation and
+browser harness did not complete acceptance. Remaining work is in [todo.md](../todo.md). See
 [scoped verification](verification/portraits-events.md).
 This specifies the notification part of [M02](map-playability-plan.md#m02-map-orders-and-consequences).
 The other M02 map-order and inspector work keeps its existing scope.
@@ -273,12 +275,14 @@ in Attention; subsequent new/escalated risks notify normally. Save/read/dismiss
 state travels with a saved campaign, while delivery preferences stay local.
 Loading an older manual save intentionally restores that save's unread state.
 
-Mark notification presentation changes dirty for the next durable save. Ensure
-checkpoint and named-save snapshots include them, and use existing storage
-recovery for failures. Do not silently overwrite a named save merely to persist
-a click. Reload guarantees apply to successfully saved state; the UI must not
-claim unsaved acknowledgements are durable. New campaign and failed-load paths
-must respectively reset and preserve the correct inbox.
+Read and dismiss actions mutate the campaign-owned inbox. Checkpoints and
+user-initiated named saves serialize a snapshot of the complete current campaign,
+so a snapshot prepared after a presentation change includes it. These actions do
+not trigger a save by themselves; until a snapshot containing the change is
+successfully written, reloading may restore the earlier read or dismissal state.
+Use existing storage recovery for failed writes, and never overwrite a named save
+merely to persist a click. New campaign and failed-load paths must respectively
+reset and preserve the correct inbox.
 
 The toolkit's `NotificationManager` already provides transient toasts and bounded
 text/type history. It lacks campaign IDs/targets, categories, read state and
@@ -292,8 +296,9 @@ Put message copy, category definitions and tunable limits in validated JSON unde
 
 ## Delivery and acceptance
 
-Deliver within M02 as useful, separately validated commits. These are planned
-packages, not completed milestones:
+These M02 packages are implemented in source. The [scoped verification](verification/portraits-events.md)
+records current acceptance, and [todo.md](../todo.md) lists remaining agent-run
+interaction checks. The descriptions below retain the package contracts:
 
 1. **M02-N1: durable events and compact UI.** Add receipts, additive save support,
    rail/card, Recent, per-type settings and own-hero details. Migrate all existing

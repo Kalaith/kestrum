@@ -34,7 +34,11 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     let world = &campaign.world;
     let targets = ctx.navigation.targets(world, ctx.view);
     let groups = ctx.navigation.place_groups(world, ctx.view);
-    let panel = if ctx.movement.stage == super::MoveStage::Map {
+    let panel = if super::is_open_for_map(ctx) {
+        super::notification_reserved_rects(ctx.notifications, ctx.notification_projection)
+            .last()
+            .copied()
+    } else if ctx.movement.stage == super::MoveStage::Map {
         Some(super::movement_panel_bounds(
             ctx.movement,
             ctx.navigation,

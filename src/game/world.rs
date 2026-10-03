@@ -50,11 +50,24 @@ impl Game {
         if self.is_observer() && ui::observer_controls_contain(point) {
             return true;
         }
+        let notifications = self.notification_map_visible();
+        let card_open = notifications && self.notifications.is_open;
+        if notifications
+            && ui::notification_controls_contain(
+                point,
+                &self.notifications,
+                self.notification_projection.as_ref(),
+            )
+        {
+            return true;
+        }
         if !self.is_observer()
             && ui::overview_controls_contain(
                 point,
                 &self.overview_ui,
-                self.navigation.selection().is_some() || self.movement.stage == ui::MoveStage::Map,
+                card_open
+                    || self.navigation.selection().is_some()
+                    || self.movement.stage == ui::MoveStage::Map,
                 self.overview
                     .as_ref()
                     .map_or(0, |overview| overview.attention.len()),
@@ -68,7 +81,14 @@ impl Game {
             .as_ref()
             .and_then(Campaign::strategic)
             .map(|campaign| &campaign.world);
-        ui::map_controls_contain(point, &self.navigation, world, &self.view, &self.movement)
+        ui::map_controls_contain(
+            point,
+            &self.navigation,
+            world,
+            &self.view,
+            &self.movement,
+            card_open,
+        )
     }
 
     /// Warning navigation uses only observer-approved objects and never issues travel.
@@ -114,7 +134,14 @@ impl Game {
         if origin.distance(pointer.position) > macroquad_toolkit::input::gestures::DRAG_THRESHOLD {
             return None;
         }
-        let panel = if self.movement.stage == ui::MoveStage::Map {
+        let panel = if self.notification_map_visible() && self.notifications.is_open {
+            ui::notification_reserved_rects(
+                &self.notifications,
+                self.notification_projection.as_ref(),
+            )
+            .last()
+            .copied()
+        } else if self.movement.stage == ui::MoveStage::Map {
             Some(ui::movement_panel_bounds(
                 &self.movement,
                 &self.navigation,
@@ -147,6 +174,13 @@ impl Game {
                     target.bounds.contains(origin)
                         && target.bounds.contains(pointer.position)
                         && ui::banner_visible(target.bounds, panel, attention)
+                        && (!self.notification_map_visible()
+                            || !ui::notification_reserved_rects(
+                                &self.notifications,
+                                self.notification_projection.as_ref(),
+                            )
+                            .iter()
+                            .any(|rect| rect.overlaps(&target.bounds)))
                 })
             {
                 if let Some(position) = target.focus {
@@ -214,6 +248,7 @@ impl Game {
             self.error = Some(error);
             return;
         }
+        self.notifications.clear_card();
         if !self.is_observer() && self.movement.stage == ui::MoveStage::Map {
             match selection {
                 MapSelection::Site(id) => self.select_move_destination(id),

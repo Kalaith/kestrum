@@ -154,8 +154,12 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         | Overlay::Settlement
         | Overlay::Battlefield => return None,
     };
-    centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
-    horizontal_rule(vec2(640.0, 184.0), 206.0);
+    let notification_settings =
+        ctx.state.overlay == Overlay::Settings && ctx.notifications.global_settings_open;
+    if !notification_settings {
+        centered(ctx, &ctx.text(title_key), vec2(640.0, 159.0), 28.0, CREAM);
+        horizontal_rule(vec2(640.0, 184.0), 206.0);
+    }
     let action = match ctx.state.overlay {
         Overlay::Menu => {
             if ctx
@@ -274,6 +278,9 @@ fn pause(ctx: &Context<'_>) -> Option<UiAction> {
 }
 
 fn settings(ctx: &Context<'_>) -> Option<UiAction> {
+    if ctx.notifications.global_settings_open {
+        return super::notifications::draw_global_settings(ctx);
+    }
     for (index, (key, value, action)) in [
         (
             "labels",
@@ -308,6 +315,17 @@ fn settings(ctx: &Context<'_>) -> Option<UiAction> {
         ) {
             return Some(action);
         }
+    }
+    if button(
+        ctx,
+        Rect::new(478.0, 382.0, 324.0, 48.0),
+        super::notifications::rules_term(ctx, "ui_notification_settings", "Notifications"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::Notification(
+            super::NotificationAction::OpenGlobalSettings,
+        ));
     }
     #[cfg(not(target_arch = "wasm32"))]
     if button(

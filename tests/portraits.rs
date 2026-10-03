@@ -35,7 +35,7 @@ fn allocate(
 }
 
 fn tiny_catalog(two_hair_styles: bool) -> PortraitCatalog {
-    let mut catalog = current_catalog();
+    let mut catalog = PortraitCatalog::load_frozen().expect("load frozen metadata-only catalog");
     let face_id = "face_oval";
     let nose_id = "nose_straight";
     let eyes_id = "eyes_open";

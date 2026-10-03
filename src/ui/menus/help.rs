@@ -32,6 +32,7 @@ const PAGES: &[&[&str]] = &[
     &["help_households"],
     &["help_succession"],
     &["help_heirlooms"],
+    &["help_notifications"],
     &["help_map_scales", "help_map_symbols", "help_map_contacts"],
 ];
 pub const HELP_PAGE_COUNT: usize = PAGES.len();

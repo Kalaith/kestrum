@@ -1,6 +1,7 @@
 //! Locally witnessed family choices and evidence based succession.
 
 mod review;
+use super::super::portraits;
 use super::*;
 use kestrum::engine::HouseholdAction;
 use kestrum::state::{
@@ -131,9 +132,16 @@ fn person_row(
         );
         draw_rectangle_lines(112.0, y - 24.0, 798.0, 48.0, 1.0, BRASS);
     }
-    let name = truncate_text_to_width_ex(&person.name, 300.0, ctx.body_font(), 18.0);
-    body(ctx, &name, vec2(124.0, y - 1.0), 18.0, CREAM);
     let age = person.age_years(campaign.completed_rounds);
+    portraits::draw(
+        ctx.portraits,
+        Some(&person.appearance),
+        Some(age),
+        ctx.household_rules.service_minimum_age_years,
+        Rect::new(124.0, y - 21.0, 40.0, 40.0),
+    );
+    let name = truncate_text_to_width_ex(&person.name, 252.0, ctx.body_font(), 18.0);
+    body(ctx, &name, vec2(172.0, y - 1.0), 18.0, CREAM);
     let assignment = match person.assignment {
         PersonAssignment::Formation { .. } => ctx.text("in_service"),
         PersonAssignment::Site { .. } => ctx.text("assigned_site"),

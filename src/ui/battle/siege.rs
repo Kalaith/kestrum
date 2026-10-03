@@ -50,6 +50,7 @@ pub(super) fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow
             heading: ctx.text(key),
             detail: ctx.text("battle_siege_positions"),
             person: None,
+            appearance: None,
         });
     }
     if report.fort_damage_added > 0 || report.road_damage.is_some() {
@@ -84,6 +85,7 @@ pub(super) fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow
             heading: ctx.text("battle_lasting_damage"),
             detail,
             person: None,
+            appearance: None,
         });
     }
     rows
@@ -99,5 +101,6 @@ pub(super) fn wall_row(ctx: &Context<'_>, report: &BattleReport) -> Option<Repor
             ctx.text("battle_walls_help")
         ),
         person: None,
+        appearance: None,
     })
 }

@@ -66,6 +66,11 @@ fn attached_army(
 }
 
 fn draw_traits(ctx: &Context<'_>, person: &Person, campaign: &VisibleCampaign) {
+    let width = if person.career.course.is_some() {
+        744.0
+    } else {
+        1056.0
+    };
     let labels = person
         .career
         .traits
@@ -78,29 +83,31 @@ fn draw_traits(ctx: &Context<'_>, person: &Person, campaign: &VisibleCampaign) {
             })
         })
         .collect::<Vec<_>>();
-    let text = if labels.is_empty() {
+    let traits = if labels.is_empty() {
         ctx.text("traits_none")
     } else {
-        format!("{}: {}", ctx.text("earned_traits"), labels.join(" · "))
+        format!("{}: {}", ctx.text("earned_traits"), labels.join(" | "))
     };
-    body(ctx, &text, vec2(112.0, 288.0), 18.0, CREAM);
+    let mut y = draw_person_detail(ctx, &traits, vec2(112.0, 298.0), width, 16.0, CREAM, 1) + 2.0;
     if let Some(recognition) = &person.career.recognition {
         let site = campaign
             .world
             .site(recognition.site)
             .map(|site| site.name.as_str())
             .unwrap_or("?");
-        body(
+        y = draw_person_detail(
             ctx,
             &format!(
-                "{} {} · {site}",
+                "{} {} | {site}",
                 ctx.text("recognized_as"),
                 recognition.epithet
             ),
-            vec2(112.0, 310.0),
-            17.0,
+            vec2(112.0, y),
+            width,
+            15.0,
             BRASS,
-        );
+            1,
+        ) + 2.0;
     }
     let associations = person
         .career
@@ -120,16 +127,45 @@ fn draw_traits(ctx: &Context<'_>, person: &Person, campaign: &VisibleCampaign) {
         .take(2)
         .collect::<Vec<_>>();
     if !associations.is_empty() {
-        body(
+        draw_person_detail(
             ctx,
-            &associations.join(" · "),
-            vec2(112.0, 332.0),
-            17.0,
+            &associations.join(" | "),
+            vec2(112.0, y),
+            width,
+            14.0,
             MUTED,
+            2,
         );
     }
 }
 
+fn draw_person_detail(
+    ctx: &Context<'_>,
+    label: &str,
+    origin: Vec2,
+    width: f32,
+    size: f32,
+    color: Color,
+    max_lines: usize,
+) -> f32 {
+    let lines = wrap_text_ex(label, width, ctx.body_font(), size);
+    let visible_lines = lines.len().min(max_lines);
+    for (line, text) in lines.iter().take(visible_lines).enumerate() {
+        let copy = if line + 1 == visible_lines && lines.len() > visible_lines {
+            truncate_text_to_width_ex(&format!("{text}…"), width, ctx.body_font(), size)
+        } else {
+            text.clone()
+        };
+        body(
+            ctx,
+            &copy,
+            vec2(origin.x, origin.y + line as f32 * (size + 2.0)),
+            size,
+            color,
+        );
+    }
+    origin.y + visible_lines as f32 * (size + 2.0)
+}
 fn class_name(ctx: &Context<'_>, class: PersonClass) -> String {
     ctx.text(match class {
         Recruit => "class_recruit",

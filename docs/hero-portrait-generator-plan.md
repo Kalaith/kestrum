@@ -1,13 +1,15 @@
 # Hero portrait generator
 
-Planned on 2026-10-02. **Implementation in progress:** identity and migration
-foundations are committed; artwork, rendering and integrated acceptance remain
-pending. See [scoped verification](verification/portraits-events.md).
+Planned on 2026-10-02. Persistent identity, migration, the G02 illustrated
+catalog and runtime integration are implemented. G03 release expansion and
+remaining G04 acceptance are deferred at the user's wrap-up request; the
+[outstanding agent queue](../todo.md) records the concrete continuation contract.
+See [scoped verification](verification/portraits-events.md) for actual checks.
 This is the first graphics workstream alongside the
 [map roadmap](map-playability-plan.md#delivery-sequence). M02 remains next;
 G01-G04 below can be scheduled independently after M01A and do not replace or
 block M02-M05. The [documentation index](README.md) owns navigation, and this
-document owns portrait scope, defaults and outstanding work.
+document owns portrait scope and defaults; `todo.md` owns the current agent queue.
 
 ## Outcome and scope
 
@@ -283,35 +285,25 @@ projection differs. Encountered enemy portraits come from the saved encounter,
 including its date, not a live enemy lookup. Observer mode uses its separate
 authorized session and must not leak appearances into the restored human game.
 
-## Outstanding work (TODO)
+## Remaining delivery
 
-Only unfinished portrait delivery belongs here. Commit each useful validated
-slice; remove completed TODO entries and link their scoped evidence rather than
-duplicating the map milestone ledger. Identity and compatibility implementation
-is in progress; [scoped verification](verification/portraits-events.md) records
-the checkpoint and remaining acceptance work.
+The [outstanding agent queue](../todo.md) owns unfinished work and the concrete
+revision-2 catalog/art contract. G01 identity/migration and the G02 first visible
+slice are implemented. The [scoped evidence](verification/portraits-events.md)
+records their actual validation and remaining limits.
 
-- [ ] **G02 - Art proof and first visible slice.** Produce a proof set with
-  2 faces, 2 noses, 2 eye styles and 3 hair silhouettes including bald, plus
-  3 skin/3 hair/2 iris colors and required masks/adapters. Establish the frozen
-  rig and palette contract with a 40/64/128px contact sheet. Add any missing
-  shared compositor support, bounded game cache and People/Career integration.
-  Exit: a founder and an emergent hero retain visibly distinct faces after
-  promotion and reload; one incomplete/missing-asset case shows the fallback.
-  This is a proof set, not acceptance of campaign-wide perceptual diversity.
-- [ ] **G03 - Release art and known-identity contexts.** Expand to the minimum
-  release matrix above, validate every allowed geometry tuple and palette
-  extremes, include real exports in the publisher, and connect eligible
-  formation/household/history/battle contexts without adding permanent panels.
-  Connect notification details when that M02 feature exists; it is not a
-  prerequisite for People/Career portraits. Exit: no missing adapters or assets,
-  no hidden-enemy leaks, and every integrated view uses the same identity.
-- [ ] **G04 - Generational and readability acceptance.** Exercise old/new
-  campaigns, collision-heavy tiny catalogs, saturation, history pruning and
-  catalog expansion. Review dense rosters, long names, deceased memories and
-  unknown enemies at actual display sizes. Record cache/registry costs and
-  native/WebGL checks. Exit: explicit duplicate/reuse behavior, measured visual
-  findings and remaining limits; do not claim uniqueness from the product count.
+**G03 — Release art and known-identity contexts.** Expand to the minimum release
+matrix above, validate every allowed geometry tuple and palette extremes, and
+include the exact runtime exports in the publisher registry. Formation,
+household, history, battle and notification portrait call sites are connected;
+their remaining context review belongs in the agent queue. Acceptance requires
+complete assets/adapters, no hidden-enemy leaks and consistent identity.
+
+**G04 — Generational and readability acceptance.** Finish revision-2 transition
+coverage and the remaining native/WebGL context matrix. Existing tests cover
+legacy saves, tiny-catalog exhaustion, pruning and deceased reservations.
+Record cache/registry costs and measured visual findings; neither a product
+count nor automated checks establishes perceptual uniqueness or human playtesting.
 
 ### Verification contract
 

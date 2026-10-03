@@ -13,17 +13,16 @@ are recorded. The full suite retains one inherited production-victory failure.
 It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
 M02's map orders and seasonal consequences follow, then regional geography and
 the opening guide in M03/M04.
-The [notification feature plan](docs/notification-plan.md) details M02's
-top event bar, compact clickable details, hero and controlled-place updates,
-advance warnings and per-type mute controls. Durable event foundations are
-implemented; presentation and lifecycle acceptance remain in progress.
-The [hero portrait generator plan](docs/hero-portrait-generator-plan.md) adds a
-graphics workstream: persistent per-person features, layered human art
-and a first People/Career portrait slice. Its outstanding G01-G04 TODOs preserve
-the existing M02-M05 sequence. Persistent identity and migration foundations are
-implemented; artwork and portrait rendering remain under development. The
-[implementation record](docs/verification/portraits-events.md) distinguishes
-completed checkpoints from pending runtime and visual acceptance.
+The [notification feature plan](docs/notification-plan.md) is implemented:
+durable receipts, conditional forecasts, the compact event rail/card and local
+delivery settings. The [hero portrait generator](docs/hero-portrait-generator-plan.md)
+provides persistent identity, save compatibility, cleaner anime layered artwork
+and cached portraits in person-related views. The current proof catalog has two
+faces, two noses, two eye styles and three hair silhouettes; the larger release
+catalog is deferred at the user's wrap-up request.
+[Outstanding agent work](todo.md) records catalog expansion and remaining
+platform/context acceptance. The [verification record](docs/verification/portraits-events.md)
+distinguishes actual checks from those remaining tasks.
 The [design index](docs/README.md) identifies the owning documents and historical
 evidence.
 
@@ -199,7 +198,8 @@ remain visible touch controls. Sheet navigation preserves map camera context.
 
 ### Portrait and notification integration brief
 
-This integration is in progress. People and Career keep their existing decisions:
+Runtime integration is implemented; remaining acceptance is in [todo.md](todo.md).
+People and Career keep their existing decisions:
 choose a person, inspect their service, and act on available career or transfer
 options. A 64px roster portrait and 128px Career portrait support recognition;
 names, status, costs and visible actions remain readable beside them. Children

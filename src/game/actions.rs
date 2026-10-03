@@ -4,11 +4,25 @@ use super::*;
 
 impl Game {
     pub(super) fn apply(&mut self, action: UiAction) {
+        if let UiAction::Notification(action) = action {
+            self.apply_notification_action(action);
+            return;
+        }
         if self.apply_observer_action(action) {
             return;
         }
         if self.apply_tutorial_action(action) {
             return;
+        }
+        if matches!(
+            action,
+            UiAction::BeginMove(_)
+                | UiAction::SelectMap(_)
+                | UiAction::FocusAttention(_)
+                | UiAction::ToggleAttention
+                | UiAction::FocusMapGroup(_, _)
+        ) {
+            self.notifications.clear_card();
         }
         self.dispatch(action);
         self.observe_tutorial(action);

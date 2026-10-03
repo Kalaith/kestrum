@@ -8,6 +8,8 @@ mod battle_capture;
 mod battlefield;
 mod battlefield_capture;
 mod campaign;
+#[cfg(not(target_arch = "wasm32"))]
+mod capture_exports;
 mod composition;
 mod development_capture;
 mod founder_capture;
@@ -20,9 +22,13 @@ mod midgame_capture;
 mod military;
 mod military_capture;
 mod movement;
+mod notification_capture;
+mod notifications;
 mod observer;
 mod observer_capture;
 mod overview_capture;
+mod portrait_capture;
+pub use kestrum::portrait_rendering as portraits;
 mod profiling;
 mod projection;
 mod resources;
@@ -57,6 +63,9 @@ pub struct Game {
     state: GameState,
     preferences: Preferences,
     assets: AssetManager,
+    portraits: portraits::PortraitCache,
+    notifications: ui::NotificationSession,
+    notification_projection: Option<kestrum::state::notifications::NotificationProjection>,
     view: MapView,
     navigation: MapNavigation,
     gesture: TouchGesture,
@@ -115,6 +124,10 @@ impl Game {
         let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some()
             || crate::profiling::benchmark_frames() > 0;
         let assets = resources::load(&data).await?;
+        let portraits = portraits::PortraitCache::load(&data.portraits, &assets).await?;
+        for error in portraits.asset_errors() {
+            warn!("Portrait asset unavailable: {error}");
+        }
         let setup = ui::SetupView {
             seed: data.production_layout.default_seed,
             factions: data.rules.default_factions,
@@ -167,6 +180,9 @@ impl Game {
             observer_return: None,
             data,
             assets,
+            portraits,
+            notifications: ui::NotificationSession::default(),
+            notification_projection: None,
             state: GameState::default(),
             preferences: Preferences::default(),
             view,
@@ -196,6 +212,12 @@ impl Game {
 
     pub fn begin_capture_scene(&mut self, scene: &str) {
         self.reset_capture_scene();
+        if self.capture_notifications(scene) {
+            return;
+        }
+        if self.capture_portrait_review(scene) {
+            return;
+        }
         if self.capture_observer(scene) {
             return;
         }
@@ -390,6 +412,8 @@ impl Game {
     }
 
     fn reset_capture_scene(&mut self) {
+        self.portraits.request_reset();
+        self.reset_notifications();
         self.capture = true;
         self.state = GameState::default();
         self.observer = Default::default();
@@ -422,6 +446,10 @@ impl Game {
     }
 
     pub fn frame(&mut self, dt: f32) {
+        self.portraits.begin_frame();
+        for error in self.portraits.take_runtime_errors() {
+            warn!("Portrait composition unavailable: {error}");
+        }
         self.poll_storage();
         self.progress_observer(dt);
         self.sync_pending_battle();
@@ -441,6 +469,7 @@ impl Game {
         clear_background(Color::new(0.06, 0.10, 0.10, 1.0));
         let viewport = begin_virtual_ui_frame(WIDTH, HEIGHT);
         let pointer = self.input(&viewport, dt);
+        self.refresh_notifications(pointer);
         let changed = self.refresh_projection();
         if changed {
             self.refresh_movement();
@@ -456,6 +485,10 @@ impl Game {
         self.clamp_pages();
         self.kingdom_events();
         let ctx = ui::Context {
+            portraits: &self.portraits,
+            notifications: &self.notifications,
+            notification_projection: self.notification_projection.as_ref(),
+            notification_rules: &self.data.notifications,
             observer: &self.observer,
             overview: self.overview.as_ref(),
             overview_ui: &self.overview_ui,

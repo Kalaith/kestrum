@@ -235,8 +235,21 @@ impl Game {
     }
 
     pub(super) fn finish_load(&mut self, result: Result<Campaign, String>) {
-        match result.and_then(|campaign| self.state.load_campaign(campaign, &self.data)) {
+        let result = result.and_then(|mut campaign| {
+            if let Campaign::Strategic(campaign) = &mut campaign {
+                if !campaign.notifications.baseline_complete {
+                    engine::notifications::baseline_current_conditions(campaign, &self.data)?;
+                }
+                campaign
+                    .notifications
+                    .sync_preferences(&self.preferences.notifications, &self.data.notifications);
+            }
+            self.state.load_campaign(campaign, &self.data)
+        });
+        match result {
             Ok(()) => {
+                self.portraits.request_reset();
+                self.initialize_notification_campaign();
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();

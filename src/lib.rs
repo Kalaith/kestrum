@@ -3,4 +3,6 @@
 pub mod data;
 pub mod engine;
 pub mod navigation;
+#[path = "game/portraits.rs"]
+pub mod portrait_rendering;
 pub mod state;

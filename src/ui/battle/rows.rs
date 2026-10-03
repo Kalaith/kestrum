@@ -26,6 +26,7 @@ fn row(heading: String, detail: String) -> ReportRow {
         heading,
         detail,
         person: None,
+        appearance: None,
     }
 }
 
@@ -193,6 +194,7 @@ fn people(ctx: &Context<'_>, report: &BattleReport) -> Vec<ReportRow> {
                 ));
                 if let Some(row) = rows.last_mut() {
                     row.person = Some(person.id);
+                    row.appearance = Some(person.appearance.clone());
                 }
             }
         }

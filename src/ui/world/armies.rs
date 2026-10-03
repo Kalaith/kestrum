@@ -37,7 +37,16 @@ pub(super) fn draw(ctx: &Context<'_>, panel: Option<Rect>) {
         .navigation
         .army_targets(&campaign.world, ctx.view, &campaign.armies)
     {
-        if !banner_visible(target.bounds, panel, attention) {
+        if !banner_visible(target.bounds, panel, attention)
+            || (!campaign.observer_mode
+                && ctx.state.overlay == Overlay::None
+                && super::super::notification_reserved_rects(
+                    ctx.notifications,
+                    ctx.notification_projection,
+                )
+                .iter()
+                .any(|rect| rect.overlaps(&target.bounds)))
+        {
             continue;
         }
         let armies: Vec<_> = target

@@ -9,7 +9,8 @@ scale/navigation are complete under their recorded scope. M01A's
 1920×1080 native/browser captures, automated native actions, browser gameplay,
 publishing and reload, with explicit inherited limits. M02 is next.
 The [hero portrait plan](hero-portrait-generator-plan.md) adds a companion
-graphics workstream with its own outstanding TODOs; it does not reorder M02-M05.
+graphics workstream; the [agent queue](../todo.md) records its unfinished work
+and remaining event acceptance. It does not reorder M02-M05.
 K01–K18 and B01–B07 describe completed
 implementation work under their recorded scope.
 
@@ -30,8 +31,8 @@ Historical speculative wording does not override the current request or plan.
 | --- | --- |
 | [Map playability plan](map-playability-plan.md) | Active milestones, dependencies, map scope, compatibility and acceptance |
 | [Early Stellaris lessons](stellaris-release-lessons.md) | Source-grounded design review and rationale for campaign acceptance; no gameplay changes or separate delivery queue |
-| [Campaign notifications](notification-plan.md) | Planned M02 event rail, compact details, controlled-place warnings, noise controls and delivery packages |
-| [Hero portrait generator](hero-portrait-generator-plan.md) | Planned persistent appearance, layered human art, duplicate policy and outstanding G01-G04 graphics work |
+| [Campaign notifications](notification-plan.md) | Implemented event rail, durable receipts, controlled-place warnings, delivery settings and acceptance contract |
+| [Hero portrait generator](hero-portrait-generator-plan.md) | Persistent appearance, layered human art, duplicate policy and G03/G04 continuation contracts |
 | [01 Vision and experience](01-vision-and-experience.md) | Player role, core loops and generational identity |
 | [02 World, time, and control](02-world-time-and-control.md) | Physical graph, regions, ownership and seasonal turns |
 | [03 Kingdoms and economy](03-kingdoms-and-economy.md) | Setup, resources, development, diplomacy and AI |

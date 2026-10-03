@@ -28,6 +28,7 @@ pub(super) fn outcome(ctx: &Context<'_>, report: &BattleReport) -> Option<Report
             ctx.text("threat_reward_once")
         ),
         person: None,
+        appearance: None,
     })
 }
 
@@ -47,6 +48,7 @@ pub(super) fn forces(ctx: &Context<'_>, report: &BattleReport) -> Option<ReportR
             threat.encirclement_losses
         ),
         person: None,
+        appearance: None,
     })
 }
 
@@ -65,5 +67,6 @@ pub(super) fn factors(ctx: &Context<'_>, report: &BattleReport) -> Option<Report
             ctx.text("threat_combat_rules")
         ),
         person: None,
+        appearance: None,
     })
 }

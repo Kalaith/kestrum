@@ -92,10 +92,29 @@ pub(super) fn rows(ctx: &Context<'_>) -> Vec<HistoryRow> {
                                 snapshot.site_name
                             ),
                         };
-                        HistoryRow::new(person.name().to_owned(), detail).link(
+                        let row = HistoryRow::new(person.name().to_owned(), detail).link(
                             UiAction::OpenHistory(HistorySubject::Person(person.id())),
                             "history_open",
-                        )
+                        );
+                        let portrait = match person {
+                            PersonKnowledge::CurrentOwn(record) => {
+                                let age_round = match record.status {
+                                    kestrum::state::people::PersonStatus::Dead {
+                                        completed_rounds,
+                                        ..
+                                    } => completed_rounds,
+                                    _ => campaign.completed_rounds,
+                                };
+                                super::HistoryPortrait::CurrentOwn {
+                                    appearance: record.appearance.clone(),
+                                    age_years: record.age_years(age_round),
+                                }
+                            }
+                            PersonKnowledge::LastEncountered { snapshot, .. } => {
+                                super::HistoryPortrait::AdultSnapshot(snapshot.appearance.clone())
+                            }
+                        };
+                        row.portrait(portrait)
                     })
                     .collect()
             })

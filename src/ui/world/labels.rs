@@ -26,6 +26,12 @@ pub(super) fn draw(
     if let Some(tutorial) = super::super::tutorial_bounds(ctx.state) {
         reserved.push(tutorial);
     }
+    if !campaign.observer_mode && ctx.state.overlay == Overlay::None {
+        reserved.extend(super::super::notification_reserved_rects(
+            ctx.notifications,
+            ctx.notification_projection,
+        ));
+    }
     reserved.extend(
         ctx.navigation
             .place_groups(&campaign.world, ctx.view)

@@ -112,6 +112,8 @@ impl Game {
     }
 
     fn reset_observer_views(&mut self) {
+        self.portraits.request_reset();
+        self.reset_notifications();
         self.army = ui::ArmyView::default();
         self.army_refresh_pending = true;
         self.movement = ui::MoveView::default();

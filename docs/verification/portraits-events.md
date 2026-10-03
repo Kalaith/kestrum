@@ -1,247 +1,158 @@
-# Portrait and campaign-event verification
+# Portraits and campaign events
 
-Implementation follows [the portrait plan](../hero-portrait-generator-plan.md)
-and [the campaign notification plan](../notification-plan.md), including G01–G04
-and M02-N1–N3. Verification uses the actual checkout and its shared workspace.
+Current checkpoint: 2026-10-03. At the user's wrap-up request, the implemented
+portrait proof/runtime and event system are committed together; the
+release portrait expansion and remaining agent-run acceptance are in
+[../../todo.md](../../todo.md). This record distinguishes implementation from
+verified coverage and does not claim completion of G03/G04.
 
-## Pre-change baseline
+## Implementation and work split
 
-Baseline revision: `bf843aa` on `master`, with a clean working tree.
+Astra led planning, shared state/save integration, art direction and diff/visual
+review. Luna workers were configured at extra-high effort for portrait and event
+implementation, toolkit changes and validation. Backend runtime identity was not
+exposed, so these are requested configurations rather than independently
+verified model identities.
 
-- Formatting and shared-pool Clippy with `-D warnings` passed.
-- The source-size gate passed; no Rust source exceeded 800 physical lines.
-- The shared-pool test run passed the reported targets up to
-  `k18_production_battle`, including the 400-round replay coverage. Cargo stopped
-  at `four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`
-  (`tests/k18_production_battle.rs:531`): seed 88 remained at war after round 240,
-  with factions 1 and 2 independent and factions 3 and 4 eliminated. Later test
-  binaries were not run by that baseline command. This failure predates the
-  portrait and notification changes.
+Persistent descriptors use stable feature IDs, explicit palettes and canonical
+visual signatures. Deterministic allocation leaves gameplay RNG untouched;
+legacy migration assigns once per retained person ID, including encounter and
+pending/completed battle snapshots. Campaign reservations survive deceased
+record pruning. Tiny-catalog tests cover finite exhaustion and explicit reuse.
+A separate read-only review found no confirmed defect in current creation,
+migration or reservation paths. Future callers of the low-level allocator must
+continue supplying fresh monotonic person IDs.
 
-## Publishing constraint
-
-The required no-argument `publish.ps1` was inspected but not run. Its shared
-publisher deploys to a local preview tree and can write a Project Roost deployment
-record externally. The task explicitly prohibits remote publication and tracker
-writes. Build/test results must be reported separately and do not constitute a
-passing publishing gate. Publishing or security configuration is not altered.
-
-## Shared image primitives
-
-Dependency checkout: `D:\WebHatchery\RustGames\macroquad-toolkit`, commit
-`806b50f` (`CPU image composition`). Its working tree was clean after the local
-commit. Changes are limited to asset decoding, a CPU composition module, its
-export, and two integration-test files. No dependency or compiler version changed.
-
-Owned decoded images support game-owned eviction without uploading source layers.
-The shared functions implement straight-alpha over, mask tinting and area
-downsampling in premultiplied-alpha space, followed by a final texture upload.
-
-Toolkit verification passed with source frozen and Cargo offline: formatting,
-strict Clippy, source size, all-feature tests (428 unit, 15 integration and 29
-doc-tests passed; 9 doc-tests ignored), native example checks, WASM library and
-example checks with analytics, and API documentation. The five new image cases
-cover PNG/JPEG/pack decoding, blending, mask coverage, downsampling and transparent
-edges against light/dark surfaces. These pixel tests do not verify portrait art.
-
-Toolkit follow-up `3ff2a1e` adds owned encoded-byte loading with the same pack
-precedence as decoded-image loading. This supports a game-owned compressed source
-cache without retaining every decoded layer. Its full all-feature tests, strict
-all-target/all-feature Clippy, formatting, source gate, native/WASM example checks
-and documentation passed. Six asset/image integration cases passed; loose-file
-loading still needs verification through the actual game runtime.
-
-## First Kestrum implementation checkpoint
-
-Committed as `9d6173d` on `master`, with a clean tree after the commit.
-
-Required appearance descriptors now accompany people and retained encounter/battle
-snapshots. A seed-derived allocator owns campaign reservations, and wholly legacy
-saves receive frozen-catalog migration. Existing fixture creation paths allocate
-identities instead of copying another person's appearance. The proof catalog
-contains identity metadata only; portrait art and UI acceptance remain pending.
-
-The event schema and transaction-owned collectors are a foundation. The compact
-rail/card, settings integration, exact shared construction/development forecasts,
-presentation copy refinement, and broader lifecycle regressions remain pending.
-Current UI continues using its existing labelled presentation.
-
-Focused checkpoint regressions passed: 47 tests across `portraits` (8),
-`knowledge` (5), `continuity_feedback` (2), `legacy` (11), `lifecycle` (6),
-`succession` (14), and the official `code_standards` source-size gate (1).
-This is scoped evidence; it does not replace the complete regression run or
-the portrait migration and event lifecycle cases still being added.
-
-After the final snapshot-layout and fixture corrections, the changed-target pass
-also passed all 21 cases in `ai_review`, `campaign`, `code_standards`,
-`continuity_feedback`, and `portraits`. Across these passes, 57 distinct cases in
-nine targets passed. Long campaign scenarios and the complete suite remain for
-the integrated verification pass.
-
-Project formatting, strict shared-pool Clippy with `--all-targets -D warnings`,
-and whitespace checks passed. The source gate covers 432 Rust files; the largest
-is 794 physical lines. No assets or UI captures are part of this checkpoint.
-
-## Migration regression checkpoint
-
-The subsequent complete `..\rust_management\cargo.ps1 test --locked
---no-fail-fast` run reached every target. The 400-round replay and actual version-2
-portrait migration/round-trip cases passed. Five targets failed: the event module
-source-size gate, the pre-person military migration fixture, a portrait golden
-value, two progression fixtures that reused an issued person ID, and the existing
-seed-88 production victory-cap case. The first four are regressions being fixed;
-the victory-cap test remains a failing required check, not a pass or waiver.
-
-The victory test still uses seed 88 and a 240-round cap. Its current outcome has
-factions 1 and 2 independent, factions 3 and 4 eliminated, and phase PlayerTurn,
-matching the baseline failure category. It took 277.21 seconds in this run;
-performance and the event query costs remain under review. No AI or victory-test
-behavior has been changed to mask this result.
-
-After correcting the source split, frozen golden expectation and historical
-fixtures, the full `test --locked --no-fail-fast` rerun passed every target except
-the unchanged seed-88 victory-cap case (258.29 seconds). Portrait tests passed
-15/15, progression 10/10, and the economy migration case passed. The 400-round
-replay passed in 180.76 seconds. The additional portrait cases cover distinct
-legacy/modern migration, optional notification snapshots and canonical allocation
-regressions rather than replacing useful existing coverage to meet a test count.
-
-Strict all-target/all-feature Clippy, project formatting and whitespace checks
-passed. The canonical source gate passed; a direct scan found 433 Rust files,
-maximum 793 physical lines, with none over 800. Fifty local documentation links
-and anchors across the edited feature documents and art notes passed review.
-
-The user explicitly authorized committing validated portrait/event slices with
-the documented pre-existing seed-88 failure retained. That exception does not
-cover new regressions or claim a full-suite pass. Publishing remains prohibited
-under the separate task constraint above. Unfinished event corrections and
-artwork remain unstaged at this portrait migration commit boundary.
-
-## Revised artwork direction
-
-The user rejected the flat vector proof in favor of the supplied detailed
-tactical-RPG portrait reference. Its experimental vector source is retained, while
-the illustrated exporter replaces the rejected runtime exports. A built-in imagegen concept demonstrates
-a richer illustrated direction; it is not an interchangeable production layer
-set. An explicitly configured Astra high review recommends detailed near-front
-art on the existing rig, with real aligned face/eye/nose/hair assets and mask QA.
-No exposed control selects the built-in imagegen model, so no image-model upgrade
-is claimed. The user then selected a cleaner anime treatment closer to the supplied
-reference. The [current concept](portrait_direction.png) uses crisp linework,
-restrained cel shading and front-facing original characters. Its complete
-[generation prompt and provenance](../../assets/art-source/portraits/concept.json)
-are retained with the artwork sources. This concept is a reference for component
-production; it does not prove aligned layers, thumbnail recognition or runtime
-rendering. Runtime integration and the release artwork remain pending.
-
-## Illustrated component proof
-
-The cleaner anime direction is now represented by real transparent components,
-not just the concept sheet. The G02 export review composited all 336 legal color
-combinations across its 24 geometry tuples. It validated 111 runtime PNGs and 44
-aligned source/mask pairs. The reviewed [40/64/128px contact sheet](portrait_contact_sheet.png)
-is 880x1814 pixels; its G02 SHA256 is
+The cleaner anime direction replaces the rejected vector proof. The current
+catalog enables 111 real layered PNGs: two faces, two noses, two eye styles,
+three hair silhouettes including bald, three skin/hair and two iris palettes.
+All 336 legal color combinations across 24 geometries were raster reviewed.
+The [contact sheet](portrait_contact_sheet.png) has SHA256
 `F229E7D013FE52D09CB53F9FE8B578893CA69146B0A02B69D9BDFD6FB5D15439`.
-The illustrated exporter replaces the rejected vector exports; retained source
-code is not an approval of that earlier treatment.
+The [art notes](../portrait-art.md) and retained source manifests record prompts,
+registration, immutable hashes and composition rules. Image generation exposed
+no model-tier selector; no image-model upgrade is claimed.
 
-The lead accepted the crisp contours, illustrated hair and restrained shading as
-the production direction. The near pair differing only in face silhouette is
-subtle at 40px, and dark hair/skin on the dark surface is subdued at 64px. These
-are observed limits, not evidence of human recognition or campaign-wide perceptual
-uniqueness. The bounded G03 expansion adds rounder features and varied hair
-silhouettes while preserving the approved G02 exported bytes. Runtime compositor
-parity, integrated UI captures and the full release matrix remain pending.
+People/Career, formation, household, history, battle and notification call sites
+use the bounded cache and authorized descriptors. Missing adult art uses the
+neutral UI silhouette without rerolling identity. Child/unknown policy remains
+separate. The public production compositor and request queue support external
+integration tests; no test module is declared under portrait source files.
+Budgets are 64 MiB encoded sources, 32 MiB decoded sources, 128 thumbnail textures,
+32 detail textures and 128 queued jobs, with one composition per frame.
 
-## Event and rendering integration review
+Campaign events collect observer-safe dated receipts at accepted transaction
+boundaries, retain warning episodes, and share actual development/construction
+rules for conditional forecasts. Muted risks remain in Attention. The compact
+rail/card provides Recent, grouped details, safe subject links, read/dismiss and
+local delivery settings. Read/dismiss changes are included in the next successful
+full-campaign checkpoint or named save; clicking alone is not a durable write.
 
-The integrated full `test --locked --no-fail-fast` run reached every target.
-All targets passed except the documented seed-88 victory-cap case and two new
-notification fixture failures. The seed-88 outcome remained round 240 with
-factions 1 and 2 independent and factions 3 and 4 eliminated (69.23 seconds).
-The 400-round replay passed in 160.96 seconds. These timings are observations,
-not a controlled performance comparison.
+## Commits and dependencies
 
-The notification fixture review corrected suppression-cutoff expectations and
-used an actual blocking threat to exercise facility forecast clearance. It also
-exposed a production issue: an undelivered construction warning could lose its
-episode counter while its order remained open. Retention now preserves that
-counter until the order closes, with explicit clear/recur assertions for both
-delivered and capacity-omitted warnings. Validation of this correction and hidden
-runtime captures are in progress; the earlier full run does not validate this
-later change.
+- `9d6173d`: persistent portrait identity and event receipt foundations.
+- `fdf2fcd`: portrait compatibility corrections.
+- `9834f70`: cleaner anime concept and provenance.
+- `36cea85`: illustrated sources, 111 frozen runtime exports and reference images.
+- `2d5fae2`: complete event-engine collection, forecasts and regressions.
+- Shared macroquad-toolkit: `806b50f` CPU composition, `3ff2a1e` owned encoded asset
+  bytes, and `72e4c669183a844a2d285cd57cdb98d3eb18ac5b` hidden capture client sizing.
+  The toolkit's final tree is clean and its full validation matrix passed.
 
-After that correction, formatting, strict all-target/all-feature Clippy, the
-source-size gate and all 19 focused event tests passed. The first hidden native
-capture attempt used the shared wrapper with the release binary, `-SkipBuild`,
-`-Frames 20`, `-WindowWidth 1920`, and `-WindowHeight 1080` for `notifications`,
-`notification_details`, `notification_warning`, `notification_settings`, and
-`notifications_dense`. No `-Visible` or `-Fullscreen` option was passed.
-Kestrum's capture assertion at `src/game/spatial_capture.rs:171` measured a
-1920x1061 framebuffer, 19 pixels shorter than the requested 1920x1080. The audit
-stopped before writing any of the five screenshots. Game PID 24052 and wrapper
-PID 24160 both exited; the wrapper removed its temporary scene manifest. Its
-failed-run diagnostic files remain at `.capture_stdout_24160.log` (0 bytes) and
-`.capture_stderr_24160.log` (247 bytes) until the sizing repair is proven. No
-fullscreen or visible-window retry was attempted. An exact hidden-client resize
-fix is being made in the shared capture tool, and the captures remain
-unverified.
+The final Kestrum integration commit is reported by the task's completion message
+and Git history, avoiding a self-referential commit hash in this file.
 
-The illustrated source/export checkpoint is committed as `36cea85`. Its 111
-frozen layer files are not yet enabled by the runtime catalog. The source set
-also includes the authored expansion masters; release-matrix validation remains
-pending. The reference compositor produced the durable 128px/256px fixtures
-documented in [the art notes](../portrait-art.md).
+## Final actual-checkout validation
 
-## Current event-engine checkpoint
+| Check | Final result |
+| --- | --- |
+| Project formatting | Passed |
+| Strict all-target/all-feature Clippy | Passed |
+| Source limits | Passed: 461 Rust files, maximum 793 lines |
+| Native release build | Passed, 2m06s |
+| WASM release build | Passed, 1m45s; emitted an unused native-diagnostic-method warning. A native-only cfg guard was then added and native Clippy passed; WASM was not rebuilt after that guard. |
+| Hidden native captures | All 13 passed at 1920x1080; game PID 8468 exited |
+| Final full test command | Did not run tests: `cargo.ps1 test --locked '--' --no-fail-fast` incorrectly forwarded a Cargo option to the test harness. Compilation finished in 4m09s, then libtest rejected `no-fail-fast`. |
+| Headless browser interactions | Failed harness navigation/import; reached title/How to Play instead of the campaign. Browser closed cleanly. |
+| Publication | Not run under the user's no-publication constraint |
 
-The current focused run passes all 20 notification tests: six shared-boundary
-forecast cases plus receipt/lifecycle, Attention, migration, movement,
-transaction and warning-retention regressions. The added decline/ruin case
-establishes a real owned observer at the subject site, checks the conditional
-receipt, then compares an unchanged seasonal boundary with recovery before that
-boundary. The authored habitation sequence is Village to Hamlet. Early fixture
-failures omitted observation or expected Camp; they did not justify changing the
-game's visibility or development rules.
-Separate cases retain independent coverage for save migration, observer boundaries,
-continued movement, construction ordering and omitted-warning recurrence; these
-failure modes warrant more than the five-case feature target.
+The previous correctly invoked full suite passed every target except the
+established seed-88 round-240 victory-cap case; its 400-round replay passed in
+149.43s. That run preceded the final rendering/API/UI corrections. The user
+explicitly allowed the baseline exception, then requested committing all current
+work with new findings deferred to todo.md and no more code changes. No final
+full-suite pass is claimed, and the malformed command was not rerun after the
+wrap-up instruction.
 
-The 11 current CPU rendering cases pass. The Rust compositor matches every
-reference alpha and premultiplied RGB byte at both 128px and 256px (maximum
-delta zero). Metadata-only tests explicitly use the frozen legacy catalog now
-that the current v1 catalog enables real artwork. Formatting, strict Clippy and
-the source-size gate pass. The mandatory post-fixture full rerun completed with
-exactly the documented seed-88 round-240 victory-cap failure; all other targets
-passed, including all 15 portrait identity tests and the 400-round replay
-(149.43 seconds). The user explicitly allowed this documented baseline exception
-for validated slices. This is not a full-suite pass. The no-argument publisher
-remains unrun because it can update an external deployment record and the user
-prohibited publication and external tracker writes.
+The five current external rendering cases cover full-frame C# reference parity
+at 128/256px, complete/partial/legacy manifests, source reuse/eviction/reset,
+missing/corrupt assets and age/unknown fallback policy, and bounded requests with
+failure suppression/retry. Twenty event cases cover receipt ordering/lifecycle,
+shared-boundary forecasts, observation, movement, migration and warning retention.
+The additional event cases preserve distinct failure modes beyond the usual
+five-case target. Fifteen portrait identity cases cover deterministic allocation,
+compatibility and lifecycle behavior.
 
-The first resize repair still measured 1920x1061, before any scene rendered.
-The second repair preserves visibility, focus and stacking order while skipping
-the hidden window's default size-clamping message. Its targeted toolkit test
-and strict Clippy pass. The subsequent hidden run produced eight verified
-1920x1080 PNGs before an inherited battle-capture fixture failed in
-portraits_known. A separate hidden run produced missing-source, life-history
-and Career captures at the same dimensions. Both game processes exited.
-The runtime reports a 1920x1080 canvas at DPI 1. No visible or fullscreen
-retry was used. The remaining known-enemy scene needs its real-battle fixture
-repaired; the first visual review also found rail/settings label clipping.
+The full-suite baseline failure is
+`k18_production_battle::four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`:
+seed 88 reaches round 240 with factions 1 and 2 independent and 3 and 4 eliminated.
+Do not treat the user's commit exception as a fix or weaken its victory assertion.
 
-Before the rendering code is committed, its tests will be moved onto a public
-production rendering API. The current private test-module declarations under
-src/game/portraits/ do not satisfy the shared test-placement standard. This
-correction is separate from the event-engine checkpoint.
+## Render and interaction evidence
 
-## Verification boundaries
+Normal and minimum acceptance use the same supported **1920x1080** canvas.
+Verification uses only the shared hidden native wrapper and headless Chromium;
+no visible window, physical input, fullscreen button or Fullscreen API is used.
 
-All rendering checks must remain headless, use the supported 1920×1080 canvas,
-and write stable captures directly into this directory. No visible window,
-fullscreen interaction, display takeover, or physical input is authorized.
-Automated checks do not establish human portrait recognition, human playtesting,
-or physical-touch verification.
+Initial hidden attempts exposed a 1920x1061 client despite requesting 1080.
+The shared toolkit repair preserves focus, visibility and stacking order while
+bypassing hidden-window size clamping. Subsequent captures measured both Win32
+and Macroquad at 1920x1080, DPI 1. An old known-enemy fixture also failed because
+it did not accept pending encounters; its repair uses the real StartPendingBattle
+command and verifies the committed report. Failed processes exited, and only
+the six verified wrapper-owned diagnostic logs were removed after recording
+these facts. No alternate capture pipeline or scratch project was created.
 
-Implementation and integrated verification are in progress. This document does
-not yet claim feature acceptance or a full-suite pass.
+The first visual pass inspected the event card, active warnings, dense People
+and life history. The map remained dominant and End Turn reachable. Rail/settings
+label clipping and a narrow adult fallback were corrected. Career now wraps the
+full raw name, including a 64-character stress case, with bounded secondary text;
+roster metadata sits below the action buttons. All 13 final native scenes succeeded at 1920x1080; the launched game (PID 8468)
+exited. The lead inspected the full-name Career, dense roster, dated enemy
+memory, corrected rail/settings and neutral fallback captures. The full name
+fits two lines, settings labels fit their buttons and known-enemy text remains
+explicitly dated. Two nonblocking polish items are recorded in todo.md: dense
+roster separators crowd the following row, and global settings draws Back twice.
+The headless browser measured a 1920x1080 canvas, but the harness's initial
+Import Campaign click did not open the campaign. Later coordinates operated on
+the title/How to Play UI and the preference persistence assertion failed. This
+is failed test navigation, not established game-state verification. The nine
+`ui_web_*` PNGs are retained as failed-harness diagnostics under the user's
+all-current-work commit instruction; their filenames do not establish that the
+intended states were reached. The portrait browser profile was not reached.
+
+## Measured costs and limits
+
+The native review imports use the normal save encoder and compatibility loader.
+Offline compact UTF-8 measurements, without per-frame serialization:
+
+| Fixture | People | Reservations | Registry bytes | Full save bytes |
+| --- | ---: | ---: | ---: | ---: |
+| notification_review_save.json | 4 | 4 | 2,994 | 42,582 |
+| portrait_review_save.json | 9 | 9 | 6,480 | 183,151 |
+
+These are fixture measurements, not extrapolated costs for all campaigns.
+Runtime cache metrics were not present in the successful wrapper output and
+were not collected from the failed browser run. They remain in todo.md; the
+configured budgets above are not runtime measurements.
+
+At 40px the face-only oval/tapered near pair remains subtle; dark skin and hair
+are subdued on charcoal at 64px. Automated art inspection is not evidence of
+human recognition, perceptual uniqueness, physical-touch testing or human
+playtesting. The larger G03 matrix is not exported or enabled: its registered
+masters/export support are ready, with concrete continuation steps in todo.md.
+
+The no-argument publisher remains unrun: the shared publisher can update an
+external deployment record, and the user prohibited publication/tracker writes.
+No remote push or publication is performed. Broader M02-M05 roadmap work remains
+outside this portrait/event checkpoint.

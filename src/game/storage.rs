@@ -176,6 +176,14 @@ impl Game {
     }
 
     pub(super) fn go_back(&mut self) {
+        if self.state.overlay == Overlay::Settings && self.notifications.global_settings_open {
+            self.apply_notification_action(ui::NotificationAction::CloseGlobalSettings);
+            return;
+        }
+        if self.state.overlay == Overlay::None && self.notifications.is_open {
+            self.apply_notification_action(ui::NotificationAction::Close);
+            return;
+        }
         if self.state.overlay == Overlay::Setup && self.setup.editing_name {
             self.setup.editing_name = false;
             return;
@@ -217,6 +225,9 @@ impl Game {
                 self.saves.mode = ui::SaveMode::Browse
             }
             _ => self.state.back(),
+        }
+        if self.state.overlay == Overlay::None {
+            self.notifications.restore_return_context();
         }
     }
 }

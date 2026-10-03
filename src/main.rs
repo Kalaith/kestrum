@@ -47,10 +47,22 @@ async fn main() {
 
     // Deterministic scenes isolate verification from local saves and preferences.
     if let Some(configs) = capture::CaptureConfig::all_from_env("KESTRUM") {
+        capture::prepare_capture_surface("KESTRUM")
+            .await
+            .expect("hidden capture framebuffer must match its requested dimensions");
         for config in configs {
             game.begin_capture_scene(&config.scene);
+            let mut rendered = 0;
             capture::run_capture_once(&config, |dt| {
                 game.frame(dt);
+                rendered += 1;
+                if rendered == config.frames {
+                    println!(
+                        "KESTRUM_CAPTURE_METRICS scene={} {}",
+                        config.scene,
+                        game.profile_context()
+                    );
+                }
             })
             .await;
         }

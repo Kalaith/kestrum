@@ -4,7 +4,7 @@ mod rows;
 mod siege;
 mod threat;
 
-use super::{components::*, Context, UiAction};
+use super::{components::*, portraits, Context, UiAction};
 use kestrum::state::battle::BattleReport;
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
@@ -80,6 +80,7 @@ struct ReportRow {
     heading: String,
     detail: String,
     person: Option<kestrum::state::people::PersonId>,
+    appearance: Option<kestrum::data::portraits::AppearanceDescriptor>,
 }
 
 fn current_report<'a>(ctx: &'a Context<'_>) -> Option<&'a BattleReport> {
@@ -178,13 +179,36 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
 fn draw_rows(ctx: &Context<'_>, report: &BattleReport) -> Option<UiAction> {
     for (index, row) in visible_rows(ctx, report).iter().enumerate() {
         let y = 244.0 + index as f32 * 108.0;
-        let width = if row.person.is_some() { 850.0 } else { 1056.0 };
+        let has_portrait = row.appearance.is_some();
+        if let Some(appearance) = &row.appearance {
+            portraits::draw_adult(
+                ctx.portraits,
+                appearance,
+                Rect::new(112.0, y - 20.0, 64.0, 64.0),
+            );
+        }
+        let text_x = if has_portrait { 188.0 } else { 112.0 };
+        let width = if row.person.is_some() {
+            if has_portrait {
+                776.0
+            } else {
+                850.0
+            }
+        } else {
+            1056.0
+        };
         for (line, label) in wrap_text_ex(&row.heading, width, ctx.body_font(), 20.0)
             .iter()
             .take(2)
             .enumerate()
         {
-            body(ctx, label, vec2(112.0, y + line as f32 * 24.0), 20.0, CREAM);
+            body(
+                ctx,
+                label,
+                vec2(text_x, y + line as f32 * 24.0),
+                20.0,
+                CREAM,
+            );
         }
         for (line, label) in wrap_text_ex(&row.detail, width, ctx.body_font(), 18.0)
             .iter()
@@ -194,7 +218,7 @@ fn draw_rows(ctx: &Context<'_>, report: &BattleReport) -> Option<UiAction> {
             body(
                 ctx,
                 label,
-                vec2(112.0, y + 51.0 + line as f32 * 23.0),
+                vec2(text_x, y + 51.0 + line as f32 * 23.0),
                 18.0,
                 MUTED,
             );

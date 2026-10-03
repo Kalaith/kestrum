@@ -1,5 +1,6 @@
 //! Each formation slot holds one named member plus troops, or troops alone.
 
+use super::super::portraits;
 use super::*;
 use kestrum::state::{
     evidence::Veterancy,
@@ -53,10 +54,20 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign, army: &Army) -
 }
 
 fn occupied(ctx: &Context<'_>, campaign: &VisibleCampaign, member: &Formation, rect: Rect) {
+    let person = first_member(campaign, member);
+    if let Some(person) = person {
+        portraits::draw(
+            ctx.portraits,
+            Some(&person.appearance),
+            Some(person.age_years(campaign.completed_rounds)),
+            ctx.household_rules.service_minimum_age_years,
+            Rect::new(rect.x + 34.0, rect.y + 6.0, 40.0, 40.0),
+        );
+    }
     let count = format!("{} / {}", member.headcount, member.capacity);
     let count_width = measure_text(&count, ctx.body_font(), 18, 1.0).width;
     let count_x = rect.x + rect.w - 16.0 - count_width;
-    let label_x = rect.x + 46.0;
+    let label_x = rect.x + if person.is_some() { 90.0 } else { 46.0 };
     body(
         ctx,
         &label(ctx, campaign, member, count_x - label_x - 16.0),
@@ -87,16 +98,7 @@ fn occupied(ctx: &Context<'_>, campaign: &VisibleCampaign, member: &Formation, r
 
 fn label(ctx: &Context<'_>, campaign: &VisibleCampaign, member: &Formation, width: f32) -> String {
     let troop = ctx.text(troop_key(member.kind));
-    let first = campaign.people.iter().find(|person| {
-        person.assignment
-            == (PersonAssignment::Formation {
-                formation: member.id,
-            })
-            && !matches!(
-                person.status,
-                PersonStatus::Dead { .. } | PersonStatus::Displaced { .. }
-            )
-    });
+    let first = first_member(campaign, member);
     let Some(first) = first else {
         return troop;
     };
@@ -106,4 +108,20 @@ fn label(ctx: &Context<'_>, campaign: &VisibleCampaign, member: &Formation, widt
     let name =
         truncate_text_to_width_ex(&person_name(ctx, first), name_width, ctx.body_font(), 20.0);
     format!("{name}{suffix}")
+}
+
+fn first_member<'a>(
+    campaign: &'a VisibleCampaign,
+    member: &Formation,
+) -> Option<&'a kestrum::state::people::Person> {
+    campaign.people.iter().find(|person| {
+        person.assignment
+            == (PersonAssignment::Formation {
+                formation: member.id,
+            })
+            && !matches!(
+                person.status,
+                PersonStatus::Dead { .. } | PersonStatus::Displaced { .. }
+            )
+    })
 }

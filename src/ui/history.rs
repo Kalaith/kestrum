@@ -5,7 +5,7 @@ mod overview;
 mod records;
 mod rows;
 
-use super::{components::*, Context, UiAction};
+use super::{components::*, portraits, Context, UiAction};
 use kestrum::{
     engine::{HistoryFilter, HistoryPage, KnownPeoplePage, PersonKnowledge},
     state::history::HistorySubject,
@@ -14,6 +14,15 @@ use macroquad::prelude::*;
 use macroquad_toolkit::ui::{text_entry::KeyboardPage, truncate_text_to_width_ex, wrap_text_ex};
 
 pub const HISTORY_ROWS_PER_SCREEN: usize = 5;
+
+#[derive(Clone)]
+enum HistoryPortrait {
+    CurrentOwn {
+        appearance: kestrum::data::portraits::AppearanceDescriptor,
+        age_years: u32,
+    },
+    AdultSnapshot(kestrum::data::portraits::AppearanceDescriptor),
+}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum HistoryMode {
@@ -56,6 +65,7 @@ struct HistoryRow {
     detail: String,
     action: Option<UiAction>,
     action_key: &'static str,
+    portrait: Option<HistoryPortrait>,
 }
 
 impl HistoryRow {
@@ -65,6 +75,7 @@ impl HistoryRow {
             detail,
             action: None,
             action_key: "history_open",
+            portrait: None,
         }
     }
 
@@ -73,13 +84,21 @@ impl HistoryRow {
         self.action_key = key;
         self
     }
+
+    fn portrait(mut self, portrait: HistoryPortrait) -> Self {
+        self.portrait = Some(portrait);
+        self
+    }
 }
 
 pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     draw_rectangle(80.0, 38.0, 1120.0, 650.0, INK);
+    let has_person_portrait = draw_person_portrait(ctx);
     let title = title(ctx);
-    let title = truncate_text_to_width_ex(&title, 1056.0, ctx.font(), 28.0);
-    text(ctx, &title, vec2(112.0, 83.0), 28.0, CREAM);
+    let title_x = if has_person_portrait { 164.0 } else { 112.0 };
+    let title_width = if has_person_portrait { 1004.0 } else { 1056.0 };
+    let title = truncate_text_to_width_ex(&title, title_width, ctx.font(), 28.0);
+    text(ctx, &title, vec2(title_x, 83.0), 28.0, CREAM);
     let action = match ctx.history.mode {
         HistoryMode::Records => records::draw(ctx),
         HistoryMode::Overview | HistoryMode::Events => subject(ctx),
@@ -103,6 +122,45 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         return Some(UiAction::HistoryBack);
     }
     None
+}
+
+fn draw_person_portrait(ctx: &Context<'_>) -> bool {
+    if !matches!(
+        ctx.history.mode,
+        HistoryMode::Overview | HistoryMode::Events
+    ) || !matches!(ctx.history.subject, Some(HistorySubject::Person(_)))
+    {
+        return false;
+    }
+    let bounds = Rect::new(112.0, 48.0, 40.0, 40.0);
+    match &ctx.history.person {
+        Some(PersonKnowledge::CurrentOwn(person)) => portraits::draw(
+            ctx.portraits,
+            Some(&person.appearance),
+            ctx.campaign_view.map(|campaign| {
+                let round = match person.status {
+                    kestrum::state::people::PersonStatus::Dead {
+                        completed_rounds, ..
+                    } => completed_rounds,
+                    _ => campaign.completed_rounds,
+                };
+                person.age_years(round)
+            }),
+            ctx.household_rules.service_minimum_age_years,
+            bounds,
+        ),
+        Some(PersonKnowledge::LastEncountered { snapshot, .. }) => {
+            portraits::draw_adult(ctx.portraits, &snapshot.appearance, bounds)
+        }
+        None => portraits::draw(
+            ctx.portraits,
+            None,
+            None,
+            ctx.household_rules.service_minimum_age_years,
+            bounds,
+        ),
+    };
+    true
 }
 
 fn title(ctx: &Context<'_>) -> String {
@@ -180,9 +238,19 @@ fn draw_rows(ctx: &Context<'_>, rows: &[HistoryRow], offset: usize) -> Option<Ui
         .enumerate()
     {
         let y = 231.0 + index as f32 * 74.0;
-        let width = if row.action.is_some() { 850.0 } else { 1056.0 };
+        let has_portrait = row.portrait.is_some();
+        if let Some(portrait) = &row.portrait {
+            draw_history_portrait(ctx, portrait, Rect::new(112.0, y - 20.0, 40.0, 40.0));
+        }
+        let text_x = if has_portrait { 164.0 } else { 112.0 };
+        let width = match (row.action.is_some(), has_portrait) {
+            (true, true) => 798.0,
+            (true, false) => 850.0,
+            (false, true) => 1004.0,
+            (false, false) => 1056.0,
+        };
         let heading = truncate_text_to_width_ex(&row.heading, width, ctx.body_font(), 20.0);
-        body(ctx, &heading, vec2(112.0, y), 20.0, CREAM);
+        body(ctx, &heading, vec2(text_x, y), 20.0, CREAM);
         for (line, label) in wrap_text_ex(&row.detail, width, ctx.body_font(), 18.0)
             .iter()
             .take(2)
@@ -191,7 +259,7 @@ fn draw_rows(ctx: &Context<'_>, rows: &[HistoryRow], offset: usize) -> Option<Ui
             body(
                 ctx,
                 label,
-                vec2(112.0, y + 24.0 + line as f32 * 22.0),
+                vec2(text_x, y + 24.0 + line as f32 * 22.0),
                 18.0,
                 MUTED,
             );
@@ -217,6 +285,26 @@ fn draw_rows(ctx: &Context<'_>, rows: &[HistoryRow], offset: usize) -> Option<Ui
         );
     }
     None
+}
+
+fn draw_history_portrait(ctx: &Context<'_>, portrait: &HistoryPortrait, bounds: Rect) {
+    match portrait {
+        HistoryPortrait::CurrentOwn {
+            appearance,
+            age_years,
+        } => {
+            portraits::draw(
+                ctx.portraits,
+                Some(appearance),
+                Some(*age_years),
+                ctx.household_rules.service_minimum_age_years,
+                bounds,
+            );
+        }
+        HistoryPortrait::AdultSnapshot(appearance) => {
+            portraits::draw_adult(ctx.portraits, appearance, bounds);
+        }
+    }
 }
 
 fn pagination(ctx: &Context<'_>, page: usize, total: usize, overview: bool) -> Option<UiAction> {

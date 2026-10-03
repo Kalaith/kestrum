@@ -23,6 +23,7 @@ pub fn map_controls_contain(
     campaign_world: Option<&CampaignWorld>,
     view: &MapView,
     movement: &super::MoveView,
+    hide_inspector: bool,
 ) -> bool {
     [
         MENU,
@@ -38,17 +39,18 @@ pub fn map_controls_contain(
     .iter()
     .any(|rect| rect.contains(point))
         || (matches!(navigation.scope(), MapScope::Region(_)) && world::WORLD_MAP.contains(point))
-        || campaign_world
-            .and_then(|world| {
-                if movement.stage == super::MoveStage::Map {
-                    Some(super::movement_panel_bounds(
-                        movement, navigation, world, view,
-                    ))
-                } else {
-                    selection::bounds(navigation, world, view)
-                }
-            })
-            .is_some_and(|rect| rect.contains(point))
+        || (!hide_inspector
+            && campaign_world
+                .and_then(|world| {
+                    if movement.stage == super::MoveStage::Map {
+                        Some(super::movement_panel_bounds(
+                            movement, navigation, world, view,
+                        ))
+                    } else {
+                        selection::bounds(navigation, world, view)
+                    }
+                })
+                .is_some_and(|rect| rect.contains(point)))
 }
 
 pub fn draw_landscape(ctx: &Context<'_>) {
@@ -260,7 +262,9 @@ pub fn hud(ctx: &Context<'_>) -> Option<UiAction> {
     let moving = ctx.movement.stage == super::MoveStage::Map;
     let phase_action = phase_controls(ctx, active);
     let navigation_action = world::navigation(ctx);
-    let selection_action = if moving {
+    let selection_action = if super::is_open_for_map(ctx) {
+        None
+    } else if moving {
         super::draw_move_map_overlay(ctx)
     } else {
         selection::draw(ctx)

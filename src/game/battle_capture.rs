@@ -187,7 +187,7 @@ fn march_capture(campaign: &mut StrategicCampaign, data: &GameData, path: &[u32]
         .filter(|army| army.faction == campaign.player && army.site == SiteId(path[0]))
         .map(|army| army.id)
         .collect();
-    engine::apply(
+    let moved = engine::apply(
         campaign,
         data,
         Actor::Player,
@@ -197,4 +197,15 @@ fn march_capture(campaign: &mut StrategicCampaign, data: &GameData, path: &[u32]
         }),
     )
     .expect("capture follows physical route");
+    if moved.battle_pending {
+        let committed = engine::apply(campaign, data, Actor::Player, Command::StartPendingBattle)
+            .expect("capture accepts the real pending encounter");
+        let battle = committed
+            .battle
+            .expect("accepted encounter commits its battle report");
+        assert!(
+            campaign.battles.contains_key(&battle),
+            "accepted encounter records a real battle report"
+        );
+    }
 }

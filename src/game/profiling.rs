@@ -73,10 +73,11 @@ impl Game {
             core::arch::wasm32::memory_size(0) * 65_536
         );
         format!(
-            "{context} canvas={}x{} dpi={}",
+            "{context} canvas={}x{} dpi={} portrait_cache={:?}",
             screen_width(),
             screen_height(),
-            screen_dpi_scale()
+            screen_dpi_scale(),
+            self.portraits.metrics()
         )
     }
 }

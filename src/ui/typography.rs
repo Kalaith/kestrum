@@ -4,6 +4,15 @@ use super::{Context, SaveMode};
 use kestrum::state::Overlay;
 
 pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
+    if ctx.notifications.is_open
+        && ctx.state.screen == kestrum::state::Screen::Campaign
+        && ctx.state.overlay == Overlay::None
+    {
+        super::notifications::prepare_text(ctx);
+    }
+    if ctx.notifications.global_settings_open && ctx.state.overlay == Overlay::Settings {
+        super::notifications::prepare_text(ctx);
+    }
     if ctx.state.overlay == Overlay::Kingdom {
         super::kingdom::prepare_text(ctx);
     }
@@ -64,7 +73,7 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
             .map(|army| army.name.as_str())
             .chain(view.people.iter().map(|person| person.name.as_str()))
         {
-            for size in [16, 17, 18, 20, 21] {
+            for size in [14, 15, 16, 17, 18, 20, 21, 22] {
                 samples.push((size, name));
             }
             titles.push((24, name));

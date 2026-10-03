@@ -23,21 +23,266 @@
     }
   },
   "faces": [
-    { "id": "face_oval", "visual_key": "face-oval-v1", "silhouette_group": "oval" },
-    { "id": "face_tapered", "visual_key": "face-tapered-v1", "silhouette_group": "tapered" }
+    {
+      "id": "face_oval",
+      "visual_key": "face-oval-v1",
+      "silhouette_group": "oval",
+      "assets": {
+        "base": {
+          "source": "assets/portraits/faces/face_oval/base_source.png",
+          "mask": "assets/portraits/faces/face_oval/base_mask.png"
+        },
+        "shadow": {
+          "source": "assets/portraits/faces/face_oval/shadow_source.png",
+          "mask": "assets/portraits/faces/face_oval/shadow_mask.png"
+        },
+        "highlight": {
+          "source": "assets/portraits/faces/face_oval/highlight_source.png",
+          "mask": "assets/portraits/faces/face_oval/highlight_mask.png"
+        },
+        "ink": "assets/portraits/faces/face_oval/ink.png"
+      }
+    },
+    {
+      "id": "face_tapered",
+      "visual_key": "face-tapered-v1",
+      "silhouette_group": "tapered",
+      "assets": {
+        "base": {
+          "source": "assets/portraits/faces/face_tapered/base_source.png",
+          "mask": "assets/portraits/faces/face_tapered/base_mask.png"
+        },
+        "shadow": {
+          "source": "assets/portraits/faces/face_tapered/shadow_source.png",
+          "mask": "assets/portraits/faces/face_tapered/shadow_mask.png"
+        },
+        "highlight": {
+          "source": "assets/portraits/faces/face_tapered/highlight_source.png",
+          "mask": "assets/portraits/faces/face_tapered/highlight_mask.png"
+        },
+        "ink": "assets/portraits/faces/face_tapered/ink.png"
+      }
+    }
   ],
   "noses": [
-    { "id": "nose_straight", "visual_key": "nose-straight-v1" },
-    { "id": "nose_upturned", "visual_key": "nose-upturned-v1" }
+    {
+      "id": "nose_straight",
+      "visual_key": "nose-straight-v1",
+      "fits": {
+        "face_oval": {
+          "source": "assets/portraits/noses/face_oval/nose_straight_source.png",
+          "mask": "assets/portraits/noses/face_oval/nose_straight_mask.png"
+        },
+        "face_tapered": {
+          "source": "assets/portraits/noses/face_tapered/nose_straight_source.png",
+          "mask": "assets/portraits/noses/face_tapered/nose_straight_mask.png"
+        }
+      }
+    },
+    {
+      "id": "nose_upturned",
+      "visual_key": "nose-upturned-v1",
+      "fits": {
+        "face_oval": {
+          "source": "assets/portraits/noses/face_oval/nose_upturned_source.png",
+          "mask": "assets/portraits/noses/face_oval/nose_upturned_mask.png"
+        },
+        "face_tapered": {
+          "source": "assets/portraits/noses/face_tapered/nose_upturned_source.png",
+          "mask": "assets/portraits/noses/face_tapered/nose_upturned_mask.png"
+        }
+      }
+    }
   ],
   "eyes": [
-    { "id": "eyes_open", "visual_key": "eyes-open-v1" },
-    { "id": "eyes_lidded", "visual_key": "eyes-lidded-v1" }
+    {
+      "id": "eyes_open",
+      "visual_key": "eyes-open-v1",
+      "fits": {
+        "face_oval": {
+          "whites": "assets/portraits/eyes/face_oval/eyes_open_whites.png",
+          "iris_source": "assets/portraits/eyes/face_oval/eyes_open_iris_source.png",
+          "iris_mask": "assets/portraits/eyes/face_oval/eyes_open_iris_mask.png",
+          "ink": "assets/portraits/eyes/face_oval/eyes_open_ink.png"
+        },
+        "face_tapered": {
+          "whites": "assets/portraits/eyes/face_tapered/eyes_open_whites.png",
+          "iris_source": "assets/portraits/eyes/face_tapered/eyes_open_iris_source.png",
+          "iris_mask": "assets/portraits/eyes/face_tapered/eyes_open_iris_mask.png",
+          "ink": "assets/portraits/eyes/face_tapered/eyes_open_ink.png"
+        }
+      }
+    },
+    {
+      "id": "eyes_lidded",
+      "visual_key": "eyes-lidded-v1",
+      "fits": {
+        "face_oval": {
+          "whites": "assets/portraits/eyes/face_oval/eyes_lidded_whites.png",
+          "iris_source": "assets/portraits/eyes/face_oval/eyes_lidded_iris_source.png",
+          "iris_mask": "assets/portraits/eyes/face_oval/eyes_lidded_iris_mask.png",
+          "ink": "assets/portraits/eyes/face_oval/eyes_lidded_ink.png"
+        },
+        "face_tapered": {
+          "whites": "assets/portraits/eyes/face_tapered/eyes_lidded_whites.png",
+          "iris_source": "assets/portraits/eyes/face_tapered/eyes_lidded_iris_source.png",
+          "iris_mask": "assets/portraits/eyes/face_tapered/eyes_lidded_iris_mask.png",
+          "ink": "assets/portraits/eyes/face_tapered/eyes_lidded_ink.png"
+        }
+      }
+    }
   ],
   "hair": [
-    { "id": "hair_bald", "visual_key": "hair-bald-v1", "silhouette_group": "bald", "is_bald": true },
-    { "id": "hair_cropped", "visual_key": "hair-cropped-v1", "silhouette_group": "short", "is_bald": false },
-    { "id": "hair_coiled", "visual_key": "hair-coiled-v1", "silhouette_group": "curled", "is_bald": false }
+    {
+      "id": "hair_bald",
+      "visual_key": "hair-bald-v1",
+      "silhouette_group": "bald",
+      "is_bald": true
+    },
+    {
+      "id": "hair_cropped",
+      "visual_key": "hair-cropped-v1",
+      "silhouette_group": "short",
+      "is_bald": false,
+      "fits": {
+        "face_oval": {
+          "rear": {
+            "base": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/rear_base_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/rear_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/rear_shadow_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/rear_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/rear_highlight_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/rear_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_oval/hair_cropped/rear_ink.png"
+          },
+          "front": {
+            "base": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/front_base_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/front_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/front_shadow_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/front_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_oval/hair_cropped/front_highlight_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_cropped/front_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_oval/hair_cropped/front_ink.png"
+          }
+        },
+        "face_tapered": {
+          "rear": {
+            "base": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/rear_base_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/rear_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/rear_shadow_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/rear_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/rear_highlight_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/rear_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_tapered/hair_cropped/rear_ink.png"
+          },
+          "front": {
+            "base": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/front_base_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/front_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/front_shadow_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/front_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_tapered/hair_cropped/front_highlight_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_cropped/front_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_tapered/hair_cropped/front_ink.png"
+          }
+        }
+      }
+    },
+    {
+      "id": "hair_coiled",
+      "visual_key": "hair-coiled-v1",
+      "silhouette_group": "curled",
+      "is_bald": false,
+      "fits": {
+        "face_oval": {
+          "rear": {
+            "base": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/rear_base_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/rear_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/rear_shadow_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/rear_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/rear_highlight_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/rear_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_oval/hair_coiled/rear_ink.png"
+          },
+          "front": {
+            "base": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/front_base_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/front_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/front_shadow_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/front_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_oval/hair_coiled/front_highlight_source.png",
+              "mask": "assets/portraits/hair/face_oval/hair_coiled/front_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_oval/hair_coiled/front_ink.png"
+          }
+        },
+        "face_tapered": {
+          "rear": {
+            "base": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/rear_base_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/rear_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/rear_shadow_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/rear_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/rear_highlight_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/rear_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_tapered/hair_coiled/rear_ink.png"
+          },
+          "front": {
+            "base": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/front_base_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/front_base_mask.png"
+            },
+            "shadow": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/front_shadow_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/front_shadow_mask.png"
+            },
+            "highlight": {
+              "source": "assets/portraits/hair/face_tapered/hair_coiled/front_highlight_source.png",
+              "mask": "assets/portraits/hair/face_tapered/hair_coiled/front_highlight_mask.png"
+            },
+            "ink": "assets/portraits/hair/face_tapered/hair_coiled/front_ink.png"
+          }
+        }
+      }
+    }
   ],
   "skin_palettes": [
     { "id": "skin_fair", "visual_key": "skin-fair-v1", "value_group": "light", "shadow": [124, 74, 62], "base": [204, 147, 119], "highlight": [247, 207, 176] },
@@ -79,5 +324,40 @@
     { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_bald" },
     { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_cropped" },
     { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_coiled" }
-  ]
+  ],
+  "supporting": {
+    "neck": {
+      "base": {
+        "source": "assets/portraits/supporting/neck/base_source.png",
+        "mask": "assets/portraits/supporting/neck/base_mask.png"
+      },
+      "shadow": {
+        "source": "assets/portraits/supporting/neck/shadow_source.png",
+        "mask": "assets/portraits/supporting/neck/shadow_mask.png"
+      },
+      "highlight": {
+        "source": "assets/portraits/supporting/neck/highlight_source.png",
+        "mask": "assets/portraits/supporting/neck/highlight_mask.png"
+      },
+      "ink": "assets/portraits/supporting/neck/ink.png"
+    },
+    "shoulders": {
+      "base": {
+        "source": "assets/portraits/supporting/shoulders/base_source.png",
+        "mask": "assets/portraits/supporting/shoulders/base_mask.png"
+      },
+      "shadow": {
+        "source": "assets/portraits/supporting/shoulders/shadow_source.png",
+        "mask": "assets/portraits/supporting/shoulders/shadow_mask.png"
+      },
+      "highlight": {
+        "source": "assets/portraits/supporting/shoulders/highlight_source.png",
+        "mask": "assets/portraits/supporting/shoulders/highlight_mask.png"
+      },
+      "ink": "assets/portraits/supporting/shoulders/ink.png"
+    },
+    "child_silhouette": "assets/portraits/supporting/child_silhouette.png",
+    "unknown_silhouette": "assets/portraits/supporting/unknown_silhouette.png",
+    "adult_fallback": "assets/portraits/supporting/adult_fallback.png"
+  }
 }

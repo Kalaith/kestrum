@@ -10,8 +10,10 @@ mod history;
 mod kingdom;
 mod menus;
 mod movement;
+mod notifications;
 mod observer;
 mod overview;
+pub(crate) mod portraits;
 mod saves;
 mod selection;
 mod settlement;
@@ -53,6 +55,11 @@ pub use movement::{
     draw_map_overlay as draw_move_map_overlay, panel_bounds as movement_panel_bounds,
 };
 pub use movement::{MoveStage, MoveView, MOVE_GROUP_PAGE_SIZE, ROUTE_PAGE_SIZE};
+pub use notifications::{
+    draw_notification_overlay, is_open_for_map, notification_controls_contain,
+    notification_reserved_rects, NotificationAction, NotificationSession,
+    NotificationSettingsCategory, NotificationTab,
+};
 pub use observer::controls_contain as observer_controls_contain;
 pub use overview::attention_bounds;
 pub use overview::{controls_contain as overview_controls_contain, OverviewView};
@@ -71,6 +78,7 @@ pub use world::{banner_visible, important_target};
 
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
+    Notification(NotificationAction),
     ToggleAttention,
     AttentionPage(i32),
     FocusAttention(kestrum::engine::AttentionTarget),
@@ -343,6 +351,10 @@ impl UiAction {
 
 #[derive(Clone, Copy)]
 pub struct Context<'a> {
+    pub portraits: &'a crate::game::portraits::PortraitCache,
+    pub notifications: &'a NotificationSession,
+    pub notification_projection: Option<&'a kestrum::state::notifications::NotificationProjection>,
+    pub notification_rules: &'a kestrum::data::notifications::NotificationRules,
     pub overview: Option<&'a kestrum::engine::MapOverview>,
     pub overview_ui: &'a OverviewView,
     pub kingdom: &'a KingdomView,
@@ -410,7 +422,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         atlas::hud(ctx)
     };
     if ctx.state.overlay == Overlay::None {
-        return action;
+        return draw_notification_overlay(ctx).or(action);
     }
     centered_sheet(ctx, draw_sheet)
 }

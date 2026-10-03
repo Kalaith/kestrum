@@ -1,5 +1,6 @@
 //! All local named people remain selectable through a bounded page.
 
+use super::super::portraits;
 use super::*;
 use kestrum::state::people::{Person, PersonAssignment, PersonStatus};
 
@@ -108,9 +109,17 @@ fn person_rows(
 ) -> Option<UiAction> {
     for (index, person) in people.iter().enumerate() {
         let y = 219.0 + index as f32 * 81.0;
+        let age = person.age_years(campaign.completed_rounds);
+        portraits::draw(
+            ctx.portraits,
+            Some(&person.appearance),
+            Some(age),
+            ctx.household_rules.service_minimum_age_years,
+            Rect::new(112.0, y - 23.0, 64.0, 64.0),
+        );
         let name =
-            truncate_text_to_width_ex(&person_name(ctx, person), 400.0, ctx.body_font(), 20.0);
-        body(ctx, &name, vec2(112.0, y), 20.0, CREAM);
+            truncate_text_to_width_ex(&person_name(ctx, person), 324.0, ctx.body_font(), 20.0);
+        body(ctx, &name, vec2(188.0, y), 20.0, CREAM);
         let remaining = ctx
             .army
             .person_remaining
@@ -129,17 +138,14 @@ fn person_rows(
         body(
             ctx,
             &format!(
-                "{} · {assignment} · {} · {}: {}",
+                "{} | {assignment} | {} | {}: {}",
                 class_name(ctx, person.class),
-                ctx.text("person_age").replace(
-                    "{age}",
-                    &person.age_years(campaign.completed_rounds).to_string()
-                ),
+                ctx.text("person_age").replace("{age}", &age.to_string()),
                 ctx.text("movement_left"),
                 remaining
             ),
-            vec2(112.0, y + 25.0),
-            18.0,
+            vec2(188.0, y + 42.0),
+            16.0,
             MUTED,
         );
         if button(
@@ -212,13 +218,13 @@ fn person_rows(
             },
             epithet
         );
-        let note = truncate_text_to_width_ex(&note, 1040.0, ctx.body_font(), 16.0);
-        body(ctx, &note, vec2(112.0, y + 46.0), 16.0, MUTED);
+        let note = truncate_text_to_width_ex(&note, 980.0, ctx.body_font(), 14.0);
+        body(ctx, &note, vec2(188.0, y + 61.0), 14.0, MUTED);
         draw_line(
             112.0,
-            y + 64.0,
+            y + 68.0,
             1168.0,
-            y + 64.0,
+            y + 68.0,
             1.0,
             Color::new(0.21, 0.29, 0.25, 1.0),
         );

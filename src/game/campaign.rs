@@ -35,11 +35,17 @@ impl Game {
                 library.refresh(store, &self.data)?;
                 campaign.campaign_id = library.allocate_campaign_id(store)?;
             }
+            engine::notifications::baseline_current_conditions(&mut campaign, &self.data)?;
+            campaign
+                .notifications
+                .sync_preferences(&self.preferences.notifications, &self.data.notifications);
             self.state
                 .load_campaign(Campaign::Strategic(Box::new(campaign)), &self.data)
         })();
         match result {
             Ok(()) => {
+                self.portraits.request_reset();
+                self.initialize_notification_campaign();
                 self.navigation.reset(&mut self.view);
                 self.army = ui::ArmyView::default();
                 self.movement = ui::MoveView::default();
@@ -73,18 +79,6 @@ impl Game {
     ) {
         match result {
             Ok(outcome) => {
-                let messages = self
-                    .state
-                    .campaign
-                    .as_ref()
-                    .and_then(Campaign::strategic)
-                    .map(|campaign| {
-                        engine::action_notices(campaign, &self.data, campaign.player, &outcome)
-                    })
-                    .unwrap_or_default();
-                if !messages.is_empty() {
-                    self.notice = Some((messages.join(" "), 5.0));
-                }
                 if outcome.battle_pending {
                     self.battle_return = None;
                     self.refresh_pending_battlefield();

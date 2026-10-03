@@ -1,0 +1,450 @@
+{
+  "schema_version": 1,
+  "rig_id": "human_bust_front_v1",
+  "exports": [
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_lidded_ink.png",
+      "sha256": "AE2435E50B63BCB680D0D566C84C91D7390005381841197F918864369054C663"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_lidded_iris_mask.png",
+      "sha256": "959E1AAE191DC6B2AE5939F50DEE70C2389BD8E58F09297F8C9817AFAC7F42CC"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_lidded_iris_source.png",
+      "sha256": "188303FE9D7AF0D60590EDF005ED65DB36A830F65FAFAF761D494062B2779067"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_lidded_whites.png",
+      "sha256": "089E4D0A031409284E9CB1DD8294B8DE2931E8358D514A74F9E80976E8E371C2"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_open_ink.png",
+      "sha256": "AFD228F6F10913044E075525A311A62064A4E8C5B278E2BFB5E7C5A55330E1D0"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_open_iris_mask.png",
+      "sha256": "CE749025078DD59E0C1B40FC299517669D14A06C1CB3E7A2F9C7BFE5D0F1D9E2"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_open_iris_source.png",
+      "sha256": "76DBF6F6961129090B724F61B6A9706B249062FAF2DE76A162A6AD7B89FB553E"
+    },
+    {
+      "path": "assets/portraits/eyes/face_oval/eyes_open_whites.png",
+      "sha256": "4B16FC19B4AF38BA590F8F8BE664DAA9C53A90885BD22CFAA47BD7FDBF393689"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_lidded_ink.png",
+      "sha256": "AE2435E50B63BCB680D0D566C84C91D7390005381841197F918864369054C663"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_lidded_iris_mask.png",
+      "sha256": "959E1AAE191DC6B2AE5939F50DEE70C2389BD8E58F09297F8C9817AFAC7F42CC"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_lidded_iris_source.png",
+      "sha256": "188303FE9D7AF0D60590EDF005ED65DB36A830F65FAFAF761D494062B2779067"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_lidded_whites.png",
+      "sha256": "089E4D0A031409284E9CB1DD8294B8DE2931E8358D514A74F9E80976E8E371C2"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_open_ink.png",
+      "sha256": "AFD228F6F10913044E075525A311A62064A4E8C5B278E2BFB5E7C5A55330E1D0"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_open_iris_mask.png",
+      "sha256": "CE749025078DD59E0C1B40FC299517669D14A06C1CB3E7A2F9C7BFE5D0F1D9E2"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_open_iris_source.png",
+      "sha256": "76DBF6F6961129090B724F61B6A9706B249062FAF2DE76A162A6AD7B89FB553E"
+    },
+    {
+      "path": "assets/portraits/eyes/face_tapered/eyes_open_whites.png",
+      "sha256": "4B16FC19B4AF38BA590F8F8BE664DAA9C53A90885BD22CFAA47BD7FDBF393689"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/base_mask.png",
+      "sha256": "ADCA87A547F7A417BF1CBCC1424A62B14610DDE2ACC4D440A9263E66FBC20414"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/base_source.png",
+      "sha256": "36D8B331E5E1C1224D030602DE78872A4479FB2437FBB1F3FB8FD2B12E248689"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/highlight_mask.png",
+      "sha256": "99EA5FF0B6653AF253B08F2909EEEA94AD7B9DF73C38FA2E1A45F97BC6612E3B"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/highlight_source.png",
+      "sha256": "E195A0BB639B1A30391105C228C8E14B40F1F4E53A59B49A940B21E97002BEF4"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/ink.png",
+      "sha256": "A5AEE86C4705F19D7220FFEAA45FEADC532ABA911B240F9CD2EFF4B99E6AB1CE"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/shadow_mask.png",
+      "sha256": "EEF3A99336765201CDB6C9A8F1DEE7B2A4055D889ADA7ABFD986385A45C572C8"
+    },
+    {
+      "path": "assets/portraits/faces/face_oval/shadow_source.png",
+      "sha256": "3CCD901B8110E2397BFA89480A6864D2A01196567436186DD5E31C6200990293"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/base_mask.png",
+      "sha256": "7F2E89247802429E18D22090487D644202FF74965EB64B15F4C4D7293FE544F3"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/base_source.png",
+      "sha256": "1AA468E5CBCBEBB8D0C4EFC511761BF90D07321E14B5BB5452317E1DC2CED0D7"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/highlight_mask.png",
+      "sha256": "B0C51B09DFF54398C43876E3779703C9A11963E9388DE29DF84AED27C56ACE8D"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/highlight_source.png",
+      "sha256": "44227C6F518C3663ABC91510AE4297B476858D9D4799271D03AD4BA7BB08D51E"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/ink.png",
+      "sha256": "253E890BCE2E6CEE85418504DA4D1E1ADB7BACDD13F8822B95DC65CF70FAC06F"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/shadow_mask.png",
+      "sha256": "8246F924C138FE9377727DEB9D72A80D430C4F42A8638C9ED5C55693A4EA7B7C"
+    },
+    {
+      "path": "assets/portraits/faces/face_tapered/shadow_source.png",
+      "sha256": "B60DD30198E613FCDC7B276447431CDF7BF7D9B300037680B7358E08D9760FE1"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_base_mask.png",
+      "sha256": "A15B271E280C900751FACBE939441F9FA3637A04D6C59BA4498F58A0D0CE716B"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_base_source.png",
+      "sha256": "A69EC92AB9BDB4D3F299E26A860A57660EB5D2722BEEA5C49420606DAB1972CA"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_highlight_mask.png",
+      "sha256": "D714D71DA7AEE256117607BBDF8E1C133C0B1BFE019EC672F279A82E2A268ED6"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_highlight_source.png",
+      "sha256": "BCECE433126A56DF7DD09B6C4F8DC4DE4C2093DAE5B77693D4DAD06A074EF3EF"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_ink.png",
+      "sha256": "E5983C0766697244E8774B78D7D150462C84BBA6713344DE7CB5F5089A14B8B3"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_shadow_mask.png",
+      "sha256": "9CBAEFE0927A96A882E5044D1750BC9BF560932B410C7C19AA85672D49E54D82"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/front_shadow_source.png",
+      "sha256": "582448DF9C5F727051796FDB74C01CCEC7CF9A7998C5D01447CD22304D14B574"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_base_mask.png",
+      "sha256": "2771476A98BE7FF63A4C5185C3A330B538B63CFDD2463B2F02E5072266A09E97"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_base_source.png",
+      "sha256": "59E04F46C08380DE0A15B9BEFBAB0FF51A8D1B728A2AEED6E49E492EB9F5642E"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_highlight_mask.png",
+      "sha256": "2B87FD6692511D4191702B2363AD5EDFD794E130EADF48F4299172D6997AA4BD"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_highlight_source.png",
+      "sha256": "496EB65089F49694AE94DF45C87F85E9A6FA58C68014429CBE68BAD9D959A439"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_ink.png",
+      "sha256": "F7449F12983592EE1129406DFF332EFAD8F4DD9037FDC0EFAE9DE21AE2094C5A"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_shadow_mask.png",
+      "sha256": "D3B66027AFDF20939CE637694C6410D7237049D0C2DB5028DFA09BFC815AA380"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_coiled/rear_shadow_source.png",
+      "sha256": "0E8E18C3C713D649E169CB8122963FA6FC27CE5800067428FDCD741586965FA1"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_base_mask.png",
+      "sha256": "102952FE9460AD55EA47087E2DCF8E73FE4BD5B72A5D05AA1ECA22AB25F995F8"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_base_source.png",
+      "sha256": "463E2E5CBA955EFCD96AB5B439AB24DE1627E34C148D6EFCB7AFF24757C052F2"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_highlight_mask.png",
+      "sha256": "A4BAAD468E85F0D11FF84A275E6C80EA2E6EECC111C6995E02D4A1387952A6DF"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_highlight_source.png",
+      "sha256": "6770456A88CDE58BDF6A7F795238B9C022D0D5D8B1FFEFAF66F6A9490A716050"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_ink.png",
+      "sha256": "358231454E5FF3FA1BE4A538F48239F6D014ED051BC52FAC421E737B75F8C734"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_shadow_mask.png",
+      "sha256": "395C70A9EC37026F67831CD12857A92B0D1943DBC512BF11233FA13E3BA8A01D"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/front_shadow_source.png",
+      "sha256": "285501E54427A8D31CD3609D58F93F0FCF5C7AB3A66C633A39FAC89C4D801D92"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_base_mask.png",
+      "sha256": "30E35E311AE1181D3EF113F282B2C977BBF7B84BED9DEC3DF73C75D1F721D43B"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_base_source.png",
+      "sha256": "93B8407B704D7181F7137836277C994C5F8B485F981F8D66816BDFF5AE71593F"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_highlight_mask.png",
+      "sha256": "042EC300994D1D8FAA6CDA5E44FEBFAE23DB9F3CBB58F3A134177B859F1A7B78"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_highlight_source.png",
+      "sha256": "00E447D76F551732466A7F9747DF906B92D04485E7C3C89AA2FB517863DDE4B2"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_ink.png",
+      "sha256": "BBC6CF993B421BF22E9A38D17208B1DC8B40918FD0086472ACB486294FCDB5C1"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_shadow_mask.png",
+      "sha256": "769F76353F2F8159D367300B34BB5532946CCE1221221893B4D9CC66D2E23ECE"
+    },
+    {
+      "path": "assets/portraits/hair/face_oval/hair_cropped/rear_shadow_source.png",
+      "sha256": "C4E13344C077591AA986948849F2182DD52CD89FA101DC5B5B935C479221508F"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_base_mask.png",
+      "sha256": "A15B271E280C900751FACBE939441F9FA3637A04D6C59BA4498F58A0D0CE716B"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_base_source.png",
+      "sha256": "A69EC92AB9BDB4D3F299E26A860A57660EB5D2722BEEA5C49420606DAB1972CA"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_highlight_mask.png",
+      "sha256": "D714D71DA7AEE256117607BBDF8E1C133C0B1BFE019EC672F279A82E2A268ED6"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_highlight_source.png",
+      "sha256": "BCECE433126A56DF7DD09B6C4F8DC4DE4C2093DAE5B77693D4DAD06A074EF3EF"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_ink.png",
+      "sha256": "E5983C0766697244E8774B78D7D150462C84BBA6713344DE7CB5F5089A14B8B3"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_shadow_mask.png",
+      "sha256": "9CBAEFE0927A96A882E5044D1750BC9BF560932B410C7C19AA85672D49E54D82"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/front_shadow_source.png",
+      "sha256": "582448DF9C5F727051796FDB74C01CCEC7CF9A7998C5D01447CD22304D14B574"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_base_mask.png",
+      "sha256": "2771476A98BE7FF63A4C5185C3A330B538B63CFDD2463B2F02E5072266A09E97"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_base_source.png",
+      "sha256": "59E04F46C08380DE0A15B9BEFBAB0FF51A8D1B728A2AEED6E49E492EB9F5642E"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_highlight_mask.png",
+      "sha256": "2B87FD6692511D4191702B2363AD5EDFD794E130EADF48F4299172D6997AA4BD"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_highlight_source.png",
+      "sha256": "496EB65089F49694AE94DF45C87F85E9A6FA58C68014429CBE68BAD9D959A439"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_ink.png",
+      "sha256": "F7449F12983592EE1129406DFF332EFAD8F4DD9037FDC0EFAE9DE21AE2094C5A"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_shadow_mask.png",
+      "sha256": "D3B66027AFDF20939CE637694C6410D7237049D0C2DB5028DFA09BFC815AA380"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_coiled/rear_shadow_source.png",
+      "sha256": "0E8E18C3C713D649E169CB8122963FA6FC27CE5800067428FDCD741586965FA1"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_base_mask.png",
+      "sha256": "102952FE9460AD55EA47087E2DCF8E73FE4BD5B72A5D05AA1ECA22AB25F995F8"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_base_source.png",
+      "sha256": "463E2E5CBA955EFCD96AB5B439AB24DE1627E34C148D6EFCB7AFF24757C052F2"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_highlight_mask.png",
+      "sha256": "A4BAAD468E85F0D11FF84A275E6C80EA2E6EECC111C6995E02D4A1387952A6DF"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_highlight_source.png",
+      "sha256": "6770456A88CDE58BDF6A7F795238B9C022D0D5D8B1FFEFAF66F6A9490A716050"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_ink.png",
+      "sha256": "358231454E5FF3FA1BE4A538F48239F6D014ED051BC52FAC421E737B75F8C734"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_shadow_mask.png",
+      "sha256": "395C70A9EC37026F67831CD12857A92B0D1943DBC512BF11233FA13E3BA8A01D"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/front_shadow_source.png",
+      "sha256": "285501E54427A8D31CD3609D58F93F0FCF5C7AB3A66C633A39FAC89C4D801D92"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_base_mask.png",
+      "sha256": "30E35E311AE1181D3EF113F282B2C977BBF7B84BED9DEC3DF73C75D1F721D43B"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_base_source.png",
+      "sha256": "93B8407B704D7181F7137836277C994C5F8B485F981F8D66816BDFF5AE71593F"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_highlight_mask.png",
+      "sha256": "042EC300994D1D8FAA6CDA5E44FEBFAE23DB9F3CBB58F3A134177B859F1A7B78"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_highlight_source.png",
+      "sha256": "00E447D76F551732466A7F9747DF906B92D04485E7C3C89AA2FB517863DDE4B2"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_ink.png",
+      "sha256": "BBC6CF993B421BF22E9A38D17208B1DC8B40918FD0086472ACB486294FCDB5C1"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_shadow_mask.png",
+      "sha256": "769F76353F2F8159D367300B34BB5532946CCE1221221893B4D9CC66D2E23ECE"
+    },
+    {
+      "path": "assets/portraits/hair/face_tapered/hair_cropped/rear_shadow_source.png",
+      "sha256": "C4E13344C077591AA986948849F2182DD52CD89FA101DC5B5B935C479221508F"
+    },
+    {
+      "path": "assets/portraits/noses/face_oval/nose_straight_mask.png",
+      "sha256": "C4D027FC0D367336A937DF3F3ECE5F555FF00FFC0320399370A105B5E719C0D0"
+    },
+    {
+      "path": "assets/portraits/noses/face_oval/nose_straight_source.png",
+      "sha256": "2B19D5D6253BDED391457C0D9DC598356988AABAB154C1D5CAAA0C2BF44C3B38"
+    },
+    {
+      "path": "assets/portraits/noses/face_oval/nose_upturned_mask.png",
+      "sha256": "6F210C1A3C97135730457059D3A36656C635BBDAC36775866197ED2F1840F1B5"
+    },
+    {
+      "path": "assets/portraits/noses/face_oval/nose_upturned_source.png",
+      "sha256": "CE8AE9CCD8A2814FEEA69339B73B5C80D068E5ED5DD2F8C978C413F87C22A75A"
+    },
+    {
+      "path": "assets/portraits/noses/face_tapered/nose_straight_mask.png",
+      "sha256": "C4D027FC0D367336A937DF3F3ECE5F555FF00FFC0320399370A105B5E719C0D0"
+    },
+    {
+      "path": "assets/portraits/noses/face_tapered/nose_straight_source.png",
+      "sha256": "2B19D5D6253BDED391457C0D9DC598356988AABAB154C1D5CAAA0C2BF44C3B38"
+    },
+    {
+      "path": "assets/portraits/noses/face_tapered/nose_upturned_mask.png",
+      "sha256": "6F210C1A3C97135730457059D3A36656C635BBDAC36775866197ED2F1840F1B5"
+    },
+    {
+      "path": "assets/portraits/noses/face_tapered/nose_upturned_source.png",
+      "sha256": "CE8AE9CCD8A2814FEEA69339B73B5C80D068E5ED5DD2F8C978C413F87C22A75A"
+    },
+    {
+      "path": "assets/portraits/supporting/adult_fallback.png",
+      "sha256": "2902EB3918CCEB24ED002E41FBA47D630B20DBE62B8C281837CF10C44DB84F51"
+    },
+    {
+      "path": "assets/portraits/supporting/child_silhouette.png",
+      "sha256": "CD2F501DB3EFE95743119DDE3A8D8C3067BCA0EC7806EB998E6A4C1D8970A156"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/base_mask.png",
+      "sha256": "0ED5AD76A02E92928D426127113D4B7C989FB17C1038FE36DB0FCECE554BCB53"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/base_source.png",
+      "sha256": "533A7ACBF8E031BA35770CF78D2A6185E0C74902716D3643994F69A814B39E92"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/highlight_mask.png",
+      "sha256": "661DD5D1D3A20ED873AA258C339C5F3BBA19B6065E69CE91DCF776CFD622311F"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/highlight_source.png",
+      "sha256": "273519FE5BA31D7C3E1E542F3FFAD8C9E2CB0528D6F8D2D997BA9CF489CFB5EE"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/ink.png",
+      "sha256": "64A0F61208A0DCB79D56F48B915A40CEB00D114061F177640C645F7A75B4A2AB"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/shadow_mask.png",
+      "sha256": "D044147327EC7C6726936801367B814CA10A3588B835EA9B725FE6D1AACCB44B"
+    },
+    {
+      "path": "assets/portraits/supporting/neck/shadow_source.png",
+      "sha256": "CD0969E44931193812405522D917D59C512ABC93A68BEE5304FEBAB4DC94EB58"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/base_mask.png",
+      "sha256": "2D88E5D1B920FA7BCF13EDF2A15CE2EB87E6AEA1875ABB6CAA1E0E4C4809B114"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/base_source.png",
+      "sha256": "5FD1DAFDD7DE932D9DE8855ECE8B5216ED16A9C5B9E39286DF514431F33A68ED"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/highlight_mask.png",
+      "sha256": "613C6C439489354D7B1B7DDFD8068B908EEE5D5FDF0C9F1EDBB8A29735AA943B"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/highlight_source.png",
+      "sha256": "3942B7532AA4DE834A95707B8CE435471B706F2E75DD25836141B187EECA773D"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/ink.png",
+      "sha256": "26F94C9C6EF4D6BA57DB9A19E92C6B1BB57D3A5D440D9D8EDFACBF3D8E92CBF4"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/shadow_mask.png",
+      "sha256": "8D91BC33ACD6B1CA3A3B988BA3FD2A8D464DBDA2516A85DD0B12417E87A8F4A0"
+    },
+    {
+      "path": "assets/portraits/supporting/shoulders/shadow_source.png",
+      "sha256": "5A081B74D18A05415C20A33D3D73FE8D583A3CEB86203F8258AB28B169DE151F"
+    },
+    {
+      "path": "assets/portraits/supporting/unknown_silhouette.png",
+      "sha256": "FC08FEF99097E38027017F8E2E1ACDC62B73C929E64E5C002D628BC44CFF92FB"
+    }
+  ]
+}

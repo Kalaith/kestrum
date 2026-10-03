@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "exporter": "PortraitArtSource reference straight-alpha compositor",
+  "exporter_version": "illustrated-ramp-v1",
+  "command": "scripts/export_illustrated_portraits.ps1 -ParityOnly",
+  "source_revision": "frozen G02 runtime exports",
+  "frozen_exports_manifest": "export-manifest.json",
+  "frozen_exports_manifest_sha256": "30FDD763A77D12E5C6394C7845AD01C81C2538C3B62FE4DF31DCDA5D71793923",
+  "descriptor": {
+    "schema_version": 1,
+    "catalog_revision": 1,
+    "allocation_revision": 1,
+    "rig_id": "human_bust_front_v1",
+    "face_id": "face_oval",
+    "nose_id": "nose_upturned",
+    "eyes_id": "eyes_lidded",
+    "hair_id": "hair_coiled",
+    "skin_palette_id": "skin_ochre",
+    "hair_palette_id": "hair_flax",
+    "eye_palette_id": "eyes_hazel",
+    "signature": "19:human-bust-front-v1|12:face-oval-v1|16:nose-upturned-v1|14:eyes-lidded-v1|14:hair-coiled-v1|13:skin-ochre-v1|12:hair-flax-v1|13:eyes-hazel-v1"
+  },
+  "composition": "Per-plane grayscale-red multiplied RGB tint; source alpha * mask red * mask alpha * tint alpha; straight-alpha Porter-Duff over. Order: rear hair, shoulders, neck, face fills, eyes whites/iris/ink, nose, face ink/mouth, front hair. Shaded assemblies use base, shadow, highlight, ink (face ink deferred). Shoulder shadow/base/highlight RGB: [39,51,58]/[84,101,108]/[153,164,157].",
+  "reduction": "Exact area filtering in premultiplied-alpha space from 512x512, then unpremultiplication. Exactly zero accumulated alpha has zero RGB; positive coverage rounded to byte-alpha zero can retain unused RGB. Clamped byte conversion rounds halfway away from zero after each over operation and reduction. Compare alpha and premultiplied RGB, not unused transparent RGB.",
+  "files": [
+    {
+      "path": "assets/art-source/portraits/illustrated/parity_v1_128.png",
+      "width": 128,
+      "height": 128,
+      "sha256": "B51D00EFE4E553B6006E33CAD0CC088D052A87F5C8465C8DC7D16F4DBA8D9C46"
+    },
+    {
+      "path": "assets/art-source/portraits/illustrated/parity_v1_256.png",
+      "width": 256,
+      "height": 256,
+      "sha256": "3D2A9272887073B9ED259D6ECEB470D1C2D9811A8D9A08B70A36B8C791471883"
+    }
+  ]
+}

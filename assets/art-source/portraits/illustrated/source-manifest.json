@@ -1,0 +1,522 @@
+{
+  "version": 1,
+  "status": "G02 exports approved and frozen; G03 append-only registration and review in progress",
+  "generation": {
+    "tool": "built-in image_gen",
+    "model": "not exposed by tool",
+    "date": "2026-10-03",
+    "style_reference": "../../../../docs/verification/portrait_direction.png",
+    "style_provenance": "../concept.json"
+  },
+  "rig_id": "human_bust_front_v1",
+  "export_notes": [
+    "Registration is performed offline on a fixed 512x512 canvas. No runtime anatomical stretching or image generation.",
+    "Input alpha is genuine transparency. Material normalization treats coverage at or above 240/255 as opaque; lower edge coverage is retained.",
+    "Neutral grayscale is derived with Rec.709 luminance. Eyes use deliberately green-coded iris pixels; other materials are not selected by guessed hues.",
+    "The neutral mouth is registered at y=354 and precomposited into the face material master, with no new runtime descriptor field.",
+    "The G02 runtime matrix is approved by lead review, with no human-recognition claim; G03 expands by new IDs and append-only exports.",
+    "The long front hair source is intentionally cropped at the bust boundary during registration; it continues beyond the portrait crop."
+  ],
+  "components": [
+    {
+      "id": "face_oval_master",
+      "file": "face_oval_master.png",
+      "source_rect": [
+        305,
+        128,
+        645,
+        845
+      ],
+      "destination_rect": [
+        124.7,
+        64,
+        262.6,
+        344
+      ],
+      "purpose": "Bald oval face base with ears/contour shading; all interchangeable features and mouth absent.",
+      "prompts": [
+        "Use case: stylized-concept.\nAsset type: a SINGLE production component for a modular 2D fantasy tactical RPG portrait generator, NOT a completed portrait.\nPrimary request: draw one front-facing adult human BALD FACE MASTER on a true transparent background, in polished clean tactical Japanese RPG portrait style: confident fine tapered ink lines, crisp sculpted cheek and jaw planes, clean two-to-three-tone cel shading, handsome natural anime human proportions rather than a round cartoon avatar. Oval face with a strong but rounded adult jaw. Full head plus ears, no neck, no shoulders.\nCRITICAL MODULAR REQUIREMENT: the face has NO eyes, NO eyebrows, and NO nose. The eye/nose area is uninterrupted gently shaded facial skin, like a carefully prepared blank character base onto which separate eye and nose layers will be composited. Do not draw eyelids, eye sockets, empty eye holes, nose bridge, nostrils, or a nose bump. Keep only an understated closed neutral mouth, subtle lower lip and chin shadow. No hair, beard, glasses, clothing, accessories, text, labels, background, or ground shadow.\nComposition: square canvas, front-facing symmetric facial geometry, vertically upright, neither tilted nor three-quarter. Use normalized coordinates on a 512x512 rig: skull top centered around (256,64), ear-inclusive head spans x=120 to392, chin ends at (256,408), ears around y=239–290, mouth centered at (256,354). The lower head ends at chin, do not include neck. Leave a large empty transparent margin below y=410 and above y=62. This is a registered FACE component, so do not enlarge it to fill the entire canvas. Preserve these relative proportions at whatever output resolution is used.\nColors: strictly neutral GRAYSCALE material master, no skin hue or colored pixels. Skin midtone around 65% gray with pale highlights and restrained 35% gray shadow planes; dark fine ink for outer contour and mouth. Smooth clean cel shading, no painterly skin texture, no speckles, no gradients that flatten form. Upper-left lighting. Jaw and ears must be fully rendered and isolated. Actual transparent alpha outside the head. No checkerboard painted into pixels.\nQuality priority: expressive designed head anatomy and refined linework suitable for a premium tactical RPG, with clear silhouette at small thumbnails. This is deliberately a featureless eye/nose base, not a finished character.",
+        "Use case: precise-object-edit. Asset type: modular fantasy tactical RPG grayscale FACE MASTER. Among the recent images, the BALD FEATURELESS GRAYSCALE HEAD ON TRANSPARENT ALPHA is the exact edit target. The FOUR COLORED ANIME PORTRAITS sheet is a STYLE REFERENCE ONLY, showing the desired cleaner anime treatment.\nMake ONE targeted anatomy correction to the grayscale head: MOVE THE CLOSED MOUTH AND ITS LOWER-LIP SHADING DOWN by about 50 pixels on this 1254x1254 canvas (4% of the canvas height). The mouth line currently around y=770 should be around y=820. Fill its old location seamlessly with the existing grayscale skin. Move the complete lips as one unit, keeping their current width and neutral expression. This shortens the distance between mouth and chin. Keep the chin tip exactly where it currently is, around y=950; do not move or lengthen the jaw.\nPreserve the head silhouette, skull top, ears, cheek planes, lighting, canvas size, transparency, and location of all other pixels as closely as possible. Keep the eye and nose region completely blank: NO eyes, eyebrows, eyelids, nose, nose shadow, nostrils or hair. No neck or shoulders. No text. Strictly neutral grayscale. Keep genuine transparent alpha outside the head, never paint a checkerboard.\nStyle should remain clean confident anime RPG ink with sculpted cel-shaded planes, consistent with the colored style sheet but still an unfinished grayscale modular base. The only substantive change is lowering the mouth and lip shading.",
+        "Use case: precise-object-edit. Edit the LAST IMAGE: the transparent grayscale bald head master with completely blank eye/nose area. Move ONLY the entire mouth and lower-lip shading DOWN ANOTHER 24 PIXELS (about 2% of canvas height), leaving the head outline and chin exactly fixed. The dark mouth line currently sits at y=816 on the 1254x1254 canvas; it MUST sit at y=840 after this edit. Repaint the old mouth location smoothly with existing neutral gray skin. Keep mouth width and neutral expression. Do not move chin (y=973), skull top (y=127), ears or cheek shading. Keep every other feature in place. Preserve true transparent alpha, same canvas and framing, strictly neutral grayscale. No eyes, brows, nose, nostrils, hair, neck or shoulders. Crisp clean anime cel illustration. This is a precise alignment correction for modular production: lower the lips by the requested distance, not the entire head.",
+        "Use case: precise-object-edit. Edit the last grayscale bald head component: REMOVE the mouth, lips, lip shadow and lip highlights entirely, replacing that small region with seamless neutral-gray facial skin shading. Preserve the head silhouette, ears, jaw, chin, skull top, cheek planes, grayscale lighting, framing and transparent background exactly. Do not move any part of the head. The result is a completely featureless FRONT-FACING HEAD BASE with ears and facial contour/shading but NO mouth, NO lips, NO eyes, NO brows, NO nose and NO hair. This is intentional: separate modular facial features will be positioned precisely in an export pipeline. Keep refined clean anime RPG linework and restrained clean cel shading. No neck, shoulders, text or symbols. Preserve genuine alpha transparency outside the head."
+      ],
+      "source_sha256": "58E7AB2C07F642D8966C1E22F8B0D1FB9143D39AC2D4DABA8FD5500B39B7C26D"
+    },
+    {
+      "id": "mouth_neutral",
+      "file": "mouth_neutral.png",
+      "source_rect": [
+        460,
+        500,
+        528,
+        129
+      ],
+      "destination_rect": [
+        218,
+        346.8,
+        76,
+        18.57
+      ],
+      "purpose": "Closed mouth, baked into the face export at fixed mouth anchor.",
+      "prompt": "Use case: stylized-concept. Asset type: ONE isolated transparent modular mouth component for a clean anime fantasy tactical RPG portrait. Draw ONLY a single front-facing closed neutral mouth and tiny restrained lower-lip shading/highlight. No face, skin patch, head, eyes, nose, chin, neck or background. The mouth floats on genuine transparent alpha. Clean refined tapered dark ink across the closed mouth; understated natural human lips, neither thick lipstick nor a smile. Symmetric front view. Strictly neutral grayscale, smooth clean cel shading. Mouth line dark gray, upper lip medium gray, minimal pale gray lower lip highlight with translucent edges. Use a horizontal component about 60% of the square canvas width and 15% of its height, centered, empty transparent space all around. Premium Japanese tactical RPG illustration linework, not emoji or cartoon clip-art. No text, swatches, border or checkerboard. This will be scaled down and registered at the mouth anchor of a separate head master.",
+      "source_sha256": "0657E417546A927DF68C0523341D0F8EF57011BE1CB460BFA2CFEFEC264BFD1E"
+    },
+    {
+      "id": "eyes_open",
+      "file": "eyes_open.png",
+      "source_rect": [
+        24,
+        122,
+        1935,
+        487
+      ],
+      "destination_rect": [
+        150,
+        201,
+        212,
+        53.36
+      ],
+      "purpose": "Eye/brow assembly; green channel marks iris pigment for separate source/mask export.",
+      "prompt": "Use case: stylized-concept. Asset type: ONE modular eye-and-brow assembly for a clean anime tactical fantasy RPG portrait. Draw a matched PAIR of expressive open human eyes and their eyebrows, isolated on genuine transparent alpha with no face or surrounding skin patch. Refined confident Japanese RPG character linework, sharp upper eyelids, restrained tapered lashes, slightly angular natural eyebrows, alert calm expression. Both eyes front-facing and level, natural adult anime proportions, not huge chibi eyes. Eye pair centered, occupying about two thirds of a wide canvas, brows just above eyes. Transparent gap between the eyes wide enough for a separate nose. No nose, mouth, head outline, ears, hair, labels or border.\nPRODUCTION MASK CODING: ALL linework, brows, pupils, shadows and eye whites must be neutral grayscale. Fill ONLY the colored iris rings with vivid PURE GREEN (RGB 0,255,0) as a deliberate technical material marker; keep black pupils and small white specular highlights on top. This green is not a final eye color. Absolutely no green anywhere outside the irises. Each iris must be neatly enclosed inside its eye, with the round black pupil visible. Clean off-white sclera, crisp dark gray upper lids, lighter lower lids. No surrounding skin color or pink tear ducts. True transparent alpha around every eye/brow shape, no painted checkerboard. This single assembly will be registered, split by its explicit green material channel and recolored in an offline export pipeline.",
+      "source_sha256": "3721E7FB849BF5837A3A78CA2D6E11E898531E62BAD76FEEDCA0843F85BF69F5"
+    },
+    {
+      "id": "nose_straight",
+      "file": "nose_straight.png",
+      "source_rect": [
+        445,
+        401,
+        260,
+        619
+      ],
+      "destination_rect": [
+        243.4,
+        266,
+        25.2,
+        60
+      ],
+      "purpose": "Straight nose grayscale shading component for skin base tint.",
+      "prompt": "Use case: stylized-concept. Asset type: ONE isolated transparent straight-nose shading component for a modular clean anime tactical RPG portrait. Draw ONLY a small front-facing straight human nose using restrained angular cel-shadow shapes, two subtle nostril strokes, a very fine tip contour and a short bridge highlight. Anime portrait feature drawing, not a photorealistic floating nose. Refined simple Japanese fantasy RPG linework, consistent upper-left illumination. Clean small shadow wedge down the viewer-right side of a straight bridge, compact natural tip; no exaggerated long nose. Strictly neutral grayscale, dark-gray nostril ink, medium-gray plane shadow and pale-gray tip highlight. NO surrounding rectangular skin patch or face; all gaps and the entire outside are genuinely alpha transparent, with soft alpha only where nose shading blends into underlying face. No eyes, eyebrows, lips, cheeks, head or neck. Tall compact nose component centered with generous transparent margin. No text or checkerboard. This will be registered at nose bridge y270 and nose tip y316 on a separate 512px front-facing head rig, and tinted using the selected skin palette.",
+      "source_sha256": "C900E73AA428EF723FFF60AD82CEBBFB313E2D50DAAF18F65DED5EDD5F9B2479"
+    },
+    {
+      "id": "hair_cropped_front",
+      "file": "hair_cropped_front.png",
+      "source_rect": [
+        373,
+        3,
+        1074,
+        809
+      ],
+      "destination_rect": [
+        98.5,
+        25,
+        315,
+        237.3
+      ],
+      "purpose": "Layered cropped anime hair silhouette, front only; rear hair remains pending.",
+      "prompt": "Use case: stylized-concept. Asset type: ONE transparent FRONT HAIR LAYER for a modular clean anime tactical fantasy RPG portrait. Draw a beautifully sculpted SHORT CROPPED TOUSLED HAIRSTYLE as an isolated grayscale hair cap, seen from straight in front. No face, scalp skin, head, ears, eyes, neck or shoulders. The hair alone, with a transparent arch/opening underneath where the forehead and face will appear.\nStyle: refined Japanese tactical RPG illustration with confident fine dark tapered ink, large distinct overlapping locks, angular pointed tufts, crisp two-to-three-tone cel shading, carefully placed pale strand highlights, upper-left light. Not a buzz cut, not curly, not photorealism, not messy scribbles. Short side-swept bangs and a few loose pointed locks create an expressive asymmetric silhouette; crown volume and short temple locks frame an adult oval face. Hair ends above the ear lobes. Keep the CENTER forehead opening high enough to show both eyebrows and eyes; side-swept bangs stop just above the eye line, never form a solid curtain over the eyes.\nSTRICTLY NEUTRAL GRAYSCALE hair material: medium-gray main masses, darker shadow separations, pale highlights, very dark fine ink. No colored pixels. Hair cap centered on a square transparent canvas with generous transparent margin. Outer hair silhouette roughly twice as wide as tall, with tapered side locks extending a little lower than center bangs. Preserve genuine transparent alpha outside and below hair; no head-shaped white filler or checkerboard. No text, labels or props. This is a reusable front hair component, not a complete portrait.",
+      "source_sha256": "1142D5A14E18FC1EBD16F8486349E42AFA42AF1BB8C4D67D24F656CE9F8CA468"
+    },
+    {
+      "id": "face_tapered_master",
+      "file": "face_tapered_master.png",
+      "source_rect": [
+        305,
+        129,
+        645,
+        838
+      ],
+      "destination_rect": [
+        123.6,
+        64,
+        264.8,
+        344
+      ],
+      "prompt": "Use case: precise-object-edit. The last image is an isolated featureless bald grayscale face MASTER for a modular clean anime tactical RPG. Create its TAPERED FACE variant by changing only the jaw and cheek silhouette: narrow the lower jaw by roughly 22%, draw a clearly more pointed delicate chin, softer cheeks and more slender facial contour. Retain full adult human proportions. Keep skull top, forehead width, ears, ear height, chin tip height, lighting, canvas framing and transparency as close as possible. The silhouette must be visibly different from the original broad angular jaw at thumbnail sizes. No eyes, eyebrows, nose, mouth, lips, hair, neck or shoulders: the entire facial interior remains blank softly cel-shaded neutral grayscale, because features are separate layers. Keep crisp delicate dark contour ink, clean gray cel-shaded cheek planes, upper-left light, no texture or colored pixels. True transparent alpha outside the head. No labels, background or checkerboard.",
+      "source_sha256": "6648AD5B9525F79040E6C71CD5A32D7F2CE2AA000E119F96B65D707304269902"
+    },
+    {
+      "id": "eyes_lidded",
+      "file": "eyes_lidded.png",
+      "source_rect": [
+        71,
+        124,
+        2031,
+        454
+      ],
+      "destination_rect": [
+        150,
+        202,
+        212,
+        47.4
+      ],
+      "prompts": [
+        "Use case: stylized-concept. Asset type: ONE modular eye-and-brow assembly for a clean anime tactical fantasy RPG portrait. Draw a matched PAIR of softly lidded human eyes and their eyebrows, isolated on genuine transparent alpha with no face or surrounding skin patch. Refined confident Japanese RPG character linework, smooth delicate upper eyelids, restrained tapered lashes, gently arched relaxed natural eyebrows, composed friendly expression. Both eyes front-facing and level, natural adult anime proportions, not huge chibi eyes. Clearly narrower eye openings than a wide alert eye style, with calm heavy upper lids and gently curved lower lids, but both irises remain visible. Eye pair centered, occupying about two thirds of a wide canvas, brows just above eyes. Transparent gap between the eyes wide enough for a separate nose. No nose, mouth, head outline, ears, hair, labels or border.\nPRODUCTION MASK CODING: ALL linework, brows, pupils, shadows and eye whites must be neutral grayscale. Fill ONLY the colored iris rings with vivid PURE GREEN (RGB 0,255,0) as a deliberate technical material marker; keep black pupils and small white specular highlights on top. This green is not a final eye color. Absolutely no green anywhere outside the irises. Each iris must be neatly enclosed inside its eye, with the round black pupil visible. Clean off-white sclera, crisp dark gray upper lids, lighter lower lids. No surrounding skin color or pink tear ducts. True transparent alpha around every eye/brow shape, no painted checkerboard. This single assembly will be registered, split by its explicit green material channel and recolored in an offline export pipeline.",
+        "Use case: precise-object-edit. Edit the last isolated green-iris eye/brow pair. Remove the pale/white SKIN BANDS ABOVE THE UPPER EYELASHES entirely and make those bands transparent. Keep white only INSIDE the eyeballs as sclera, enclosed by eyelids. The space between eyebrow and eye must be genuine transparent alpha with no skin patch, white patch or gray eyelid flesh. Preserve the eyes, green iris marker colors, pupils, small highlights, grayscale lashes, eyebrows and all proportions. The upper eyelid can be a thin dark-gray line, not an opaque white ribbon. This is a transparent modular eye assembly meant to overlay many skin colors. No face, nose, mouth or labels. Keep genuine transparency and the same crisp clean anime rendering."
+      ],
+      "source_sha256": "3A207531D10B30FB24F5F3F47DCD32B509BD31BF75CDECB1AF440F43D08DB7E1"
+    },
+    {
+      "id": "nose_upturned",
+      "file": "nose_upturned.png",
+      "source_rect": [
+        556,
+        522,
+        167,
+        238
+      ],
+      "destination_rect": [
+        241.5,
+        280,
+        29,
+        41.3
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one transparent modular UPturned NOSE SHADING component for a clean anime fantasy tactical RPG portrait. Draw only a very small elegant front-facing human nose, indicated by two tiny curved dark-gray nostril marks, a subtly lifted rounded tip and a SHORT delicate tapered cel-shadow wedge on the viewer-right side of the bridge. The tip is slightly upturned; no long projecting bridge. Minimal refined anime feature treatment, far subtler than a realistic floating nose. Medium-to-pale neutral grayscale material with very restrained dark ink. Upper-left light. Genuine transparent alpha between and around the few shading/line shapes, NO surrounding skin patch, NO complete face, no eyes, brows, lips, cheeks, head or neck. Isolated compact nose centered in an otherwise empty square transparent canvas, no labels or checkerboard. This will be fitted beneath a separate eye pair and tinted with skin color, so keep the shading soft and compact.",
+      "source_sha256": "2CF69BC5BE11D5DE598C483F047833635A7B3B3AA8D393B4D2CE25D581B5E7CD"
+    },
+    {
+      "id": "hair_coiled_front",
+      "file": "hair_coiled_front.png",
+      "source_rect": [
+        107,
+        6,
+        1331,
+        996
+      ],
+      "destination_rect": [
+        98.5,
+        26,
+        315,
+        235.7
+      ],
+      "prompts": [
+        "Use case: stylized-concept. Asset type: ONE isolated FRONT HAIR LAYER for a modular clean anime tactical fantasy RPG portrait. Draw only a SHORT DENSE COILED CURLY hairstyle hair cap, viewed straight from the front. A rounded crown of many clearly sculpted tight springy curls/coils, with a slightly irregular curly fringe and short curled temple locks. Distinct rounded silhouette, not the pointed silhouette of straight tousled hair. NO head, skin, ears, face, neck or shoulders. Transparent opening beneath the curly fringe is where the forehead/face will be.\nPremium clean anime RPG rendering: confident tapered dark ink separating large readable curl clusters, crisp two-to-three-tone cel shading, restrained curved pale highlights, upper-left light. STRICTLY NEUTRAL GRAYSCALE material. Medium-gray curl masses, dark overlapping coil shadows and pale curl-edge highlights. Not photorealism, not wire curls, not a flat bubble pattern. Show designed three-dimensional locks that will read at tiny portrait sizes.\nFringe stays ABOVE both eyebrows, short side curls stop near the upper ears. Balanced rounded hair cap centered with generous transparent margin. Every gap outside and underneath the hair is genuine transparent alpha; no head-shaped white filler or checkerboard. No text or labels. This reusable front component will overlay a separate bald face; back/nape hair is a different component.",
+        "Use case: background-extraction. Clean the last curly hair component by removing EVERY bit of the gray haze, glow and backdrop around and underneath the hair. Preserve the exact curl illustration and silhouette. Output ONLY the solid illustrated hair with clean antialiased edges and genuine fully transparent alpha elsewhere, including the entire face opening below the fringe. Do not add a drop shadow or ambient glow. Do not change the locks, colors, shading, scale or arrangement. The hair must be suitable for layering over a separate face without any background fog. No face or other object."
+      ],
+      "source_sha256": "216FDFE7A2275A764C9DEF54BE6407BDD98684B275C1D42FCCB06A2FB3AB422E"
+    },
+    {
+      "id": "hair_cropped_rear",
+      "file": "hair_cropped_rear.png",
+      "source_rect": [
+        366,
+        107,
+        792,
+        780
+      ],
+      "destination_rect": [
+        118.5,
+        60,
+        275,
+        270.8
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: ONE REAR HAIR LAYER for a modular clean anime RPG portrait seen from the FRONT. Draw only the back mass and short nape/temple tufts of a cropped straight tousled hairstyle. This layer goes BEHIND a separate face and behind the front hair cap: its central area can be a solid dark-gray hair mass that the face will cover. Outer silhouette is a compact upright rounded head-shaped hair mass, with short pointed locks on both lower sides and a few modest tufts at the nape. It ends at the upper neck; no long hair. Symmetric overall front-facing placement, subtle individual lock asymmetry. Clean crisp tactical Japanese RPG linework and subdued cel shading, upper-left light. Dark-to-medium NEUTRAL GRAYSCALE, restrained pale strand highlights on edges. No head, face, skin, ears, neck, clothing or shoulders, only hair. Genuine alpha transparency outside the hair silhouette; no shadow, glow, backdrop, text or checkerboard. Leave generous transparent margin.",
+      "source_sha256": "47B7C47042EB9839A4388F26F08ACBE79C46EF91506D9401AAA7FAB16470B688"
+    },
+    {
+      "id": "hair_coiled_rear",
+      "file": "hair_coiled_rear.png",
+      "source_rect": [
+        142,
+        104,
+        1031,
+        898
+      ],
+      "destination_rect": [
+        106,
+        63,
+        300,
+        261.3
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: ONE REAR HAIR LAYER for a modular clean anime RPG portrait seen from the FRONT. Draw only the back mass and short nape/temple tufts of a short dense coiled curly hairstyle. This layer goes BEHIND a separate face and behind the front hair cap: its central area can be a solid dark-gray hair mass that the face will cover. Outer silhouette is a compact upright rounded head-shaped hair mass, with small rounded springy curl clusters on both lower sides and small overlapping coils at the nape. It ends at the upper neck; no long hair. Symmetric overall front-facing placement, subtle individual curl asymmetry. Clean crisp tactical Japanese RPG linework and subdued cel shading, upper-left light. Dark-to-medium NEUTRAL GRAYSCALE, restrained curved pale curl-edge highlights on edges. No head, face, skin, ears, neck, clothing or shoulders, only hair. Genuine alpha transparency outside the hair silhouette; no shadow, glow, backdrop, text or checkerboard. Leave generous transparent margin.",
+      "source_sha256": "75237AC3453FB7DF6F13C2CB126A6C62A294F3F3598302AF49E88812D9CEBE10"
+    },
+    {
+      "id": "support",
+      "file": "support.png",
+      "source_rect": [
+        5,
+        237,
+        1525,
+        589
+      ],
+      "destination_rect": [
+        40,
+        329.1,
+        432,
+        166.9
+      ],
+      "purpose": "Combined authored neck/shirt with red-only neck material marker; deterministically separated during export.",
+      "prompt": "Use case: stylized-concept. Asset type: ONE modular lower portrait BUST SUPPORT component: a short bare human neck joining a simple dark cloth tunic collar and the tops of both shoulders, viewed exactly from the front. NO head, face, chin, ears or hair. The neck starts at a clean horizontal cut at the upper center where a separate head will overlap. Below it is a modest open rounded tunic collar with a small V-notch, neutral practical fantasy clothing, subtle seam and shoulder-fold details. No armor, insignia, jewelry, scarves, buckles, capes or weapons. Broad cropped shoulders; only the very top of the chest, a shallow wide bust strip. Clean bottom crop.\nStyle: premium clean anime tactical RPG illustration, fine confident ink, subtle two-to-three-tone cel shading, upper-left lighting. Keep neck anatomy gently shaded and natural, NOT hard polygonal bands.\nTECHNICAL MATERIAL MARKERS: the entire exposed neck skin must be RED only (red-channel grayscale: deep red shadows through pure red highlights; G=0,B=0), with no red anywhere on clothing. This is an explicit material ID, not final skin color. Shirt, stitching and all outer clothing are strictly neutral grayscale. Neck outline may have dark red lines; no neutral black lines across neck interior. This will be split into skin and cloth source/mask layers and recolored. All outside space is genuine transparent alpha. Put component centered with generous transparent margin. No text, background, labels or checkerboard.",
+      "source_sha256": "AAFD1A8AC9EB78288D5AE12EF2015E8F9AFA822FB32C4683DF9633F80D5C212A"
+    },
+    {
+      "id": "face_square_master",
+      "file": "face_square_master.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        281,
+        124,
+        692,
+        865
+      ],
+      "destination_rect": [
+        118.4,
+        64,
+        275.2,
+        344
+      ],
+      "prompt": "Use case: precise-object-edit. Create a SQUARE-JAW FACE MASTER variant of the last transparent bald featureless grayscale head. Change the lower cheek/jaw outline to a markedly broad mature square jaw: strong wide jaw corners, flatter wide chin, fuller cheek volume and less inward taper. The chin should be about twice as broad as the original chin, with rounded corners rather than a sharp point. Preserve skull top, forehead width, ears, ear height, chin-bottom height, frontal pose, clean cel-shaded neutral-grayscale rendering, upper-left lighting, canvas framing and true transparency. NO eyes, eyebrows, nose, mouth, lips, beard, hair, neck or shoulders. Interior facial plane remains blank for separate modular features. This should read as a different adult face silhouette at a 64px portrait size; do not merely change shading. Fine confident anime tactical RPG contour ink, no texture, text, background or checkerboard.",
+      "source_sha256": "F1F3F9ECA30804A143A1071A5CE6E2B82DD935B455ABBA069268BB3B9671E4F2"
+    },
+    {
+      "id": "face_round_master",
+      "file": "face_round_master.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        273,
+        127,
+        705,
+        866
+      ],
+      "destination_rect": [
+        116,
+        64,
+        280,
+        344
+      ],
+      "prompt": "Use case: precise-object-edit. Create a ROUND FACE MASTER variant of the last transparent featureless grayscale bald head. Replace the angular square lower face with soft full rounded cheeks, a smoothly curved round jaw and a gently rounded compact chin. Remove all sharp jaw corners and hard angular cheek hollows; use softer clean cel-shaded planes and a friendlier gentle adult facial silhouette. Adult human anime proportions, NOT a baby or chibi. Preserve skull top, forehead width, ear placement, chin-bottom height, strict front view, canvas framing and alpha transparency. NO eyes, eyebrows, nose, mouth, lips, hair, beard, neck or shoulders. The interior stays blank for separate modular features. Neutral grayscale only; fine soft confident anime RPG contour ink, upper-left light, no texture, text, background or checkerboard. Make the round-cheek silhouette clearly distinct from a square jaw and a pointed tapered chin at 64px.",
+      "source_sha256": "0FE710156BA740EC10124389449CC00054E3BDA5778D364AFAA23B82E5B6F750"
+    },
+    {
+      "id": "eyes_round",
+      "file": "eyes_round.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        103,
+        200,
+        1569,
+        472
+      ],
+      "destination_rect": [
+        150,
+        190.8,
+        212,
+        63.8
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: ONE isolated ROUND EYE AND BROW PAIR for a modular clean anime fantasy tactical RPG portrait. Draw two soft expressive rounded almond eyes, viewed exactly from the front, with a gentle open friendly expression. Upper eyelids curve smoothly; lower lids round gently. Thin gracefully arched relaxed brows, NOT thick angry downward-sloping brows. Refined tapered lash accents, no exaggerated giant doll/chibi eyes. Give the expression calm warmth and curiosity rather than a glare. Place both eyes level and equally sized.\nTECHNICAL MATERIAL CODING: iris rings are vivid PURE GREEN, RGB0,255,0, with dark neutral-gray pupils and tiny white highlights. Only iris pigment is green. All brows, lashes and thin lid contours are neutral grayscale. Off-white sclera ONLY inside the eyeballs. NO pale eyelid skin bands, no skin patch between brows and eyes; that space must be transparent. No head outline, face, nose, lips, ears or hair.\nPolished crisp clean anime tactical RPG linework, restrained cel shading inside sclera, no texture. Entire pair isolated on genuine transparent alpha with empty space between eyes and around brows; no backdrop, glow, labels, swatches or checkerboard. This is a production component for registration and explicit iris mask extraction, not a complete portrait.",
+      "source_sha256": "977A5B61E156D89748F44DD1B41F72067301CF133459127B60863254932874E5"
+    },
+    {
+      "id": "nose_aquiline",
+      "file": "nose_aquiline.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        557,
+        256,
+        264,
+        565
+      ],
+      "destination_rect": [
+        241,
+        265,
+        30,
+        64.2
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one isolated AQUILINE NOSE shading component for a modular clean anime tactical RPG portrait, strictly front-facing. A refined adult human nose with a slightly pronounced narrow bridge, small angular plane at the lower bridge and a subtly downturned compact tip; broader nostril spacing than a tiny upturned nose. Indicate it with a restrained viewer-right cel-shadow wedge, two delicate dark-gray nostril strokes and a pale tip highlight. Keep the front view symmetric, NOT profile or three-quarter. Neutral grayscale only, minimal elegant anime feature treatment; no photorealistic fleshy floating nose, no surrounding face/skin patch. Thin precise linework, upper-left light, gentle grayscale shading that will blend over a separately colored face. All outside and gaps genuinely alpha transparent. No eyes, brows, mouth, head, neck, text, glow or background. This will be a small interchangeable feature, so prioritize clear simple shape rather than excess detail.",
+      "source_sha256": "E423A2C14480EC801EBD71141E17A8FE45D0B28E0883E549EE1DDE1E7E6FDFF2"
+    },
+    {
+      "id": "hair_wavy_front",
+      "file": "hair_wavy_front.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        283,
+        17,
+        983,
+        932
+      ],
+      "destination_rect": [
+        71,
+        27,
+        370,
+        383
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one FRONT HAIR LAYER for a modular clean anime fantasy tactical RPG portrait. Draw only an elegant medium-length WAVY HAIRSTYLE from straight in front: parted crown, soft sweeping forehead locks, and large flowing S-shaped side waves descending to just below the jaw. The central opening for the separate face stays clear; bangs stop above both eyes, with no opaque face filler. Broad gently flared wavy silhouette, distinctly longer and softer than short tousled hair or tight curls.\nPremium crisp tactical Japanese RPG linework, sculpted overlapping locks, clean two-to-three-tone cel shading, upper-left light, restrained pale ribbon highlights. Strictly NEUTRAL GRAYSCALE material, medium-gray main masses and dark separators. No head, skin, face, eyes, ears, neck, shoulders, accessories, text or backdrop. Genuine alpha transparency around and inside the face opening, no glow or checkerboard. Isolated centered hair cap plus framing side waves, generous empty transparent margins. This is a reusable front component; rear hair is a separate layer.",
+      "source_sha256": "86BFA32B7D614F3AAA266E275F5499E7E99B509FC8564A5BD0D37221798A4ECB"
+    },
+    {
+      "id": "hair_wavy_rear",
+      "file": "hair_wavy_rear.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        75,
+        49,
+        1179,
+        1049
+      ],
+      "destination_rect": [
+        75,
+        49,
+        362,
+        414
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one REAR HAIR LAYER for a modular clean anime tactical RPG portrait seen from the front. Draw only the back mass of a medium-length WAVY hairstyle: a rounded upper head-shaped hair mass, broad soft S-shaped waves along both sides, flaring gently near the jaw and ending at the upper shoulders. The center can be solid hair because a separate head/neck will cover it. Front-facing symmetric placement, refined individual wave asymmetry. Crisp polished anime RPG linework, large readable sculpted waves, clean two-to-three-tone cel shading, upper-left light. Neutral grayscale, medium-gray masses, darker center/recesses, pale curved ribbon highlights. No face, skin, head features, neck, shoulders, accessories or text. Genuine transparent alpha outside the complete hair silhouette. Generous empty margin, no background, glow or checkerboard. This is the layer behind a separate face and matching front waves.",
+      "source_sha256": "CF57A9F768C197457DC42CFE754921CAE40E86FA7D74EB884BAA99350FC1F908"
+    },
+    {
+      "id": "hair_braided_front",
+      "file": "hair_braided_front.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        310,
+        18,
+        692,
+        1164
+      ],
+      "destination_rect": [
+        96,
+        50,
+        320,
+        445
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one FRONT HAIR LAYER for a modular clean anime tactical fantasy RPG portrait. Draw only a neat BRAIDED hairstyle viewed straight from the front: a smooth parted crown with a narrow braided band near the temples, then TWO clearly woven thick plaits descending beside the face to the upper chest. Each braid has readable overlapping chevron segments and ends in a small tied hair tuft, with tiny neutral ties, no jewelry. Keep a broad clear central opening for the entire separate face, both eyebrows and both eyes fully unobstructed. Braids stay to the left and right of that face opening.\nPremium crisp anime RPG linework, sculpted woven hair masses, clean two-to-three-tone cel shading, upper-left light, restrained pale strand highlights. NEUTRAL GRAYSCALE only. No head, skin, face, eyes, ears, neck, clothes or shoulders. Genuine transparent alpha around all hair and throughout the face opening; no head-shaped filler, background, labels or checkerboard. Centered with generous margin. Reusable front hair component, not a finished portrait.",
+      "source_sha256": "4615A5B1AE92F6116E7676DAADFC5A1325887FC2A8E7EC6C783D106AFCB4A721"
+    },
+    {
+      "id": "hair_braided_rear",
+      "file": "hair_braided_rear.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        120,
+        101,
+        1080,
+        946
+      ],
+      "destination_rect": [
+        109,
+        58,
+        294,
+        274
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one REAR HAIR MASS for a modular front-facing clean anime RPG double-braided hairstyle. Draw only the smooth back-of-head hair mass gathered toward two low side braid roots. Compact rounded upright head-shaped silhouette, neat swept strands, subtle braided gathering detail at each lower side, ending at the upper nape. Do NOT draw long hanging plaits: those exist in the separate front component. Center can be solid hair because the separate face will cover it. Neutral grayscale only, darker center and clean pale curved strand highlights, fine confident anime RPG ink, restrained cel shading, upper-left light. No head, skin, ears, face, neck, clothing, objects or text. Genuine transparent alpha outside silhouette, generous margin, no glow/background/checkerboard.",
+      "source_sha256": "17E5C46F77FFBA6D3FFB2BFB417F7A0096B6394CBE21862ED63B8B668B86D087"
+    },
+    {
+      "id": "hair_topknot_front",
+      "file": "hair_topknot_front.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        218,
+        62,
+        868,
+        1099
+      ],
+      "destination_rect": [
+        101,
+        25,
+        310,
+        330
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one isolated FRONT HAIR LAYER for a modular clean anime fantasy tactical RPG portrait, exact front view. A neat HIGH TOPKNOT hairstyle: smooth hair swept back from the forehead, a compact sculpted round knot/bun at the upper crown, and a few fine restrained temple wisps. The central forehead and both eyes must remain entirely open beneath a clean curved hairline. Distinct tall central bun silhouette, no long hanging hair. Do not draw the person's head or skin: all areas below the hairline and between wisps are transparent.\nNeutral grayscale only, medium-gray hair masses, dark crisp separators and fine tapered ink, pale controlled curved strand highlights, clean two-to-three-tone cel shading, upper-left light. Premium tactical Japanese RPG illustration, no photoreal texture. No face, eyes, ears, neck, shoulders, jewelry, pins, text or background. Genuine alpha transparency outside hair, generous empty margins including above the bun; no glow or checkerboard. Reusable front component only.",
+      "source_sha256": "AC4B63AEE3FDF9963186D1FE4A42E982241068533C7B07E5EDAB1AE1C9CC454B"
+    },
+    {
+      "id": "hair_topknot_rear",
+      "file": "hair_topknot_rear.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        257,
+        149,
+        797,
+        878
+      ],
+      "destination_rect": [
+        122,
+        64,
+        268,
+        280
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one REAR HAIR LAYER for a modular front-facing clean anime RPG high-topknot hairstyle. Draw only a compact smooth rounded back-of-head hair mass, its fine strands swept upward toward the crown, ending neatly at the upper nape. NO extra bun: the bun is already in the separate front layer. No hanging long hair, plaits or side tails. Center is solid grayscale hair because the separate face covers it. Crisp restrained anime RPG linework, neutral dark-to-medium grayscale cel shading, pale curved strand highlights at outer edges, upper-left light. No head, skin, ears, face, neck, shoulders, accessories, text or background. Fully transparent alpha outside the compact hair silhouette, with generous empty margin and no glow/checkerboard.",
+      "source_sha256": "F5CD438753C324684C44E032D9998F93EE191981679D582137EB9B21A8CF6B6D"
+    },
+    {
+      "id": "hair_long_front",
+      "file": "hair_long_front.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        148,
+        84,
+        731,
+        900
+      ],
+      "destination_rect": [
+        80,
+        45,
+        352,
+        450
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one FRONT HAIR LAYER for a modular clean anime tactical fantasy RPG portrait. Draw only LONG STRAIGHT HAIR viewed exactly from the front: a clean center part, smooth sculpted crown, two elegant straight face-framing locks descending past the jaw to the upper chest, and a few slender individual strands. Straight hanging tapered silhouette, not waves, curls or braids. The face opening should be broad and clear from the forehead down; both eyebrows and both eyes must remain unobstructed, no solid bangs curtain. No head-shaped filler.\nPremium crisp Japanese tactical RPG linework, smooth large hair planes, restrained two-to-three-tone cel shading, upper-left light and pale narrow ribbon highlights. Strictly neutral grayscale, medium-gray masses and dark ink separators. No face, skin, eyes, ears, neck, clothes, shoulders, accessories or text. Genuine transparent alpha outside hair and through the entire face opening, no backdrop, glow or checkerboard. Isolated centered component with generous margin; matching rear hair is separate.",
+      "source_sha256": "0FBFDA51E918092F0538E38401C17416118DA7DB59A83F0502DBB60142C43BAC"
+    },
+    {
+      "id": "hair_long_rear",
+      "file": "hair_long_rear.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        185,
+        41,
+        846,
+        1221
+      ],
+      "destination_rect": [
+        80,
+        50,
+        352,
+        445
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one REAR HAIR LAYER for a modular front-facing clean anime tactical RPG long straight hairstyle. Draw a full smooth back mass of long straight hair: rounded scalp silhouette above, clean long near-vertical flowing hair sheets on both sides, tapering slightly toward the ends at upper-chest length. The center may be solid hair; a separate head and shoulders cover it. No waves, curls, braids or bun. Fine confident anime RPG ink, large smooth hair planes, restrained two-to-three-tone cel shading, pale narrow vertical highlights, upper-left light. Neutral grayscale only. No face, skin, ears, head features, neck, shoulders, clothes, objects or labels. Genuine transparent alpha outside the complete hair silhouette; no glow/backdrop/checkerboard, generous margins.",
+      "source_sha256": "B002D05B35B5C17628F08FE5CC7573D7FD316BE9C1578029D579BE7DF324604C"
+    },
+    {
+      "id": "hair_undercut_front",
+      "file": "hair_undercut_front.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        239,
+        38,
+        1039,
+        820
+      ],
+      "destination_rect": [
+        100,
+        30,
+        312,
+        246
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one isolated FRONT HAIR LAYER for a modular clean anime tactical fantasy RPG portrait, exact front view. A distinctive UNDERCUT hairstyle: a high swept side-parted quiff across the top, short sharply tapering temple locks, and very sparse short stubble marks along the sides. Most side scalp remains transparent to show the separately colored bald head beneath. The quiff creates a bold asymmetric raised silhouette, swept toward viewer-left; no long hair, curls, braids or bun. Both eyes and most forehead stay visible below the short lifted fringe.\nNeutral grayscale only. Crisp confident Japanese RPG ink, large sculpted overlapping quiff planes, restrained two-to-three-tone cel shading, upper-left light and pale strand highlights. No head, skin, ears, face, eyes, neck, shoulders, text or background. Genuine alpha transparency outside hair and in the shaved side areas, no gray skin filler, glow or checkerboard. Centered with generous margins. This is only the front hair component.",
+      "source_sha256": "8EB99CC15B278081EB56A85F4D6B6AAC54E14D5EC71BFB0C052F89D521254F6A"
+    },
+    {
+      "id": "hair_undercut_rear",
+      "file": "hair_undercut_rear.png",
+      "introduced_catalog_revision": 2,
+      "source_rect": [
+        329,
+        188,
+        677,
+        758
+      ],
+      "destination_rect": [
+        131,
+        68,
+        250,
+        262
+      ],
+      "prompt": "Use case: stylized-concept. Asset type: one REAR HAIR LAYER for a modular front-facing clean anime tactical RPG undercut hairstyle. Draw a very compact close-cut back-of-head hair mass: narrow upright rounded silhouette, tiny neat side/nape taper, short fine strand texture, no long side locks or hanging hair. Center may be solid hair because a separate face covers it. Keep side volume minimal to distinguish an undercut from full tousled hair. Neutral grayscale only, dark-to-medium gray masses with small restrained pale edge highlights and crisp fine anime RPG ink, upper-left light. No quiff or bun in this rear layer; the large swept quiff is in the front component. No head, skin, ears, face, neck, clothing or text. Genuine transparent alpha outside silhouette, generous empty margin, no glow/background/checkerboard.",
+      "source_sha256": "61733D9A634DC13FD00BBFACB8E63460517921F83C48BC601E479898D0CB8D71"
+    }
+  ],
+  "frozen_runtime_manifest": "export-manifest.json"
+}

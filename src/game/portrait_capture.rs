@@ -15,8 +15,6 @@ impl Game {
             "portraits_dense" => {
                 self.capture_founder("founder_dense");
                 self.prepare_dense_portrait_roster();
-                #[cfg(not(target_arch = "wasm32"))]
-                self.write_capture_import("portrait_review_save.json");
                 true
             }
             "portraits_career_dense" => {

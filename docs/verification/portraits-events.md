@@ -121,30 +121,18 @@ roster metadata sits below the action buttons. All 13 final native scenes succee
 exited. The lead inspected the full-name Career, dense roster, dated enemy
 memory, corrected rail/settings and neutral fallback captures. The full name
 fits two lines, settings labels fit their buttons and known-enemy text remains
-explicitly dated. Two nonblocking polish items are recorded in todo.md: dense
-roster separators crowd the following row, and global settings draws Back twice.
-The headless browser measured a 1920x1080 canvas, but the harness's initial
-Import Campaign click did not open the campaign. Later coordinates operated on
-the title/How to Play UI and the preference persistence assertion failed. This
-is failed test navigation, not established game-state verification. The nine
-`ui_web_*` PNGs are retained as failed-harness diagnostics under the user's
-all-current-work commit instruction; their filenames do not establish that the
-intended states were reached. The portrait browser profile was not reached.
+explicitly dated. The dense-roster separators and duplicate global-settings Back label were
+subsequently corrected in commit `3d5f652`.
+Browser campaign interaction, preference persistence and portrait runtime
+behavior remain unverified. The stopped review did not establish passing
+browser acceptance.
 
 ## Measured costs and limits
 
-The native review imports use the normal save encoder and compatibility loader.
-Offline compact UTF-8 measurements, without per-frame serialization:
-
-| Fixture | People | Reservations | Registry bytes | Full save bytes |
-| --- | ---: | ---: | ---: | ---: |
-| notification_review_save.json | 4 | 4 | 2,994 | 42,582 |
-| portrait_review_save.json | 9 | 9 | 6,480 | 183,151 |
-
-These are fixture measurements, not extrapolated costs for all campaigns.
-Runtime cache metrics were not present in the successful wrapper output and
-were not collected from the failed browser run. They remain in todo.md; the
-configured budgets above are not runtime measurements.
+Current native debug cache measurements and their limits are recorded in the
+[development verification record](development-workflow.md#native-metric-output-slice).
+Cache byte estimates are not measured process/GPU memory or release frame
+percentiles; WebGL runtime measurements remain unverified.
 
 At 40px the face-only oval/tapered near pair remains subtle; dark skin and hair
 are subdued on charcoal at 64px. Automated art inspection is not evidence of

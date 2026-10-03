@@ -8,8 +8,6 @@ mod battle_capture;
 mod battlefield;
 mod battlefield_capture;
 mod campaign;
-#[cfg(not(target_arch = "wasm32"))]
-mod capture_exports;
 mod composition;
 mod development_capture;
 mod founder_capture;

@@ -99,60 +99,13 @@ screenshots deleted by the failed wrapper were replaced by the successful run.
 No repeated simulation suite, release build or publication was needed for these
 drawing-only changes. The earlier baseline failure remains an explicit exception.
 
-## Headless import diagnostics slice
+## Browser verification limitation
 
-The current Rust checkout at `3d5f652` built for WASM release successfully in
-76.631s (Cargo reported 1m16s). The exact pooled artifact was
-`target/pool/slot-1/wasm32-unknown-unknown/release/kestrum.wasm`, 9,002,391 bytes,
-SHA-256 `2ee67580ec295e515df38a060d457da5eb24511b925cb2d8aecefa06cec4b7ff`.
-No publisher, deployment tracker or remote push was invoked.
-
-The browser harness now waits for the app's held save-writer Web Lock rather
-than assuming WASM exports imply completed asynchronous asset startup. Clicks
-map through canvas bounds and span rendered frames with a bounded wait. Import
-must produce an actual Imported catalogue entry before downstream interactions
-can run. Failure captures the corresponding stable profile image and reports
-storage, lock and canvas/input diagnostics. This is a diagnostic improvement,
-not completed browser acceptance.
-
-Three headless notification attempts used the same fresh WASM. The measured
-viewport, canvas CSS and canvas pixels were all 1920x1080, DPR 1, with no
-fullscreen element. The valid fixture key and app writer lock were present.
-The current diagnostic shows `elementFromPoint(1680,850)` resolving to the
-focused canvas; mouse handlers were installed and trusted pointer/mouse down/up
-events reached that canvas. Despite this, the title remained visible and no
-`mq-indexed:*` save keys were written. The captured Import control is enabled.
-Neither coordinates, missing fixture, startup readiness nor a missed brief
-press has been established as the root cause. No recovery overlay was observed.
-An intermediate attempt exposed an out-of-scope diagnostic variable in the new
-failure handler; its signature/call sites were corrected before handoff.
-
-Blocking the host's external Ko-fi script also produces a separately identified
-`kofiWidgetOverlay is not defined` page error. That host dependency failure is
-not evidence of an import or persistence defect. Other game page errors remain
-fatal. The root browser input/import cause still needs diagnosis; receipt,
-preference/reload, portrait context and WebGL metrics acceptance remain unrun.
-The stable `ui_web_notifications.png` is a title-screen diagnostic, not campaign
-acceptance. No profile success or human/physical-touch verification is claimed.
-
-Final `node --check scripts/verify_portraits_events.cjs` and `git diff --check`
-passed. The final cleanup (profile-specific failure path and host-error
-classification) was syntax/review checked without a fourth browser rerun.
-The browser's `finally` closes it after failure. The two task-generated
-Chromium `debug.log` additions were removed by restoring its exact original
-tracked bytes, preserving the pre-existing diagnostic line.
-
-A fourth, bounded diagnostic reused the same WASM and temporarily wrapped a
-shallow copy of its JavaScript exports. It observed 366 actual `frame` calls;
-`mouse_down(1680, 850, 0)` returned at frame count 7 and
-`mouse_up(1680, 850, 0)` returned at frame count 9. Thus the expected callbacks
-ran with two actual WASM frames between them. Import still produced no indexed
-keys or catalogue entry. The remaining boundary is inside Rust-side input,
-frame or action handling; calling an export does not prove `Game::input`
-consumed its state or selected `ImportCampaign`. No downstream profile checks
-ran, and no duplicate title screenshot was taken. Temporary instrumentation
-and the sole Chromium-added log line were restored byte-for-byte from HEAD;
-the unchanged harness passed `node --check` and Chromium closed in `finally`.
+Browser campaign interaction, preference persistence, portrait context and
+WebGL runtime metrics remain unverified. Daniel ended this investigation and
+removed it from the active work queue. Unfinished diagnostic scaffolding was
+removed at closeout; no browser acceptance is claimed and no further builds,
+tests or captures were run after the stop instruction.
 
 ## Seed-88 bounded diagnosis
 

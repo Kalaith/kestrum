@@ -55,10 +55,6 @@ impl Game {
         }
         let ids = self.populate_notification_fixture();
         self.validate_notification_capture();
-        #[cfg(not(target_arch = "wasm32"))]
-        if scene == "notifications_dense" {
-            self.write_capture_import("notification_review_save.json");
-        }
         match scene {
             "notifications" => self.apply(UiAction::Notification(NotificationAction::Toggle)),
             "notification_details" => {

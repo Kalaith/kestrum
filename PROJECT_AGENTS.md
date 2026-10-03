@@ -5,20 +5,21 @@ These project-specific instructions supplement the shared RustGames checklist.
 ## Kestrum validation override (Daniel, 2026-10-03)
 
 Daniel explicitly authorizes resuming development with proportionate validation.
-For Kestrum this supersedes the shared full-suite/Clippy/publish-per-slice gate;
+For Kestrum this supersedes the shared full-suite/publish-per-slice gate;
 do not edit shared policy or apply this exception to other games.
 
 - Before a slice, name its owned files, behavior, relevant checks and evidence.
   Freeze those files for validation, review the complete diff, then commit the
   buildable slice before starting the next independent feature. Update `todo.md`
   with outstanding work only, including checks actually still missing.
-- Each Rust slice: formatting, source-size gate, and the smallest relevant
-  existing behavioral test targets. UI-only changes need an affected binary
-  build and relevant hidden 1920x1080 captures/interactions, not unrelated
+- Each Rust slice: formatting, strict all-target/all-feature Clippy, source-size
+  gate, and the smallest relevant existing behavioral test targets. UI-only
+  changes need an affected binary build and relevant hidden 1920x1080
+  captures/interactions, not unrelated
   campaign simulations. Documentation uses diff/link/command review.
-- Run the full project suite and strict all-target/all-feature Clippy once at
-  a meaningful integration boundary, or sooner for shared state, save/migration,
-  allocator, simulation or public API changes with broad impact. Record why.
+- Run the full project suite at a meaningful integration boundary, or sooner
+  for shared state, save/migration, allocator, simulation or public API changes
+  with broad impact. Record why.
   Reuse unchanged results; rerun only after a relevant change or unresolved
   failure. Do not run focused suites immediately before a full suite that
   already contains them unless an earlier fast diagnosis is useful.

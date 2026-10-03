@@ -44,8 +44,8 @@ before starting the next independent feature. Run from the actual checkout:
 cargo fmt -p kestrum -- --check
 ..\rust_management\cargo.ps1 test -p kestrum --locked --test code_standards
 # Add relevant --test <target> arguments to the same focused invocation.
-# At a justified integration boundary (not automatically for every slice):
 ..\rust_management\cargo.ps1 clippy -p kestrum --all-targets --all-features '--' -D warnings
+# At a justified integration boundary (not automatically for every slice):
 ..\rust_management\cargo.ps1 test -p kestrum --locked --all-features --no-fail-fast
 ```
 

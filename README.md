@@ -261,10 +261,8 @@ failures. Do not reopen completed packages or weaken their regression assertions
 
 ## Native development saves
 
-Native debug startup resumes the catalogue's Continue entry once storage is
-ready. Release and browser builds open the title. Use
-`..\rust_management\cargo.ps1 run -p kestrum '--' --title` to open the native
-title explicitly.
+Native debug, release and browser builds open the title first. Choose Continue
+from the title screen to resume the catalogue's selected campaign.
 
 `examples/prepare_midgame.rs` creates a separate **Briarhold - Midgame Battle
 Review** save through production commands: Year 16, 60 completed rounds, broad

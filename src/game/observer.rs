@@ -24,10 +24,6 @@ impl Game {
                 self.setup.editing_name = false;
                 self.state.overlay = Overlay::ObserverSetup;
                 self.error = None;
-                #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
-                {
-                    self.resume_on_storage_ready = false;
-                }
             }
             UiAction::StartObserver => self.start_observer(),
             UiAction::ToggleObserverPaused if self.is_observer() => {

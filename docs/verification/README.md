@@ -23,6 +23,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Title startup](title-startup.md) records the native debug startup correction,
+the explicit Continue route, and focused validation. The title capture does not
+exercise real catalogue polling because capture mode skips storage.
+
 [Portraits and campaign events](portraits-events.md) records persistent portrait
 identity, the cleaner anime proof catalog, runtime composition, durable events
 and integrated validation. The [agent queue](../../todo.md) owns deferred

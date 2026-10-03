@@ -117,6 +117,6 @@ fn main() -> Result<(), String> {
     if let Some(path) = get_app_data_path("kestrum", "") {
         println!("Native save catalogue: {}", path.display());
     }
-    println!("cargo run resumes this save. Use cargo run -- --title for the title screen.");
+    println!("Start the game and choose Continue on the title screen to load this save.");
     Ok(())
 }

@@ -76,8 +76,6 @@ pub struct Game {
     storage: Option<macroquad_toolkit::persistence::IndexedKeyStore>,
     library: Option<kestrum::state::persistence::SaveLibrary>,
     storage_checked: bool,
-    #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
-    resume_on_storage_ready: bool,
     saves: ui::SaveView,
     setup: ui::SetupView,
     army: ui::ArmyView,
@@ -144,8 +142,6 @@ impl Game {
             storage: None,
             library: None,
             storage_checked: false,
-            #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
-            resume_on_storage_ready: !capture && !std::env::args().any(|arg| arg == "--title"),
             saves: ui::SaveView::default(),
             setup,
             army: ui::ArmyView::default(),

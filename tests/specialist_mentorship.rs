@@ -1,4 +1,8 @@
 //! Specialist lessons supplement real treatment and physical travel.
+
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{
         progression::TrainingDiscipline,
@@ -34,6 +38,7 @@ fn add_person(campaign: &mut StrategicCampaign) -> PersonId {
     campaign.next_ids.person.0 += 1;
     let mut person = campaign.people[&MENTOR].clone();
     person.id = id;
+    person.appearance = appearance_support::allocate_frozen(campaign, id);
     person.name = format!("Pupil {}", id.0);
     person.class = PersonClass::Recruit;
     person.career = Default::default();

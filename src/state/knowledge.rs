@@ -39,6 +39,7 @@ pub enum ObservedCondition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EncounteredPerson {
+    pub appearance: crate::data::portraits::AppearanceDescriptor,
     pub id: PersonId,
     pub name: String,
     pub class: FounderClass,
@@ -62,6 +63,7 @@ pub(crate) fn encounter_people(
         .flat_map(|army| {
             army.people.iter().filter_map(|person| {
                 Some(EncounteredPerson {
+                    appearance: person.appearance.clone(),
                     id: person.id,
                     name: person.name.clone(),
                     class: person.class,

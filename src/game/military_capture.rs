@@ -148,6 +148,12 @@ impl Game {
             companion.assignment = PersonAssignment::Formation {
                 formation: FormationId(2),
             };
+            companion.appearance = engine::portraits::allocate_for_person(
+                campaign,
+                &self.data.portraits,
+                companion_id,
+            )
+            .expect("capture companion appearance");
             campaign.people.insert(companion_id, companion);
             campaign.next_ids.person = PersonId(ward_id.0 + 1);
             campaign
@@ -209,6 +215,9 @@ impl Game {
                 ward.assignment = PersonAssignment::Dependent { site: SiteId(1) };
                 ward.career = Default::default();
                 ward.evidence = Default::default();
+                ward.appearance =
+                    engine::portraits::allocate_for_person(campaign, &self.data.portraits, ward_id)
+                        .expect("capture ward appearance");
                 campaign.people.insert(ward_id, ward);
                 campaign.families.insert(
                     ward_id,

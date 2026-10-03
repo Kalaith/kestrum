@@ -10,6 +10,8 @@ pub mod economy;
 pub mod generation;
 pub mod households;
 pub mod lifecycle;
+pub mod notifications;
+pub mod portraits;
 pub mod progression;
 pub mod rules;
 mod setup_validation;
@@ -25,6 +27,8 @@ pub use presentation::{GameTextData, GeographyLabel, MapCameraSettings, Presenta
 
 #[derive(Debug, Clone)]
 pub struct GameData {
+    pub notifications: notifications::NotificationRules,
+    pub portraits: portraits::PortraitCatalog,
     pub ai: ai::AiRules,
     pub battle_tactics: battle_tactics::BattleTacticsRules,
     pub diplomacy: diplomacy::DiplomacyRules,
@@ -51,6 +55,8 @@ pub struct GameData {
 impl GameData {
     pub fn load() -> Result<Self, String> {
         let mut data = Self {
+            notifications: macroquad_toolkit::include_json!("../assets/data/notifications.json")?,
+            portraits: macroquad_toolkit::include_json!("../assets/data/portrait_catalog.json")?,
             ai: macroquad_toolkit::include_json!("../assets/data/ai.json")?,
             battle_tactics: macroquad_toolkit::include_json!("../assets/data/battle_tactics.json")?,
             diplomacy: macroquad_toolkit::include_json!("../assets/data/diplomacy.json")?,
@@ -83,6 +89,8 @@ impl GameData {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        self.notifications.validate()?;
+        self.portraits.validate()?;
         self.ai.validate()?;
         self.battle_tactics.validate()?;
         self.diplomacy.validate()?;

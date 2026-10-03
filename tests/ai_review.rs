@@ -280,6 +280,7 @@ fn known_rivalry_breaks_only_strategic_ties_without_following_hidden_people() {
         .insert(
             PersonId(1),
             EncounteredPerson {
+                appearance: campaign.people[&PersonId(1)].appearance.clone(),
                 id: PersonId(1),
                 name: "Witnessed rival".into(),
                 class: PersonClass::Officer,

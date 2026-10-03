@@ -1,5 +1,7 @@
 //! Long production campaigns record real engine, retention, replay, and save measurements.
 
+#[path = "support/appearance.rs"]
+mod appearance_support;
 #[path = "support/campaign_scenarios.rs"]
 mod support;
 
@@ -121,6 +123,8 @@ fn active_pupil_item_heir_survives_mentor_death_at_a_campaign_boundary() {
 
     let mut apprentice = campaign.people[&mentor].clone();
     apprentice.id = heir;
+    apprentice.appearance =
+        appearance_support::allocate(&mut campaign, &data.portraits, apprentice.id);
     apprentice.name = "K18 Apprentice".into();
     apprentice.class = PersonClass::Recruit;
     apprentice.birth_round = -64;

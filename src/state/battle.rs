@@ -176,6 +176,7 @@ pub struct BattleCommander {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BattlePersonReport {
+    pub appearance: crate::data::portraits::AppearanceDescriptor,
     pub id: PersonId,
     pub starting_formation: FormationId,
     /// Earlier reports did not record starting fitness; absence grants no treatment evidence.

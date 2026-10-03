@@ -1,5 +1,8 @@
 //! Small physical battle fixtures and real in-memory catalogue compatibility checks.
 
+#[path = "appearance_frozen.rs"]
+mod appearance_support;
+
 use super::*;
 use kestrum::{
     data::world::FounderClass,
@@ -25,6 +28,12 @@ pub(super) fn fixture(first: u32, second: u32) -> (GameData, StrategicCampaign) 
         .retain(|id, _| [FormationId(1), FormationId(7)].contains(id));
     campaign.people.clear();
     campaign.legacy_items.clear();
+    campaign.appearance_registry =
+        kestrum::state::appearance::AppearanceRegistry::for_campaign_seed(
+            campaign.seed,
+            data.portraits.catalog_revision,
+            data.portraits.allocation_revision,
+        );
     for (army, formation, site, count) in [(1, 1, 8, first), (3, 7, 10, second)] {
         let army = campaign.armies.get_mut(&ArmyId(army)).unwrap();
         army.site = SiteId(site);
@@ -41,9 +50,12 @@ pub(super) fn fixture(first: u32, second: u32) -> (GameData, StrategicCampaign) 
 }
 
 pub(super) fn person(campaign: &mut StrategicCampaign, id: u32, faction: u32, formation: u32) {
+    let person_id = PersonId(id);
+    let appearance = appearance_support::allocate_frozen(campaign, person_id);
     campaign.people.insert(
-        PersonId(id),
+        person_id,
         Person {
+            appearance,
             career: Default::default(),
             evidence: Default::default(),
             id: PersonId(id),

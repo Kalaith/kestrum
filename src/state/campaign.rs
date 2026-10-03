@@ -214,6 +214,9 @@ pub struct DomainFact {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct StrategicCampaign {
+    pub appearance_registry: super::appearance::AppearanceRegistry,
+    #[serde(default)]
+    pub notifications: super::notifications::NotificationInbox,
     /// All independent factions, including the original player faction, are AI controlled.
     #[serde(default)]
     pub observer_mode: bool,
@@ -370,6 +373,12 @@ impl StrategicCampaign {
             })
             .collect();
         let mut campaign = Self {
+            appearance_registry: super::appearance::AppearanceRegistry::for_campaign_seed(
+                scenario.seed,
+                data.portraits.catalog_revision,
+                data.portraits.allocation_revision,
+            ),
+            notifications: Default::default(),
             observer_mode: false,
             tutorial: super::tutorial::TutorialProgress::new(),
             diplomacy: Default::default(),

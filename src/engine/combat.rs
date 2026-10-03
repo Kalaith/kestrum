@@ -153,7 +153,7 @@ fn snapshot(
             PersonAssignment::Formation {formation} if formations.iter().any(|entry| entry.id == formation))
             && (person.age_years(campaign.completed_rounds) < data.lifecycle.elder_age_years
                 || army.commander == Some(person.id)))
-            .map(|person| BattlePersonReport {id:person.id,starting_formation:match person.assignment {PersonAssignment::Formation {formation} => formation,_ => unreachable!("attached participant")},name:person.name.clone(),class:person.class,
+            .map(|person| BattlePersonReport {appearance: person.appearance.clone(), id:person.id,starting_formation:match person.assignment {PersonAssignment::Formation {formation} => formation,_ => unreachable!("attached participant")},name:person.name.clone(),class:person.class,
                 starting_status:Some(person.status),status:person.status,assignment:person.assignment}).collect();
         BattleArmyReport {id,name:army.name.clone(),leadership_permille:campaign.army_leadership_permille(id,data).expect("army"),
             battle_doctrine:army.battle_doctrine,ai_prepared:false,

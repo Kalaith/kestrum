@@ -55,6 +55,7 @@ pub enum PersonStatus {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Person {
+    pub appearance: crate::data::portraits::AppearanceDescriptor,
     #[serde(default)]
     pub career: PersonCareer,
     pub evidence: super::evidence::EvidenceLedger,
@@ -80,8 +81,10 @@ impl Person {
         birth_round: i64,
         service_start_round: u32,
         assignment: PersonAssignment,
+        appearance: crate::data::portraits::AppearanceDescriptor,
     ) -> Self {
         Self {
+            appearance,
             career: Default::default(),
             evidence: Default::default(),
             id,

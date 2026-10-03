@@ -1,5 +1,8 @@
 //! Real encounters and the public save-library boundary, without private mutation hooks.
 
+#[path = "appearance.rs"]
+mod appearance_support;
+
 use super::*;
 use kestrum::state::{
     battle::BattleReport,
@@ -33,6 +36,7 @@ pub(super) fn fixture() -> (GameData, StrategicCampaign) {
     campaign.people.get_mut(&PersonId(3)).unwrap().name = "Enemy witness 003".into();
     let mut remote = campaign.people[&PersonId(3)].clone();
     remote.id = PersonId(5);
+    remote.appearance = appearance_support::allocate(&mut campaign, &data.portraits, remote.id);
     remote.name = "Hidden career".into();
     remote.assignment = PersonAssignment::Site { site: SiteId(3) };
     campaign.people.insert(remote.id, remote);
@@ -71,7 +75,7 @@ pub(super) fn snapshot(
     id: PersonId,
 ) -> EncounteredPerson {
     match person_knowledge(campaign, observer, id).unwrap() {
-        PersonKnowledge::LastEncountered { snapshot, .. } => snapshot,
+        PersonKnowledge::LastEncountered { snapshot, .. } => *snapshot,
         PersonKnowledge::CurrentOwn(_) => panic!("expected historical enemy knowledge"),
     }
 }
@@ -398,6 +402,7 @@ pub(super) fn assert_departed_budgets(data: &GameData) {
     for id in 6..2006 {
         let mut person = departed.clone();
         person.id = PersonId(id);
+        person.appearance = appearance_support::allocate(&mut campaign, &data.portraits, person.id);
         person.name = format!("Departed member {id}");
         person.evidence = Default::default();
         campaign.people.insert(person.id, person);
@@ -549,6 +554,7 @@ pub(super) fn witness_roster(campaign: &mut StrategicCampaign, data: &GameData) 
     for id in 6..60 {
         let mut person = campaign.people[&PersonId(3)].clone();
         person.id = PersonId(id);
+        person.appearance = appearance_support::allocate(campaign, &data.portraits, person.id);
         person.name = format!("Enemy witness {id:03}");
         let recipient = campaign
             .armies

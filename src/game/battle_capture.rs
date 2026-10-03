@@ -108,6 +108,9 @@ fn capture_commander_wound(campaign: &mut StrategicCampaign, data: &GameData) {
     let mut successor = campaign.people[&PersonId(1)].clone();
     successor.id = PersonId(5);
     successor.name = "Elian of the Western Crossing".into();
+    successor.appearance =
+        engine::portraits::allocate_for_person(campaign, &data.portraits, successor.id)
+            .expect("capture successor appearance");
     campaign.people.insert(successor.id, successor);
     campaign.next_ids.person = PersonId(6);
     engine::apply(

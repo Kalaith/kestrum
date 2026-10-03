@@ -1,5 +1,8 @@
 //! K14 ages on campaign boundaries and releases field, teaching and site duties.
 
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{
         progression::FormationSpecialization,
@@ -44,6 +47,7 @@ fn add_person(
     person.status = PersonStatus::Fit;
     person.career = Default::default();
     person.evidence = Default::default();
+    person.appearance = appearance_support::allocate_frozen(campaign, person.id);
     campaign.people.insert(person.id, person);
     campaign.next_ids.person = PersonId(campaign.next_ids.person.0.max(id + 1));
 }

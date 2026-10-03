@@ -1,4 +1,8 @@
 //! Peaceful service establishes familiarity without inventing combat experience.
+
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{world::SiteId, GameData},
     engine::{apply, Actor, Command, MoveOrder},
@@ -20,6 +24,7 @@ fn colleague(campaign: &mut StrategicCampaign, assignment: PersonAssignment) -> 
     campaign.next_ids.person.0 += 1;
     let mut person = campaign.people[&PersonId(1)].clone();
     person.id = id;
+    person.appearance = appearance_support::allocate_frozen(campaign, id);
     person.name = format!("Colleague {}", id.0);
     person.assignment = assignment;
     person.career = Default::default();

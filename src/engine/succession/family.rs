@@ -179,6 +179,8 @@ fn add_birth(
         .rng
         .people
         .below(data.human_names.family_names.len());
+    let appearance = crate::engine::portraits::allocate_for_person(campaign, &data.portraits, id)
+        .map_err(RuleError::InvalidState)?;
     let person = Person::new_recruit(
         id,
         household.faction,
@@ -191,6 +193,7 @@ fn add_birth(
         PersonAssignment::Dependent {
             site: household.home,
         },
+        appearance,
     );
     campaign.people.insert(id, person);
     campaign.families.insert(

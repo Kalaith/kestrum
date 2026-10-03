@@ -1,5 +1,8 @@
 //! Private application feedback and uninterrupted personal service chronology.
 
+#[path = "support/appearance.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{world::SiteId, GameData},
     engine::{action_notices, apply, Actor, Command},
@@ -92,6 +95,7 @@ fn later_family_transfers_keep_wounds_evidence_movement_and_original_service() {
             campaign.next_ids.person = PersonId(id.0 + 1);
             let mut parent = campaign.people[&person].clone();
             parent.id = id;
+            parent.appearance = appearance_support::allocate(&mut campaign, &data.portraits, id);
             parent.birth_round -= 80;
             parent.assignment = kestrum::state::people::PersonAssignment::Site { site: SiteId(1) };
             campaign.people.insert(id, parent);

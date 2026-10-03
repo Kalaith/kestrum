@@ -21,6 +21,8 @@ use kestrum::{
 use macroquad_toolkit::{persistence::encode_slot, rng::SeededRng};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "support/appearance.rs"]
+mod appearance_support;
 #[path = "support/phases.rs"]
 mod phases;
 use phases::pass_npc;
@@ -37,6 +39,12 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
         let template = campaign.people[&PersonId(1)].clone();
         campaign.people.clear();
         campaign.legacy_items.clear();
+        campaign.appearance_registry =
+            kestrum::state::appearance::AppearanceRegistry::for_campaign_seed(
+                campaign.seed,
+                data.portraits.catalog_revision,
+                data.portraits.allocation_revision,
+            );
         for id in 1..=20 {
             let mut person = template.clone();
             person.id = PersonId(id);
@@ -46,6 +54,8 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
             person.assignment = PersonAssignment::Site { site: SiteId(3) };
             person.career = Default::default();
             person.evidence = Default::default();
+            person.appearance =
+                appearance_support::allocate(&mut campaign, &data.portraits, person.id);
             campaign.people.insert(PersonId(id), person);
         }
         campaign.next_ids.person = PersonId(21);
@@ -103,6 +113,8 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
     let (data, mut campaign) = fixture();
     let mut companion = campaign.people[&PersonId(1)].clone();
     companion.id = PersonId(4);
+    companion.appearance =
+        appearance_support::allocate(&mut campaign, &data.portraits, companion.id);
     companion.class = PersonClass::Recruit;
     companion.name = "A serving companion".into();
     let formation = campaign.next_ids.formation;
@@ -395,6 +407,8 @@ fn a_known_rival_requires_two_actual_mutual_combats() {
     let (data, mut campaign) = fixture();
     let mut companion = campaign.people[&PersonId(1)].clone();
     companion.id = PersonId(4);
+    companion.appearance =
+        appearance_support::allocate(&mut campaign, &data.portraits, companion.id);
     companion.name = "Della Rose".into();
     let formation = campaign.next_ids.formation;
     campaign.next_ids.formation.0 += 1;

@@ -13,6 +13,8 @@ use std::collections::BTreeSet;
 
 impl StrategicCampaign {
     pub fn validate(&self, data: &GameData) -> Result<(), String> {
+        crate::engine::portraits::validate_campaign(self, &data.portraits)?;
+        self.notifications.validate(&data.notifications)?;
         require(
             self.version == STRATEGIC_VERSION,
             "version",

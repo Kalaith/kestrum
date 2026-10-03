@@ -101,6 +101,12 @@ impl Game {
                         remaining_steps: 2,
                     };
                 }
+                companion.appearance = engine::portraits::allocate_for_person(
+                    campaign,
+                    &self.data.portraits,
+                    companion.id,
+                )
+                .expect("capture companion appearance");
                 campaign.people.insert(companion.id, companion);
             }
         }
@@ -222,6 +228,9 @@ fn roster_archer(data: &GameData, campaign: &mut StrategicCampaign, scene: &str)
         });
     }
     if scene != "formation_transfer" {
+        archer.appearance =
+            engine::portraits::allocate_for_person(campaign, &data.portraits, archer.id)
+                .expect("capture archer appearance");
         campaign.people.insert(archer.id, archer);
     }
     if scene == "formation_transfer" {

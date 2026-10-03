@@ -285,7 +285,9 @@ authorized session and must not leak appearances into the restored human game.
 
 Only unfinished portrait delivery belongs here. Commit each useful validated
 slice; remove completed TODO entries and link their scoped evidence rather than
-duplicating the map milestone ledger. All four packages are currently unstarted.
+duplicating the map milestone ledger. Identity and compatibility implementation
+is in progress; [scoped verification](verification/portraits-events.md) records
+the checkpoint and remaining acceptance work.
 
 - [ ] **G01 - Identity and compatibility.** Add descriptor/catalog schema,
   immutable feature IDs, independent deterministic allocator and reservation
@@ -352,8 +354,9 @@ browser canvas, dense states and visible tap equivalents. Smaller hosts only
 scale/letterbox under the current spec; do not reinstate 720p acceptance. Preserve
 the physical-touch waiver and report human/physical-touch gaps separately.
 
-This planning change runs only documentation link/anchor, preservation,
-whitespace and diff checks; it does not run game builds, tests, captures or publish.
+The original planning revision ran only documentation checks. Implementation
+checks and outstanding acceptance work are recorded in the linked verification
+document; this plan alone does not establish runtime or visual acceptance.
 
 ## Defaults, decisions and later expansion
 

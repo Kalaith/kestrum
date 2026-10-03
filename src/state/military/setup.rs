@@ -67,9 +67,12 @@ impl StrategicCampaign {
                 care: tendency(&mut self.rng.people),
                 curiosity: tendency(&mut self.rng.people),
             };
+            let appearance =
+                crate::engine::portraits::allocate_for_person(self, &data.portraits, person_id)?;
             self.people.insert(
                 person_id,
                 Person {
+                    appearance,
                     career: PersonCareer {
                         disposition,
                         founding_lord: scenario.kind == ScenarioKind::Production,

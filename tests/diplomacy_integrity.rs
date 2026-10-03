@@ -13,15 +13,16 @@ use serde_json::json;
 fn earlier_payloads_preserve_relations_without_inventing_truces_or_ai_history() {
     let data = GameData::load().unwrap();
     let original = StrategicCampaign::new(&data).unwrap();
-    let mut old = serde_json::to_value(&original).unwrap();
+    let modern = serde_json::to_value(&original).unwrap();
+    let mut old = modern.clone();
     old.as_object_mut().unwrap().remove("diplomacy");
     old.as_object_mut().unwrap().remove("ai");
     let decoded: Campaign = serde_json::from_value(old.clone()).unwrap();
     decoded.validate(&data).unwrap();
     assert_eq!(decoded.strategic().unwrap(), &original);
     for field in ["diplomacy", "ai"] {
-        let mut partial = old.clone();
-        partial[field] = serde_json::to_value(&original).unwrap()[field].clone();
+        let mut partial = modern.clone();
+        partial.as_object_mut().unwrap().remove(field);
         assert!(serde_json::from_value::<Campaign>(partial).is_err());
     }
     old["diplomacy"] = json!(null);

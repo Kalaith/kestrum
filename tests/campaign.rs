@@ -140,6 +140,8 @@ fn saved_campaign_round_trips_and_invalid_loads_preserve_current_play() {
     let mut full_width = strategic.clone();
     full_width.campaign_id.0 = u64::MAX;
     full_width.seed = u64::MAX;
+    full_width.appearance_registry.appearance_salt =
+        kestrum::state::appearance::derive_appearance_salt(u64::MAX);
     full_width.rng.generation = SeededRng::from_state(u64::MAX);
     round_trip(&Campaign::Strategic(Box::new(full_width)))
         .validate(&data)

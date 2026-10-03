@@ -1,6 +1,8 @@
 # Campaign notifications
 
-Planned on 2026-10-02. **Design only; implementation has not started.**
+Planned on 2026-10-02. **Implementation in progress.** Durable receipt foundations
+are being validated; UI and forecast acceptance remain outstanding. See
+[scoped verification](verification/portraits-events.md).
 This specifies the notification part of [M02](map-playability-plan.md#m02-map-orders-and-consequences).
 The other M02 map-order and inspector work keeps its existing scope.
 
@@ -353,5 +355,6 @@ no-argument `publish.ps1` after meaningful implementation changes. Record any
 inherited failures or unverified browser/touch coverage explicitly. Commit each
 validated package on `master` under the repository's commit rules.
 
-This planning change requires documentation consistency, reference and whitespace
-checks. No runtime implementation, new capture or publishing result is claimed.
+The original planning revision had only documentation checks. Implementation
+checks and outstanding acceptance work are recorded in the linked verification
+document; this plan alone does not establish runtime or visual acceptance.

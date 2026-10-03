@@ -1,5 +1,8 @@
 //! K16 heirlooms, remembrance, private chronicles and additive save migration.
 
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{
         progression::TrainingDiscipline,
@@ -54,6 +57,7 @@ fn add_person(
     person.status = PersonStatus::Fit;
     person.career = Default::default();
     person.evidence = Default::default();
+    person.appearance = appearance_support::allocate_frozen(campaign, id);
     campaign.people.insert(id, person);
     id
 }

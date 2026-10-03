@@ -1,5 +1,8 @@
 //! K15 households retain real kinship and appoint qualified successors without copying lives.
 
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{
         progression::TrainingDiscipline,
@@ -63,6 +66,7 @@ fn add_person_for(
     person.status = PersonStatus::Fit;
     person.career = Default::default();
     person.evidence = Default::default();
+    person.appearance = appearance_support::allocate_frozen(campaign, id);
     campaign.people.insert(id, person);
     id
 }

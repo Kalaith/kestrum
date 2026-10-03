@@ -1,6 +1,7 @@
 //! Game ownership, explicit legacy compatibility, and guarded campaign actions.
 
 pub mod ai;
+pub mod appearance;
 pub mod battle;
 pub mod battle_plans;
 pub mod campaign;
@@ -14,6 +15,7 @@ pub mod legacy;
 pub mod mentorship;
 pub mod military;
 pub mod movement;
+pub mod notifications;
 pub mod observer;
 pub mod people;
 pub mod persistence;
@@ -170,6 +172,7 @@ impl Campaign {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Preferences {
+    pub notifications: notifications::NotificationPreferences,
     pub hide_labels: bool,
     pub high_contrast: bool,
 }

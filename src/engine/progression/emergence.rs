@@ -207,9 +207,12 @@ fn create(
         &evidence,
         &career_state.notable_sites,
     );
+    let appearance = crate::engine::portraits::allocate_for_person(campaign, &data.portraits, id)
+        .map_err(RuleError::InvalidState)?;
     campaign.people.insert(
         id,
         Person {
+            appearance,
             career: career_state,
             evidence,
             id,

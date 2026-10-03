@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "catalog_revision": 1,
+  "allocation_revision": 1,
+  "supported_catalog_revisions": [1],
+  "supported_allocation_revisions": [1],
+  "rig": {
+    "id": "human_bust_front_v1",
+    "visual_key": "human-bust-front-v1",
+    "width": 512,
+    "height": 512,
+    "safe_rect": [40, 24, 472, 496],
+    "anchors": {
+      "crown": [256, 32],
+      "scalp_center": [256, 116],
+      "eye_line": [256, 236],
+      "nose_bridge": [256, 270],
+      "nose_tip": [256, 316],
+      "mouth_center": [256, 354],
+      "chin": [256, 408],
+      "neck_center": [256, 444],
+      "shoulder_line": [256, 482]
+    }
+  },
+  "faces": [
+    { "id": "face_oval", "visual_key": "face-oval-v1", "silhouette_group": "oval" },
+    { "id": "face_tapered", "visual_key": "face-tapered-v1", "silhouette_group": "tapered" }
+  ],
+  "noses": [
+    { "id": "nose_straight", "visual_key": "nose-straight-v1" },
+    { "id": "nose_upturned", "visual_key": "nose-upturned-v1" }
+  ],
+  "eyes": [
+    { "id": "eyes_open", "visual_key": "eyes-open-v1" },
+    { "id": "eyes_lidded", "visual_key": "eyes-lidded-v1" }
+  ],
+  "hair": [
+    { "id": "hair_bald", "visual_key": "hair-bald-v1", "silhouette_group": "bald", "is_bald": true },
+    { "id": "hair_cropped", "visual_key": "hair-cropped-v1", "silhouette_group": "short", "is_bald": false },
+    { "id": "hair_coiled", "visual_key": "hair-coiled-v1", "silhouette_group": "curled", "is_bald": false }
+  ],
+  "skin_palettes": [
+    { "id": "skin_fair", "visual_key": "skin-fair-v1", "value_group": "light", "shadow": [124, 74, 62], "base": [204, 147, 119], "highlight": [247, 207, 176] },
+    { "id": "skin_ochre", "visual_key": "skin-ochre-v1", "value_group": "medium", "shadow": [103, 54, 37], "base": [174, 111, 71], "highlight": [224, 165, 115] },
+    { "id": "skin_umber", "visual_key": "skin-umber-v1", "value_group": "dark", "shadow": [48, 30, 27], "base": [103, 65, 54], "highlight": [166, 119, 94] }
+  ],
+  "hair_palettes": [
+    { "id": "none", "visual_key": "none", "value_group": "none", "shadow": [0, 0, 0], "base": [0, 0, 0], "highlight": [0, 0, 0] },
+    { "id": "hair_ebony", "visual_key": "hair-ebony-v1", "value_group": "dark", "shadow": [25, 25, 35], "base": [54, 46, 48], "highlight": [103, 83, 71] },
+    { "id": "hair_copper", "visual_key": "hair-copper-v1", "value_group": "medium", "shadow": [85, 42, 28], "base": [161, 84, 48], "highlight": [222, 143, 83] },
+    { "id": "hair_flax", "visual_key": "hair-flax-v1", "value_group": "light", "shadow": [102, 74, 42], "base": [192, 153, 87], "highlight": [240, 212, 144] }
+  ],
+  "eye_palettes": [
+    { "id": "eyes_brown", "visual_key": "eyes-brown-v1", "value_group": "brown", "shadow": [47, 30, 22], "base": [104, 62, 35], "highlight": [169, 116, 67] },
+    { "id": "eyes_hazel", "visual_key": "eyes-hazel-v1", "value_group": "hazel", "shadow": [38, 52, 36], "base": [92, 112, 60], "highlight": [171, 157, 84] }
+  ],
+  "geometry": [
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_bald" },
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_cropped" },
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_coiled" },
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_bald" },
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_cropped" },
+    { "face_id": "face_oval", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_coiled" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_bald" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_cropped" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_coiled" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_bald" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_cropped" },
+    { "face_id": "face_oval", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_coiled" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_bald" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_cropped" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_open", "hair_id": "hair_coiled" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_bald" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_cropped" },
+    { "face_id": "face_tapered", "nose_id": "nose_straight", "eyes_id": "eyes_lidded", "hair_id": "hair_coiled" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_bald" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_cropped" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_open", "hair_id": "hair_coiled" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_bald" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_cropped" },
+    { "face_id": "face_tapered", "nose_id": "nose_upturned", "eyes_id": "eyes_lidded", "hair_id": "hair_coiled" }
+  ]
+}

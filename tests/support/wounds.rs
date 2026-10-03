@@ -1,5 +1,8 @@
 //! Named-person acceptance fixtures use fixed combat streams, never capture-time search.
 
+#[path = "appearance_frozen.rs"]
+mod appearance_support;
+
 use super::*;
 use kestrum::state::persistence::{
     load_legacy, SaveKind, SaveLibrary, SaveMetadata, SAVE_NAMESPACE,
@@ -57,6 +60,7 @@ pub(super) fn add_person(
 ) {
     let mut person = campaign.people[&PersonId(faction)].clone();
     person.id = PersonId(id);
+    person.appearance = appearance_support::allocate_frozen(campaign, person.id);
     person.name = format!("Test officer {id}");
     person.birth_round = -4 * i64::from(age);
     person.assignment = PersonAssignment::Formation {

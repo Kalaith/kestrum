@@ -1,5 +1,8 @@
 //! K06 physical costs, interruption, road access, and stable composition changes.
 
+#[path = "support/appearance.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{
         economy::TroopKind,
@@ -375,6 +378,7 @@ fn assert_existing_commander_retained(
     let mut appointed = campaign.clone();
     let mut person = appointed.people[&PersonId(2)].clone();
     person.id = appointed.next_ids.person;
+    person.appearance = appearance_support::allocate(&mut appointed, &data.portraits, person.id);
     person.faction = appointed.player;
     person.assignment = PersonAssignment::Formation {
         formation: FormationId(2),

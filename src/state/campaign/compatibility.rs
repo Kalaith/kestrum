@@ -63,6 +63,7 @@ impl StrategicCampaign {
                 world.insert("contested_sites".into(), serde_json::json!([]));
                 true
             });
+        crate::engine::portraits::migrate_legacy(&mut value).map_err(serde_json::Error::custom)?;
         let mut campaign: Self = serde_json::from_value(value)?;
         battle::initialize_earlier_leaders(&mut campaign, &earlier_battle_leaders);
         if legacy_migration.era_dates_missing {

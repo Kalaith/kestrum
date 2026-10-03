@@ -28,6 +28,12 @@ impl Game {
                     person.career = Default::default();
                     person.evidence = Default::default();
                     campaign.next_ids.person.0 += 1;
+                    person.appearance = engine::portraits::allocate_for_person(
+                        campaign,
+                        &self.data.portraits,
+                        person.id,
+                    )
+                    .expect("capture household appearance");
                     campaign.people.insert(person.id, person);
                 }
             }

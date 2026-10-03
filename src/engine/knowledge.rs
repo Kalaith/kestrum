@@ -22,7 +22,7 @@ pub const KNOWLEDGE_PAGE_SIZE: usize = 50;
 pub enum PersonKnowledge {
     CurrentOwn(Box<Person>),
     LastEncountered {
-        snapshot: EncounteredPerson,
+        snapshot: Box<EncounteredPerson>,
         available_report: Option<BattleId>,
     },
 }
@@ -103,7 +103,7 @@ pub fn person_knowledge(
         })
         .map(|report| report.id);
     Some(PersonKnowledge::LastEncountered {
-        snapshot,
+        snapshot: Box::new(snapshot),
         available_report,
     })
 }

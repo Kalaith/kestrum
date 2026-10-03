@@ -1,5 +1,8 @@
 //! Named people share slots with troops, never with another named person.
 
+#[path = "support/appearance_frozen.rs"]
+mod appearance_support;
+
 use kestrum::{
     data::{world::SiteId, GameData},
     engine::{apply, preview, Actor, Command, RuleError},
@@ -27,6 +30,7 @@ fn member(campaign: &mut StrategicCampaign, formation: FormationId) -> PersonId 
     let mut person = campaign.people[&PersonId(1)].clone();
     person.id = campaign.next_ids.person;
     campaign.next_ids.person.0 += 1;
+    person.appearance = appearance_support::allocate_frozen(campaign, person.id);
     person.name = format!("Companion {}", person.id.0);
     person.career = Default::default();
     person.evidence = Default::default();

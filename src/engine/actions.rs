@@ -278,6 +278,15 @@ fn prepare(
             .ok_or(RuleError::Overflow {
                 field: "accepted action sequence",
             })?;
+    if candidate.appearance_registry.catalog_revision != data.portraits.catalog_revision
+        || candidate.appearance_registry.allocation_revision != data.portraits.allocation_revision
+    {
+        // Expansion affects future people only, and becomes durable with this transaction.
+        candidate
+            .appearance_registry
+            .transition_to_catalog(&data.portraits)
+            .map_err(RuleError::InvalidState)?;
+    }
     let mut outcome = ActionOutcome {
         continued_movements: Vec::new(),
         life_events: Vec::new(),
@@ -399,11 +408,16 @@ fn finish(
                     .is_some_and(|site| site.controller == Some(candidate.player)),
             })
             .collect();
-        super::history::prune(candidate, data);
     }
     outcome.succession = super::succession::notices(before, candidate);
     outcome.battle_pending = candidate.pending_battle.is_some();
     super::exploration::observe(candidate);
+    super::notifications::collect(before, candidate, data, outcome)
+        .map_err(RuleError::InvalidState)?;
+    // Receipts retain event-time facts before narrative/person retention removes them.
+    if outcome.round_completed {
+        super::history::prune(candidate, data);
+    }
     candidate.validate(data).map_err(RuleError::InvalidState)?;
     if !candidate.movement_plans.is_empty()
         && (outcome.round_completed

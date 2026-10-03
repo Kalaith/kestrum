@@ -170,6 +170,9 @@ impl Game {
         recruit.status = PersonStatus::Fit;
         recruit.career = Default::default();
         recruit.evidence = Default::default();
+        recruit.appearance =
+            engine::portraits::allocate_for_person(campaign, &self.data.portraits, recipient)
+                .expect("capture recipient appearance");
         campaign.people.insert(recipient, recruit);
         let item = campaign
             .legacy_items

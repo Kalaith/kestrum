@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "max_receipts": 200,
+  "max_completed_seasons": 8,
+  "max_active_warnings": 128,
+  "max_rail_items": 8,
+  "categories": {
+    "people": "People",
+    "places": "Places",
+    "security": "Territory and security",
+    "orders": "Orders and supply",
+    "military": "Military",
+    "economy_diplomacy": "Economy and diplomacy",
+    "remembrance": "Remembrance"
+  },
+  "first_use_help": "Tap an event icon for details. Use Notification settings to choose which messages appear.",
+  "kinds": {
+    "new_hero": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "New hero", "title": "A new hero emerges", "body": "{person} is recognized through service. {reason}"
+    },
+    "person_class_completed": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Career completed", "title": "Career training completed", "body": "{person} completed training as {class} at {place}."
+    },
+    "person_recognized": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Recognition", "title": "A hero is recognized", "body": "{person} earned recognition for {reason}."
+    },
+    "person_arrived": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Person arrived", "title": "A new person arrives", "body": "{person} arrived at {place}. {reason}"
+    },
+    "person_retired": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Retirement", "title": "Service concluded", "body": "{person} retired at {place}."
+    },
+    "person_died": {
+      "category": "people", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Death", "title": "A person has died", "body": "{person} died at {place}."
+    },
+    "career_opportunity": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Career opportunity", "title": "Career requirements met", "body": "{person} has met the prerequisites for: {opportunities}. Rest and final eligibility checks still apply."
+    },
+    "succession": {
+      "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Succession", "title": "Command passes to a successor", "body": "{successor} succeeds {predecessor} in {army}."
+    },
+    "vacant_command": {
+      "category": "people", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Vacant command", "title": "A command is vacant", "body": "{predecessor} left {army} without a successor. Assign a commander."
+    },
+    "growth_approaching": {
+      "category": "places", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Growth approaching", "title": "Growth expected next season", "body": "{place}: {before} to {after}, expected in {when} if conditions hold. {conditions}"
+    },
+    "decline_risk": {
+      "category": "places", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Decline risk", "title": "Habitation at risk next season", "body": "{place}: {before} may decline to {after} in {when}. {conditions}"
+    },
+    "ruin_risk": {
+      "category": "places", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Ruin risk", "title": "Ruin risk next season", "body": "{place} may be ruined in {when} if damage and population conditions persist. {conditions}"
+    },
+    "habitation_changed": {
+      "category": "places", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Settlement changed", "title": "Habitation changed", "body": "{place}: {before} to {after}. {reason}"
+    },
+    "site_ruined": {
+      "category": "places", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Place ruined", "title": "A settlement has fallen into ruin", "body": "{place} was ruined. {reason}"
+    },
+    "site_reclaimed": {
+      "category": "places", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Ruins reclaimed", "title": "A place has been reclaimed", "body": "{place} is inhabited again."
+    },
+    "capital_relocated": {
+      "category": "places", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Capital moved", "title": "Capital relocated", "body": "The capital moved from {before} to {after}."
+    },
+    "headquarters_relocated": {
+      "category": "places", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Headquarters moved", "title": "Headquarters relocated", "body": "Headquarters moved from {before} to {after}."
+    },
+    "fort_status_changed": {
+      "category": "places", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Fort status", "title": "Fort status changed", "body": "The fort at {place} is now {after}."
+    },
+    "facility_status_changed": {
+      "category": "places", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Facility status", "title": "Facility status changed", "body": "{facility} at {place} is now {after}."
+    },
+    "control_gained": {
+      "category": "security", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Holding gained", "title": "Control gained", "body": "Your faction took control of {place}."
+    },
+    "control_lost": {
+      "category": "security", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Holding lost", "title": "Control lost", "body": "Your faction lost control of {place}. {reason}"
+    },
+    "contest_entered": {
+      "category": "security", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Contested", "title": "A place is contested", "body": "{place} is contested."
+    },
+    "contest_cleared": {
+      "category": "security", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Contest cleared", "title": "Contestation ended", "body": "Contestation ended at {place}."
+    },
+    "occupation_started": {
+      "category": "security", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Occupation", "title": "Occupation pressure began", "body": "{place} has entered an occupied state."
+    },
+    "occupation_cleared": {
+      "category": "security", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Occupation cleared", "title": "Occupation pressure cleared", "body": "Occupation pressure at {place} has cleared."
+    },
+    "siege_started": {
+      "category": "security", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Siege", "title": "A siege has begun", "body": "{place} is under siege."
+    },
+    "siege_lifted": {
+      "category": "security", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Siege lifted", "title": "A siege has ended", "body": "The siege at {place} has ended."
+    },
+    "movement_arrived": {
+      "category": "orders", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Route arrived", "title": "A force reached its destination", "body": "{army} arrived at {place}."
+    },
+    "movement_blocked": {
+      "category": "orders", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Route blocked", "title": "A route was blocked", "body": "{army} could not continue toward {place}. {reason}"
+    },
+    "supply_lost": {
+      "category": "orders", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Supply lost", "title": "An army lost supply", "body": "{army} at {place} is no longer supplied."
+    },
+    "supply_recovered": {
+      "category": "orders", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Supply recovered", "title": "Supply recovered", "body": "{army} at {place} has a friendly supply route again."
+    },
+    "army_retreated": {
+      "category": "military", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Retreat", "title": "A force retreated", "body": "{army} withdrew to {place} after battle."
+    },
+    "army_destroyed": {
+      "category": "military", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Force destroyed", "title": "A force was destroyed", "body": "{army} was lost at {place}."
+    },
+    "battle_resolved": {
+      "category": "military", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Battle resolved", "title": "Battle resolved outside your encounter", "body": "The battle at {place} ended: {result}. {details}"
+    },
+    "construction_completed": {
+      "category": "orders", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Work completed", "title": "Construction completed", "body": "{work} at {place} is complete."
+    },
+    "construction_expected": {
+      "category": "orders", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Work expected", "title": "Construction expected next season", "body": "{work} at {place} may finish in {when} if conditions hold."
+    },
+    "construction_blocked": {
+      "category": "orders", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Work blocked", "title": "Construction was interrupted", "body": "{work} at {place} paused. {reason}"
+    },
+    "construction_resumed": {
+      "category": "orders", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Work resumed", "title": "Construction resumed", "body": "{work} at {place} is active again."
+    },
+    "construction_lost": {
+      "category": "orders", "default_priority": "warning", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Work lost", "title": "Construction was lost", "body": "{work} at {place} ended because control was lost."
+    },
+    "unpaid_upkeep_began": {
+      "category": "economy_diplomacy", "default_priority": "urgent", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Unpaid upkeep", "title": "Upkeep is unpaid", "body": "Your force upkeep has a shortfall of {amount} gold. Review the seasonal account."
+    },
+    "unpaid_upkeep_cleared": {
+      "category": "economy_diplomacy", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": false,
+      "label": "Upkeep paid", "title": "Upkeep is fully paid", "body": "Your faction has cleared its upkeep shortfall."
+    },
+    "diplomacy_outcome": {
+      "category": "economy_diplomacy", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,
+      "label": "Diplomacy", "title": "Diplomatic outcome", "body": "{result}. {details}"
+    },
+    "remembrance": {
+      "category": "remembrance", "default_priority": "history", "default_delivery": "history_only", "group": true,
+      "label": "Remembrance", "title": "A remembered milestone", "body": "{subject}: {years} seasons of service or settlement."
+    },
+    "legacy_transfer": {
+      "category": "remembrance", "default_priority": "history", "default_delivery": "history_only", "group": true,
+      "label": "Legacy transfer", "title": "A legacy passed on", "body": "{item} passed from {from} to {to}."
+    }
+  }
+}

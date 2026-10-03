@@ -142,7 +142,6 @@ fn earlier_atlas_saves_keep_their_terrain_headquarters_and_discoveries() {
     old.validate(&data).unwrap();
     let expected = old.clone();
     let saved = Campaign::Strategic(Box::new(old));
-    let saved: Campaign = serde_json::from_str(&serde_json::to_string(&saved).unwrap()).unwrap();
     let mut state = GameState::default();
     state.load_campaign(saved, &data).unwrap();
     assert_eq!(state.campaign.unwrap().strategic().unwrap(), &expected);

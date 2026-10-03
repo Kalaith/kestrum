@@ -589,6 +589,7 @@ fn adopt_ward(
     let service_start_round = campaign.completed_rounds;
     insert_family_person(
         campaign,
+        data,
         FamilyPersonRecord {
             id,
             faction: owner,
@@ -603,7 +604,7 @@ fn adopt_ward(
                 links: BTreeMap::from([(guardian, FamilyLink::AdoptiveGuardian)]),
             },
         },
-    );
+    )?;
     Ok(id)
 }
 
@@ -654,6 +655,7 @@ fn invite_apprentice(
     let service_start_round = campaign.completed_rounds;
     insert_family_person(
         campaign,
+        data,
         FamilyPersonRecord {
             id,
             faction: owner,
@@ -668,7 +670,7 @@ fn invite_apprentice(
                 links: BTreeMap::new(),
             },
         },
-    );
+    )?;
     Ok(id)
 }
 
@@ -745,7 +747,14 @@ struct FamilyPersonRecord {
     family: PersonFamily,
 }
 
-fn insert_family_person(campaign: &mut StrategicCampaign, record: FamilyPersonRecord) {
+fn insert_family_person(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    record: FamilyPersonRecord,
+) -> Result<(), RuleError> {
+    let appearance =
+        crate::engine::portraits::allocate_for_person(campaign, &data.portraits, record.id)
+            .map_err(RuleError::InvalidState)?;
     let person = Person::new_recruit(
         record.id,
         record.faction,
@@ -753,9 +762,11 @@ fn insert_family_person(campaign: &mut StrategicCampaign, record: FamilyPersonRe
         record.birth_round,
         record.service_start_round,
         record.assignment,
+        appearance,
     );
     campaign.people.insert(record.id, person);
     campaign.families.insert(record.id, record.family);
+    Ok(())
 }
 
 fn reason(message: &str) -> RuleError {

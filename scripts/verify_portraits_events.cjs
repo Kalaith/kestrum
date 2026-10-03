@@ -14,6 +14,9 @@ const releaseRoot = path.join(workspaceRoot, 'Release');
 const verificationRoot = path.join(projectRoot, 'docs', 'verification');
 const origin = 'http://127.0.0.1';
 const viewport = { width: 1920, height: 1080 };
+const LEGACY_STRATEGIC_KEY = 'kestrum_save_kestrum_strategic_v2';
+const CAMPAIGN_CATALOGUE_KEY = 'mq-indexed:kestrum:campaign_catalogue:campaign_catalogue_index';
+const CAMPAIGN_WRITER_LOCK = 'macroquad:kestrum:campaign_catalogue';
 
 function usage() {
   console.log(`Usage: node scripts/verify_portraits_events.cjs --wasm <fresh-wasm> [--profile all|notifications|portraits]
@@ -164,6 +167,21 @@ async function newReviewPage(browser, fixturePath, audit) {
     } catch (error) {
       window.__kestrumFixtureStorageError = String(error);
     }
+    window.__kestrumPointerTrace = [];
+    window.__kestrumTraceImportPointer = false;
+    for (const type of ['mousedown', 'mouseup', 'pointerdown', 'pointerup']) {
+      document.addEventListener(type, (event) => {
+        if (!window.__kestrumTraceImportPointer) return;
+        window.__kestrumPointerTrace.push({
+          type,
+          trusted: event.isTrusted,
+          x: event.clientX,
+          y: event.clientY,
+          target: event.target?.id || event.target?.tagName || null,
+          active: document.activeElement?.id || document.activeElement?.tagName || null,
+        });
+      }, true);
+    }
     const fitCanvasWithoutFullscreen = () => {
       if (!document.body) return;
       document.body.classList.add('game-playing');
@@ -181,7 +199,14 @@ async function newReviewPage(browser, fixturePath, audit) {
   }, { key: 'kestrum_save_kestrum_strategic_v2', value: fixture });
   await installRoutes(context, options.wasm, audit);
   const page = await context.newPage();
-  page.on('pageerror', (error) => audit.pageErrors.push(error.stack || error.message));
+  page.on('pageerror', (error) => {
+    const detail = error.stack || error.message;
+    if (error.message === 'kofiWidgetOverlay is not defined') {
+      audit.blockedHostErrors.push(detail);
+    } else {
+      audit.pageErrors.push(detail);
+    }
+  });
   page.on('console', (message) => {
     if (message.type() === 'error') audit.consoleErrors.push(message.text());
   });
@@ -199,6 +224,15 @@ async function newReviewPage(browser, fixturePath, audit) {
       && canvas.width === 1920
       && canvas.height === 1080;
   }, { timeout: 15000 });
+  await page.waitForFunction(async (lockName) => {
+    if (!navigator.locks?.query || !window.wasm_exports) return false;
+    try {
+      const { held } = await navigator.locks.query();
+      return held.some((lock) => lock.name === lockName);
+    } catch {
+      return false;
+    }
+  }, CAMPAIGN_WRITER_LOCK, { timeout: 90000 });
   const dimensions = await page.evaluate(() => {
     const canvas = document.querySelector('#glcanvas');
     const rect = canvas.getBoundingClientRect();
@@ -209,39 +243,87 @@ async function newReviewPage(browser, fixturePath, audit) {
       devicePixelRatio: window.devicePixelRatio,
       fullScreenElement: Boolean(document.fullscreenElement),
       playModeClass: document.body.classList.contains('game-playing'),
+      fixturePresent: localStorage.getItem('kestrum_save_kestrum_strategic_v2') !== null,
       fixtureError: window.__kestrumFixtureStorageError || null,
     };
   });
   if (dimensions.viewport[0] !== 1920 || dimensions.viewport[1] !== 1080
       || dimensions.canvasPixels[0] !== 1920 || dimensions.canvasPixels[1] !== 1080
       || dimensions.devicePixelRatio !== 1 || dimensions.fullScreenElement
-      || !dimensions.playModeClass || dimensions.fixtureError) {
+      || !dimensions.playModeClass || !dimensions.fixturePresent || dimensions.fixtureError) {
     throw new Error(`Unexpected headless viewport/fixture state: ${JSON.stringify(dimensions)}`);
   }
-  await page.waitForTimeout(1200);
+  await page.evaluate(() => new Promise(requestAnimationFrame));
   return { context, page, dimensions };
 }
 
+async function canvasPoint(page, x, y) {
+  const rect = await page.locator('#glcanvas').boundingBox();
+  if (!rect || rect.width === 0 || rect.height === 0) {
+    throw new Error('Kestrum canvas has no visible input bounds');
+  }
+  return {
+    x: rect.x + (x / viewport.width) * rect.width,
+    y: rect.y + (y / viewport.height) * rect.height,
+  };
+}
+
+async function waitForAnimationFrames(page, count = 2, timeoutMs = 10000) {
+  await page.evaluate(({ frames, timeout }) => new Promise((resolve, reject) => {
+    let remaining = frames;
+    const timer = window.setTimeout(() => reject(new Error(`Canvas did not render ${frames} input frames within ${timeout}ms`)), timeout);
+    const next = () => {
+      remaining -= 1;
+      if (remaining === 0) {
+        window.clearTimeout(timer);
+        resolve();
+      }
+      else requestAnimationFrame(next);
+    };
+    requestAnimationFrame(next);
+  }), { frames: count, timeout: timeoutMs });
+}
+
 async function click(page, x, y, label) {
-  await page.mouse.click(x, y, { delay: 40 });
-  await page.waitForTimeout(450);
-  console.log(`  clicked ${label} at ${x},${y}`);
+  const point = await canvasPoint(page, x, y);
+  await page.mouse.move(point.x, point.y);
+  const traceImportPointer = label === 'ordinary Import Campaign';
+  if (traceImportPointer) {
+    await page.evaluate(() => {
+      window.__kestrumPointerTrace = [];
+      window.__kestrumTraceImportPointer = true;
+    });
+  }
+  await page.mouse.down();
+  try {
+    await waitForAnimationFrames(page);
+  } finally {
+    await page.mouse.up();
+    if (traceImportPointer) {
+      await page.evaluate(() => { window.__kestrumTraceImportPointer = false; });
+    }
+  }
+  await waitForAnimationFrames(page);
+  console.log(`  clicked ${label} at logical ${x},${y} / browser ${Math.round(point.x)},${Math.round(point.y)}`);
 }
 
 async function scroll(page, x, y, deltaY, label) {
-  await page.mouse.move(x, y);
+  const point = await canvasPoint(page, x, y);
+  await page.mouse.move(point.x, point.y);
   await page.mouse.wheel(0, deltaY);
   await page.waitForTimeout(500);
-  console.log(`  wheel ${label} at ${x},${y} deltaY=${deltaY}`);
+  console.log(`  wheel ${label} at logical ${x},${y} deltaY=${deltaY}`);
 }
 
 async function drag(page, fromX, fromY, toX, toY, label) {
-  await page.mouse.move(fromX, fromY);
+  const from = await canvasPoint(page, fromX, fromY);
+  const to = await canvasPoint(page, toX, toY);
+  await page.mouse.move(from.x, from.y);
   await page.mouse.down();
-  await page.mouse.move(toX, toY, { steps: 8 });
+  await page.mouse.move(to.x, to.y, { steps: 8 });
   await page.mouse.up();
   await page.waitForTimeout(500);
-  console.log(`  dragged ${label} from ${fromX},${fromY} to ${toX},${toY}`);
+  console.log(`  dragged ${label} from logical ${fromX},${fromY} to ${toX},${toY}`);
 }
 
 async function saveFrame(page, filename, audit, label) {
@@ -259,22 +341,76 @@ async function saveFrame(page, filename, audit, label) {
   console.log(`  captured ${filename} ${dimensions[0]}x${dimensions[1]} sha256=${digest}`);
 }
 
-async function importCampaign(page) {
-  // This is the visible title-screen button in the established 1920x1080 UI.
-  await click(page, 1680, 850, 'ordinary Import Campaign');
-  await page.waitForTimeout(2500);
+async function importCampaign(page, audit, failureCapture) {
+  const fixturePresent = await page.evaluate((key) => localStorage.getItem(key) !== null, LEGACY_STRATEGIC_KEY);
+  if (!fixturePresent) throw new Error(`Legacy campaign fixture is absent at ${LEGACY_STRATEGIC_KEY}`);
+  try {
+    await click(page, 1680, 850, 'ordinary Import Campaign');
+    await page.waitForFunction((key) => {
+      try {
+        const catalogue = JSON.parse(localStorage.getItem(key) || 'null');
+        return catalogue?.entries?.some((entry) => entry.metadata?.kind === 'imported') || false;
+      } catch {
+        return false;
+      }
+    }, CAMPAIGN_CATALOGUE_KEY, { timeout: 15000 });
+  } catch (error) {
+    await saveFrame(page, failureCapture, audit, 'import failed before campaign navigation');
+    const state = await page.evaluate(({ legacyKey, catalogueKey, lockName }) => {
+      return navigator.locks.query().then(({ held, pending }) => ({
+        fixturePresent: localStorage.getItem(legacyKey) !== null,
+        catalogue: localStorage.getItem(catalogueKey),
+        indexedKeys: Object.keys(localStorage).filter((key) => key.startsWith('mq-indexed:')),
+        canvas: (() => {
+          const canvas = document.querySelector('#glcanvas');
+          const rect = canvas?.getBoundingClientRect();
+          const point = rect ? {
+            x: rect.x + (1680 / 1920) * rect.width,
+            y: rect.y + (850 / 1080) * rect.height,
+          } : null;
+          const hit = point ? document.elementFromPoint(point.x, point.y) : null;
+          return rect ? {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            importPoint: point,
+            targetAtImport: hit?.id || hit?.tagName || null,
+            active: document.activeElement?.id || document.activeElement?.tagName || null,
+            onmousedown: typeof canvas.onmousedown,
+            onmouseup: typeof canvas.onmouseup,
+            pointerTrace: window.__kestrumPointerTrace,
+          } : null;
+        })(),
+        heldLocks: held.map((lock) => lock.name),
+        pendingLocks: pending.map((lock) => lock.name),
+        expectedLock: lockName,
+      }));
+    }, {
+      legacyKey: LEGACY_STRATEGIC_KEY,
+      catalogueKey: CAMPAIGN_CATALOGUE_KEY,
+      lockName: CAMPAIGN_WRITER_LOCK,
+    });
+    throw new Error(`Import Campaign did not commit an Imported catalogue entry. Failed state captured at ${failureCapture}. ${JSON.stringify({ ...state, pageErrors: audit.pageErrors, blockedHostErrors: audit.blockedHostErrors, consoleErrors: audit.consoleErrors })}; ${error.message}`);
+  }
+  const imported = await page.evaluate((key) => {
+    const catalogue = JSON.parse(localStorage.getItem(key));
+    return catalogue.entries.find((entry) => entry.metadata?.kind === 'imported')?.metadata || null;
+  }, CAMPAIGN_CATALOGUE_KEY);
+  if (!imported) throw new Error('Campaign catalogue changed without an Imported entry');
+  console.log(`  durable import committed: ${JSON.stringify({ name: imported.name, campaign_id: imported.campaign_id, completed_rounds: imported.completed_rounds, schema_version: imported.schema_version })}`);
 }
 
 async function notificationsReview(browser, wasmFile) {
   console.log('Headless notifications review (isolated browser context)');
-  const audit = { frames: [], blockedExternal: [], blockedMethods: [], unmapped: [], failedRequests: [], pageErrors: [], consoleErrors: [] };
+  const audit = { frames: [], blockedExternal: [], blockedMethods: [], unmapped: [], failedRequests: [], pageErrors: [], blockedHostErrors: [], consoleErrors: [] };
   const { context, page, dimensions } = await newReviewPage(
     browser,
     path.join(verificationRoot, 'notification_review_save.json'),
     audit,
   );
   console.log(`  canvas: ${JSON.stringify(dimensions)}`);
-  await importCampaign(page);
+  await importCampaign(page, audit, 'ui_web_notifications.png');
   await saveFrame(page, 'ui_web_notifications.png', audit, 'imported campaign and event rail');
   await click(page, 768, 128, 'Notifications rail');
   await saveFrame(page, 'ui_web_notification_recent.png', audit, 'notification recent card');
@@ -344,14 +480,14 @@ async function notificationsReview(browser, wasmFile) {
 
 async function portraitsReview(browser, wasmFile) {
   console.log('Headless portraits review (isolated browser context)');
-  const audit = { frames: [], blockedExternal: [], blockedMethods: [], unmapped: [], failedRequests: [], pageErrors: [], consoleErrors: [] };
+  const audit = { frames: [], blockedExternal: [], blockedMethods: [], unmapped: [], failedRequests: [], pageErrors: [], blockedHostErrors: [], consoleErrors: [] };
   const { context, page, dimensions } = await newReviewPage(
     browser,
     path.join(verificationRoot, 'portrait_review_save.json'),
     audit,
   );
   console.log(`  canvas: ${JSON.stringify(dimensions)}`);
-  await importCampaign(page);
+  await importCampaign(page, audit, 'ui_web_portrait_campaign.png');
   await saveFrame(page, 'ui_web_portrait_campaign.png', audit, 'imported portrait campaign');
   await click(page, 287, 652, 'selected home Armies control');
   await click(page, 727, 830, 'Army Orders control in centered sheet');
@@ -371,6 +507,7 @@ function reportAudit(name, audit) {
     unmappedLocalRequests: audit.unmapped,
     failedLocalRequests: audit.failedRequests,
     pageErrors: audit.pageErrors,
+    blockedHostErrors: audit.blockedHostErrors,
     consoleErrors: audit.consoleErrors,
   }, null, 2)}`);
   if (audit.blockedMethods.length || audit.unmapped.length || audit.failedRequests.length || audit.pageErrors.length) {

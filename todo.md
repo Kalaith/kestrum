@@ -7,7 +7,12 @@ Use the [portrait plan](docs/hero-portrait-generator-plan.md),
 actual evidence. Keep this file outstanding-only. Other map milestones remain
 in their existing roadmap.
 
-## Portrait catalog expansion (G03)
+## Portrait catalog expansion (G03, deferred artwork scope)
+
+Portrait artwork is serviceable; Daniel excludes improving it in this pass.
+The expansion/export tasks below remain deferred. Earlier compatibility details
+are optional prototype design choices, not a mandate to preserve old saves;
+unsupported formats must instead fail clearly and recoverably.
 
 - [ ] Implement canonical catalog/allocation revision 2, supporting saved revisions
   1 and 2 without changing descriptor schema 1. Add
@@ -73,13 +78,13 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
 
 ## Event and platform acceptance
 
-- [ ] Repair and validate `scripts/verify_portraits_events.cjs` import/navigation
-  coordinates before using its later interaction assertions. The current run
-  stayed on title/How to Play screens and failed the preference persistence
-  assertion; it did not prove a game persistence defect. `ui_web_*` captures
-  committed at wrap-up are failed-harness diagnostics, not feature acceptance.
-  Rebuild WASM after the final native-only diagnostic cfg guard, then replace
-  these stable captures with correctly reached states. Do not invoke fullscreen.
+- [ ] Resolve the headless browser input/import blocker in
+  `scripts/verify_portraits_events.cjs`. Fresh WASM built successfully; the
+  fail-fast harness confirms fixture, writer lock, correct 1920x1080 canvas and
+  trusted clicks delivered to the Import control, but the title remains and no
+  catalogue entry is written. See [current evidence](docs/verification/development-workflow.md).
+  Diagnose the runtime/input path before later assertions; replace stable failed
+  `ui_web_*` diagnostics only with reached states. Never invoke fullscreen.
 - [ ] Collect current native/WebGL portrait cache and frame-time metrics. The
   successful capture wrapper output did not expose the expected metrics lines;
   no runtime cache measurements were collected in the final run.

@@ -6,63 +6,33 @@
 
 This document defines the centrally maintained coding standards for Macroquad game projects. Keep project-local copies identical to the canonical `docs/CODE_STANDARDS.md`; put project-specific guidance in the project's README or another local documentation file instead.
 
-These standards prioritize:  
-- Readability over cleverness  
-- Data-driven design over hardcoded values  
-- Clean state management  
-- Modular services for game logic  
-- A clear mental model for game phases and transitions  
-
 ## 1. Core Philosophy
 
 ### 1.1 Write for Maintainability
-Code should be easy to debug and extend.  
-- Prefer obvious, straightforward code  
-- Avoid hidden state or side effects  
-- If a junior Rust developer can understand the flow, you are doing it right.
+Prefer obvious, readable code with no hidden state or side effects.
 
 ### 1.2 Consistency Beats Preference
-If a pattern already exists in the codebase, follow it even if you dislike it. A consistent codebase is more valuable than a perfect one.
+Match established patterns and avoid unrelated refactors. Add dependencies only
+when they remove real complexity or match an established project pattern. Keep
+gameplay deterministic where practical; isolate randomness in small helpers or
+state-owned RNG.
 
 ### 1.3 Data-Driven Design
-Keep game content and configuration in JSON; see §5.3 for loading and validation rules.
+Keep game content and configuration in JSON; see section 5.3.
 
 ### 1.4 No Unused Code
-Delete unused variables, fields, and functions; never hide them with `_` prefixes. An unused parameter may use an `_` prefix only when a required trait or API signature prevents removing it.
+Delete unused variables, fields, and functions; never hide them with `_` prefixes.
+Unused parameters may use `_` only when a required trait/API signature prevents removal.
 
 ## 2. Project Structure Rules
 
 ### 2.1 Module Responsibilities
-Each module/subdirectory owns a single conceptual domain:
-
-**Root Level:**
-- `main.rs` – Entry point, game loop, phase transitions, and high-level coordination
-
-**Subdirectories:**
-- `data/` – Data structures and JSON loading
-  - Type definitions for game entities
-  - Constants and configuration structures
-
-- `engine/` – Game logic services (stateless where possible)
-  - Core game calculations
-  - Entity management and state machines
-  - Visual effects (particles, transitions)
-
-- `state/` – Game state management
-  - Current game state
-  - Persistent player progression
-  - Save/load functionality
-
-- `ui/` – User interface components
-  - Base UI utilities and styling
-  - Reusable UI widgets
-  - Uses macroquad-toolkit for buttons and interactions
-
-- `screens/` – Screen-specific rendering (if separated from main.rs)
-
-**Cross-Domain Rules:**
-- Data types have no knowledge of engine or UI; all domains may read them.
-- See §5.1 for state ownership and §7 for UI actions.
+Each module owns one domain: `main.rs` coordinates the loop and transitions;
+`data/` owns schemas/loading; `engine/` owns calculations, entity/state-machine
+services and effects; `state/` owns current/persistent state and save/load;
+`ui/` owns toolkit-based views/widgets; optional `screens/` owns screen rendering.
+Data types know neither engine nor UI. State ownership and UI actions follow
+sections 5.1 and 7.
 
 ### 2.2 File Size Guideline
 - Target 200–400 lines per file; begin planning a split at 600.
@@ -79,37 +49,11 @@ Each module/subdirectory owns a single conceptual domain:
 
 ### 2.4 Folder Structure
 
-```
-game_name/
-├── Cargo.toml              # Project manifest
-├── CODE_STANDARDS.md       # This file
-├── UI_STYLE.md             # Screen composition and visual review
-├── src/
-│   ├── lib.rs              # Public game logic used by the binary and tests
-│   ├── main.rs             # Entry point and game loop
-│   ├── data.rs             # Data module root and re-exports
-│   ├── data/               # Data child modules
-│   │   ├── schema.rs       # Typed schemas and game-specific validation
-│   │   └── constants.rs    # Game constants structures
-│   ├── engine.rs           # Engine module root and re-exports
-│   ├── engine/             # Engine child modules
-│   │   └── game_engine.rs  # Core calculations
-│   ├── state.rs            # State module root and re-exports
-│   ├── state/              # State child modules
-│   │   ├── game_state.rs   # Current game state
-│   │   └── persistence.rs  # Save/load
-│   ├── ui.rs               # UI module root and re-exports
-│   ├── ui/                 # UI child modules
-│   │   ├── core.rs
-│   │   └── components.rs
-│   └── screens.rs          # Screen renderers module root (optional)
-├── tests/                  # This crate's tests and test-only helpers
-│   └── gameplay.rs         # Tests through the public library API
-├── assets/                 # Game data
-│   ├── constants.json      # Balance values
-│   └── localization/       # Text strings
-└── .gitignore
-```
+Use `src/main.rs` plus `src/lib.rs` for logic shared by binary and tests;
+`src/data.rs`, `engine.rs`, `state.rs`, and `ui.rs` are named module roots with
+children under matching directories. Keep tests beside `Cargo.toml` in `tests/`
+and JSON content under `assets/` (for example `constants.json`, `localization/`).
+The working template demonstrates the layout; follow existing project structure.
 
 ## 3. Naming Conventions
 
@@ -180,17 +124,10 @@ Game data should be:
 - The toolkit owns generic parsing, file loading, platform branching, source-labeled diagnostics, and fallback behavior. Do not create generic project-local loader wrappers or call `serde_json::from_str` directly for game-data files.
 
 ### 5.4 Enums for Game Phases
-Use enums to model distinct game states:
-```rust
-pub enum GamePhase {
-    Loading,
-    MainMenu,
-    Playing,
-    Paused,
-    GameOver,
-    // Add game-specific phases
-}
-```
+Use enums for real phases, e.g. loading, menu, playing, paused, and game over.
+Only one phase is active; transitions are explicit, with no magic callbacks or
+shared mutable globals. `Game` calls the active state's update/draw and applies
+returned transitions.
 
 ## 6. Error Handling
 
@@ -212,21 +149,11 @@ the required screen brief, visual hierarchy, progressive disclosure, template
 adaptation, and visual review. The rules below govern implementation.
 
 ### 7.1 UI Is Dumb
-UI code:  
-- Reads game state  
-- Returns actions/intents  
-- It should never contain game logic.  
+UI reads state and returns actions; it never contains game logic or mutates state.
 
 ### 7.2 Action Pattern
-UI components return `Option<UiAction>` to signal user intent:
-```rust
-pub enum UiAction {
-    StartGame,
-    Pause,
-    Resume,
-    // Add game-specific actions
-}
-```
+Components return `Option<UiAction>` (e.g. start, pause, resume) for the dispatcher
+to apply. Add an intent rather than reaching into state from a panel.
 
 ### 7.3 Component Organization
 - `core.rs` – Color schemes, fonts, base styling  
@@ -259,22 +186,19 @@ The game must build for:
 - **Web/WASM**: `..\rust_management\cargo.ps1 build --release --target wasm32-unknown-unknown`
 
 ### 8.3 Validation
+
+- During a slice, run focused tests for the changed behavior. Before each code-slice commit, review the full diff and affected feature suites, run formatting, Clippy (`--all-targets --all-features -- -D warnings`), source-size gates, and the affected project's full test suite (including relevant member crates). Focused tests do not replace full-suite checks; no catalog-wide test/build is required for a single-game slice.
+- After meaningful game changes, complete the publish and applicable visual review below before committing the slice. Smaller commits do not waive those checks.
+- Documentation-only slices require content/link/reference review, `git diff --check`, and relevant sync/check or documentation-tool tests. No gameplay build or publish is required solely for prose; changed executable tooling still needs its relevant checks.
+- Report exact failing commands and distinguish verified pre-existing failures from regressions and unrun checks. A baseline failure is not a pass or an automatic waiver: fix the real cause within scope, or report a blocker and obtain an explicit user exception before committing a slice whose required checks fail. Never commit newly broken code for cadence.
+
 After meaningful game changes, run `.\publish.ps1` with no parameters from the affected project directory and report the result. If the script is missing, blocked, or fails for an unrelated environment reason, report that limitation. A local instance or dev server is not a substitute unless the user requests it.
 
-All validation must run against the actual project checkout being changed, with
-its real workspace and dependency configuration. Do not create or use isolated
-project copies, copied source trees, temporary clones, alternate manifests, or
-fabricated workspaces to get formatting, Clippy, source-size gates, tests, or
-publishing to pass. Do not detach a game from its workspace or change dependency
-paths merely to bypass a validation failure.
-
-For example, "Validation passed in the isolated project copy: formatting,
-clippy with `-D warnings`, source-size gate, and 15 gameplay tests" is not an
-acceptable substitute for validating the changed checkout. Even an honestly
-labelled isolated-copy result does not satisfy these requirements. Run the
-checks in the actual checkout; if its workspace cannot load, report that error
-and identify the blocked checks. Fix the real cause within the task's scope,
-then rerun validation there. Never claim completion based on a copied project.
+Run all checks against the actual checkout with its real workspace/dependencies.
+Never use isolated copies, temporary clones, alternate manifests, fabricated
+workspaces, detachment, or dependency-path changes to bypass failures. Identify
+the failing path/check, fix the real cause within scope, and rerun there; a pass
+in a copied project is not validation, even when honestly labelled.
 
 Use project-local asset paths and make missing assets and loading failures clear during publishing.
 
@@ -347,6 +271,8 @@ Focus tests on:
 - Do not create screenshot subfolders under `docs/verification/`.
 - If a new capture represents the same screen or state as an existing screenshot, replace the existing image instead of keeping duplicates.
 - Do not create disposable review files, scratch projects, backup screenshots, or cleanup folders, either inside the workspace or elsewhere. Do not move files out of a repository to make Git status clean. Preserve existing work and report blockers instead.
+- Use the shared capture wrapper, retain its hidden-window default, wait for completion, and verify the launched game exits. Fix/report tool failures; do not invent another capture pipeline.
+- Investigate ownership/contents of unexpected directories; remove only verified disposable artifacts created by this task within scope, otherwise report a blocker.
 - Use existing tooling and direct command output. Established tools may manage their own internal capture manifests, logs, and normal build outputs; do not create an ad hoc parallel set of temporary artifacts.
 - Never fabricate a `Cargo.toml`, source file, or placeholder crate to bypass a workspace failure. A missing manifest in an unexpected directory is a workspace hygiene problem to investigate and report, not a request to invent a project.
 

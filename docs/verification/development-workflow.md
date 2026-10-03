@@ -142,6 +142,18 @@ The browser's `finally` closes it after failure. The two task-generated
 Chromium `debug.log` additions were removed by restoring its exact original
 tracked bytes, preserving the pre-existing diagnostic line.
 
+A fourth, bounded diagnostic reused the same WASM and temporarily wrapped a
+shallow copy of its JavaScript exports. It observed 366 actual `frame` calls;
+`mouse_down(1680, 850, 0)` returned at frame count 7 and
+`mouse_up(1680, 850, 0)` returned at frame count 9. Thus the expected callbacks
+ran with two actual WASM frames between them. Import still produced no indexed
+keys or catalogue entry. The remaining boundary is inside Rust-side input,
+frame or action handling; calling an export does not prove `Game::input`
+consumed its state or selected `ImportCampaign`. No downstream profile checks
+ran, and no duplicate title screenshot was taken. Temporary instrumentation
+and the sole Chromium-added log line were restored byte-for-byte from HEAD;
+the unchanged harness passed `node --check` and Chromium closed in `finally`.
+
 ## Seed-88 bounded diagnosis
 
 The test player's recruitment ceiling is six formations across all armies
@@ -165,3 +177,15 @@ HEAD, index and worktree blob hashes all matched
 `75c8b4635cf50ac7d7d79728ac3fda31828fdfcd`. No cap, assertion or production
 balance was changed. The original baseline exception remains outstanding;
 no full-suite rerun was needed after restoring the tested original source.
+
+## Native metric collection limit
+
+Source inspection explains the missing successful-run metric output:
+`src/main.rs` prints `KESTRUM_CAPTURE_METRICS` on the last capture frame, but
+the shared `macroquad-toolkit/scripts/capture_ui.ps1` redirects stdout to its
+managed log, exposes it only on failure, and deletes it after successful exit
+(lines 219, 271 and 338-339). Its optional process report records OS process/GPU
+counters, not the game's portrait-cache or frame-profile lines. A supported
+stdout forwarding/export capability is needed in the shared tool before using
+this capture route for those measurements. No alternate pipeline or repeated
+capture was introduced; shared tooling is outside this project's edit scope.

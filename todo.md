@@ -81,13 +81,16 @@ Agreed new ramps, listed as shadow / base / highlight RGB:
 - [ ] Resolve the headless browser input/import blocker in
   `scripts/verify_portraits_events.cjs`. Fresh WASM built successfully; the
   fail-fast harness confirms fixture, writer lock, correct 1920x1080 canvas and
-  trusted clicks delivered to the Import control, but the title remains and no
-  catalogue entry is written. See [current evidence](docs/verification/development-workflow.md).
-  Diagnose the runtime/input path before later assertions; replace stable failed
+  trusted clicks delivered to the Import control. A subsequent trace confirms
+  both WASM mouse callbacks return, with two WASM frames between them; the title
+  remains and no catalogue entry is written. See
+  [current evidence](docs/verification/development-workflow.md).
+  Instrument Rust input/action handling before later assertions; replace stable failed
   `ui_web_*` diagnostics only with reached states. Never invoke fullscreen.
 - [ ] Collect current native/WebGL portrait cache and frame-time metrics. The
-  successful capture wrapper output did not expose the expected metrics lines;
-  no runtime cache measurements were collected in the final run.
+  shared capture wrapper deletes successful stdout logs without forwarding
+  game metric lines; it needs a supported output capability before this route
+  can collect them. No runtime cache measurements were collected in this pass.
 - [ ] Finish any interaction coverage left unverified in the current scoped
   record: grouped/overflow navigation, last-page delivery settings, muting and
   re-enabling, save/reload acknowledgements, NPC progression with an open card,

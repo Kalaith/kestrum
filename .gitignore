@@ -12,3 +12,4 @@ dist/
 *.history
 .vscode
 .gemini
+docs/verification/.capture_*

@@ -81,7 +81,7 @@ Every capture measures **1920×1080** and was visually inspected.
 | --- | --- |
 | [Title](ui_title.png) | Observe is a distinct action beneath New Game; catalog thumbnail refreshed |
 | [Setup](ui_observer_setup.png) | Eight AI kingdoms, seed choice, session explanation and tap instructions |
-| [Full world](ui_observer_world.png) | Every region and army marker visible, no fog, quiet header and complete playback toolbar |
+| [Full world](ui_observer_world.png) | Every region and army marker visible; commander portraits and faction-colored frames distinguish forces; no fog, quiet header and complete playback toolbar |
 | [Kingdom roster](ui_observer_kingdoms.png) | All eight rows, faction colors, current AI, territory counts and reachable Back |
 | [Regional inspection](ui_observer_region.png) | Foreign kingdom army name and troop count, no order controls |
 | [Developed inspection](ui_observer_developed.png) | Three completed rounds, two armies at one site, wrapped force details clear of buttons |
@@ -98,6 +98,22 @@ appear on demand. The roster fits the maximum eight factions. Inspector text
 wraps within its reserved area, with forces ahead of secondary place details.
 No reviewed text clips into controls. The capture assertions establish pointer
 handling and application actions; they do not establish hardware touch timing.
+
+## Army map marker update — 2026-10-07
+
+Army markers show the visible commander's portrait in the compact badge and use
+that army's faction color for the frame. Leaderless armies retain the flag with
+the owner's color. A grouped badge prefers a visible army with a commander;
+observer multi-faction ticks continue to show the other represented kingdoms.
+The [full world capture](ui_observer_world.png) was refreshed at 1920×1080 after
+30 frames. Portraits and owner colors remain distinguishable in the dense map.
+
+Formatting, strict all-target/all-feature Clippy, and a read-only scan of 471
+Rust files for the 800-line limit passed. No behavioral tests were run for this
+visual-only change. The hidden capture wrapper rebuilt the affected binary,
+completed with exit code 0 and verified its launched process exited. For this
+slice, `publish.ps1` was deliberately not run under the Kestrum validation
+override because it updates an external deployment tracker.
 
 ## Published browser check
 

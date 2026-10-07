@@ -179,12 +179,13 @@ The [interface chapter](docs/10-interface-and-accessibility.md) owns the target
 screen composition; the [map plan](docs/map-playability-plan.md#target-screen-brief)
 owns its delivery. The map is the dominant play area. Calendar, active faction,
 balances and actual seasonal accounts support it, with a compact attention list
-that gives way to selection. Political fill, local control marks, owned forces,
-settlement symbols and importance-based labels explain the known world. Camera
-controls, Menu and End Turn remain reachable; the selected-place inspector and
-movement card retain direct destination-tap movement. M01A establishes useful
-working and overview scales with smaller unselected symbols and fewer full
-cards. M02 brings common actions and seasonal consequences into that context.
+that gives way to selection. Political fill, local control marks, army commander
+portraits framed by faction color, settlement symbols and importance-based
+labels explain the known world. Camera controls, Menu and End Turn remain
+reachable; the selected-place inspector and movement card retain direct
+destination-tap movement. M01A establishes useful working and overview scales
+with smaller unselected symbols and fewer full cards. M02 brings common actions
+and seasonal consequences into that context.
 Known political borders show each kingdom's color on its own side of a dark
 outline. They retain the existing fog rules and world atlas shoreline mask.
 

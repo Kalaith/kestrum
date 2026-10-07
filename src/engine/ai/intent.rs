@@ -43,6 +43,10 @@ pub(super) fn of(command: &Command) -> Option<AiIntent> {
             AiIntentKind::Reassign,
             vec![(order.0 >> 32) as u32, order.0 as u32, builder.0],
         ),
+        Command::CancelConstruction { order } => (
+            AiIntentKind::CancelConstruction,
+            vec![(order.0 >> 32) as u32, order.0 as u32],
+        ),
         Command::SetFocus { site, focus } => (AiIntentKind::Focus, vec![site.0, *focus as u32]),
         Command::ClearThreat { armies, threat } => (
             AiIntentKind::Threat,

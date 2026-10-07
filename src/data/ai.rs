@@ -17,6 +17,10 @@ pub struct AiRules {
     pub unknown_enemy_power: u32,
     pub reserve_upkeep_rounds: u32,
     pub target_armies: usize,
+    /// Developed, controlled settlements needed to support one army target step.
+    pub sites_per_army: usize,
+    /// Hard cap for holdings, relief and threatened-front army targets.
+    pub maximum_armies: usize,
     pub minimum_formations: usize,
     pub war_peace_rounds: u32,
     pub neutral_search_edges: usize,
@@ -33,6 +37,8 @@ impl AiRules {
             || !(1..=100_000).contains(&self.unknown_enemy_power)
             || !(1..=20).contains(&self.reserve_upkeep_rounds)
             || !(1..=8).contains(&self.target_armies)
+            || !(1..=256).contains(&self.sites_per_army)
+            || !(self.target_armies..=8).contains(&self.maximum_armies)
             || !(1..=6).contains(&self.minimum_formations)
             || !(1..=80).contains(&self.war_peace_rounds)
             || !(1..=16).contains(&self.neutral_search_edges)

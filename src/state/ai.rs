@@ -58,6 +58,7 @@ pub enum AiIntentKind {
     Recruit,
     Build,
     Reassign,
+    CancelConstruction,
     Focus,
     Threat,
     Siege,

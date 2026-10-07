@@ -7,6 +7,8 @@
   "unknown_enemy_power": 2000,
   "reserve_upkeep_rounds": 2,
   "target_armies": 2,
+  "sites_per_army": 8,
+  "maximum_armies": 8,
   "minimum_formations": 3,
   "war_peace_rounds": 4,
   "neutral_search_edges": 2,

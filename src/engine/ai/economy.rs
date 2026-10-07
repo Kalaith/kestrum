@@ -1,3 +1,5 @@
+//! Resource-aware recruitment targets and local production choices.
+
 use super::*;
 use crate::{
     data::{
@@ -15,8 +17,155 @@ impl Planner<'_> {
         self.view
             .formations
             .iter()
+            .filter(|formation| formation.headcount > 0)
             .map(|formation| self.data.economy.formations[&formation.kind].upkeep_gold)
             .fold(0_i64, i64::saturating_add)
+    }
+
+    fn minimum_complement(&self) -> (Resources, i64) {
+        self.data
+            .ai
+            .recruitment_order
+            .iter()
+            .take(self.data.ai.minimum_formations)
+            .fold(
+                (
+                    Resources {
+                        gold: 0,
+                        wood: 0,
+                        stone: 0,
+                    },
+                    0_i64,
+                ),
+                |(mut cost, upkeep), kind| {
+                    let definition = &self.data.economy.formations[kind];
+                    cost.gold = cost.gold.saturating_add(definition.recruit_cost.gold);
+                    cost.wood = cost.wood.saturating_add(definition.recruit_cost.wood);
+                    cost.stone = cost.stone.saturating_add(definition.recruit_cost.stone);
+                    (cost, upkeep.saturating_add(definition.upkeep_gold))
+                },
+            )
+    }
+
+    fn growth_supported_by_income(&self) -> usize {
+        let faction = &self.campaign.factions[&self.owner];
+        if faction.deficit {
+            return 0;
+        }
+        let Some(income) = faction
+            .last_economy
+            .as_ref()
+            .filter(|income| income.completed_rounds == self.campaign.completed_rounds)
+        else {
+            return 0;
+        };
+        let (_, added_upkeep) = self.minimum_complement();
+        let guarded_added_upkeep =
+            added_upkeep.saturating_mul(i64::from(self.data.ai.reserve_upkeep_rounds));
+        if guarded_added_upkeep == 0 {
+            return 0;
+        }
+        let sustainable_income = income.income.gold.saturating_sub(self.upkeep()).max(0);
+        usize::try_from(sustainable_income / guarded_added_upkeep).unwrap_or(0)
+    }
+
+    /// The maximum army count justified by developed land, supply needs and income.
+    pub(super) fn recruitment_target(&self) -> usize {
+        let rules = &self.data.ai;
+        let base = rules.target_armies.min(rules.maximum_armies);
+        let developed_sites = self
+            .view
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                site.controller == Some(self.owner)
+                    && site.habitation >= Habitation::Outpost
+                    && !self.campaign.site_is_ruined(site.id)
+            })
+            .count();
+        let holdings_target = developed_sites
+            .saturating_add(rules.sites_per_army.saturating_sub(1))
+            .checked_div(rules.sites_per_army)
+            .unwrap_or(0)
+            .max(base)
+            .min(rules.maximum_armies);
+
+        let armies = &self.view.armies;
+        let first_base_full = armies
+            .iter()
+            .take(base)
+            .all(|army| army.formation_ids().count() == 6);
+        let threatened_fronts = if first_base_full {
+            self.anchors()
+                .iter()
+                .filter(|site| {
+                    self.threatened(**site)
+                        && self
+                            .view
+                            .world
+                            .site(**site)
+                            .is_some_and(|site| site.controller == Some(self.owner))
+                })
+                .count()
+                .min(rules.maximum_armies)
+        } else {
+            base
+        };
+        let supplied_core = self
+            .view
+            .world
+            .sites
+            .iter()
+            .any(|site| self.can_replenish_at(site.id));
+        let all_armies_unsupplied = !armies.is_empty()
+            && armies
+                .iter()
+                .all(|army| !self.view.supplied_armies.contains(&army.id));
+        let relief_target = if supplied_core && all_armies_unsupplied {
+            base.saturating_add(1).min(rules.maximum_armies)
+        } else {
+            base
+        };
+        let desired = holdings_target
+            .max(threatened_fronts)
+            .max(relief_target)
+            .min(rules.maximum_armies);
+        let supported = base
+            .saturating_add(self.growth_supported_by_income())
+            .min(rules.maximum_armies);
+        desired.min(supported).max(base)
+    }
+
+    fn can_replenish_at(&self, site_id: SiteId) -> bool {
+        let Some(site) = self.view.world.site(site_id) else {
+            return false;
+        };
+        site.controller == Some(self.owner)
+            && site.habitation >= Habitation::Outpost
+            && !self.campaign.site_is_ruined(site_id)
+            && !self.view.world.contested_sites.contains(&site_id)
+            && self.view.supplied_sites.contains(&site_id)
+            && !self
+                .view
+                .threats
+                .iter()
+                .any(|threat| threat.site == site_id)
+    }
+
+    fn can_reserve_minimum_army(&self, emergency: bool) -> bool {
+        if emergency && self.view.armies.is_empty() {
+            return true;
+        }
+        let (complement_cost, complement_upkeep) = self.minimum_complement();
+        let reserve = self
+            .upkeep()
+            .saturating_add(complement_upkeep)
+            .saturating_mul(i64::from(self.data.ai.reserve_upkeep_rounds));
+        let available = self.campaign.factions[&self.owner].resources;
+        available.gold.saturating_sub(complement_cost.gold) >= reserve
+            && available.wood >= complement_cost.wood
+            && available.stone >= complement_cost.stone
     }
 
     fn reserve(&self, cost: Resources, extra: i64, emergency: bool) -> bool {
@@ -53,39 +202,18 @@ impl Planner<'_> {
                 return Some(decision);
             }
         }
-        let fronts = self
-            .anchors()
-            .iter()
-            .filter(|site| {
-                self.threatened(**site)
-                    && self
-                        .view
-                        .world
-                        .site(**site)
-                        .is_some_and(|site| site.controller == Some(self.owner))
-            })
-            .count();
-        let first_armies_full = armies
-            .iter()
-            .take(self.data.ai.target_armies)
-            .all(|army| army.formation_ids().count() == 6);
-        let target = if first_armies_full {
-            self.data.ai.target_armies.max(fronts)
-        } else {
-            self.data.ai.target_armies
-        };
         let established = armies
             .iter()
+            .filter(|army| self.can_replenish_at(army.site))
             .all(|army| army.formation_ids().count() >= self.data.ai.minimum_formations);
-        if armies.len() < target && established {
+        let target = self.recruitment_target();
+        if armies.len() < target && established && self.can_reserve_minimum_army(emergency) {
             let mut sites: Vec<_> = self
                 .view
                 .world
                 .sites
                 .iter()
-                .filter(|site| {
-                    site.controller == Some(self.owner) && site.habitation >= Habitation::Outpost
-                })
+                .filter(|site| self.can_replenish_at(site.id))
                 .collect();
             sites.sort_by_key(|site| {
                 (
@@ -101,6 +229,7 @@ impl Planner<'_> {
         }
         for army in armies
             .iter()
+            .filter(|army| self.can_replenish_at(army.site))
             .take(target)
             .filter(|army| army.formation_ids().count() < 6)
         {

@@ -52,6 +52,10 @@ and the latest scoped evidence take precedence over old milestone prose.
 - Seasonal faction rounds use deterministic commands and state-owned randomness.
   Rivals recruit, move, build, fight and progress through the campaign rules.
   Pause, Step and Resume control their atomic actions.
+  Army targets grow with developed holdings and affordable upkeep. Isolated
+  forces can release stalled builders and plan to reopen supply corridors;
+  see the [mid-game recovery evidence](docs/verification/ai-recovery.md) and
+  its headless observer replay command.
 - Physical control, political claims, contested regions, secure supply,
   exploration and observed enemy knowledge are persistent.
 - Six-slot armies support recruitment, transfers, supplied recovery, service,

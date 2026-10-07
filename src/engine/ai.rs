@@ -8,6 +8,7 @@ mod objectives;
 pub use objectives::{rank_targets, AiTarget};
 mod politics;
 mod progression;
+mod recovery;
 mod routes;
 mod travel;
 pub use routes::ObservedRoutes;
@@ -125,7 +126,8 @@ fn propose_with_diagnostics(
         ));
     }
     let decision = planner
-        .defend()
+        .release_stranded_builders()
+        .or_else(|| planner.defend())
         // Keep useful wartime operations ahead of regrouping: an isolated
         // army may still be the force needed to finish an attack or retake land.
         .or_else(|| {
@@ -137,6 +139,7 @@ fn propose_with_diagnostics(
         })
         .or_else(|| planner.recover_lost_territory())
         .or_else(|| planner.attack())
+        .or_else(|| planner.reconnect_supply())
         .or_else(|| planner.retreat())
         .or_else(|| planner.recruit(emergency))
         .or_else(|| planner.progression())
@@ -340,6 +343,15 @@ impl Planner<'_> {
             budget.map_or(0, |state| state.accepted_commands),
             self.data.ai.max_commands_per_phase
         )];
+        lines.push(format!(
+            "Military plan: {} armies, {} supplied, target {}; last seasonal gold income {}, upkeep {}, deficit {}",
+            self.view.armies.len(),
+            self.view.supplied_armies.len(),
+            self.recruitment_target(),
+            faction.last_economy.as_ref().map_or(0, |statement| statement.income.gold),
+            faction.last_economy.as_ref().map_or(0, |statement| statement.upkeep_due),
+            faction.deficit,
+        ));
         lines.push(format!(
             "Decision {:?}; objective {:?}; evaluated {} candidate commands",
             decision.command,

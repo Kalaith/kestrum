@@ -126,20 +126,22 @@ fn propose_with_diagnostics(
     }
     let decision = planner
         .defend()
-        .or_else(|| planner.retreat())
-        .or_else(|| planner.recruit(emergency))
-        .or_else(|| planner.progression())
-        .or_else(|| planner.construct())
-        .or_else(|| planner.develop_city())
-        // A retained attack objective uses dated enemy strength and can remain
-        // viable after a setback; do not offer peace ahead of that counterattack.
+        // Keep useful wartime operations ahead of regrouping: an isolated
+        // army may still be the force needed to finish an attack or retake land.
         .or_else(|| {
             planner
                 .objective
                 .as_ref()
                 .filter(|objective| matches!(objective.kind, AiObjectiveKind::Attack))
-                .and_then(|_| planner.pursue())
+                .and_then(|_| planner.pursue_attack())
         })
+        .or_else(|| planner.recover_lost_territory())
+        .or_else(|| planner.attack())
+        .or_else(|| planner.retreat())
+        .or_else(|| planner.recruit(emergency))
+        .or_else(|| planner.progression())
+        .or_else(|| planner.construct())
+        .or_else(|| planner.develop_city())
         .or_else(|| planner.peace())
         .or_else(|| {
             planner
@@ -153,7 +155,6 @@ fn propose_with_diagnostics(
         })
         .or_else(|| planner.clear_threat())
         .or_else(|| planner.expand())
-        .or_else(|| planner.attack())
         .or_else(|| planner.declare_war())
         .or_else(|| planner.border());
     let decision = decision.unwrap_or_else(|| planner.pass());

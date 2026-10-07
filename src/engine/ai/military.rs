@@ -7,7 +7,7 @@ use crate::{
         siege::{SiegeAction, SiegeOrder},
     },
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Planner<'_> {
     pub(super) fn threatened(&self, site: SiteId) -> bool {
@@ -21,6 +21,13 @@ impl Planner<'_> {
     }
     pub(super) fn threatened_headquarters(&self) -> bool {
         self.threatened(self.campaign.factions[&self.owner].headquarters)
+    }
+
+    fn at_war_anywhere(&self) -> bool {
+        self.campaign.relations.iter().any(|relation| {
+            relation.factions.contains(&self.owner)
+                && relation.state == crate::data::world::DiplomaticState::War
+        })
     }
 
     pub(super) fn defend(&self) -> Option<AiDecision> {
@@ -110,10 +117,17 @@ impl Planner<'_> {
                 }
             }
         }
+        let headquarters = self.campaign.factions[&self.owner].headquarters;
+        let anchors = self.anchors();
         for army in self.view.armies.iter().filter(|army| {
-            self.weak(army)
-                && !self.view.supplied_sites.contains(&army.site)
+            !self.view.supplied_armies.contains(&army.id)
                 && self.moving(army, true)
+                && !self.is_last_wartime_garrison(army, headquarters, &anchors)
+                && !self
+                    .view
+                    .construction
+                    .iter()
+                    .any(|order| order.is_open() && order.builder == Some(army.id))
         }) {
             let mut routes: Vec<_> = self
                 .view
@@ -138,6 +152,24 @@ impl Planner<'_> {
             }
         }
         None
+    }
+
+    fn is_last_wartime_garrison(
+        &self,
+        army: &Army,
+        headquarters: SiteId,
+        anchors: &BTreeSet<SiteId>,
+    ) -> bool {
+        let is_important = army.site == headquarters
+            || anchors.contains(&army.site)
+            || self.border_post(army.site);
+        self.at_war_anywhere()
+            && is_important
+            && !self
+                .view
+                .armies
+                .iter()
+                .any(|other| other.id != army.id && other.site == army.site)
     }
 
     pub(super) fn clear_threat(&self) -> Option<AiDecision> {
@@ -199,7 +231,17 @@ impl Planner<'_> {
     }
 
     pub(super) fn attack(&self) -> Option<AiDecision> {
+        if !self.at_war_anywhere() {
+            return None;
+        }
         for siege in &self.view.sieges {
+            if ![siege.defender, siege.besieger]
+                .into_iter()
+                .flatten()
+                .any(|faction| self.at_war(faction))
+            {
+                continue;
+            }
             let view = crate::engine::siege_view(self.campaign, self.data, self.owner, siege.site)?;
             if self.advantage(&view.own_armies, view.site) {
                 let action = if view.role == SiegeRole::Defender {
@@ -250,7 +292,66 @@ impl Planner<'_> {
         .into_iter()
         .find_map(|site| self.attack_at(site))
     }
+
+    pub(super) fn recover_lost_territory(&self) -> Option<AiDecision> {
+        if !self.at_war_anywhere() {
+            return None;
+        }
+        let mut latest: BTreeMap<SiteId, &crate::state::battle::BattleReport> = BTreeMap::new();
+        for report in &self.view.battles {
+            if latest.get(&report.site).is_none_or(|old| {
+                (report.completed_rounds, report.sequence, report.id)
+                    > (old.completed_rounds, old.sequence, old.id)
+            }) {
+                latest.insert(report.site, report);
+            }
+        }
+        let targets: BTreeSet<_> = latest
+            .into_values()
+            .filter_map(|report| {
+                let controller = report.control_after?;
+                (report.control_before == Some(self.owner)
+                    && self.at_war(controller)
+                    && self
+                        .view
+                        .world
+                        .site(report.site)
+                        .is_some_and(|site| site.controller == Some(controller))
+                    && self
+                        .campaign
+                        .completed_rounds
+                        .saturating_sub(report.completed_rounds)
+                        <= self.data.ai.objective_rounds)
+                    .then_some(report.site)
+            })
+            .collect();
+        self.targets(targets.into_iter())
+            .into_iter()
+            .find_map(|site| {
+                self.attack_at(site)
+                    .or_else(|| self.toward(site, AiObjectiveKind::Attack, false))
+            })
+    }
+
+    pub(super) fn pursue_attack(&self) -> Option<AiDecision> {
+        let objective = self.objective.as_ref()?;
+        if objective.kind != AiObjectiveKind::Attack {
+            return None;
+        }
+        self.attack_at(objective.site)
+            .or_else(|| self.toward(objective.site, AiObjectiveKind::Attack, false))
+    }
+
     pub(super) fn attack_at(&self, site: SiteId) -> Option<AiDecision> {
+        if !self
+            .view
+            .world
+            .site(site)?
+            .controller
+            .is_some_and(|owner| self.at_war(owner))
+        {
+            return None;
+        }
         let mut groups: BTreeMap<SiteId, Vec<ArmyId>> = BTreeMap::new();
         for army in self.view.armies.iter().filter(|army| {
             self.moving(army, false) && self.view.world.connected_route(army.site, site).is_some()

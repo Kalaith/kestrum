@@ -112,6 +112,14 @@ The current Normal difficulty uses a zero-percent AI income bonus in campaign da
 
 **Implemented AI baseline:** rivals choose legal orders for movement, military composition, economy, progression and politics through shared command validation. Their objectives and priorities are data-driven. Map improvements must expose known rival pressure without bypassing those rules or inventing omniscient information.
 
+**Known defect — planned correction:** Observer logs show accepted AI armies
+repeatedly moving between neighboring friendly sites after expansion, including
+during peace. The shared border planner treats any adjacent foreign ownership
+as a target and retargets after its four-round objective expires. The [observer
+border objective handoff](implementation/observer-border-objective-fix.md)
+defines the intended correction and regression coverage; this behavior remains
+uncorrected until that work is implemented.
+
 War, peace and truce decisions and dated knowledge are implemented. Their effectiveness and campaign pacing remain balance work; use the actual planners and current regression results as the baseline rather than treating the original questions as unanswered.
 
 ## Fog of war and intelligence

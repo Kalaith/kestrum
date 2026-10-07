@@ -23,6 +23,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Observer household abandonment](household-abandonment.md) records the
+Year 24 validation error, the distinction from NPC defeat, and household
+cleanup when a settlement becomes uninhabited.
+
 [City-created regions](city-regions.md) tracks the region-free opening, paid
 city development, spacing and capital tutorial, with check status recorded per
 implementation slice.

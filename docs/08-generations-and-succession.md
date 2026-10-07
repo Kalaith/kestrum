@@ -43,6 +43,13 @@ Combat death, wounds, recovery and birthday mortality are implemented. Death fre
 
 **Implemented direction (O20):** households, children, wards, apprentices, mentorship and several successor links support continuity; legacy does not require children. Household commands validate age, local presence, shared service and existing relationships. Formation/end-of-household actions, optional childraising, adoption, trainee assignment and entry into service are implemented through [household data](../assets/data/household_rules.json) and [succession commands](../src/engine/succession/commands.rs).
 
+An active household needs a friendly, inhabited home. Capture or abandonment of
+that settlement ends the household and stops childraising, while retaining its
+family records. Seasonal decline to Unsettled counts as abandonment even when
+the kingdom still controls the site. This local loss does not end the campaign;
+kingdom defeat follows the separate [defeat rules](03-kingdoms-and-economy.md#victory-defeat-and-continuity).
+See the [Observer household regression](verification/household-abandonment.md).
+
 Limited encouraged or arranged partnerships may support alliances, continuity, succession, and stability. The intended question is what the relationship means for those people and the faction. It should not become a roster of breeding statistics.
 
 The household workflow already supplies player agency and current eligibility explanations. Political marriage, diplomatic alliances and a full social-compatibility simulation remain future scope; they do not block using or improving existing family and succession controls.

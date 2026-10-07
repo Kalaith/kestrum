@@ -16,6 +16,7 @@ pub(super) const PROGRESSION_TEXT: &[&str] = &[
     "life_chosen",
     "life_partner_died",
     "life_site_captured",
+    "life_site_abandoned",
     "life_faction_defeated",
     "life_service",
     "life_retired",

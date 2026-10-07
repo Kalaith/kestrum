@@ -1000,6 +1000,7 @@
     "life_chosen": "partners chose to separate",
     "life_partner_died": "a partner died",
     "life_site_captured": "the home was captured",
+    "life_site_abandoned": "the home became uninhabited",
     "life_faction_defeated": "the faction was defeated",
     "life_service": "Entered adult service",
     "life_retired": "Retired from active service",

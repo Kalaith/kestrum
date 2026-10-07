@@ -41,7 +41,7 @@ pub(super) fn resolve_boundary(
 }
 
 pub(super) fn reconcile(before: &StrategicCampaign, candidate: &mut StrategicCampaign) {
-    family::reconcile_capture(before, candidate);
+    family::reconcile_homes(before, candidate);
     for (id, household) in &mut candidate.households {
         let defeated = candidate
             .factions

@@ -48,6 +48,7 @@ impl GameTextData {
                     HouseholdEndReason::Chosen => "life_chosen",
                     HouseholdEndReason::PartnerDied => "life_partner_died",
                     HouseholdEndReason::SiteCaptured => "life_site_captured",
+                    HouseholdEndReason::SiteAbandoned => "life_site_abandoned",
                     HouseholdEndReason::FactionDefeated => "life_faction_defeated",
                 })
                 .to_owned(),

@@ -2,6 +2,7 @@
 
 use crate::{
     data::{
+        economy::Habitation,
         world::{DiplomaticState, FactionId, SiteId},
         GameData,
     },
@@ -230,7 +231,7 @@ fn age_trainees(campaign: &mut StrategicCampaign, data: &GameData) {
     }
 }
 
-pub(super) fn reconcile_capture(before: &StrategicCampaign, after: &mut StrategicCampaign) {
+pub(super) fn reconcile_homes(before: &StrategicCampaign, after: &mut StrategicCampaign) {
     let captured = before
         .world
         .sites
@@ -245,22 +246,45 @@ pub(super) fn reconcile_capture(before: &StrategicCampaign, after: &mut Strategi
         .map(|site| (site.id, site.controller.expect("filtered owner")))
         .collect::<Vec<_>>();
     for (site, old_owner) in captured {
-        for household in after.households.values_mut().filter(|household| {
-            household.home == site
-                && household.faction == old_owner
-                && matches!(household.status, HouseholdStatus::Active)
-        }) {
-            household.status = HouseholdStatus::Ended {
-                completed_rounds: after.completed_rounds,
-                reason: HouseholdEndReason::SiteCaptured,
-            };
-            household.raising_children = false;
-        }
-        for person in after.people.values_mut().filter(|person| {
-            matches!(person.assignment, PersonAssignment::Trainee { site: assigned } if assigned == site)
-                && person.faction == old_owner
-        }) {
-            person.assignment = PersonAssignment::Dependent { site };
-        }
+        reconcile_home_loss(after, site, old_owner, HouseholdEndReason::SiteCaptured);
+    }
+    let abandoned = before
+        .world
+        .sites
+        .iter()
+        .filter(|old| old.controller.is_some() && old.habitation != Habitation::Unsettled)
+        .filter_map(|old| {
+            let new = after.world.site(old.id)?;
+            (new.controller == old.controller && new.habitation == Habitation::Unsettled)
+                .then_some((old.id, old.controller.expect("filtered owner")))
+        })
+        .collect::<Vec<_>>();
+    for (site, owner) in abandoned {
+        reconcile_home_loss(after, site, owner, HouseholdEndReason::SiteAbandoned);
+    }
+}
+
+fn reconcile_home_loss(
+    campaign: &mut StrategicCampaign,
+    site: SiteId,
+    faction: FactionId,
+    reason: HouseholdEndReason,
+) {
+    for household in campaign.households.values_mut().filter(|household| {
+        household.home == site
+            && household.faction == faction
+            && matches!(household.status, HouseholdStatus::Active)
+    }) {
+        household.status = HouseholdStatus::Ended {
+            completed_rounds: campaign.completed_rounds,
+            reason,
+        };
+        household.raising_children = false;
+    }
+    for person in campaign.people.values_mut().filter(|person| {
+        matches!(person.assignment, PersonAssignment::Trainee { site: assigned } if assigned == site)
+            && person.faction == faction
+    }) {
+        person.assignment = PersonAssignment::Dependent { site };
     }
 }

@@ -25,6 +25,7 @@ pub enum HouseholdEndReason {
     Chosen,
     PartnerDied,
     SiteCaptured,
+    SiteAbandoned,
     FactionDefeated,
 }
 

@@ -25,4 +25,7 @@ pub(super) const OBSERVER_TEXT: &[&str] = &[
     "observer_winner",
     "observer_stopped",
     "observer_siege_observing",
+    "observer_log_button",
+    "observer_log_title",
+    "observer_log_empty",
 ];

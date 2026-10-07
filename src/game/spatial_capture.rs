@@ -176,6 +176,7 @@ impl Game {
             notification_projection: self.notification_projection.as_ref(),
             notification_rules: &self.data.notifications,
             observer: &self.observer,
+            observer_log: &self.observer_log.view,
             overview: self.overview.as_ref(),
             overview_ui: &self.overview_ui,
             kingdom: &self.kingdom,

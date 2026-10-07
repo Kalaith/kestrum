@@ -70,6 +70,7 @@ pub enum Overlay {
     CampaignEnd,
     ObserverSetup,
     ObserverKingdoms,
+    ObserverLog,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -366,6 +367,22 @@ impl GameState {
     pub fn advance_observer(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {
         let campaign = self.playing_campaign()?;
         engine::advance_observer(campaign, data)
+    }
+
+    pub fn advance_observer_diagnosed(
+        &mut self,
+        data: &GameData,
+    ) -> Result<engine::ObserverStepOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::advance_observer_diagnosed(campaign, data)
+    }
+
+    pub fn advance_observer_without_diagnostics(
+        &mut self,
+        data: &GameData,
+    ) -> Result<engine::ObserverStepOutcome, RuleError> {
+        let campaign = self.playing_campaign()?;
+        engine::advance_observer_without_diagnostics(campaign, data)
     }
 
     pub fn step_observer(&mut self, data: &GameData) -> Result<ActionOutcome, RuleError> {

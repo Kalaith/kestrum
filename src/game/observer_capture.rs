@@ -77,6 +77,10 @@ impl Game {
                 );
             }
             "observer_developed" => self.capture_observer_developed(),
+            "observer_log" => {
+                self.capture_observer_developed();
+                self.capture_observer_log();
+            }
             "observer_help" => self.apply(UiAction::Open(Overlay::Help)),
             _ => panic!("Unsupported Observer capture scene: {scene}"),
         }
@@ -202,5 +206,35 @@ impl Game {
                 .focus_site(&campaign.world, site, &mut self.view);
         }
         self.refresh_projection();
+    }
+
+    fn capture_observer_log(&mut self) {
+        for _ in 0..5_000 {
+            if self.observer_log.view.events.len() > 11 {
+                break;
+            }
+            self.apply(UiAction::StepObserver);
+            assert!(self.error.is_none(), "{:?}", self.error);
+        }
+        assert!(self.observer_log.view.events.len() > 11);
+        let toolbar = vec2(1472.0, 48.0);
+        let open = self.capture_sheet_tap(toolbar);
+        assert!(matches!(open, UiAction::Open(Overlay::ObserverLog)));
+        self.apply(open);
+        assert_eq!(self.state.overlay, Overlay::ObserverLog);
+
+        let next = self.capture_sheet_tap(vec2(1340.0, 843.0));
+        assert!(matches!(next, UiAction::ObserverLogPage(1)));
+        self.apply(next);
+        assert_eq!(self.observer_log.view.page, 1);
+
+        let close = self.capture_sheet_tap(vec2(1344.0, 237.0));
+        assert!(matches!(close, UiAction::Back));
+        self.apply(close);
+        assert_eq!(self.state.overlay, Overlay::None);
+        let reopen = self.capture_sheet_tap(toolbar);
+        assert!(matches!(reopen, UiAction::Open(Overlay::ObserverLog)));
+        self.apply(reopen);
+        assert_eq!(self.state.overlay, Overlay::ObserverLog);
     }
 }

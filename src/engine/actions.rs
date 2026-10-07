@@ -158,6 +158,28 @@ pub(super) fn advance_npc_action(
     campaign: &mut StrategicCampaign,
     data: &GameData,
 ) -> Result<ActionOutcome, RuleError> {
+    Ok(advance_npc_action_without_diagnostics(campaign, data)?.outcome)
+}
+
+pub(super) fn advance_npc_action_without_diagnostics(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<super::observer::ObserverStepOutcome, RuleError> {
+    advance_npc_action_inner(campaign, data, false)
+}
+
+pub(super) fn advance_npc_action_diagnosed(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<super::observer::ObserverStepOutcome, RuleError> {
+    advance_npc_action_inner(campaign, data, true)
+}
+
+fn advance_npc_action_inner(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    include_diagnostics: bool,
+) -> Result<super::observer::ObserverStepOutcome, RuleError> {
     if campaign.pending_battle.is_some() {
         return Err(RuleError::BattlePending);
     }
@@ -167,10 +189,14 @@ pub(super) fn advance_npc_action(
     if matches!(campaign.phase, CampaignPhase::NpcTurn { paused: true, .. }) {
         return Err(RuleError::NpcPaused);
     }
-    let decision = super::ai::propose(campaign, data, faction)?;
+    let decision = if include_diagnostics {
+        super::ai::propose_diagnosed(campaign, data, faction)?
+    } else {
+        super::ai::propose(campaign, data, faction)?
+    };
     let mut candidate = campaign.clone();
     let actor = Actor::Npc(faction);
-    let outcome = match apply(&mut candidate, data, actor, decision.command.clone()) {
+    let (outcome, resolution) = match apply(&mut candidate, data, actor, decision.command.clone()) {
         Ok(mut outcome) => {
             if candidate.pending_battle.as_ref().is_some_and(|pending| {
                 candidate.observer_mode
@@ -188,15 +214,29 @@ pub(super) fn advance_npc_action(
                 merge_outcome(&mut outcome, accepted);
             }
             super::ai::accepted(&mut candidate, campaign, data, faction, &decision)?;
-            outcome
+            let resolution = if matches!(decision.command, Command::EndTurn) {
+                "No legal command was selected; faction passed.".to_owned()
+            } else {
+                "Command accepted.".to_owned()
+            };
+            (outcome, resolution)
         }
-        Err(_) => {
+        Err(error) => {
             super::ai::rejected(&mut candidate, campaign, data, faction, &decision)?;
-            apply(&mut candidate, data, actor, Command::EndTurn)?
+            (
+                apply(&mut candidate, data, actor, Command::EndTurn)?,
+                format!("Command rejected ({error}); faction passed."),
+            )
         }
     };
     *campaign = candidate;
-    Ok(outcome)
+    let mut diagnostics = decision.diagnostics;
+    diagnostics.push(resolution);
+    Ok(super::observer::ObserverStepOutcome {
+        action: format!("{:?}", decision.command),
+        diagnostics,
+        outcome,
+    })
 }
 
 pub(super) fn merge_outcome(target: &mut ActionOutcome, mut later: ActionOutcome) {

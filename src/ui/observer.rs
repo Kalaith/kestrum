@@ -9,6 +9,36 @@ use kestrum::{
 use macroquad::prelude::*;
 use macroquad_toolkit::ui::{truncate_text_to_width_ex, wrap_text_ex};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObserverEvent {
+    pub round: u32,
+    pub message: String,
+}
+
+#[derive(Debug, Default)]
+pub struct ObserverEventLog {
+    pub events: Vec<ObserverEvent>,
+    pub page: usize,
+    pub file_path: Option<String>,
+    pub status: Option<String>,
+}
+
+impl ObserverEventLog {
+    pub fn add(&mut self, round: u32, message: String) {
+        self.events.insert(0, ObserverEvent { round, message });
+        self.events.truncate(200);
+        self.page = 0;
+    }
+
+    pub fn change_page(&mut self, delta: i32) {
+        let last_page = self.events.len().saturating_sub(1) / EVENT_ROWS;
+        self.page = self
+            .page
+            .saturating_add_signed(delta as isize)
+            .min(last_page);
+    }
+}
+
 const MENU: Rect = Rect::new(WIDTH - 132.0, 24.0, 108.0, 48.0);
 const ZOOM_OUT: Rect = Rect::new(24.0, HEIGHT - 72.0, 48.0, 48.0);
 const ZOOM_IN: Rect = Rect::new(80.0, HEIGHT - 72.0, 48.0, 48.0);
@@ -22,11 +52,14 @@ const SPEED_FOUR: Rect = Rect::new(WIDTH - 424.0, HEIGHT - 72.0, 56.0, 48.0);
 const STEP: Rect = Rect::new(WIDTH - 352.0, HEIGHT - 72.0, 96.0, 48.0);
 const PLAY: Rect = Rect::new(WIDTH - 244.0, HEIGHT - 72.0, 220.0, 48.0);
 const ROSTER: Rect = Rect::new(80.0, 38.0, 1120.0, 650.0);
+const LOG: Rect = Rect::new(1384.0, 24.0, 176.0, 48.0);
+const LOG_PANEL: Rect = Rect::new(176.0, 20.0, 928.0, 680.0);
+const EVENT_ROWS: usize = 11;
 
 /// The observer toolbar is the only permanent control strip on the map.
 pub fn controls_contain(point: Vec2) -> bool {
     [
-        MENU, ZOOM_OUT, ZOOM_IN, OVERVIEW, RECENTER, MAP_KEY, KINGDOMS, SPEED_ONE, SPEED_TWO,
+        MENU, LOG, ZOOM_OUT, ZOOM_IN, OVERVIEW, RECENTER, MAP_KEY, KINGDOMS, SPEED_ONE, SPEED_TWO,
         SPEED_FOUR, STEP, PLAY,
     ]
     .iter()
@@ -101,6 +134,19 @@ fn header(ctx: &Context<'_>) -> Option<UiAction> {
         false,
     ) {
         return Some(UiAction::Open(Overlay::Menu));
+    }
+    if button(
+        ctx,
+        LOG,
+        &format!(
+            "{} · {}",
+            ctx.text("observer_log_button"),
+            ctx.observer_log.events.len()
+        ),
+        ctx.state.overlay == Overlay::None,
+        false,
+    ) {
+        return Some(UiAction::Open(Overlay::ObserverLog));
     }
     if let Some(campaign) = ctx.state.campaign.as_ref() {
         let season = &ctx.game_text.seasons[campaign.season_index()];
@@ -208,6 +254,136 @@ fn observer_finished(ctx: &Context<'_>) -> bool {
         .as_ref()
         .and_then(kestrum::state::Campaign::strategic)
         .is_some_and(|campaign| campaign.observer_finished())
+}
+
+pub fn draw_log(ctx: &Context<'_>) -> Option<UiAction> {
+    let rect = LOG_PANEL;
+    draw_rectangle(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        Color::new(0.04, 0.08, 0.08, 0.99),
+    );
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, BRASS);
+    text(
+        ctx,
+        &ctx.text("observer_log_title"),
+        vec2(rect.x + 28.0, rect.y + 42.0),
+        27.0,
+        CREAM,
+    );
+    if button(
+        ctx,
+        Rect::new(rect.right() - 132.0, rect.y + 14.0, 104.0, 46.0),
+        &ctx.text("close"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::Back);
+    }
+    if let Some(status) = &ctx.observer_log.status {
+        let status = truncate_text_to_width_ex(status, rect.w - 56.0, ctx.body_font(), 16.0);
+        body(
+            ctx,
+            &status,
+            vec2(rect.x + 28.0, rect.y + 76.0),
+            16.0,
+            MUTED,
+        );
+    }
+    if let Some(path) = &ctx.observer_log.file_path {
+        let path = truncate_text_to_width_ex(path, rect.w - 56.0, ctx.body_font(), 16.0);
+        body(
+            ctx,
+            &path,
+            vec2(
+                rect.x + 28.0,
+                rect.y
+                    + if ctx.observer_log.status.is_some() {
+                        98.0
+                    } else {
+                        76.0
+                    },
+            ),
+            16.0,
+            MUTED,
+        );
+    }
+
+    if ctx.observer_log.events.is_empty() {
+        body(
+            ctx,
+            &ctx.text("observer_log_empty"),
+            vec2(rect.x + 28.0, rect.y + 142.0),
+            20.0,
+            CREAM,
+        );
+    } else {
+        draw_log_events(ctx, rect);
+    }
+    draw_log_paging(ctx, rect)
+}
+
+fn draw_log_events(ctx: &Context<'_>, rect: Rect) {
+    let start = ctx.observer_log.page * EVENT_ROWS;
+    for (row, event) in ctx
+        .observer_log
+        .events
+        .iter()
+        .skip(start)
+        .take(EVENT_ROWS)
+        .enumerate()
+    {
+        let y = rect.y + 125.0 + row as f32 * 44.0;
+        body(
+            ctx,
+            &format!("R{}", event.round),
+            vec2(rect.x + 28.0, y + 20.0),
+            16.0,
+            BRASS,
+        );
+        let message =
+            truncate_text_to_width_ex(&event.message, rect.w - 112.0, ctx.body_font(), 18.0);
+        body(ctx, &message, vec2(rect.x + 82.0, y + 20.0), 18.0, CREAM);
+        draw_line(
+            rect.x + 28.0,
+            y + 34.0,
+            rect.right() - 28.0,
+            y + 34.0,
+            1.0,
+            Color::new(BRASS.r, BRASS.g, BRASS.b, 0.24),
+        );
+    }
+}
+
+fn draw_log_paging(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
+    let last_page = ctx.observer_log.events.len().saturating_sub(1) / EVENT_ROWS;
+    if button(
+        ctx,
+        Rect::new(rect.x + 28.0, rect.bottom() - 58.0, 112.0, 42.0),
+        &ctx.text("previous"),
+        ctx.observer_log.page > 0,
+        false,
+    ) {
+        return Some(UiAction::ObserverLogPage(-1));
+    }
+    let page_label = format!("{} / {}", ctx.observer_log.page + 1, last_page + 1);
+    centered(
+        ctx,
+        &page_label,
+        vec2(rect.x + rect.w * 0.5, rect.bottom() - 30.0),
+        16.0,
+        MUTED,
+    );
+    button(
+        ctx,
+        Rect::new(rect.right() - 140.0, rect.bottom() - 58.0, 112.0, 42.0),
+        &ctx.text("next"),
+        ctx.observer_log.page < last_page,
+        false,
+    )
+    .then_some(UiAction::ObserverLogPage(1))
 }
 
 fn observer_status(ctx: &Context<'_>) -> String {

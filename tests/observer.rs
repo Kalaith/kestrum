@@ -110,6 +110,30 @@ fn same_seed_observer_steps_produce_identical_campaigns() {
 }
 
 #[test]
+fn observer_steps_expose_ai_decision_diagnostics() {
+    let data = GameData::load().unwrap();
+    let mut campaign = production_observer(&data, 71_008, 4);
+
+    let step = engine::advance_observer_diagnosed(&mut campaign, &data).unwrap();
+
+    assert!(!step.action.is_empty());
+    assert!(step
+        .diagnostics
+        .iter()
+        .any(|line| line.starts_with("Faction ")));
+    assert!(step
+        .diagnostics
+        .iter()
+        .any(|line| line.starts_with("Decision ")));
+    assert!(step
+        .diagnostics
+        .iter()
+        .any(|line| line.contains("Command accepted")
+            || line.contains("faction passed")
+            || line.contains("Command rejected")));
+}
+
+#[test]
 fn observer_finishes_a_round_without_returning_to_a_player_phase() {
     let data = GameData::load().unwrap();
     let mut campaign = production_observer(&data, 71_004, 8);

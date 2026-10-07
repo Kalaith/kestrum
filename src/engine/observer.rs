@@ -6,10 +6,39 @@ use crate::{
     state::{CampaignPhase, StrategicCampaign},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObserverStepOutcome {
+    pub action: String,
+    pub diagnostics: Vec<String>,
+    pub outcome: ActionOutcome,
+}
+
 pub fn advance_observer(
     campaign: &mut StrategicCampaign,
     data: &GameData,
 ) -> Result<ActionOutcome, RuleError> {
+    Ok(advance_observer_without_diagnostics(campaign, data)?.outcome)
+}
+
+pub fn advance_observer_without_diagnostics(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<ObserverStepOutcome, RuleError> {
+    advance_observer_inner(campaign, data, false)
+}
+
+pub fn advance_observer_diagnosed(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<ObserverStepOutcome, RuleError> {
+    advance_observer_inner(campaign, data, true)
+}
+
+fn advance_observer_inner(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    include_diagnostics: bool,
+) -> Result<ObserverStepOutcome, RuleError> {
     require_observer(campaign)?;
     if campaign.observer_finished() {
         return Err(RuleError::NotNpcPhase);
@@ -18,23 +47,38 @@ pub fn advance_observer(
         return Err(RuleError::NpcPaused);
     }
     if campaign.pending_battle.is_some() {
-        return actions::apply(campaign, data, Actor::Player, Command::StartPendingBattle);
+        let battle = campaign
+            .pending_battle
+            .as_ref()
+            .map(|battle| battle.report.id);
+        return diagnosed_action(
+            campaign,
+            data,
+            Actor::Player,
+            Command::StartPendingBattle,
+            format!("Resolve pending battle {battle:?}"),
+        );
     }
     if let Some(offer) = campaign.diplomacy.pending_offers.first() {
         let recipient = offer.recipient;
         let proposer = offer.proposer;
         let accept = super::diplomacy::peace_desired(campaign, data, recipient, proposer);
-        return actions::apply(
+        return diagnosed_action(
             campaign,
             data,
             Actor::Npc(recipient),
             Command::RespondPeace { proposer, accept },
+            format!(
+                "{} peace offer from faction #{}",
+                if accept { "Accept" } else { "Decline" },
+                proposer.0
+            ),
         );
     }
     if let Some(defeat) = campaign.diplomacy.pending_defeats.first() {
         let faction = defeat.faction;
         let victor = defeat.victor;
-        return actions::apply(
+        return diagnosed_action(
             campaign,
             data,
             Actor::Npc(victor),
@@ -42,15 +86,50 @@ pub fn advance_observer(
                 faction,
                 resolution: crate::state::diplomacy::DefeatResolution::Annex,
             },
+            format!("Annex defeated faction #{}", faction.0),
         );
     }
-    actions::advance_npc_action(campaign, data)
+    if include_diagnostics {
+        actions::advance_npc_action_diagnosed(campaign, data)
+    } else {
+        actions::advance_npc_action_without_diagnostics(campaign, data)
+    }
+}
+
+fn diagnosed_action(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    actor: Actor,
+    command: Command,
+    label: String,
+) -> Result<ObserverStepOutcome, RuleError> {
+    let outcome = actions::apply(campaign, data, actor, command)?;
+    Ok(ObserverStepOutcome {
+        action: label,
+        diagnostics: Vec::new(),
+        outcome,
+    })
 }
 
 pub fn step_observer(
     campaign: &mut StrategicCampaign,
     data: &GameData,
 ) -> Result<ActionOutcome, RuleError> {
+    Ok(step_observer_inner(campaign, data, false)?.outcome)
+}
+
+pub fn step_observer_diagnosed(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<ObserverStepOutcome, RuleError> {
+    step_observer_inner(campaign, data, true)
+}
+
+fn step_observer_inner(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    include_diagnostics: bool,
+) -> Result<ObserverStepOutcome, RuleError> {
     require_observer(campaign)?;
     let CampaignPhase::NpcTurn { faction, paused } = campaign.phase else {
         return Err(RuleError::PauseRequired);
@@ -63,7 +142,7 @@ pub fn step_observer(
         faction,
         paused: false,
     };
-    let outcome = advance_observer(&mut candidate, data)?;
+    let outcome = advance_observer_inner(&mut candidate, data, include_diagnostics)?;
     if let CampaignPhase::NpcTurn { paused, .. } = &mut candidate.phase {
         *paused = true;
     }

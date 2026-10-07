@@ -35,8 +35,15 @@ and the latest scoped evidence take precedence over old milestone prose.
 
 - Observe opens a separate AI-only session from the title menu. Watch the full
   map without fog, inspect every kingdom, and use Pause, Step or 1×/2×/4× speed.
-  Leaving restores the human campaign. See the [Observer screen brief](#observer)
-  and [verification record](docs/verification/observer.md).
+  Its Log button opens recent wars, battles, new people and forces, defeats, and
+  territory changes. Native sessions write a JSONL audit to the local app-data
+  folder (`%LOCALAPPDATA%\kestrum\observer_logs` on Windows), including each
+  AI action, rejected candidate reasons, and the resulting faction, army,
+  territory, siege and resource state. Browser sessions keep the visible feed
+  in memory because the browser sandbox does not expose a user-accessible audit
+  file. Leaving restores the human campaign. See the
+  [Observer screen brief](#observer) and
+  [verification record](docs/verification/observer.md).
 - Production setup creates a seeded human kingdom with a name, botanical
   emblem, 4–8 factions and 152 country-map nodes. New campaigns have no regions.
   Every node can receive city investment once it reaches Village; a city cannot
@@ -153,13 +160,17 @@ regional maps reveal all places, borders and armies without fog.
 | Current decision | Where to look and how quickly the simulation advances. |
 | Dominant focus | The full atlas, with regional detail available on selection. |
 | Primary action | Pause or resume; advance one AI action while paused; choose 1×, 2× or 4× speed. |
-| Supporting information | Season, current AI kingdom, playback status and speed. |
+| Supporting information | Season, current AI kingdom, playback status and speed; a Log button opens notable events and shows where the native audit file is written. |
 | Deferred information | All AI kingdoms in a separate roster; local detail on selection; help in the menu. |
 | Layout and camera | Full map at the sole supported 1920×1080 canvas; compact controls along the lower edge. |
 | Input and feedback | Visible tap controls, drag/pinch and zoom buttons; selected speed and paused status remain visible. |
 
 Opening a sheet suspends automatic turns. The simulation handles battles and
-diplomatic decisions without human orders. Observer sessions are separate from
+diplomatic decisions without human orders. The event panel keeps the latest 200
+notable observer events in memory. The native JSONL audit writes one record per
+AI step, including the selected command, candidate rejections and a state
+snapshot so a pass can be checked against resources, reachable targets, army
+movement, supply, sieges and campaign rules. Observer sessions are separate from
 campaign saves; returning to the title restores any campaign already in memory.
 
 ### Strategic map

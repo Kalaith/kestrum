@@ -139,6 +139,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Setup
         | Overlay::ObserverSetup
         | Overlay::ObserverKingdoms
+        | Overlay::ObserverLog
         | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery
@@ -181,6 +182,7 @@ pub fn overlay(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Setup
         | Overlay::ObserverSetup
         | Overlay::ObserverKingdoms
+        | Overlay::ObserverLog
         | Overlay::None
         | Overlay::Saves
         | Overlay::SaveRecovery

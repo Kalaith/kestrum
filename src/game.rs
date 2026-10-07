@@ -25,6 +25,7 @@ mod notification_capture;
 mod notifications;
 mod observer;
 mod observer_capture;
+mod observer_log;
 mod overview_capture;
 mod portrait_capture;
 pub use kestrum::portrait_rendering as portraits;
@@ -106,6 +107,7 @@ pub struct Game {
     save_error: String,
     npc_delay: f32,
     observer: kestrum::state::observer::ObserverPlayback,
+    observer_log: observer_log::ObserverLog,
     observer_return: Option<observer::CampaignReturn>,
     capture: bool,
     notice: Option<(String, f32)>,
@@ -172,6 +174,7 @@ impl Game {
             save_error: String::new(),
             npc_delay: 0.0,
             observer: Default::default(),
+            observer_log: Default::default(),
             observer_return: None,
             data,
             assets,
@@ -387,6 +390,7 @@ impl Game {
         self.capture = true;
         self.state = GameState::default();
         self.observer = Default::default();
+        self.observer_log.reset();
         self.observer_return = None;
         self.preferences = Preferences::default();
         self.navigation.reset(&mut self.view);
@@ -460,6 +464,7 @@ impl Game {
             notification_projection: self.notification_projection.as_ref(),
             notification_rules: &self.data.notifications,
             observer: &self.observer,
+            observer_log: &self.observer_log.view,
             overview: self.overview.as_ref(),
             overview_ui: &self.overview_ui,
             kingdom: &self.kingdom,

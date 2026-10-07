@@ -66,7 +66,10 @@ pub use movement::{
     preview_order as movement_order_preview, route_cost, world_movement_preview, MoveOrder,
     MovementBlock, MovementEncounter, MovementOutcome, MovementPreview, MovementStop, RouteStep,
 };
-pub use observer::{advance_observer, step_observer};
+pub use observer::{
+    advance_observer, advance_observer_diagnosed, advance_observer_without_diagnostics,
+    step_observer, step_observer_diagnosed, ObserverStepOutcome,
+};
 pub use person_combat::{resolve_person_combat, PersonCombatContext, PersonCombatSide};
 pub use progression::{
     career_options, specialization_options, CareerOption, CareerRequirement, SpecializationOption,

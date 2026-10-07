@@ -1,4 +1,4 @@
-# Observer mode — 2026-10-02
+# Observer mode — 2026-10-07
 
 [Verification index](README.md) · [Screen brief](../../README.md#observer)
 
@@ -18,7 +18,13 @@ headquarters, and map inspectors show local forces without order controls.
 
 Observer sessions stay in memory. Entering retains the current human campaign
 and camera; leaving restores them. Observer does not write campaign checkpoints
-or expose save/load controls. Existing saves without the new mode flag remain
+or expose save/load controls. Native Observer sessions also write a separate,
+flushed JSONL audit under the Kestrum app-data folder's `observer_logs`
+directory. Each step records the AI action, candidate rejection reasons,
+outcome facts and a campaign snapshot with faction resources, territory, armies,
+movement, supply, sieges and pending diplomacy. The Log panel keeps the latest
+200 notable events in memory; browser sessions show that feed without creating
+a user-accessible audit file. Existing saves without the new mode flag remain
 ordinary human campaigns.
 
 ## Regression coverage
@@ -38,6 +44,8 @@ The native capture scenes also use the real UI draw/action path with synthetic
 pointer frames. Assertions cover title/setup entry, press/release origin guards,
 automatic progress, menu suspension, Pause, Step, 4× selection, all-faction map
 projection, and restoration of the prior human campaign through Continue.
+The observer-log scene advances until the feed spans multiple pages, opens the
+panel through its toolbar button, exercises Next, closes it and reopens it.
 
 ## Engineering results
 
@@ -57,6 +65,11 @@ Clippy and capture commands used the shared three-slot pool.
   were rerun: **32 passed**. The save compatibility test also rejects an unknown
   founding faction, including in Observer mode.
 - The source gate passed with no exceptions; the largest Rust file has 794 lines.
+- For the observer event log slice, `cargo fmt --all -- --check` and
+  `git diff --check` passed. The focused observer suite passed **9 tests**; the
+  source-size gate passed **1 test**; strict all-target/all-feature Clippy and
+  the native `kestrum` binary build passed. The `wasm32-unknown-unknown` binary
+  build passed for the browser event-feed path.
 
 ## Native visual review
 
@@ -72,7 +85,13 @@ Every capture measures **1920×1080** and was visually inspected.
 | [Kingdom roster](ui_observer_kingdoms.png) | All eight rows, faction colors, current AI, territory counts and reachable Back |
 | [Regional inspection](ui_observer_region.png) | Foreign kingdom army name and troop count, no order controls |
 | [Developed inspection](ui_observer_developed.png) | Three completed rounds, two armies at one site, wrapped force details clear of buttons |
+| [Observer event log](ui_observer_log.png) | Recent territory changes, battle results and seasons; Previous/Next paging across 85 events |
 | [Help](ui_observer_help.png) | Observer-specific instructions and visible dismissal |
+
+The observer-log capture used `scripts/capture_ui.ps1 -Scenes observer_log` and
+completed with exit code 0. Its hidden game process (`16396`) was verified
+exited. The 1920×1080 image was visually inspected after the battle-result
+wording was updated.
 
 The map remains dominant; playback occupies one lower control strip and details
 appear on demand. The roster fits the maximum eight factions. Inspector text

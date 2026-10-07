@@ -39,6 +39,9 @@ impl Game {
                 self.kingdom.page = 0;
                 self.state.overlay = Overlay::ObserverKingdoms;
             }
+            UiAction::ObserverLogPage(delta) if self.is_observer() => {
+                self.observer_log.view.change_page(delta);
+            }
             UiAction::FocusObserverFaction(faction) if self.is_observer() => {
                 self.focus_observer_faction(faction);
             }
@@ -47,6 +50,7 @@ impl Game {
             | UiAction::SetObserverSpeed(_)
             | UiAction::StepObserver
             | UiAction::OpenObserverKingdoms
+            | UiAction::ObserverLogPage(_)
             | UiAction::FocusObserverFaction(_) => {}
             _ => return false,
         }
@@ -87,6 +91,13 @@ impl Game {
         self.state.screen = Screen::Campaign;
         self.state.overlay = Overlay::None;
         self.observer = Default::default();
+        let seed = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .map_or(0, |campaign| campaign.seed);
+        self.observer_log.start(seed, self.capture);
         self.reset_observer_views();
         self.navigation.reset(&mut self.view);
         self.refresh_projection();
@@ -103,6 +114,7 @@ impl Game {
             self.view = previous.view;
         }
         self.observer = Default::default();
+        self.observer_log.finish();
         self.reset_observer_views();
         self.state.main_menu();
     }
@@ -173,9 +185,43 @@ impl Game {
             return;
         }
         self.observer.reset_clock();
-        if let Err(error) = self.state.advance_observer(&self.data) {
-            self.observer.set_paused(true);
-            self.error = Some(error.to_string());
+        let Some(before) = self
+            .state
+            .campaign
+            .as_ref()
+            .and_then(Campaign::strategic)
+            .map(super::observer_log::ObserverSnapshot::capture)
+        else {
+            return;
+        };
+        match self.advance_observer_for_log() {
+            Ok(step) => {
+                if let Some(after) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
+                    self.observer_log.record(&before, after, &step, &self.data);
+                }
+            }
+            Err(error) => {
+                if let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) {
+                    self.observer_log.record_failure(
+                        &before,
+                        campaign,
+                        &self.data,
+                        &error.to_string(),
+                    );
+                }
+                self.observer.set_paused(true);
+                self.error = Some(error.to_string());
+            }
+        }
+    }
+
+    fn advance_observer_for_log(
+        &mut self,
+    ) -> Result<kestrum::engine::ObserverStepOutcome, kestrum::engine::RuleError> {
+        if cfg!(target_arch = "wasm32") {
+            self.state.advance_observer_without_diagnostics(&self.data)
+        } else {
+            self.state.advance_observer_diagnosed(&self.data)
         }
     }
 

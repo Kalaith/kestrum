@@ -61,6 +61,7 @@ pub use notifications::{
     NotificationSettingsCategory, NotificationTab,
 };
 pub use observer::controls_contain as observer_controls_contain;
+pub use observer::ObserverEventLog;
 pub use overview::attention_bounds;
 pub use overview::{controls_contain as overview_controls_contain, OverviewView};
 pub use saves::{SaveMode, SaveRow, SaveView};
@@ -216,6 +217,7 @@ pub enum UiAction {
     StepObserver,
     SetObserverSpeed(u8),
     OpenObserverKingdoms,
+    ObserverLogPage(i32),
     FocusObserverFaction(kestrum::data::world::FactionId),
     ConfirmNew,
     OpenSetupName,
@@ -392,6 +394,7 @@ pub struct Context<'a> {
     pub setup: &'a SetupView,
     pub campaign_view: Option<&'a kestrum::engine::VisibleCampaign>,
     pub observer: &'a kestrum::state::observer::ObserverPlayback,
+    pub observer_log: &'a ObserverEventLog,
 }
 
 impl Context<'_> {
@@ -460,6 +463,7 @@ fn draw_sheet(ctx: &Context<'_>) -> Option<UiAction> {
         Overlay::Setup => setup::draw(ctx),
         Overlay::ObserverSetup => observer::draw_setup(ctx),
         Overlay::ObserverKingdoms => observer::draw_kingdoms(ctx),
+        Overlay::ObserverLog => observer::draw_log(ctx),
         Overlay::CampaignEnd => campaign_end::draw(ctx),
         Overlay::Threat => threat::draw(ctx),
         Overlay::Siege => siege::draw(ctx),

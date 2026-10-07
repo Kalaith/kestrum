@@ -26,6 +26,14 @@ pub struct AiDecision {
     pub command: Command,
     pub objective: Option<AiObjective>,
     pub intent: AiIntent,
+    pub diagnostics: Vec<String>,
+}
+
+#[derive(Default)]
+struct CandidateTrace {
+    evaluated: u32,
+    rejection_counts: std::collections::BTreeMap<String, u32>,
+    examples: Vec<String>,
 }
 
 struct Planner<'a> {
@@ -36,12 +44,31 @@ struct Planner<'a> {
     objective: Option<AiObjective>,
     routes: ObservedRoutes,
     rejected_candidates: std::cell::RefCell<Vec<Command>>,
+    include_diagnostics: bool,
+    candidate_trace: std::cell::RefCell<CandidateTrace>,
 }
 
 pub fn propose(
     campaign: &StrategicCampaign,
     data: &GameData,
     faction: FactionId,
+) -> Result<AiDecision, RuleError> {
+    propose_with_diagnostics(campaign, data, faction, false)
+}
+
+pub fn propose_diagnosed(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    faction: FactionId,
+) -> Result<AiDecision, RuleError> {
+    propose_with_diagnostics(campaign, data, faction, true)
+}
+
+fn propose_with_diagnostics(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    faction: FactionId,
+    include_diagnostics: bool,
 ) -> Result<AiDecision, RuleError> {
     data.validate().map_err(RuleError::InvalidState)?;
     campaign.validate(data).map_err(RuleError::InvalidState)?;
@@ -75,13 +102,20 @@ pub fn propose(
         objective: None,
         routes,
         rejected_candidates: Default::default(),
+        include_diagnostics,
+        candidate_trace: Default::default(),
     };
     planner.objective = planner.retained_objective();
     if campaign.ai.factions.get(&faction).is_some_and(|state| {
         state.phase_round == campaign.completed_rounds
             && state.accepted_commands >= data.ai.max_commands_per_phase
     }) {
-        return Ok(planner.pass());
+        let decision = planner.pass();
+        return Ok(if include_diagnostics {
+            planner.finish(decision)
+        } else {
+            decision
+        });
     }
     let emergency = planner.threatened_headquarters();
     if emergency {
@@ -118,7 +152,12 @@ pub fn propose(
         .or_else(|| planner.attack())
         .or_else(|| planner.declare_war())
         .or_else(|| planner.border());
-    Ok(decision.unwrap_or_else(|| planner.pass()))
+    let decision = decision.unwrap_or_else(|| planner.pass());
+    Ok(if include_diagnostics {
+        planner.finish(decision)
+    } else {
+        decision
+    })
 }
 
 /// Called only after the ordinary command succeeds in the parent's atomic candidate.
@@ -175,6 +214,9 @@ pub fn rejected(
 impl Planner<'_> {
     fn choose(&self, command: Command, objective: Option<AiObjective>) -> Option<AiDecision> {
         let intent = intent::of(&command)?;
+        if self.include_diagnostics {
+            self.candidate_trace.borrow_mut().evaluated += 1;
+        }
         if self
             .campaign
             .ai
@@ -186,25 +228,18 @@ impl Planner<'_> {
             })
             || self.rejected_candidates.borrow().contains(&command)
         {
+            self.record_rejection(
+                &command,
+                "the same intent was already rejected at this campaign state",
+            );
             return None;
         }
         // The planner issues one edge at a time. Saving an unaffordable edge
         // repeatedly would spend its entire command budget without travelling.
-        let can_act = self.candidate_allowed(&command).is_ok()
-            && match &command {
-                Command::Move(order) => {
-                    super::movement::preview_order(self.campaign, self.data, self.owner, order)
-                        .is_ok_and(|route| route.can_confirm() && route.reachable_steps > 0)
-                }
-                _ => preview(
-                    self.campaign,
-                    self.data,
-                    Actor::Npc(self.owner),
-                    command.clone(),
-                )
-                .is_ok(),
-            };
-        if !can_act {
+        if let Err(reason) = self.check_candidate(&command) {
+            if let Some(reason) = reason {
+                self.record_rejection(&command, &reason);
+            }
             self.rejected_candidates.borrow_mut().push(command);
             return None;
         }
@@ -212,7 +247,195 @@ impl Planner<'_> {
             command,
             objective,
             intent,
+            diagnostics: Vec::new(),
         })
+    }
+
+    fn check_candidate(&self, command: &Command) -> Result<(), Option<String>> {
+        self.candidate_allowed(command)
+            .map_err(|error| self.include_diagnostics.then(|| error.to_string()))?;
+        if let Command::Move(order) = command {
+            let route = super::movement::preview_order(self.campaign, self.data, self.owner, order)
+                .map_err(|error| self.include_diagnostics.then(|| error.to_string()))?;
+            if route.can_confirm() && route.reachable_steps > 0 {
+                return Ok(());
+            }
+            if let Some(stop) = route.blocked.as_ref().or(route.stop.as_ref()) {
+                return Err(self
+                    .include_diagnostics
+                    .then(|| format!("route stops at site {}: {:?}", stop.site.0, stop.reason)));
+            }
+            return Err(self.include_diagnostics.then(|| {
+                format!(
+                    "route has no reachable step (remaining movement {})",
+                    route.remaining
+                )
+            }));
+        }
+        preview(
+            self.campaign,
+            self.data,
+            Actor::Npc(self.owner),
+            command.clone(),
+        )
+        .map(|_| ())
+        .map_err(|error| self.include_diagnostics.then(|| error.to_string()))
+    }
+
+    fn record_rejection(&self, command: &Command, reason: &str) {
+        if !self.include_diagnostics {
+            return;
+        }
+        let mut trace = self.candidate_trace.borrow_mut();
+        *trace.rejection_counts.entry(reason.to_owned()).or_default() += 1;
+        if trace.examples.len() < 12 {
+            trace.examples.push(format!("{command:?}: {reason}"));
+        }
+    }
+
+    fn finish(&self, mut decision: AiDecision) -> AiDecision {
+        decision.diagnostics = self.diagnostic_lines(&decision);
+        decision
+    }
+
+    fn diagnostic_lines(&self, decision: &AiDecision) -> Vec<String> {
+        let faction = &self.campaign.factions[&self.owner];
+        let owned = self
+            .view
+            .world
+            .sites
+            .iter()
+            .filter(|site| site.controller == Some(self.owner))
+            .count();
+        let neutral = self
+            .view
+            .world
+            .sites
+            .iter()
+            .filter(|site| site.controller.is_none())
+            .count();
+        let wars: Vec<_> = self
+            .view
+            .factions
+            .iter()
+            .filter(|other| self.at_war(other.id))
+            .map(|other| other.name.as_str())
+            .collect();
+        let budget = self.campaign.ai.factions.get(&self.owner);
+        let budget_reached = budget.is_some_and(|state| {
+            state.phase_round == self.campaign.completed_rounds
+                && state.accepted_commands >= self.data.ai.max_commands_per_phase
+        });
+        let mut lines = vec![format!(
+            "Faction {} (#{}): resources {:?}, territory {owned}, neutral sites {neutral}, wars {:?}, action budget {}/{}",
+            faction.name,
+            self.owner.0,
+            faction.resources,
+            wars,
+            budget.map_or(0, |state| state.accepted_commands),
+            self.data.ai.max_commands_per_phase
+        )];
+        lines.push(format!(
+            "Decision {:?}; objective {:?}; evaluated {} candidate commands",
+            decision.command,
+            decision.objective,
+            self.candidate_trace.borrow().evaluated
+        ));
+        for army in &self.view.armies {
+            let remaining = self
+                .campaign
+                .army_movement_remaining(army.id, self.data)
+                .unwrap_or(0);
+            let formation_summary: Vec<_> = army
+                .formation_ids()
+                .filter_map(|id| {
+                    self.view
+                        .formations
+                        .iter()
+                        .find(|formation| formation.id == id)
+                })
+                .map(|formation| {
+                    format!(
+                        "{:?} {}/{}",
+                        formation.kind, formation.headcount, formation.capacity
+                    )
+                })
+                .collect();
+            let location = self
+                .view
+                .world
+                .site(army.site)
+                .map_or("unknown", |site| site.name.as_str());
+            let active_siege = self
+                .view
+                .sieges
+                .iter()
+                .any(|siege| siege.own_armies.contains(&army.id));
+            let building = self
+                .view
+                .construction
+                .iter()
+                .any(|order| order.is_open() && order.builder == Some(army.id));
+            let reachable_targets =
+                if matches!(&decision.command, Command::EndTurn) && self.moving(army, false) {
+                    self.view
+                        .world
+                        .sites
+                        .iter()
+                        .filter(|site| {
+                            site.controller.is_none()
+                                || site
+                                    .controller
+                                    .is_some_and(|owner| owner != self.owner && self.at_war(owner))
+                        })
+                        .filter(|site| {
+                            self.path(
+                                army.site,
+                                site.id,
+                                site.controller.is_some_and(|owner| self.at_war(owner)),
+                            )
+                            .is_some_and(|(_, path)| path.len() > 1)
+                        })
+                        .count()
+                } else {
+                    0
+                };
+            lines.push(format!(
+                "Army {} {} at {} (#{}): movement {remaining}, supplied {}, weak {}, siege {}, builder {}, formations {:?}{}",
+                army.id.0,
+                army.name,
+                location,
+                army.site.0,
+                self.campaign.army_is_supplied(army.id),
+                self.weak(army),
+                active_siege,
+                building,
+                formation_summary,
+                if matches!(&decision.command, Command::EndTurn) {
+                    format!(", reachable neutral/war targets {reachable_targets}")
+                } else {
+                    String::new()
+                }
+            ));
+        }
+        let trace = self.candidate_trace.borrow();
+        for (reason, count) in &trace.rejection_counts {
+            lines.push(format!("Rejected {count} candidate(s): {reason}"));
+        }
+        lines.extend(
+            trace
+                .examples
+                .iter()
+                .map(|example| format!("Candidate: {example}")),
+        );
+        if matches!(&decision.command, Command::EndTurn) {
+            lines.push(if budget_reached {
+                "Pass cause: the faction reached its accepted-command limit for this phase.".into()
+            } else {
+                "Pass cause: no eligible planner priority produced a legal command; inspect army movement, supply, target reachability and candidate rejection details above.".into()
+            });
+        }
+        lines
     }
 
     fn pass(&self) -> AiDecision {
@@ -223,6 +446,7 @@ impl Planner<'_> {
                 kind: AiIntentKind::Pass,
                 targets: Vec::new(),
             },
+            diagnostics: Vec::new(),
         }
     }
 

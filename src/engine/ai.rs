@@ -145,6 +145,10 @@ fn propose_with_diagnostics(
             planner
                 .objective
                 .as_ref()
+                .filter(|objective| {
+                    objective.kind != AiObjectiveKind::Border
+                        || !planner.posted_border_post(objective.site)
+                })
                 .map(|_| planner.pursue().unwrap_or_else(|| planner.pass()))
         })
         .or_else(|| planner.clear_threat())
@@ -470,11 +474,13 @@ impl Planner<'_> {
             .get(&self.owner)?
             .objective
             .as_ref()?;
-        if self
+        let expired = self
             .campaign
             .completed_rounds
             .saturating_sub(objective.chosen_round)
-            >= self.data.ai.objective_rounds
+            >= self.data.ai.objective_rounds;
+        if expired
+            && !(objective.kind == AiObjectiveKind::Border && self.border_post(objective.site))
         {
             return None;
         }
@@ -498,7 +504,7 @@ impl Planner<'_> {
                 .iter()
                 .any(|threat| threat.site == site.id),
             AiObjectiveKind::Attack => site.controller.is_some_and(|owner| self.at_war(owner)),
-            AiObjectiveKind::Border => site.controller == Some(self.owner),
+            AiObjectiveKind::Border => self.border_post(site.id),
         };
         valid.then(|| objective.clone())
     }

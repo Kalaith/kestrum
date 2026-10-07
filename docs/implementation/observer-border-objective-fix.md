@@ -1,6 +1,6 @@
 # Stop AI armies oscillating between border sites
 
-**Status:** Planned implementation handoff. The fix is not implemented.
+**Status:** Implemented in the shared AI planner. The regression covers war-time posting, retention through objective expiry, and the war-to-peace transition.
 
 ## Symptom and evidence
 
@@ -102,3 +102,34 @@ run the full suite at an integration boundary. Run formatting, strict
 all-target/all-feature Clippy and the source-size gate. Report the inherited
 seed-88 round-240 production-victory failure as a failure/baseline exception,
 not a pass. Do not run `publish.ps1`.
+
+## Implementation result
+
+Border posts now require an active-war neighbor or an observed local hostile
+presence/threat. A Border objective remains attached to its qualifying post
+while that need persists. Once an army occupies the post, the planner treats
+the Border objective as satisfied, keeps that army out of further Border
+retargeting, and continues through its other priorities. Once the war ends and
+no observed local need remains, the objective becomes invalid. The
+implementation does not change the global objective lifetime.
+
+The deterministic regression in `tests/ai_review.rs` checks a legal Site 6 to
+Site 5 Border move during war, holds the post through multiple expiry windows
+while another post is available, verifies that a newly available expansion
+target can trigger a later order, and checks that peace clears the Border
+objective without further border movement.
+
+## Validation
+
+- `cargo fmt -p kestrum -- --check` passed.
+- The focused `border_post_stays_fixed_during_war_and_stops_being_an_objective_at_peace`
+  regression and the AI, AI routes, diplomacy, movement, and Observer test
+  targets passed.
+- Strict all-target/all-feature Clippy passed with `-D warnings`.
+- The `code_standards` source-size gate passed; all Rust files remain within
+  the 800-line limit.
+- The full `--locked --all-features --no-fail-fast` suite exited 1 only because
+  `k18_production_battle::four_faction_production_campaign_reaches_victory_and_roundtrips_terminal_save`
+  observed `Defeat` instead of `Victory` at the 240-round cap with seed 88.
+  This is the documented baseline exception; every other target passed.
+- `publish.ps1` was deliberately not run under the Kestrum validation override.

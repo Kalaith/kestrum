@@ -4,14 +4,16 @@ use kestrum::{
     data::{
         economy::{Resources, TroopKind},
         progression::TrainingDiscipline,
-        world::{FactionId, PersonClass, SiteId},
+        world::{DiplomaticState, FactionId, PersonClass, SiteId},
         GameData,
     },
     engine::{advance_npc, ai, apply, Actor, Command},
     state::{
+        ai::{AiObjective, AiObjectiveKind},
         construction::Focus,
         military::ArmyId,
         people::{PersonAssignment, PersonId},
+        threat::ThreatStatus,
         Campaign, StrategicCampaign,
     },
 };
@@ -130,6 +132,112 @@ fn npc_approaches_distant_observed_threat_without_entering_it_or_using_unknown_s
     campaign.armies.get_mut(&spotter).unwrap().site = SiteId(2);
     let unknown = ai::propose(&campaign, &data, NPC).unwrap();
     assert!(!matches!(unknown.command, Command::ClearThreat { .. }));
+}
+
+#[test]
+fn border_post_stays_fixed_during_war_and_stops_being_an_objective_at_peace() {
+    let (mut data, mut campaign, objective, spotter) = border_post_fixture();
+    // Keep this frontier regression from adding unrelated new wars after its scout split.
+    data.ai.target_armies = 3;
+    set_relation(&mut campaign, FactionId(1), DiplomaticState::War);
+    set_last_offer_this_round(&mut campaign, FactionId(1));
+    let approach = ai::propose(&campaign, &data, NPC).unwrap();
+    assert!(
+        matches!(&approach.command, Command::Move(order)
+            if order.path == [SiteId(6), SiteId(5)]),
+        "{approach:?}"
+    );
+    assert_eq!(approach.objective, Some(objective.clone()));
+    assert_eq!(approach, ai::propose(&campaign, &data, NPC).unwrap());
+    advance_npc(&mut campaign, &data).unwrap();
+    assert_eq!(campaign.armies[&ArmyId(2)].site, SiteId(5));
+    assert_eq!(
+        campaign.ai.factions[&NPC].objective,
+        Some(objective.clone())
+    );
+    for formation in campaign.armies[&ArmyId(2)].formation_ids() {
+        campaign.formations.get_mut(&formation).unwrap().headcount = 1;
+    }
+    campaign.armies.get_mut(&spotter).unwrap().site = SiteId(5);
+
+    for _ in 0..=data.ai.objective_rounds * 2 {
+        set_zero_resources(&mut campaign, NPC);
+        set_last_offer_this_round(&mut campaign, FactionId(1));
+        assert_npc_turn_does_not_move(&mut campaign, &data, Some(&objective));
+        assert!(!matches!(
+            campaign.ai.factions[&NPC].objective.as_ref(),
+            Some(retained)
+                if retained.kind == AiObjectiveKind::Border && retained.site != objective.site
+        ));
+        advance_to_next_npc_turn(&mut campaign, &data);
+    }
+
+    assert!(campaign.completed_rounds >= data.ai.objective_rounds * 2);
+    let mut expired_post = campaign.clone();
+    let state = expired_post.ai.factions.entry(NPC).or_default();
+    state.objective = Some(objective.clone());
+    state.phase_round = expired_post.completed_rounds;
+    state.accepted_commands = data.ai.max_commands_per_phase;
+    let retained = ai::propose(&expired_post, &data, NPC).unwrap();
+    assert_eq!(retained.command, Command::EndTurn);
+    assert_eq!(retained.objective, Some(objective.clone()));
+
+    let mut changed = campaign.clone();
+    let state = changed.ai.factions.entry(NPC).or_default();
+    state.objective = Some(objective.clone());
+    state.phase_round = changed.completed_rounds;
+    state.accepted_commands = 0;
+    changed
+        .set_site_control(&data, SiteId(7), None, false)
+        .unwrap();
+    let blocked = ai::propose(&changed, &data, NPC).unwrap();
+    assert!(matches!(blocked.command, Command::InviteApprentice { .. }));
+    let before_rejection = changed.clone();
+    ai::rejected(&mut changed, &before_rejection, &data, NPC, &blocked).unwrap();
+    for formation in changed.armies[&spotter].formation_ids() {
+        let formation = changed.formations.get_mut(&formation).unwrap();
+        formation.headcount = formation.capacity;
+        formation.movement_spent = 0;
+    }
+    let mut later = ai::propose(&changed, &data, NPC).unwrap();
+    for _ in 0..data.ai.max_commands_per_phase {
+        if !matches!(later.command, Command::InviteApprentice { .. }) {
+            break;
+        }
+        let before_rejection = changed.clone();
+        ai::rejected(&mut changed, &before_rejection, &data, NPC, &later).unwrap();
+        later = ai::propose(&changed, &data, NPC).unwrap();
+    }
+    assert!(
+        matches!(&later.command, Command::Move(order)
+            if order.path == [SiteId(5), SiteId(6)]),
+        "{later:?}"
+    );
+    assert!(matches!(
+        later.objective,
+        Some(objective) if objective.kind == AiObjectiveKind::Expand && objective.site == SiteId(7)
+    ));
+
+    set_relation(&mut campaign, FactionId(1), DiplomaticState::Peace);
+    for _ in 0..=data.ai.objective_rounds * 2 {
+        let state = campaign.ai.factions.entry(NPC).or_default();
+        state.objective = Some(objective.clone());
+        state.phase_round = campaign.completed_rounds;
+        state.accepted_commands = 0;
+        set_zero_resources(&mut campaign, NPC);
+        let decision = ai::propose(&campaign, &data, NPC).unwrap();
+        assert!(
+            !matches!(&decision.command, Command::Move(_)),
+            "{decision:?}"
+        );
+        assert!(!matches!(
+            decision.objective.as_ref(),
+            Some(retained) if retained.kind == AiObjectiveKind::Border
+        ));
+        assert_eq!(decision, ai::propose(&campaign, &data, NPC).unwrap());
+        assert_npc_turn_does_not_move(&mut campaign, &data, None);
+        advance_to_next_npc_turn(&mut campaign, &data);
+    }
 }
 
 #[test]
@@ -401,4 +509,166 @@ fn command_apprentice_enters_field() {
         4
     );
     assert_eq!(reload(&campaign, &data), campaign);
+}
+
+fn border_post_fixture() -> (GameData, StrategicCampaign, AiObjective, ArmyId) {
+    let (data, mut campaign) = fixture();
+    let completed_rounds = campaign.completed_rounds;
+    for threat in campaign.threats.values_mut() {
+        threat.headcount = 0;
+        threat.status = ThreatStatus::Cleared {
+            round: completed_rounds,
+            by: NPC,
+            payout: Resources {
+                gold: 0,
+                wood: 0,
+                stone: 0,
+            },
+        };
+    }
+    for site in campaign.world.sites.clone() {
+        let owner = site.controller.unwrap_or(NPC);
+        if campaign.world.site(site.id).unwrap().controller != Some(owner) {
+            campaign
+                .set_site_control(&data, site.id, Some(owner), false)
+                .unwrap();
+        }
+    }
+    let formation = campaign.armies[&ArmyId(2)].formation_ids().last().unwrap();
+    let spotter = apply(
+        &mut campaign,
+        &data,
+        Actor::Npc(NPC),
+        Command::SplitArmy { formation },
+    )
+    .unwrap()
+    .split_army
+    .unwrap();
+    campaign.armies.get_mut(&ArmyId(2)).unwrap().site = SiteId(6);
+    campaign.armies.get_mut(&spotter).unwrap().site = SiteId(7);
+    for formation in campaign
+        .formations
+        .values_mut()
+        .filter(|formation| formation.faction == NPC)
+    {
+        formation.headcount = (formation.capacity * 41 / 100 + 1).min(formation.capacity);
+        formation.movement_spent = 0;
+    }
+    for formation in campaign.armies[&spotter].formation_ids() {
+        let formation = campaign.formations.get_mut(&formation).unwrap();
+        formation.movement_spent = formation.movement_allowance(&data);
+    }
+    set_zero_resources(&mut campaign, NPC);
+    campaign.validate(&data).unwrap();
+    (
+        data,
+        campaign,
+        AiObjective {
+            site: SiteId(5),
+            chosen_round: 0,
+            kind: AiObjectiveKind::Border,
+        },
+        spotter,
+    )
+}
+
+fn set_relation(campaign: &mut StrategicCampaign, other: FactionId, state: DiplomaticState) {
+    let factions = faction_pair(other);
+    let round = campaign.completed_rounds;
+    campaign
+        .relations
+        .iter_mut()
+        .find(|relation| relation.factions == factions)
+        .unwrap()
+        .state = state;
+    let pair = campaign
+        .diplomacy
+        .pairs
+        .iter_mut()
+        .find(|pair| pair.factions == factions)
+        .unwrap();
+    pair.peace_since = (state == DiplomaticState::Peace).then_some(round);
+    pair.truce_until = None;
+}
+
+fn set_last_offer_this_round(campaign: &mut StrategicCampaign, other: FactionId) {
+    let factions = faction_pair(other);
+    let round = campaign.completed_rounds;
+    let pair = campaign
+        .diplomacy
+        .pairs
+        .iter_mut()
+        .find(|pair| pair.factions == factions)
+        .unwrap();
+    pair.last_offer_round = Some(round);
+}
+
+fn faction_pair(other: FactionId) -> [FactionId; 2] {
+    if NPC.0 < other.0 {
+        [NPC, other]
+    } else {
+        [other, NPC]
+    }
+}
+
+fn set_zero_resources(campaign: &mut StrategicCampaign, faction: FactionId) {
+    campaign.factions.get_mut(&faction).unwrap().resources = Resources {
+        gold: 0,
+        wood: 0,
+        stone: 0,
+    };
+    for site in campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(faction))
+    {
+        campaign.world.focus.insert(site.id, Focus::Gold);
+    }
+}
+
+fn assert_npc_turn_does_not_move(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    expected_border: Option<&AiObjective>,
+) {
+    let mut commands = 0;
+    while campaign.active_faction() == NPC {
+        let decision = ai::propose(campaign, data, NPC).unwrap();
+        assert!(
+            !matches!(&decision.command, Command::Move(_)),
+            "{decision:?}"
+        );
+        assert_eq!(decision, ai::propose(campaign, data, NPC).unwrap());
+        if let Some(expected) = expected_border {
+            assert!(
+                !matches!(
+                    decision.objective.as_ref(),
+                    Some(retained)
+                        if retained.kind == AiObjectiveKind::Border && retained.site != expected.site
+                ),
+                "{decision:?}"
+            );
+        } else {
+            assert!(!matches!(
+                decision.objective.as_ref(),
+                Some(retained) if retained.kind == AiObjectiveKind::Border
+            ));
+        }
+        advance_npc(campaign, data).unwrap();
+        commands += 1;
+        assert!(commands <= data.ai.max_commands_per_phase);
+    }
+}
+
+fn advance_to_next_npc_turn(campaign: &mut StrategicCampaign, data: &GameData) {
+    let round = campaign.completed_rounds;
+    while campaign.completed_rounds == round || campaign.active_faction() != NPC {
+        let actor = if campaign.active_faction() == campaign.player {
+            Actor::Player
+        } else {
+            Actor::Npc(campaign.active_faction())
+        };
+        apply(campaign, data, actor, Command::EndTurn).unwrap();
+    }
 }

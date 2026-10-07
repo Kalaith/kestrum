@@ -1,5 +1,3 @@
 * Verify title startup and capital border colours through Continue with an existing on-disk save; hidden captures covered title, in-memory Continue, fresh capital and loaded regional rendering.
 * Investigate the shared capture harness's miniquad integer-overflow panic when batching title and observer_world; both scenes pass separately. Outside this task's scope.
 * Remove the four verified failed-capture logs in `docs/verification/` when policy allows: `.capture_stdout_32012.log`, `.capture_stderr_32012.log`, `.capture_stdout_404.log`, `.capture_stderr_404.log`. Automatic approval review rejected exact-path cleanup with `blocked by policy`; they remain untracked. City-region implementation, native tutorial completion and browser acceptance are complete; see `docs/verification/city-regions.md`.
-* Stop AI armies oscillating between peaceful border sites; implement the
-  regression and behavior in [the observer border objective handoff](docs/implementation/observer-border-objective-fix.md).

@@ -74,6 +74,7 @@ impl Planner<'_> {
             .armies
             .iter()
             .filter(|army| self.moving(army, emergency))
+            .filter(|army| kind != AiObjectiveKind::Border || !self.posted_border_post(army.site))
             .filter_map(|army| {
                 self.path(
                     army.site,
@@ -223,6 +224,32 @@ impl Planner<'_> {
         .find_map(|site| self.toward(site, AiObjectiveKind::Expand, false))
     }
 
+    pub(super) fn border_post(&self, id: SiteId) -> bool {
+        self.view.world.site(id).is_some_and(|post| {
+            post.controller == Some(self.owner)
+                && self
+                    .view
+                    .world
+                    .adjacent_sites(post.id)
+                    .into_iter()
+                    .any(|neighbor| {
+                        self.view.hostile_presence.contains(&neighbor)
+                            || self
+                                .view
+                                .threats
+                                .iter()
+                                .any(|threat| threat.site == neighbor)
+                            || self.view.world.site(neighbor).is_some_and(|adjacent| {
+                                adjacent.controller.is_some_and(|owner| self.at_war(owner))
+                            })
+                    })
+        })
+    }
+
+    pub(super) fn posted_border_post(&self, id: SiteId) -> bool {
+        self.border_post(id) && self.view.armies.iter().any(|army| army.site == id)
+    }
+
     pub(super) fn border(&self) -> Option<AiDecision> {
         let borders = self
             .view
@@ -230,17 +257,8 @@ impl Planner<'_> {
             .sites
             .iter()
             .filter(|site| {
-                site.controller == Some(self.owner)
-                    && self
-                        .view
-                        .world
-                        .adjacent_sites(site.id)
-                        .into_iter()
-                        .any(|next| {
-                            self.view.world.site(next).is_some_and(|site| {
-                                site.controller.is_some_and(|owner| owner != self.owner)
-                            })
-                        })
+                self.border_post(site.id)
+                    && !self.view.armies.iter().any(|army| army.site == site.id)
             })
             .map(|site| site.id);
         self.targets(borders)

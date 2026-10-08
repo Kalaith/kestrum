@@ -64,8 +64,21 @@ Progress survives save/load and transfers, and never imports the receiving
 formation's history. Specific supported deeds can ground an epithet; ordinary
 qualifying service is enough for the general Battle Service epithet. Recognition
 preserves the person, portrait, Recruit profession and host troop kind, and does
-not appoint them as commander. The detail screen's compact progress display is
-tracked in the presentation slice of the formation-to-Hero plan.
+not appoint them as commander. Army Details labels emerging members Apprentice
+and recognized members Hero. The person's Career detail shows personal Hero
+service as qualifying engagements fought while fit.
+
+### Army and person presentation brief
+
+| Question | Decision |
+| --- | --- |
+| Current decision | Identify who serves in each formation and whether an apprentice is nearing Hero recognition and could later replace a vacant commander. |
+| Dominant focus | Keep the selected army's six formation rows, troop type and named member prominent; the map remains dominant during map play. |
+| Primary action | Tap the visible People control from Army Details, then open the person's Career detail; army orders stay available from the same screen. |
+| Supporting information | Keep the same portrait, Apprentice/Hero title, fitness, troop kind and `x / 3` personal engagement progress beside the person. |
+| Deferred information | Keep qualifying dates, places and specific deeds in the person's History detail. |
+| Layout and camera | Preserve the existing six-row Army Details layout and map camera at the sole supported 1920×1080 canvas. |
+| Input and feedback | Use visible touch-sized controls and distinct emergence and later recognition receipts; both transitions remain in history. |
 
 ## Retrospective grounding
 

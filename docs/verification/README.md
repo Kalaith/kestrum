@@ -70,6 +70,7 @@ remain historical evidence and do not define another acceptance target.
 
 | Record | What it establishes |
 | --- | --- |
+| [Formation-to-Hero discovery — 2026-10-08](formation-hero-discovery.md) | Apprentice and Hero army presentation, personal service detail and accepted-command capture path; production pacing and integration checks remain pending |
 | [Border visuals — 2026-10-02](border-visuals.md) | Clearer two-sided political borders, native review of eight colors and seven map/menu states, browser loading/campaign smoke check, and final engineering results; records the inherited regional mask limitation and production-victory failure |
 | [Early Stellaris review — 2026-10-02](stellaris-release-review.md) | Documentation-only campaign lessons review; links, diff scope and source archive checks, including the pre-existing template README manifest mismatch |
 | [Observer mode — 2026-10-02](observer.md) | Separate AI-only sessions, full visibility, automatic decisions, playback pacing, read-only inspections and human-campaign restoration |

@@ -29,6 +29,8 @@ pub(super) const PROGRESSION_TEXT: &[&str] = &[
     "person_age_label",
     "person_title_lord",
     "person_title_hero",
+    "person_title_apprentice",
+    "hero_progress_detail",
     "person_founding_lord",
     "setup_founding_lord",
     "emerged_served_with",

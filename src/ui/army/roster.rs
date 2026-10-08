@@ -73,6 +73,18 @@ pub(super) fn draw(ctx: &Context<'_>, campaign: &VisibleCampaign) -> Option<UiAc
     if current.is_some()
         && button(
             ctx,
+            Rect::new(530.0, 626.0, 160.0, 48.0),
+            &ctx.text("army_people"),
+            true,
+            false,
+        )
+    {
+        return Some(UiAction::ArmyPeople);
+    }
+
+    if current.is_some()
+        && button(
+            ctx,
             Rect::new(700.0, 626.0, 202.0, 48.0),
             &ctx.text("new_army"),
             true,

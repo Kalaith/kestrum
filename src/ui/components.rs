@@ -14,6 +14,8 @@ pub fn person_name(ctx: &Context<'_>, person: &kestrum::state::people::Person) -
         format!("{} {}", ctx.text("person_title_lord"), person.name)
     } else if person.career.recognition.is_some() {
         format!("{} {}", ctx.text("person_title_hero"), person.name)
+    } else if person.career.emergence.is_some() {
+        format!("{} {}", ctx.text("person_title_apprentice"), person.name)
     } else {
         person.name.clone()
     }

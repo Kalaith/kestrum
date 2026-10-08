@@ -35,7 +35,7 @@ fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
         Rect::new(112.0, 160.0, 128.0, 128.0),
     );
     let mut y = 170.0;
-    for line in wrap_text_ex(&person.name, 908.0, ctx.body_font(), 22.0) {
+    for line in wrap_text_ex(&person_name(ctx, person), 908.0, ctx.body_font(), 22.0) {
         body(ctx, &line, vec2(260.0, y), 22.0, CREAM);
         y += 24.0;
     }
@@ -116,6 +116,21 @@ fn identity(ctx: &Context<'_>, campaign: &VisibleCampaign, person: &Person) {
             body(ctx, &line, vec2(260.0, y), 14.0, BRASS);
             y += 16.0;
         }
+    }
+    if person.career.recognition.is_none()
+        && (person.career.emergence.is_some() || person.career.hero_service_progress > 0)
+    {
+        let progress = ctx
+            .text("hero_progress_detail")
+            .replace(
+                "{progress}",
+                &person.career.hero_service_progress.to_string(),
+            )
+            .replace(
+                "{total}",
+                &ctx.progression.recognition.personal_engagements.to_string(),
+            );
+        draw_person_detail(ctx, &progress, vec2(260.0, y), 908.0, 14.0, BRASS, 1);
     }
     draw_traits(ctx, person, campaign);
 }

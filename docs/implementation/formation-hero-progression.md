@@ -1,9 +1,9 @@
 # Formation recruits earn Hero status
 
-Status: active implementation, 2026-10-08. Stage A's Observer baseline and Stage B's
-vacant-formation emergence are committed. Stage C's personal Hero progression now
-passes focused battle, save/load, transfer, notification and integration checks.
-Presentation, production replay, and full-project validation remain. This plan's
+Status: active implementation, 2026-10-08. Stages A-C are committed. Stage D's
+Apprentice/Hero presentation, personal progress detail, accepted-path capture and
+People-to-Career route are implemented and validated. The production replay,
+replacement lifecycle scenario and full-project validation remain. This plan's
 source investigation used master commit 5ed5429; implementation decisions follow
 the current checkout.
 

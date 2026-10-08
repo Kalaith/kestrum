@@ -91,13 +91,14 @@ recognition once. A personal name, recognition, class and command appointment
 remain distinct, and recognition does not add a formation member, change class,
 or displace a living commander.
 
-Roster identity uses the Lord title for founding nobility and Hero for formal
-recognition; these are presentation of existing status, not additional classes
-or combat multipliers. A named or recognized person stays visible beside their
-current host troop type until reassigned, displaced or dead. Their profession
-does not convert that formation, and command appointment alone does not change
-attachment. Emergence within Archers can therefore become `Name + Archers`, then
-`Hero Name + Archers` after recognition. Founders start as `Lord Name + Warriors`.
+Roster identity uses the Lord title for founding nobility, Apprentice for an
+emergent formation recruit and Hero for formal recognition; these present
+existing status, not additional classes or combat multipliers. A named or
+recognized person stays visible beside their current host troop type until
+reassigned, displaced or dead. Their profession does not convert that
+formation, and command appointment alone does not change attachment. Emergence
+within Archers therefore reads `Apprentice Name + Archers`, then `Hero Name +
+Archers` after recognition. Founders start as `Lord Name + Warriors`.
 
 Record shared-service seasons and repeated opposing encounters as compact pair
 facts only for tracked people actually present. After two mutual combats, an

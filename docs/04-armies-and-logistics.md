@@ -52,7 +52,11 @@ The player chooses troop types, character placement, support, and siege equipmen
 
 Multiple eligible people improve an otherwise identical army with bounded contributions. Campaign leadership rules, formation leader snapshots, class abilities and appointment validation are implemented. Their values live in [campaign_rules.json](../assets/data/campaign_rules.json), [combat_rules.json](../assets/data/combat_rules.json) and [battle_tactics.json](../assets/data/battle_tactics.json). Concentrating talent trades strength for coverage; preserve the one-person-per-formation rule below.
 
-A newly emerging character may appear within a formation as “Elian + Warriors” and can later leave Commander Teresa's Briar Host to lead the Frostmarch Guard. That transfer reduces Briar Host's concentration of talent. Appointment validates the person's actual assignment, life status, fitness and eligibility; transfers follow O09's shared-node rule.
+A newly emerging character appears within a formation as “Apprentice Elian +
+Warriors” and can later leave Commander Teresa's Briar Host to lead the
+Frostmarch Guard. That transfer reduces Briar Host's concentration of talent.
+Appointment validates the person's actual assignment, life status, fitness and
+eligibility; transfers follow O09's shared-node rule.
 
 ### Characters belong inside formation slots
 
@@ -66,8 +70,9 @@ troops. An army-level Commander label alone does not communicate this membership
 The founding lord begins inside Warriors, so the first slot displays, for example,
 **Lord Catrin Cairn + Warriors**. A named character serving in an Archers slot
 can read **Hero Elian + Archers** once formally recognized.
-Before recognition it reads **Elian + Archers**. Profession, founding nobility,
-recognition and army command are independent of the host formation's troop type.
+Before recognition, a formation recruit reads **Apprentice Elian + Archers**.
+Profession, founding nobility, recognition and army command are independent of
+the host formation's troop type.
 
 | State | Formation label and behavior |
 | --- | --- |

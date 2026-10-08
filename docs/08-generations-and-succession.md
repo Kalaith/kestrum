@@ -110,7 +110,9 @@ Later recruits should reflect military families, temples, settlements, apprentic
 
 Most people remain abstract population. Deeper simulation is reserved for relevance through lineage, military service, mentorship, recognition, politics, or exceptional events. Sparse dependents, tracked juniors, active recognized figures, and historical figures need distinct treatment.
 
-**Confirmed direction (O23):** historical memory may be bounded and forgotten, including stories about famous dead people. Keep living people's state and facts required by current relationships, succession, and progression; prune unneeded narrative records under the [history policy](09-history-and-content.md#bounded-history-and-forgetting). Narrative retention and formation emergence are separate controls. Each vacant formation slot earns a Recruit after two distinct meaningful engagements; the rule has no roster-size gate or hard named-person cap. Campaign replays measure the resulting roster growth and pacing.
+**Confirmed direction (O23):** historical memory may be bounded and forgotten, including stories about famous dead people. Keep living people's state and facts required by current relationships, succession, and progression; prune unneeded narrative records under the [history policy](09-history-and-content.md#bounded-history-and-forgetting). Narrative retention and formation emergence are separate controls. The battle progression below has no roster-size gate or hard named-person cap; campaign replays measure roster growth and pacing.
+
+**Implemented battle progression (P17):** a surviving formation with troops earns an Apprentice after one qualifying meaningful engagement while its named-person slot is vacant. That tracked person earns Hero recognition after one later qualifying engagement personally fought while fit. The thresholds are loaded from progression data; the resulting person stays attached to the existing troop formation and does not add headcount. The deterministic four-faction replay and its mid-game army coverage are recorded in [formation-to-Hero verification](verification/formation-hero-progression.md).
 
 ## Generational acceptance cases
 

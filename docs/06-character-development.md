@@ -55,11 +55,11 @@ Warriors` from the first turn. Neither emergence nor recognition grants an extra
 troop or formation slot. Membership, multiple people, transfers and display
 overflow follow [the formation-slot contract](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 
-**Implemented battle emergence (O14):** each surviving formation with troops and a vacant named-person slot earns one named Recruit after two distinct meaningful engagements accepted while the slot is vacant. Progress uses the established participation classifier and resolves at the seasonal boundary. Each eligible formation is evaluated in stable ID order; no faction-wide candidate lottery, chance roll, veterancy multiplier, or named-roster pressure can block earned service. Seeded people RNG still selects the recruit's identity and disposition. This threshold is data-validated and is not a hard roster cap; tune against observed campaigns.
+**Implemented battle emergence (O14):** each surviving formation with troops and a vacant named-person slot earns one named Recruit after one meaningful engagement accepted while the slot is vacant. Progress uses the established participation classifier and resolves at the seasonal boundary. Each eligible formation is evaluated in stable ID order; no faction-wide candidate lottery, chance roll, veterancy multiplier, or named-roster pressure can block earned service. Seeded people RNG still selects the recruit's identity and disposition. This threshold is data-validated and is not a hard roster cap; tune against observed campaigns.
 
 **Implemented personal Hero progression (P17):** an emerging Recruit starts with
-zero Hero progress even when their formation has older service evidence. Three
-later meaningful engagements personally fought while fit grant recognition.
+zero Hero progress even when their formation has older service evidence. One
+later meaningful engagement personally fought while fit grants recognition.
 Progress survives save/load and transfers, and never imports the receiving
 formation's history. Specific supported deeds can ground an epithet; ordinary
 qualifying service is enough for the general Battle Service epithet. Recognition
@@ -75,7 +75,7 @@ service as qualifying engagements fought while fit.
 | Current decision | Identify who serves in each formation and whether an apprentice is nearing Hero recognition and could later replace a vacant commander. |
 | Dominant focus | Keep the selected army's six formation rows, troop type and named member prominent; the map remains dominant during map play. |
 | Primary action | Tap the visible People control from Army Details, then open the person's Career detail; army orders stay available from the same screen. |
-| Supporting information | Keep the same portrait, Apprentice/Hero title, fitness, troop kind and `x / 3` personal engagement progress beside the person. |
+| Supporting information | Keep the same portrait, Apprentice/Hero title, fitness, troop kind and data-defined personal engagement progress beside the person. |
 | Deferred information | Keep qualifying dates, places and specific deeds in the person's History detail. |
 | Layout and camera | Preserve the existing six-row Army Details layout and map camera at the sole supported 1920×1080 canvas. |
 | Input and feedback | Use visible touch-sized controls and distinct emergence and later recognition receipts; both transitions remain in history. |

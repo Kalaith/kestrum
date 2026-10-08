@@ -176,13 +176,14 @@ fn local_apprenticeship_class_and_retirement_leave_one_shared_dated_trace() {
 fn recognition_is_announced_once_and_observers_cannot_read_private_milestones() {
     use kestrum::state::evidence::EvidenceKind;
     let (data, mut campaign) = fixture();
+    let service_threshold = u32::from(data.progression.recognition.personal_engagements);
     let person = campaign.people.get_mut(&PersonId(1)).unwrap();
     person.evidence.counts.extend([
-        (EvidenceKind::Battle, 3),
-        (EvidenceKind::MeaningfulEncounter, 3),
+        (EvidenceKind::Battle, service_threshold),
+        (EvidenceKind::MeaningfulEncounter, service_threshold),
         (EvidenceKind::DefendedAnchor, 1),
     ]);
-    person.career.hero_service_progress = 3;
+    person.career.hero_service_progress = service_threshold as u8;
     person
         .career
         .hero_service_sites
@@ -191,10 +192,10 @@ fn recognition_is_announced_once_and_observers_cannot_read_private_milestones() 
         .career
         .hero_service_sites
         .insert(EpithetFact::DefendedAnchor, SiteId(1));
-    person
-        .evidence
-        .service_by_troop
-        .insert(kestrum::data::economy::TroopKind::Warriors, 3);
+    person.evidence.service_by_troop.insert(
+        kestrum::data::economy::TroopKind::Warriors,
+        service_threshold,
+    );
     person
         .career
         .notable_sites

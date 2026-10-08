@@ -1,9 +1,11 @@
 # Formation recruits earn Hero status
 
-Status: active implementation, 2026-10-08. Stages A-C are committed. Stage D's
-Apprentice/Hero presentation, personal progress detail, accepted-path capture and
-People-to-Career route are implemented and validated. The production replay,
-replacement lifecycle scenario and full-project validation remain. This plan's
+Status: active implementation, 2026-10-08. Stages A-D are committed. Stage E's
+threshold tuning, replacement lifecycle scenario and production replay are
+recorded in [verification](../verification/formation-hero-progression.md). The
+earned path works, but the replay has Hero-bearing members in only 6 of 13 armies
+at round 120, so the user's midgame majority target remains open. Full-project
+validation also retains five failing targets listed in that report. This plan's
 source investigation used master commit 5ed5429; implementation decisions follow
 the current checkout.
 
@@ -52,7 +54,7 @@ which currently covers succession arrivals/births but omits emergence. It also
 omits full person snapshots and serializes life changes only as history IDs in
 debug text. Old logs therefore cannot prove the formation-to-Hero conversion rate.
 
-Current source gaps:
+Initial implementation gaps (addressed in Stages B-D):
 
 1. emergence::advance chooses only the highest-service surviving formation per
    faction per season and rolls a roster-dependent chance. Its base probability
@@ -67,6 +69,10 @@ Current source gaps:
    it does not require three later engagements fought by the tracked apprentice.
 4. A named unrecognized person has a portrait but no explicit Apprentice stage
    or simple personal progress toward Hero in the current presentation.
+
+These describe the starting checkout, not the current contract. The open gap is
+campaign pacing: too few active armies receive a later qualifying battle after
+their Apprentice appears, as measured in Stage E.
 
 ## 3. Planned behavior
 
@@ -83,6 +89,10 @@ data. Adjust them only with relevant replay evidence and record the change.
 | Timing | Resolve through accepted seasonal evidence consumption; events appear at that boundary |
 | Randomness | Keep seeded identity/disposition generation; no random failure after earning a threshold |
 | Roster pressure | Settlement people and other formations' members do not block this formation's earned progression |
+
+These were starting values, not a user-specified cadence. Stage E records any
+replay-driven tuning and its effect below; the final JSON thresholds are the
+implemented contract.
 
 This is a deliberate planned replacement for the old random faction-wide emergence
 curve and the mandatory special-deed recognition gate. The old 20-30-person soft
@@ -131,13 +141,13 @@ be promoted to Hero by delayed evidence consumption.
 
 ### Personal Hero progression
 
-- The emergence-triggering encounter and earlier unit history cannot satisfy any
-  of the three subsequent personal engagements. The whole batch consumed before
+- The emergence-triggering encounter and earlier unit history cannot satisfy the
+  one later personal engagement. The whole batch consumed before
   creation is retrospective; the new person did not appear in those battle reports.
 - Store compact durable personal progress. A transfer preserves earned progress,
   but does not import the receiving formation's old history. Save/load, pruning
   narrative history and UI inspection cannot add, reset or duplicate credit.
-- Award recognition once at the third qualifying subsequent encounter. Keep
+- Award recognition once at the first qualifying subsequent encounter. Keep
   portrait identity, profession and host troop kind unchanged.
 - Special deeds still support traits and specific epithets. They are not an extra
   mandatory gate for basic Hero rank. Add a truthful general battle-service
@@ -268,7 +278,7 @@ the relevant README/GDD section before changing them:
 Show Apprentice Name + Warriors after emergence and Hero Name + Warriors after
 recognition. Apprentice here is the battle-progression stage, not a requirement
 for an active mentorship assignment. Keep the Recruit profession separate.
-A compact detail such as 'Hero progress: 1 / 3 engagements' must count personal
+A compact detail such as 'Hero progress: 0 / 1 engagements' must count personal
 qualifying service and explain the criterion through visible detail/help.
 Preserve founding Lord precedence and established portrait aging/identity.
 
@@ -292,7 +302,7 @@ transition against the recorded outcome; explain every missing transition. Repor
 aggregate birth/invitation counts separately from formation emergence.
 
 Add one real-command lifecycle scenario: troop-only formation -> apprentice ->
-three later qualifying engagements -> Hero -> legal vacant-command appointment;
+one later qualifying engagement -> Hero -> legal vacant-command appointment;
 then retirement/death opens a slot, and fresh formation service produces a new
 identity. Reload during the sequence and compare deterministic continuation.
 A scripted fixture proves the rule; a production replay proves opportunities and
@@ -303,6 +313,11 @@ Use seed 260926/four factions through round 200 as primary evidence. Use a secon
 fixed seed or an eight-faction replay only to address remaining roster-growth or
 candidate-starvation risk; record exact arguments and stop conditions. Do not
 chase an arbitrary total Hero count without checking actual qualifying exposure.
+For the user's midgame pacing goal, require more than half of the campaign's
+active armies to contain at least one recognized Hero at round 120. Count
+Apprentices separately; do not treat them as Heroes. The current 6/13 result
+does not pass, so keep the handoff open and investigate post-emergence exposure
+or distribution without crediting service a person did not witness.
 
 Update docs/06-character-development.md, docs/08-generations-and-succession.md,
 docs/implementation/people-and-places.md and the relevant decision register/README
@@ -319,9 +334,9 @@ coverage instead of deleting it or seeding counters as the only proof.
    apprentice in its own troop formation at the threshold; occupied candidates,
    other armies and settlement population do not interfere. Headcount and six-slot
    capacity stay unchanged; identity and age/service dates are valid.
-2. **Earned recognition:** zero personal progress at emergence, no Hero after
-   one/two later engagements, one Hero event after three, same portrait/ID/host
-   unit; no compulsory special deed and no inherited commander credit.
+2. **Earned recognition:** zero personal progress at emergence, then one Hero
+   event after the first later personal engagement; keep portrait/ID/host unit,
+   with no compulsory special deed or inherited commander credit.
 3. **Evidence boundaries:** trivial/duplicate/nonparticipating service gives no
    progress; meaningful personal participation does; same-season batching,
    preview, inspection, history pruning, transfer and reload cannot double-credit.
@@ -370,21 +385,14 @@ interactions distinct from human playtesting.
 Do not run publish.ps1, push or deploy: PROJECT_AGENTS.md authorizes local pooled
 builds and headless verification instead of external publication.
 
-## 7. Known tooling blocker from the investigation
+## 7. Tooling note — earlier blocker resolved
 
-During this chat both Windows PowerShell and PowerShell 7 stalled before running
-trivial commands, and a direct cargo.ps1 --version launch also produced no output.
-Native git/rg through cmd.exe worked. No gameplay edits or Rust tests were made
-in that investigation; no replay baseline has yet been produced for this plan.
-
-Recheck the normal shell first in the implementation session; this is an observed
-session blocker, not a proven permanent machine failure. If it persists, report
-the exact blocked commands and resolve the real environment issue without
-bypassing the pool, changing workspace membership/dependencies or clearing caches.
-Do not create ad hoc scratch files or reproduce the earlier stripped-environment
-PowerShell probe, which created a literal %SystemDrive% cache directory. That
-verified task-created directory was removed and the working tree was clean before
-this documentation slice. Never terminate unrelated PowerShell processes.
+The planning session observed PowerShell and `cargo.ps1` stalls before any game
+edits or replay. The implementation session rechecked the normal shell: pooled
+tests, strict Clippy, the production replay and the hidden capture wrapper all
+ran through their established tools. The earlier malformed `%SystemDrive%` cache
+directory was verified removed. This historical blocker does not prevent the
+remaining pacing work; do not bypass the shared pool or clear caches.
 
 ## 8. Completion report required from the implementation agent
 
@@ -392,5 +400,6 @@ Provide the slice commit hashes, final thresholds and any justified tuning,
 replay seed/rounds/faction count, emergence-to-Hero/replacement evidence, screenshots
 and interactions actually verified, full/focused check outcomes and honest remaining
 limits. Finish with git status --short and preserve any unrelated changes.
-The plan is complete only when the battle-earned path works and is visible;
-extra settlement invitations or an improved log alone do not satisfy it.
+The plan is complete only when the battle-earned path works and is visible and
+the round-120 majority pacing target passes; extra settlement invitations or an
+improved log alone do not satisfy it.

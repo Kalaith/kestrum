@@ -46,7 +46,7 @@ joining a veteran formation does not inherit its old deeds.
 ## P17 — Emergence, disposition, traits and recognition
 
 Each surviving formation with troops and a vacant named-person slot earns one
-emergence after two distinct meaningful engagements accepted while that slot is
+emergence after one distinct meaningful engagement accepted while that slot is
 vacant. Use the P16 participation classifier and its site/opponent deduplication;
 resolve the threshold at the seasonal boundary. Evaluate formations in stable ID
 order. There is no faction-wide candidate lottery, veterancy multiplier, or named
@@ -79,8 +79,8 @@ facts come from actual assignments. Trait effect initially is eligibility/contex
 not an unlisted army multiplier. Retain an earned trait permanently; supporting
 stories may expire while compact evidence remains. No evidence decay initially.
 
-An unrecognized tracked person earns Hero recognition after three later
-qualifying engagements in which they personally participate while fit. The
+An unrecognized tracked person earns Hero recognition after one later
+qualifying engagement in which they personally participate while fit. The
 progress counter starts at zero when they are tracked or emerge; retrospective
 formation service supplies biography and traits but cannot award this personal
 rank. Transfers preserve personal progress without importing the receiving

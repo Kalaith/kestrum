@@ -323,6 +323,13 @@ fn recovery_preserves_formation_identity_metadata_and_replays_through_saves() {
         );
     }
     assert_eq!(campaign, resumed);
+    assert_eq!(
+        campaign.formations[&FormationId(1)]
+            .service
+            .vacancy_service_after_sequence,
+        campaign.accepted_sequence
+    );
+    expected.service.vacancy_service_after_sequence = campaign.accepted_sequence;
     assert_eq!(campaign.formations[&FormationId(1)], expected);
     assert_eq!(campaign.formations[&FormationId(1)].tactics, Some(tactics));
     assert_eq!(campaign.armies, before.armies);

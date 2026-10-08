@@ -115,7 +115,53 @@ fn main() -> Result<(), String> {
     for (faction, entry) in activity {
         println!("Faction {} actions: {:?}", faction.0, entry.actions);
     }
+    report_hero_service_detail(&campaign, &data);
     Ok(())
+}
+
+fn report_hero_service_detail(campaign: &StrategicCampaign, data: &GameData) {
+    let threshold = data.progression.recognition.personal_engagements;
+    println!(
+        "Personal Hero service at round {} (threshold={threshold})",
+        campaign.completed_rounds
+    );
+    for person in campaign.people.values().filter(|person| {
+        person.career.emergence.is_some()
+            || person.career.hero_service_progress > 0
+            || person.career.recognition.is_some()
+    }) {
+        let formation = match person.assignment {
+            PersonAssignment::Formation { formation } => Some(formation),
+            _ => None,
+        };
+        let army = formation.and_then(|formation| {
+            campaign
+                .armies
+                .values()
+                .find(|army| army.formation_ids().any(|id| id == formation))
+                .map(|army| army.id)
+        });
+        let emergence_round = person
+            .career
+            .emergence
+            .as_ref()
+            .map(|record| record.completed_rounds);
+        let recognition_round = person
+            .career
+            .recognition
+            .as_ref()
+            .map(|record| record.completed_rounds);
+        println!(
+            "  #{} faction={} name={:?} emerge={emergence_round:?} service={}/{} recognize={recognition_round:?} formation={formation:?} army={army:?} status={:?} retired={}",
+            person.id.0,
+            person.faction.0,
+            person.name,
+            person.career.hero_service_progress,
+            threshold,
+            person.status,
+            person.career.retired
+        );
+    }
 }
 
 fn report(campaign: &StrategicCampaign, activity: &BTreeMap<FactionId, Activity>) {

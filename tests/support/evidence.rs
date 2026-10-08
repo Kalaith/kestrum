@@ -270,6 +270,8 @@ pub(super) fn assert_wiped_people() {
 
 pub(super) fn assert_count_budgets() {
     let (mut data, mut campaign) = fixture();
+    // Keep this retention contract independent of current Hero pacing defaults.
+    data.progression.recognition.personal_engagements = 3;
     data.history.detail_max_entries = 2;
     data.history.notable_max_entries = 2;
     for _ in 0..3 {

@@ -12,7 +12,7 @@
   "seasoned_permille": 1100,
   "veteran_permille": 1200,
   "emergence": {
-    "vacant_slot_engagements": 2,
+    "vacant_slot_engagements": 1,
     "retrospective_rounds": 8,
     "minimum_age_years": 18,
     "maximum_age_years": 30
@@ -23,7 +23,7 @@
     "maximum_occasions": 4
   },
   "recognition": {
-    "personal_engagements": 3,
+    "personal_engagements": 1,
     "required_facts": [
       "survived_outnumbered",
       "defended_anchor",

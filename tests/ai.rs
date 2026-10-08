@@ -238,7 +238,14 @@ fn seeded_phase_replay_matches_paused_steps_and_arbitrary_observation_frames() {
         ));
         assert_eq!(automatic.rng, stepped.rng);
         assert_eq!(automatic.armies, stepped.armies);
-        assert_eq!(automatic.formations, stepped.formations);
+        let mut expected_formations = automatic.formations.clone();
+        for formation in expected_formations.values_mut() {
+            if formation.service.vacancy_service_after_sequence > 0 {
+                // The pause command shifts absolute evidence coordinates by one.
+                formation.service.vacancy_service_after_sequence += pause_sequence_offset;
+            }
+        }
+        assert_eq!(expected_formations, stepped.formations);
         commands += 1;
         assert!(commands <= 3 * 65);
     }

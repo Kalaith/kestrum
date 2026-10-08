@@ -152,7 +152,6 @@ impl Game {
                     .recognition
                     .personal_engagements
                     .saturating_sub(1)
-                    .max(1)
             } else {
                 self.data.progression.recognition.personal_engagements
             };
@@ -251,7 +250,7 @@ fn earn_capture_hero(
     )
     .expect("accepted capture war declaration");
 
-    for _ in 0..2 {
+    for _ in 0..data.progression.emergence.vacant_slot_engagements {
         capture_accepted_encounter(campaign, data);
         finish_capture_round(campaign, data);
     }

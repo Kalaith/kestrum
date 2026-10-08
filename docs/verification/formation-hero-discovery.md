@@ -14,8 +14,8 @@ All images came from the hidden native capture wrapper at the supported
 | State | Capture | Evidence |
 | --- | --- | --- |
 | Formation roster after emergence | [Apprentice in Archers](ui_formation_emerged.png) | Layout fixture; the seeded state is presentation evidence only. |
-| Apprentice after personal service | [Career, 2/3](ui_formation_hero_progress.png) | Real accepted battles created the apprentice and recorded two later qualifying personal engagements. |
-| Hero in the formation | [Hero in Warriors](ui_formation_hero_earned.png) | Real accepted battles completed emergence and three later qualifying personal engagements. |
+| Apprentice at emergence | [Career, 0/1](ui_formation_hero_progress.png) | A real accepted formation engagement created the apprentice; no personal service has yet been credited. |
+| Hero in the formation | [Hero in Warriors](ui_formation_hero_earned.png) | Real accepted battles completed emergence and one later qualifying personal engagement. |
 | Hero Career detail | [Career, recognized](ui_formation_hero_detail.png) | Same accepted-command path, followed by the People and Career UI intents. |
 
 The army footer exposes **People** beside the existing Orders control. Formation
@@ -29,9 +29,10 @@ The army panel leaves the existing map and camera visible behind it.
 The `formation_hero_progress`, `formation_hero_earned` and
 `formation_hero_detail` capture scenes use the production campaign setup. The
 fixture declares war through an accepted command, then repeats accepted Move,
-StartPendingBattle, EndTurn and NPC-pass commands. Two formation engagements
-produce the apprentice; the progress scene runs two more personal engagements,
-and the earned-Hero scenes run the third. Capture assertions check the
+StartPendingBattle, EndTurn and NPC-pass commands. One formation engagement
+produces the apprentice; the progress scene keeps the apprentice at zero
+personal service, and the earned-Hero scenes run one later personal engagement.
+Capture assertions check the
 recognition state, progress and unchanged Warriors assignment.
 
 The detail capture then dispatches the same `ArmyPeople` and
@@ -49,7 +50,7 @@ Capture command:
 
 ## Remaining evidence
 
-This presentation checkpoint does not establish how often production armies
-encounter enough qualifying battles to have a Hero by mid-game. The seed
-260926/four-faction/round-200 replay, lifecycle replacement scenario and
-full-project validation remain the pacing and integration gates in Stage E.
+At the time of this Stage D checkpoint, production pacing, the lifecycle
+replacement scenario and full-project validation remained open. Stage E ran
+those checks and recorded the current majority-coverage shortfall and full-suite
+results in [the progression verification report](formation-hero-progression.md).

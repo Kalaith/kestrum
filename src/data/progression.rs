@@ -224,7 +224,6 @@ impl ProgressionRules {
             "progression.json",
             "recognition",
             (1..=10).contains(&self.recognition.personal_engagements)
-                && self.recognition.personal_engagements == 3
                 && self
                     .recognition
                     .required_facts

@@ -33,7 +33,7 @@ mod support;
 use support::*;
 
 #[test]
-fn vacant_formation_earns_an_apprentice_after_two_qualifying_engagements() {
+fn vacant_formation_earns_an_apprentice_at_its_data_threshold() {
     fn prepared() -> (GameData, StrategicCampaign) {
         let (data, mut campaign) = fixture();
         let template = campaign.people[&PersonId(1)].clone();
@@ -67,26 +67,15 @@ fn vacant_formation_earns_an_apprentice_after_two_qualifying_engagements() {
     let mut second = prepared();
     first.1.rng.people = SeededRng::new(seed);
     second.1.rng.people = SeededRng::new(seed);
-    encounter(&mut first.1, &first.0, 5, 6, 100);
-    encounter(&mut second.1, &second.0, 5, 6, 100);
-    finish(&mut first.1, &first.0);
-    finish(&mut second.1, &second.0);
-    assert_eq!(
-        first.1.formations[&FormationId(7)]
-            .service
-            .vacancy_service_progress,
-        1
-    );
-    assert!(first
-        .1
-        .people
-        .values()
-        .all(|person| person.career.emergence.is_none()));
-    encounter(&mut first.1, &first.0, 8, 10, 100);
-    encounter(&mut second.1, &second.0, 8, 10, 100);
+    let threshold = first.0.progression.emergence.vacant_slot_engagements;
+    for index in 0..threshold {
+        let (origin, site) = if index == 0 { (5, 6) } else { (8, 10) };
+        encounter(&mut first.1, &first.0, origin, site, 100);
+        encounter(&mut second.1, &second.0, origin, site, 100);
+        finish(&mut first.1, &first.0);
+        finish(&mut second.1, &second.0);
+    }
     let headcount_after_battles = first.1.formations[&FormationId(7)].headcount;
-    finish(&mut first.1, &first.0);
-    finish(&mut second.1, &second.0);
     assert_eq!(first.1, second.1);
     let recruits = first
         .1
@@ -146,7 +135,17 @@ fn occupied_veteran_does_not_starve_a_vacant_formation() {
         campaign.formations[&vacant]
             .service
             .vacancy_service_progress,
-        1
+        data.progression.emergence.vacant_slot_engagements - 1
+    );
+    assert_eq!(
+        campaign.people.values().any(|person| {
+            person
+                .career
+                .emergence
+                .as_ref()
+                .is_some_and(|record| record.source_formation == vacant)
+        }),
+        data.progression.emergence.vacant_slot_engagements == 1
     );
     assert_eq!(
         campaign.formations[&FormationId(1)]
@@ -180,7 +179,8 @@ fn occupied_veteran_does_not_starve_a_vacant_formation() {
 
 #[test]
 fn staffing_and_reopening_a_slot_requires_fresh_qualifying_service() {
-    let (data, mut campaign) = fixture();
+    let (mut data, mut campaign) = fixture();
+    data.progression.emergence.vacant_slot_engagements = 2;
     let spare = campaign.next_ids.formation;
     campaign.next_ids.formation.0 += 1;
     let mut unit = campaign.formations[&FormationId(1)].clone();
@@ -286,7 +286,7 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
         campaign.formations[&vacant]
             .service
             .vacancy_service_progress,
-        1
+        data.progression.emergence.vacant_slot_engagements - 1
     );
     campaign.formations.get_mut(&vacant).unwrap().headcount = 20;
     encounter(&mut campaign, &data, 8, 10, 100);

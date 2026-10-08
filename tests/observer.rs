@@ -10,6 +10,7 @@ use kestrum::{
     engine::{self, Actor, Command, MoveOrder},
     state::{
         battle::BattleId,
+        history::{HistoryKind, LifeEvent},
         military::{ArmyId, FormationId},
         people::PersonAssignment,
         Campaign, CampaignPhase, GameState, StrategicCampaign,
@@ -107,6 +108,67 @@ fn same_seed_observer_steps_produce_identical_campaigns() {
         engine::advance_observer(&mut second, &data).unwrap();
         assert_eq!(first, second);
     }
+}
+
+#[test]
+fn observer_state_additions_have_typed_life_records_beyond_action_receipts() {
+    let data = GameData::load().unwrap();
+    let mut campaign = production_observer(&data, 260_926, 4);
+    let mut observed_emergence = false;
+
+    while campaign.completed_rounds < 200 && !observed_emergence {
+        let previous_people = campaign
+            .people
+            .keys()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>();
+        let history_cursor = campaign.next_ids.history;
+        let step = engine::advance_observer(&mut campaign, &data).unwrap();
+        let additions = campaign
+            .people
+            .values()
+            .filter(|person| !previous_people.contains(&person.id))
+            .collect::<Vec<_>>();
+
+        for person in additions {
+            let records = campaign
+                .history
+                .events
+                .range(history_cursor..)
+                .filter(|(_, record)| match &record.kind {
+                    HistoryKind::Life {
+                        person: subject,
+                        event,
+                        ..
+                    } if *subject == person.id => {
+                        matches!(event, LifeEvent::Emerged { .. } | LifeEvent::Arrived { .. })
+                    }
+                    _ => false,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(
+                records.len(),
+                1,
+                "person {} needs one typed arrival event",
+                person.id.0
+            );
+            if let Some(emergence) = &person.career.emergence {
+                let (_, record) = records[0];
+                assert!(matches!(
+                    &record.kind,
+                    HistoryKind::Life { event: LifeEvent::Emerged { troop }, .. }
+                        if *troop == emergence.source_troop
+                ));
+                assert!(!step.new_people.contains(&person.id));
+                observed_emergence = true;
+            }
+        }
+    }
+
+    assert!(
+        observed_emergence,
+        "seed 260926 did not produce an emergence by round 200"
+    );
 }
 
 #[test]

@@ -1,6 +1,11 @@
 //! Observer event summaries and a complete per-step diagnostic JSONL file.
 
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+use kestrum::state::{
+    evidence::EvidenceKind,
+    people::{PersonAssignment, PersonId},
+};
 use kestrum::{
     data::{world::FactionId, GameData},
     engine::ObserverStepOutcome,
@@ -9,13 +14,19 @@ use kestrum::{
         campaign::DomainFactKind,
         development::DevelopmentReceipt,
         diplomacy::DiplomacyReceipt,
-        people::PersonId,
+        history::{HistoryId, HistoryKind, HistoryRecord, LifeEvent},
+        relationships::FamilyOrigin,
         FactionStatus, StrategicCampaign,
     },
 };
 #[cfg(not(target_arch = "wasm32"))]
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet};
+
+#[cfg(not(target_arch = "wasm32"))]
+mod progression_audit;
+#[cfg(not(target_arch = "wasm32"))]
+use progression_audit::{faction_progression_counts, formation_service_audit};
 
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 #[derive(Debug, Clone)]
@@ -26,7 +37,11 @@ pub(super) struct ObserverSnapshot {
     faction_statuses: BTreeMap<FactionId, FactionStatus>,
     site_controllers: BTreeMap<kestrum::data::world::SiteId, Option<FactionId>>,
     site_names: BTreeMap<kestrum::data::world::SiteId, String>,
+    #[cfg(not(target_arch = "wasm32"))]
     people: BTreeSet<PersonId>,
+    history_cursor: HistoryId,
+    #[cfg(not(target_arch = "wasm32"))]
+    battle_cursor: kestrum::state::battle::BattleId,
     wars: BTreeSet<[FactionId; 2]>,
 }
 
@@ -60,7 +75,11 @@ impl ObserverSnapshot {
                 .iter()
                 .map(|site| (site.id, site.name.clone()))
                 .collect(),
+            #[cfg(not(target_arch = "wasm32"))]
             people: campaign.people.keys().copied().collect(),
+            history_cursor: campaign.next_ids.history,
+            #[cfg(not(target_arch = "wasm32"))]
+            battle_cursor: campaign.next_ids.battle,
             wars: campaign
                 .relations
                 .iter()
@@ -136,7 +155,7 @@ impl ObserverLog {
                     "record": "session_started",
                     "written_at_unix_ms": unix_millis(),
                     "seed": seed,
-                    "format_version": 1
+                    "format_version": 2
                 }));
             }
             Err(error) => {
@@ -155,11 +174,12 @@ impl ObserverLog {
         step: &ObserverStepOutcome,
         data: &GameData,
     ) {
-        let events = notable_events(before, after, step);
+        let life_records = new_life_records(before, after);
+        let events = notable_events(before, after, step, &life_records);
         for event in &events {
             self.view.add(after.completed_rounds, event.clone());
         }
-        self.record_file(before, after, step, data, &events);
+        self.record_file(before, after, step, data, &events, &life_records);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -170,9 +190,10 @@ impl ObserverLog {
         step: &ObserverStepOutcome,
         data: &GameData,
         events: &[String],
+        life_records: &[&HistoryRecord],
     ) {
         let actor = before.actor;
-        let record = json!({
+        let mut record = json!({
             "record": "observer_step",
             "written_at_unix_ms": unix_millis(),
             "round_before": before.round,
@@ -188,17 +209,18 @@ impl ObserverLog {
             "action_result_debug": format!("{:?}", step.outcome),
             "facts": &step.outcome.facts,
             "consumed_facts": &step.outcome.consumed_facts,
-            "new_people": step.outcome.new_people.iter().filter_map(|id| {
-                after.people.get(id).map(|person| json!({
-                    "id": id,
-                    "name": person.name,
-                    "faction": person.faction,
-                    "assignment": person.assignment
-                }))
-            }).collect::<Vec<_>>(),
+            "outcome_new_people": step.outcome.new_people,
+            "outcome_new_people_is_complete": false,
+            "people_added_in_accepted_step": added_people(before, after),
+            "life_events": life_records.iter().map(|record| life_event_audit(after, record)).collect::<Vec<_>>(),
+            "person_combat_events": new_person_combat_events(before, after),
             "notable_events": events,
             "state": campaign_snapshot(before, after, data)
         });
+        if step.outcome.round_completed {
+            record["formation_service_audit"] = formation_service_audit(after, data);
+            record["faction_progression_counts"] = faction_progression_counts(after);
+        }
         self.append(&record);
     }
 
@@ -210,6 +232,7 @@ impl ObserverLog {
         _step: &ObserverStepOutcome,
         _data: &GameData,
         _events: &[String],
+        _life_records: &[&HistoryRecord],
     ) {
     }
 
@@ -292,10 +315,130 @@ impl ObserverLog {
     }
 }
 
+fn new_life_records<'a>(
+    before: &ObserverSnapshot,
+    campaign: &'a StrategicCampaign,
+) -> Vec<&'a HistoryRecord> {
+    campaign
+        .history
+        .events
+        .range(before.history_cursor..)
+        .map(|(_, record)| record)
+        .filter(|record| matches!(record.kind, HistoryKind::Life { .. }))
+        .collect()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn added_people(before: &ObserverSnapshot, campaign: &StrategicCampaign) -> Vec<Value> {
+    campaign
+        .people
+        .iter()
+        .filter(|(id, _)| !before.people.contains(id))
+        .map(|(_, person)| person_progression_audit(campaign, person.id))
+        .collect()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn life_event_audit(campaign: &StrategicCampaign, record: &HistoryRecord) -> Value {
+    let HistoryKind::Life {
+        owner,
+        person,
+        event,
+    } = &record.kind
+    else {
+        return Value::Null;
+    };
+    json!({
+        "history_id": record.id,
+        "round": record.completed_rounds,
+        "owner": owner,
+        "person": person,
+        "event": event,
+        "site": record.sites.first(),
+        "person_state": person_progression_audit(campaign, *person)
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn person_progression_audit(campaign: &StrategicCampaign, id: PersonId) -> Value {
+    let Some(person) = campaign.people.get(&id) else {
+        return json!({ "id": id, "missing_after_step": true });
+    };
+    let assigned_formation = match person.assignment {
+        PersonAssignment::Formation { formation } => Some(formation),
+        _ => None,
+    };
+    let assigned_army = assigned_formation.and_then(|formation| {
+        campaign
+            .armies
+            .values()
+            .find(|army| army.formation_ids().any(|id| id == formation))
+            .map(|army| json!({ "id": army.id, "name": army.name, "site": army.site }))
+    });
+    json!({
+        "id": person.id,
+        "name": person.name,
+        "faction": person.faction,
+        "age_years": person.age_years(campaign.completed_rounds),
+        "class": person.class,
+        "alive": person.is_alive(),
+        "retired": person.career.retired,
+        "assignment": person.assignment,
+        "assigned_formation": assigned_formation,
+        "assigned_army": assigned_army,
+        "emergence": person.career.emergence,
+        "personal_qualifying_participation": person.evidence.counts
+            .get(&EvidenceKind::MeaningfulEncounter).copied().unwrap_or_default(),
+        "recognition": person.career.recognition
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn new_person_combat_events(before: &ObserverSnapshot, campaign: &StrategicCampaign) -> Vec<Value> {
+    campaign
+        .battles
+        .range(before.battle_cursor..)
+        .flat_map(|(battle_id, report)| {
+            report.person_events.iter().map(move |event| {
+                json!({
+                    "battle": battle_id,
+                    "round": report.completed_rounds,
+                    "site": report.site,
+                    "person": event.person,
+                    "outcome": event.outcome,
+                    "person_state": person_progression_audit(campaign, event.person)
+                })
+            })
+        })
+        .collect()
+}
+
+fn life_event_line(campaign: &StrategicCampaign, record: &HistoryRecord) -> Option<String> {
+    let HistoryKind::Life { person, event, .. } = &record.kind else {
+        return None;
+    };
+    let name = campaign.people.get(person)?.name.as_str();
+    match event {
+        LifeEvent::Emerged { troop } => Some(format!("Apprentice {name} emerged with {troop:?}")),
+        LifeEvent::Arrived { origin } => Some(match origin {
+            FamilyOrigin::Birth => format!("{name} was born"),
+            FamilyOrigin::AdoptedWard => format!("{name} joined as an adopted ward"),
+            FamilyOrigin::LocalApprentice => format!("{name} joined as a local apprentice"),
+        }),
+        LifeEvent::Recognized { epithet, .. } => {
+            Some(format!("{name} was recognized as {epithet}"))
+        }
+        LifeEvent::Retired => Some(format!("{name} retired")),
+        LifeEvent::NaturalDeath => Some(format!("{name} died")),
+        _ => None,
+    }
+}
+
 fn notable_events(
     before: &ObserverSnapshot,
     after: &StrategicCampaign,
     step: &ObserverStepOutcome,
+    life_records: &[&HistoryRecord],
 ) -> Vec<String> {
     let mut events = Vec::new();
     for (site_id, controller) in &before.site_controllers {
@@ -362,15 +505,9 @@ fn notable_events(
             ));
         }
     }
-    for id in &step.outcome.new_people {
-        if !before.people.contains(id) {
-            if let Some(person) = after.people.get(id) {
-                events.push(format!(
-                    "New person {} joined {}",
-                    person.name,
-                    faction_name(after, person.faction)
-                ));
-            }
+    for record in life_records {
+        if let Some(event) = life_event_line(after, record) {
+            events.push(event);
         }
     }
     for fact in &step.outcome.facts {

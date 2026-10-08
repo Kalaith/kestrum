@@ -52,11 +52,7 @@ Warriors` from the first turn. Neither emergence nor recognition grants an extra
 troop or formation slot. Membership, multiple people, transfers and display
 overflow follow [the formation-slot contract](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 
-**Agreed direction (O14):** emergence is semi-rare, easier when the faction has few named heroes, and progressively rarer toward roughly 20–30. Veteran formations have a higher chance, and meaningful experiences influence who emerges. Source illustrations suggest a few meaningful fights with one hero, less frequent emergence around ten, and possibly a major war around twenty. Those are qualitative examples, not probability thresholds or a hard cap.
-
-**Implemented roster measure (D07/O14):** the emergence curve counts living, non-retired faction members aged at least eighteen. Dead people and retirees do not suppress the next generation. A season's eligible surviving formation is selected from actual recent service; the people RNG and data-defined roster curve, veterancy and exceptional-service factors determine emergence.
-
-The probability curve and significance weights remain tunable in progression data. Repeated low-risk service should not outweigh a major campaign merely through repetition; adjust against observed campaigns while preserving actual evidence and deterministic state-owned randomness.
+**Implemented battle emergence (O14):** each surviving formation with troops and a vacant named-person slot earns one named Recruit after two distinct meaningful engagements accepted while the slot is vacant. Progress uses the established participation classifier and resolves at the seasonal boundary. Each eligible formation is evaluated in stable ID order; no faction-wide candidate lottery, chance roll, veterancy multiplier, or named-roster pressure can block earned service. Seeded people RNG still selects the recruit's identity and disposition. This threshold is data-validated and is not a hard roster cap; tune against observed campaigns.
 
 ## Retrospective grounding
 

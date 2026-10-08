@@ -16,6 +16,7 @@ pub(super) struct Participation {
     pub troop: TroopKind,
     pub enemy_types: BTreeSet<TroopKind>,
     pub meaningful: bool,
+    pub named_slot_vacant: Option<bool>,
     pub tags: BTreeSet<EvidenceKind>,
     pub xp: u32,
     pub outnumbered: bool,
@@ -121,6 +122,7 @@ pub(super) fn classify(
             .map(|formation| formation.kind)
             .collect(),
         meaningful,
+        named_slot_vacant: formation.named_slot_vacant,
         tags,
         xp,
         outnumbered,

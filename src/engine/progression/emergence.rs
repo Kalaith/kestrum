@@ -1,11 +1,7 @@
 //! A season's most distinguished surviving formation may produce one new named recruit.
 
 use crate::{
-    data::{
-        progression::EpithetFact,
-        world::{FactionId, PersonClass},
-        GameData,
-    },
+    data::{progression::EpithetFact, world::PersonClass, GameData},
     engine::RuleError,
     state::{
         evidence::{EvidenceKind, EvidenceLedger, FormationService, SeasonService},
@@ -19,56 +15,32 @@ use crate::{
 };
 
 pub(super) fn advance(campaign: &mut StrategicCampaign, data: &GameData) -> Result<(), RuleError> {
-    let mut factions = campaign.factions.keys().copied().collect::<Vec<_>>();
-    factions.sort();
-    for faction in factions {
-        let Some((formation, season)) = candidate(campaign, faction) else {
+    let threshold = data.progression.emergence.vacant_slot_engagements;
+    let formations = campaign.formations.keys().copied().collect::<Vec<_>>();
+    for formation in formations {
+        let Some(source) = campaign.formations.get(&formation) else {
             continue;
         };
-        if season.xp == 0 || !campaign.is_independent(faction) {
+        if source.headcount == 0 || campaign.formation_person(formation).is_some() {
+            super::reset_formation_vacancy_progress(campaign, formation);
             continue;
         }
-        let people = campaign
-            .people
-            .values()
-            .filter(|person| {
-                person.faction == faction
-                    && person.is_alive()
-                    && !person.career.retired
-                    && person.age_years(campaign.completed_rounds) >= 18
-            })
-            .count() as u64;
-        let curve = u64::from(data.progression.emergence.roster_base)
-            .saturating_mul(u64::from(data.progression.emergence.roster_factor))
-            / (u64::from(data.progression.emergence.roster_square_factor)
-                .saturating_mul(people.saturating_mul(people))
-                .saturating_add(u64::from(data.progression.emergence.roster_factor))
-                .max(1));
-        let roll = campaign.rng.people.below(1000) as u64;
-        let mut chance = curve;
-        let tier = campaign.formations[&formation].service.tier;
-        chance = chance.saturating_mul(match tier {
-            crate::state::evidence::Veterancy::Ordinary => 1000,
-            crate::state::evidence::Veterancy::Seasoned => {
-                data.progression.emergence.seasoned_multiplier_permille
-            }
-            crate::state::evidence::Veterancy::Veteran => {
-                data.progression.emergence.veteran_multiplier_permille
-            }
-        } as u64)
-            / 1000;
-        if exceptional(&season) {
-            chance = chance.saturating_mul(u64::from(
-                data.progression.emergence.exceptional_multiplier_permille,
-            )) / 1000;
-        }
-        chance = chance.min(u64::from(
-            data.progression.emergence.maximum_chance_permille,
-        ));
-        if roll >= chance {
+        if source.service.vacancy_service_progress < threshold {
             continue;
         }
-        create(campaign, data, faction, formation, &season)?;
+        let Some(season) = source.service.recent.last().filter(|season| {
+            season.completed_rounds.saturating_add(1) == campaign.completed_rounds
+                && season
+                    .encounters
+                    .iter()
+                    .any(|encounter| encounter.meaningful)
+        }) else {
+            super::reset_formation_vacancy_progress(campaign, formation);
+            continue;
+        };
+        let season = season.clone();
+        create(campaign, data, formation, &season)?;
+        super::reset_formation_vacancy_progress(campaign, formation);
     }
     Ok(())
 }
@@ -93,54 +65,28 @@ pub(super) fn update_tracked(campaign: &mut StrategicCampaign, data: &GameData) 
     }
 }
 
-fn candidate(
-    campaign: &StrategicCampaign,
-    faction: FactionId,
-) -> Option<(MilitaryFormationId, SeasonService)> {
-    campaign
-        .formations
-        .values()
-        .filter(|formation| formation.faction == faction && formation.headcount > 0)
-        .filter_map(|formation| {
-            formation
-                .service
-                .recent
-                .last()
-                .filter(|season| {
-                    season.completed_rounds.saturating_add(1) == campaign.completed_rounds
-                })
-                .cloned()
-                .map(|season| (formation, season))
-        })
-        .max_by_key(|(formation, season)| {
-            (
-                season.xp,
-                formation.service.tier,
-                std::cmp::Reverse(formation.id),
-            )
-        })
-        .map(|(formation, season)| (formation.id, season))
-}
-
-fn exceptional(season: &SeasonService) -> bool {
-    let outnumbered = season
-        .encounters
-        .iter()
-        .any(|encounter| encounter.tags.contains(&EvidenceKind::SurvivedOutnumbered));
-    let anchor = season.encounters.iter().any(|encounter| {
-        encounter.tags.contains(&EvidenceKind::CapturedAnchor)
-            || encounter.tags.contains(&EvidenceKind::DefendedAnchor)
-    });
-    outnumbered && anchor
-}
-
 fn create(
     campaign: &mut StrategicCampaign,
     data: &GameData,
-    faction: FactionId,
     formation: MilitaryFormationId,
     season: &SeasonService,
 ) -> Result<(), RuleError> {
+    let Some(source) = campaign.formations.get(&formation) else {
+        return Ok(());
+    };
+    if source.headcount == 0 || campaign.formation_person(formation).is_some() {
+        return Ok(());
+    }
+    let faction = source.faction;
+    if campaign
+        .armies
+        .values()
+        .all(|army| !army.formation_ids().any(|id| id == formation))
+    {
+        return Err(RuleError::InvalidState(
+            "Emergence source has no army.".into(),
+        ));
+    }
     let id = campaign.next_ids.person;
     campaign.next_ids.person = PersonId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "person identifiers",
@@ -174,18 +120,8 @@ fn create(
         care: tendency(&mut campaign.rng.people),
         curiosity: tendency(&mut campaign.rng.people),
     };
-    let source = &campaign.formations[&formation];
-    let site = campaign
-        .armies
-        .values()
-        .find(|army| army.formation_ids().any(|id| id == formation))
-        .ok_or_else(|| RuleError::InvalidState("Emergence source has no army.".into()))?
-        .site;
-    let assignment = campaign
-        .available_person_formation(faction, site)
-        .map_or(PersonAssignment::Site { site }, |formation| {
-            PersonAssignment::Formation { formation }
-        });
+    let source = campaign.formations.get(&formation).expect("checked source");
+    let assignment = PersonAssignment::Formation { formation };
     let evidence = retrospective(&source.service, source.kind, service_start);
     let mut career_state = PersonCareer {
         disposition,

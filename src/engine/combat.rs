@@ -146,7 +146,7 @@ fn snapshot(
         let army = &campaign.armies[&id];
         let formations: Vec<_> = army.slots.iter().enumerate().filter_map(|(slot,id)| id.map(|id| {
             let formation = &campaign.formations[&id];
-            BattleFormationReport {battle_leader:campaign.formations[&id].battle_leader,id,slot,kind:formation.kind,start:formation.headcount,end:formation.headcount,
+            BattleFormationReport {battle_leader:campaign.formations[&id].battle_leader,named_slot_vacant:Some(campaign.formation_person(id).is_none()),id,slot,kind:formation.kind,start:formation.headcount,end:formation.headcount,
                 combat_losses:0,encirclement_losses:0,veterancy_permille:formation.service.tier.permille(&data.progression)}
         })).collect();
         let people = campaign.people.values().filter(|person| person.is_alive() && matches!(person.assignment,

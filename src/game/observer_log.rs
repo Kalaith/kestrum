@@ -155,7 +155,7 @@ impl ObserverLog {
                     "record": "session_started",
                     "written_at_unix_ms": unix_millis(),
                     "seed": seed,
-                    "format_version": 2
+                    "format_version": 3
                 }));
             }
             Err(error) => {

@@ -193,6 +193,8 @@ pub struct BattlePersonReport {
 pub struct BattleFormationReport {
     #[serde(default)]
     pub battle_leader: Option<PersonId>,
+    #[serde(default)]
+    pub named_slot_vacant: Option<bool>,
     #[serde(default = "ordinary_factor")]
     pub veterancy_permille: u32,
     pub id: FormationId,

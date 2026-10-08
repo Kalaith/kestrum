@@ -10,6 +10,13 @@ impl StrategicCampaign {
     pub(crate) fn validate_evidence(&self, data: &GameData) -> Result<(), String> {
         for formation in self.formations.values() {
             let service = &formation.service;
+            if service.vacancy_service_progress > data.progression.emergence.vacant_slot_engagements
+                || service.vacancy_service_after_sequence > self.accepted_sequence
+                || (service.vacancy_service_progress > 0
+                    && self.formation_person(formation.id).is_some())
+            {
+                return Err("formation.service: invalid vacant-slot progress".into());
+            }
             if let Some(specialization) = service.specialization {
                 let rule = data.progression.specializations.get(&specialization);
                 if rule.is_none_or(|rule| !rule.sources.contains(&formation.kind))

@@ -141,6 +141,10 @@ pub struct FormationService {
     pub specialization: Option<FormationSpecialization>,
     #[serde(default)]
     pub course: Option<FormationCourse>,
+    #[serde(default)]
+    pub vacancy_service_progress: u8,
+    #[serde(default)]
+    pub vacancy_service_after_sequence: u64,
     pub xp: u32,
     pub tier: Veterancy,
     pub ledger: EvidenceLedger,

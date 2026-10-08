@@ -158,6 +158,7 @@ fn consume_side(
                     data,
                     formation.id,
                     report.completed_rounds,
+                    report.sequence,
                     &participation,
                     credit,
                 )?;
@@ -222,6 +223,7 @@ fn credit_formation(
     data: &GameData,
     id: FormationId,
     round: u32,
+    sequence: u64,
     participation: &Participation,
     credit: &mut RoundCredit,
 ) -> Result<(), RuleError> {
@@ -235,6 +237,20 @@ fn credit_formation(
         .get_mut(&id)
         .expect("surviving formation")
         .service;
+    match participation.named_slot_vacant {
+        Some(false) => {
+            service.vacancy_service_progress = 0;
+            service.vacancy_service_after_sequence =
+                service.vacancy_service_after_sequence.max(sequence);
+        }
+        Some(true) if meaningful && sequence > service.vacancy_service_after_sequence => {
+            service.vacancy_service_progress = service
+                .vacancy_service_progress
+                .saturating_add(1)
+                .min(data.progression.emergence.vacant_slot_engagements);
+        }
+        Some(true) | None => {}
+    }
     record(&mut service.ledger, participation, first, meaningful)?;
     let season = credit.seasons.entry(id).or_insert_with(|| SeasonService {
         completed_rounds: round,

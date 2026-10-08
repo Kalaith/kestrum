@@ -155,6 +155,17 @@ pub(super) fn person(
         return Err(RuleError::NotColocated);
     }
     let carried_commander = source.filter(|id| campaign.armies[id].commander == Some(person));
+    let source_formation = match selected.assignment {
+        PersonAssignment::Formation { formation } => Some(formation),
+        PersonAssignment::Site { .. }
+        | PersonAssignment::Dependent { .. }
+        | PersonAssignment::Trainee { .. }
+        | PersonAssignment::Dead => None,
+    };
+    if let Some(formation) = source_formation {
+        super::progression::reset_formation_vacancy_progress(campaign, formation);
+    }
+    super::progression::reset_formation_vacancy_progress(campaign, to_formation);
     let selected = campaign
         .people
         .get_mut(&person)

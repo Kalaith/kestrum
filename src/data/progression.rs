@@ -34,13 +34,7 @@ pub struct ProgressionRules {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EmergenceRules {
-    pub roster_base: u32,
-    pub roster_factor: u32,
-    pub roster_square_factor: u32,
-    pub seasoned_multiplier_permille: u32,
-    pub veteran_multiplier_permille: u32,
-    pub exceptional_multiplier_permille: u32,
-    pub maximum_chance_permille: u32,
+    pub vacant_slot_engagements: u8,
     pub retrospective_rounds: u32,
     pub minimum_age_years: u32,
     pub maximum_age_years: u32,
@@ -218,13 +212,7 @@ impl ProgressionRules {
         require(
             "progression.json",
             "emergence",
-            rules.roster_base > 0
-                && rules.roster_factor > 0
-                && rules.roster_square_factor > 0
-                && rules.seasoned_multiplier_permille >= 1000
-                && rules.veteran_multiplier_permille >= rules.seasoned_multiplier_permille
-                && rules.exceptional_multiplier_permille >= 1000
-                && (1..=500).contains(&rules.maximum_chance_permille)
+            (1..=10).contains(&rules.vacant_slot_engagements)
                 && (1..=80).contains(&rules.retrospective_rounds)
                 && rules.minimum_age_years >= 17
                 && rules.maximum_age_years >= rules.minimum_age_years

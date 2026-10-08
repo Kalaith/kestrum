@@ -409,6 +409,7 @@ fn finish(
     if outcome.round_completed {
         super::mentorship::resolve_season(candidate, data);
     }
+    super::progression::reset_vacancy_progress_for_assignments(candidate, before);
     if outcome.round_completed || candidate.diplomacy.ending.is_some() {
         outcome.consumed_facts = std::mem::take(&mut candidate.pending_facts);
         super::evidence::consume(candidate, data, &outcome.consumed_facts)?;

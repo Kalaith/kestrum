@@ -8,10 +8,7 @@ use kestrum::{
     },
     engine,
     state::{
-        evidence::{EvidenceKind, SeasonService},
-        military::FormationId,
-        people::PersonAssignment,
-        relationships::FamilyOrigin,
+        military::FormationId, people::PersonAssignment, relationships::FamilyOrigin,
         StrategicCampaign,
     },
 };
@@ -28,18 +25,11 @@ struct Activity {
 struct EmergenceTotals {
     formation_seasons: u64,
     eligible_formation_seasons: u64,
-    candidate_seasons: u64,
-    occupied_candidates: u64,
+    staffed_slots: u64,
+    below_threshold: u64,
+    threshold_reached: u64,
     emerged_people: u64,
-    chance_misses: u64,
-    zero_chance: u64,
-    zero_xp_candidates: u64,
-    non_independent_candidates: u64,
-    no_candidate_seasons: u64,
-    chance_sum: u64,
-    chance_count: u64,
-    chance_min: Option<u64>,
-    chance_max: Option<u64>,
+    no_living_troops: u64,
     last_source: Option<LastSource>,
 }
 
@@ -48,9 +38,10 @@ struct LastSource {
     round: u32,
     formation: FormationId,
     service_xp: u32,
-    adult_roster: u64,
-    chance: Option<u64>,
-    occupied: bool,
+    qualifying_encounters: usize,
+    vacancy_progress: u8,
+    vacancy_threshold: u8,
+    staffed: bool,
     emerged: bool,
 }
 
@@ -280,35 +271,30 @@ fn report_emergence_opportunities(emergence: Option<&EmergenceTotals>) {
     let Some(totals) = emergence else {
         return;
     };
-    let average = (totals.chance_count > 0).then(|| totals.chance_sum / totals.chance_count);
     let latest = totals.last_source.map_or_else(
         || "none".to_owned(),
         |source| {
             format!(
-                "round={} formation={} xp={} roster={} chance={:?} occupied={} emerged={}",
+                "round={} formation={} xp={} qualifying={} vacancy={}/{} staffed={} emerged={}",
                 source.round,
                 source.formation.0,
                 source.service_xp,
-                source.adult_roster,
-                source.chance,
-                source.occupied,
+                source.qualifying_encounters,
+                source.vacancy_progress,
+                source.vacancy_threshold,
+                source.staffed,
                 source.emerged
             )
         },
     );
-    println!("    old emergence: formation seasons={} eligible={} selected={} occupied candidates={} emerged={} chance misses={} zero chance={} zero-xp selections={} non-independent selections={} no-candidate seasons={} chance min/avg/max={:?}/{average:?}/{:?}; latest={latest}",
+    println!("    formation emergence: service seasons={} eligible vacant={} staffed={} below threshold={} threshold reached={} emerged={} no troops={}; latest={latest}",
         totals.formation_seasons,
         totals.eligible_formation_seasons,
-        totals.candidate_seasons,
-        totals.occupied_candidates,
+        totals.staffed_slots,
+        totals.below_threshold,
+        totals.threshold_reached,
         totals.emerged_people,
-        totals.chance_misses,
-        totals.zero_chance,
-        totals.zero_xp_candidates,
-        totals.non_independent_candidates,
-        totals.no_candidate_seasons,
-        totals.chance_min,
-        totals.chance_max);
+        totals.no_living_troops);
 }
 
 fn record_formation_opportunities(
@@ -316,193 +302,63 @@ fn record_formation_opportunities(
     data: &GameData,
     activity: &mut BTreeMap<FactionId, Activity>,
 ) {
-    for faction in campaign.factions.keys().copied() {
-        let seasons = campaign
-            .formations
-            .values()
-            .filter(|formation| formation.faction == faction)
-            .filter_map(|formation| {
-                formation
-                    .service
-                    .recent
-                    .last()
-                    .filter(|season| {
-                        season.completed_rounds.saturating_add(1) == campaign.completed_rounds
-                    })
-                    .map(|season| (formation, season))
-            })
-            .collect::<Vec<_>>();
-        let entry = activity.entry(faction).or_default();
-        entry.emergence.formation_seasons += seasons.len() as u64;
-        entry.emergence.eligible_formation_seasons += seasons
-            .iter()
-            .filter(|(formation, season)| {
-                formation.headcount > 0 && season.xp > 0 && campaign.is_independent(faction)
-            })
-            .count() as u64;
-        let selected = selected_service_source(campaign, faction);
-        let Some((formation_id, service)) = selected else {
-            entry.emergence.no_candidate_seasons += 1;
-            continue;
-        };
-        entry.emergence.candidate_seasons += 1;
-        let occupied = campaign.people.values().any(|person| {
-            person.assignment
-                == (PersonAssignment::Formation {
-                    formation: formation_id,
+    let threshold = data.progression.emergence.vacant_slot_engagements;
+    let seasons = campaign
+        .formations
+        .values()
+        .filter_map(|formation| {
+            formation
+                .service
+                .recent
+                .last()
+                .filter(|season| {
+                    season.completed_rounds.saturating_add(1) == campaign.completed_rounds
                 })
-                && !person.career.emergence.as_ref().is_some_and(|record| {
-                    record.completed_rounds == campaign.completed_rounds
-                        && record.source_formation == formation_id
-                })
-        });
+                .map(|season| (formation, season))
+        })
+        .collect::<Vec<_>>();
+    for (formation, service) in seasons {
+        let entry = activity.entry(formation.faction).or_default();
+        entry.emergence.formation_seasons += 1;
+        let staffed = campaign.formation_person(formation.id).is_some();
+        let eligible = formation.headcount > 0 && !staffed;
+        if eligible {
+            entry.emergence.eligible_formation_seasons += 1;
+        }
+        if staffed {
+            entry.emergence.staffed_slots += 1;
+        }
+        if formation.headcount == 0 {
+            entry.emergence.no_living_troops += 1;
+        }
         let emerged = campaign.people.values().any(|person| {
             person.career.emergence.as_ref().is_some_and(|record| {
                 record.completed_rounds == campaign.completed_rounds
-                    && record.source_formation == formation_id
+                    && record.source_formation == formation.id
             })
         });
-        let adults = emergence_roster_count(campaign, faction);
-        let chance = if service.xp > 0 && campaign.is_independent(faction) {
-            Some(emergence_chance(
-                campaign,
-                data,
-                formation_id,
-                &service,
-                adults,
-            ))
-        } else {
-            None
-        };
-        if occupied {
-            entry.emergence.occupied_candidates += 1;
+        let threshold_reached = formation.service.vacancy_service_progress >= threshold || emerged;
+        if threshold_reached {
+            entry.emergence.threshold_reached += 1;
+        } else if eligible {
+            entry.emergence.below_threshold += 1;
         }
         if emerged {
             entry.emergence.emerged_people += 1;
-        } else if chance.is_some() {
-            entry.emergence.chance_misses += 1;
-        }
-        if service.xp == 0 {
-            entry.emergence.zero_xp_candidates += 1;
-        }
-        if !campaign.is_independent(faction) {
-            entry.emergence.non_independent_candidates += 1;
-        }
-        if let Some(chance) = chance {
-            entry.emergence.chance_count += 1;
-            entry.emergence.chance_sum += chance;
-            entry.emergence.chance_min = Some(
-                entry
-                    .emergence
-                    .chance_min
-                    .map_or(chance, |old| old.min(chance)),
-            );
-            entry.emergence.chance_max = Some(
-                entry
-                    .emergence
-                    .chance_max
-                    .map_or(chance, |old| old.max(chance)),
-            );
-            if chance == 0 {
-                entry.emergence.zero_chance += 1;
-            }
         }
         entry.emergence.last_source = Some(LastSource {
             round: campaign.completed_rounds,
-            formation: formation_id,
+            formation: formation.id,
             service_xp: service.xp,
-            adult_roster: adults,
-            chance,
-            occupied,
+            qualifying_encounters: service
+                .encounters
+                .iter()
+                .filter(|encounter| encounter.meaningful)
+                .count(),
+            vacancy_progress: formation.service.vacancy_service_progress,
+            vacancy_threshold: threshold,
+            staffed,
             emerged,
         });
     }
-}
-
-fn selected_service_source(
-    campaign: &StrategicCampaign,
-    faction: FactionId,
-) -> Option<(FormationId, SeasonService)> {
-    campaign
-        .formations
-        .values()
-        .filter(|formation| formation.faction == faction && formation.headcount > 0)
-        .filter_map(|formation| {
-            let season = formation.service.recent.last()?;
-            (season.completed_rounds.saturating_add(1) == campaign.completed_rounds)
-                .then_some((formation, season))
-        })
-        .max_by_key(|(formation, season)| {
-            (
-                season.xp,
-                formation.service.tier,
-                std::cmp::Reverse(formation.id),
-            )
-        })
-        .map(|(formation, season)| (formation.id, season.clone()))
-}
-
-fn emergence_roster_count(campaign: &StrategicCampaign, faction: FactionId) -> u64 {
-    let adults = campaign
-        .people
-        .values()
-        .filter(|person| {
-            person.faction == faction
-                && person.is_alive()
-                && !person.career.retired
-                && person.age_years(campaign.completed_rounds) >= 18
-        })
-        .count() as u64;
-    adults.saturating_sub(
-        campaign
-            .people
-            .values()
-            .filter(|person| {
-                person.faction == faction
-                    && person.is_alive()
-                    && !person.career.retired
-                    && person.age_years(campaign.completed_rounds) >= 18
-                    && person
-                        .career
-                        .emergence
-                        .as_ref()
-                        .is_some_and(|record| record.completed_rounds == campaign.completed_rounds)
-            })
-            .count() as u64,
-    )
-}
-
-fn emergence_chance(
-    campaign: &StrategicCampaign,
-    data: &GameData,
-    formation: FormationId,
-    service: &SeasonService,
-    adults: u64,
-) -> u64 {
-    let rules = &data.progression.emergence;
-    let curve = u64::from(rules.roster_base).saturating_mul(u64::from(rules.roster_factor))
-        / (u64::from(rules.roster_square_factor)
-            .saturating_mul(adults.saturating_mul(adults))
-            .saturating_add(u64::from(rules.roster_factor))
-            .max(1));
-    let multiplier = match campaign.formations[&formation].service.tier {
-        kestrum::state::evidence::Veterancy::Ordinary => 1000,
-        kestrum::state::evidence::Veterancy::Seasoned => rules.seasoned_multiplier_permille,
-        kestrum::state::evidence::Veterancy::Veteran => rules.veteran_multiplier_permille,
-    } as u64;
-    let exceptional = service
-        .encounters
-        .iter()
-        .any(|encounter| encounter.tags.contains(&EvidenceKind::SurvivedOutnumbered))
-        && service.encounters.iter().any(|encounter| {
-            encounter.tags.contains(&EvidenceKind::CapturedAnchor)
-                || encounter.tags.contains(&EvidenceKind::DefendedAnchor)
-        });
-    let chance = curve.saturating_mul(multiplier) / 1000;
-    let chance = if exceptional {
-        chance.saturating_mul(u64::from(rules.exceptional_multiplier_permille)) / 1000
-    } else {
-        chance
-    };
-    chance.min(u64::from(rules.maximum_chance_permille))
 }

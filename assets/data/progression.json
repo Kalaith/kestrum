@@ -12,13 +12,7 @@
   "seasoned_permille": 1100,
   "veteran_permille": 1200,
   "emergence": {
-    "roster_base": 150,
-    "roster_factor": 64,
-    "roster_square_factor": 1,
-    "seasoned_multiplier_permille": 1250,
-    "veteran_multiplier_permille": 1500,
-    "exceptional_multiplier_permille": 2000,
-    "maximum_chance_permille": 500,
+    "vacant_slot_engagements": 2,
     "retrospective_rounds": 8,
     "minimum_age_years": 18,
     "maximum_age_years": 30

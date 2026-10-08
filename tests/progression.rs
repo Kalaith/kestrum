@@ -33,8 +33,8 @@ mod support;
 use support::*;
 
 #[test]
-fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
-    fn prepared() -> (GameData, StrategicCampaign, u32) {
+fn vacant_formation_earns_an_apprentice_after_two_qualifying_engagements() {
+    fn prepared() -> (GameData, StrategicCampaign) {
         let (data, mut campaign) = fixture();
         let template = campaign.people[&PersonId(1)].clone();
         campaign.people.clear();
@@ -59,23 +59,32 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
             campaign.people.insert(PersonId(id), person);
         }
         campaign.next_ids.person = PersonId(21);
-        encounter(&mut campaign, &data, 5, 6, 100);
-        let surviving_headcount = campaign.formations[&FormationId(7)].headcount;
-        (data, campaign, surviving_headcount)
+        (data, campaign)
     }
 
-    let seed = (0..100_000)
-        .find(|seed| {
-            let mut rng = SeededRng::new(*seed);
-            let first = rng.below(1000);
-            let second = rng.below(1000);
-            first >= 500 && second < 20
-        })
-        .expect("find deterministic roster-sensitive rolls");
+    let seed = 260926;
     let mut first = prepared();
     let mut second = prepared();
     first.1.rng.people = SeededRng::new(seed);
     second.1.rng.people = SeededRng::new(seed);
+    encounter(&mut first.1, &first.0, 5, 6, 100);
+    encounter(&mut second.1, &second.0, 5, 6, 100);
+    finish(&mut first.1, &first.0);
+    finish(&mut second.1, &second.0);
+    assert_eq!(
+        first.1.formations[&FormationId(7)]
+            .service
+            .vacancy_service_progress,
+        1
+    );
+    assert!(first
+        .1
+        .people
+        .values()
+        .all(|person| person.career.emergence.is_none()));
+    encounter(&mut first.1, &first.0, 8, 10, 100);
+    encounter(&mut second.1, &second.0, 8, 10, 100);
+    let headcount_after_battles = first.1.formations[&FormationId(7)].headcount;
     finish(&mut first.1, &first.0);
     finish(&mut second.1, &second.0);
     assert_eq!(first.1, second.1);
@@ -85,7 +94,11 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
         .values()
         .filter(|person| person.faction == FactionId(3) && person.career.emergence.is_some())
         .collect::<Vec<_>>();
-    assert_eq!(recruits.len(), 1, "a twenty-person roster remains eligible");
+    assert_eq!(
+        recruits.len(),
+        1,
+        "one vacant formation earns one apprentice"
+    );
     let recruit = recruits[0];
     let emergence = recruit.career.emergence.as_ref().unwrap();
     assert_eq!(emergence.source_formation, FormationId(7));
@@ -98,13 +111,143 @@ fn roster_curve_still_allows_emergence_at_twenty_and_is_seed_reproducible() {
             formation: FormationId(7)
         }
     );
-    assert_eq!(first.1.formations[&FormationId(7)].headcount, first.2);
+    assert_eq!(
+        first.1.formations[&FormationId(7)].headcount,
+        headcount_after_battles
+    );
     let record = first.1.history.events.values().find(|record| matches!(record.kind,
         kestrum::state::history::HistoryKind::Life { person, event: kestrum::state::history::LifeEvent::Emerged { .. }, .. } if person == recruit.id)).unwrap();
     assert_eq!(record.completed_rounds, emergence.completed_rounds);
     assert_eq!(record.sites[0].id, emergence.site);
     assert_eq!(record.visible_to, BTreeSet::from([FactionId(3)]));
     assert_eq!(record.armies[0].id, ArmyId(3));
+}
+
+#[test]
+fn occupied_veteran_does_not_starve_a_vacant_formation() {
+    let (data, mut campaign) = fixture();
+    let occupied = campaign.formations.get_mut(&FormationId(1)).unwrap();
+    occupied.service.xp = data.progression.veteran_xp;
+    occupied.service.tier = Veterancy::Veteran;
+
+    let vacant = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let mut unit = campaign.formations[&FormationId(1)].clone();
+    unit.id = vacant;
+    unit.headcount = 20;
+    unit.service = Default::default();
+    campaign.formations.insert(vacant, unit.clone());
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(vacant);
+    campaign.validate(&data).unwrap();
+
+    encounter(&mut campaign, &data, 5, 6, 100);
+    finish(&mut campaign, &data);
+    assert_eq!(
+        campaign.formations[&vacant]
+            .service
+            .vacancy_service_progress,
+        1
+    );
+    assert_eq!(
+        campaign.formations[&FormationId(1)]
+            .service
+            .vacancy_service_progress,
+        0
+    );
+    campaign.formations.get_mut(&vacant).unwrap().headcount = 20;
+    encounter(&mut campaign, &data, 8, 10, 100);
+    let headcount_after_battles = campaign.formations[&vacant].headcount;
+    finish(&mut campaign, &data);
+
+    let recruit = campaign
+        .people
+        .values()
+        .find(|person| person.faction == FactionId(1) && person.career.emergence.is_some())
+        .expect("the vacant formation earns an apprentice");
+    assert_eq!(
+        recruit.assignment,
+        PersonAssignment::Formation { formation: vacant }
+    );
+    assert_eq!(
+        campaign.formations[&vacant].headcount,
+        headcount_after_battles
+    );
+    assert_eq!(
+        campaign.formations[&FormationId(1)].service.tier,
+        Veterancy::Veteran
+    );
+}
+
+#[test]
+fn staffing_and_reopening_a_slot_requires_fresh_qualifying_service() {
+    let (data, mut campaign) = fixture();
+    let spare = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let mut unit = campaign.formations[&FormationId(1)].clone();
+    unit.id = spare;
+    campaign.formations.insert(spare, unit);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[1] = Some(spare);
+    campaign.validate(&data).unwrap();
+
+    apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::TransferPerson {
+            person: PersonId(1),
+            to_formation: spare,
+        },
+    )
+    .unwrap();
+    encounter(&mut campaign, &data, 5, 6, 100);
+    finish(&mut campaign, &data);
+    assert_eq!(
+        campaign.formations[&FormationId(1)]
+            .service
+            .vacancy_service_progress,
+        1
+    );
+
+    for target in [FormationId(1), spare] {
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::TransferPerson {
+                person: PersonId(1),
+                to_formation: target,
+            },
+        )
+        .unwrap();
+    }
+    assert_eq!(
+        campaign.formations[&FormationId(1)]
+            .service
+            .vacancy_service_progress,
+        0
+    );
+
+    encounter(&mut campaign, &data, 5, 6, 100);
+    finish(&mut campaign, &data);
+    assert_eq!(
+        campaign.formations[&FormationId(1)]
+            .service
+            .vacancy_service_progress,
+        1
+    );
+    assert!(campaign
+        .people
+        .values()
+        .all(|person| person.career.emergence.is_none()));
+    encounter(&mut campaign, &data, 8, 10, 100);
+    finish(&mut campaign, &data);
+    assert!(campaign.people.values().any(|person| {
+        person
+            .career
+            .emergence
+            .as_ref()
+            .is_some_and(|emergence| emergence.source_formation == FormationId(1))
+    }));
 }
 
 #[test]
@@ -128,12 +271,25 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
     companion.assignment = PersonAssignment::Formation { formation };
     campaign.people.insert(companion.id, companion);
     campaign.next_ids.person = PersonId(companion_id.0 + 1);
+    let vacant = campaign.next_ids.formation;
+    campaign.next_ids.formation.0 += 1;
+    let mut spare = campaign.formations[&formation].clone();
+    spare.id = vacant;
+    spare.headcount = 20;
+    campaign.formations.insert(vacant, spare);
+    campaign.armies.get_mut(&ArmyId(1)).unwrap().slots[2] = Some(vacant);
     campaign.armies.get_mut(&ArmyId(1)).unwrap().commander = Some(PersonId(1));
-    encounter(&mut campaign, &data, 5, 6, 60);
-    let seed = (0..100_000)
-        .find(|seed| SeededRng::new(*seed).below(1000) == 0)
-        .unwrap();
-    campaign.rng.people = SeededRng::new(seed);
+    encounter(&mut campaign, &data, 5, 6, 100);
+    campaign.rng.people = SeededRng::new(260926);
+    finish(&mut campaign, &data);
+    assert_eq!(
+        campaign.formations[&vacant]
+            .service
+            .vacancy_service_progress,
+        1
+    );
+    campaign.formations.get_mut(&vacant).unwrap().headcount = 20;
+    encounter(&mut campaign, &data, 8, 10, 100);
     finish(&mut campaign, &data);
     assert!(campaign.people[&PersonId(1)].evidence.counts[&EvidenceKind::CommandedVictory] > 0);
     assert!(
@@ -146,6 +302,10 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
         .values()
         .find(|person| person.faction == FactionId(1) && person.career.emergence.is_some())
         .expect("seeded emergence");
+    assert_eq!(
+        recruit.assignment,
+        PersonAssignment::Formation { formation: vacant }
+    );
     for person in [&campaign.people[&companion_id], recruit] {
         assert!(person.evidence.counts[&EvidenceKind::MeaningfulEncounter] > 0);
         for tag in [

@@ -45,22 +45,24 @@ joining a veteran formation does not inherit its old deeds.
 
 ## P17 — Emergence, disposition, traits and recognition
 
-After meaningful participation, choose at most one emergence candidate per faction
-per round: surviving formation with highest current-round service XP, then
-highest veterancy, then lowest ID. In the people RNG, draw once against permille
-chance `floor(150 * 64 / (64 + N*N))`, multiplied by 1250/1000 for Seasoned or
-1500/1000 for Veteran, then by 2 if the formation both survived outnumbered and
-captured/held an anchor; clamp at 500. N counts all living non-retired adult named
-people of that faction, including recovering/site-assigned people. Dead people,
-children and retirees do not count. This is a soft curve, never a 20/30-person cap.
+Each surviving formation with troops and a vacant named-person slot earns one
+emergence after two distinct meaningful engagements accepted while that slot is
+vacant. Use the P16 participation classifier and its site/opponent deduplication;
+resolve the threshold at the seasonal boundary. Evaluate formations in stable ID
+order. There is no faction-wide candidate lottery, veterancy multiplier, or named
+roster pressure: settlement people and service in other formations cannot block
+earned progress. Seeded people RNG still selects identity and disposition after
+the threshold is earned. This is not a hard roster cap; tune against observed
+campaigns rather than silently withholding a formation's earned recruit.
 
 An emerging person gets a new stable ID, human name from an authored reusable pool,
-age 18–30 from the people RNG, Recruit class initially, and attachment to the
-source formation. They are a tracked member of its existing headcount, not +1
+age 18–30 from the people RNG, Recruit class initially, and direct attachment to
+the source formation. They are a tracked member of its existing headcount, not +1
 troop. Appointing or transferring them does not change headcount either; named
 support is abstracted separately after tracking. Their service start is the latest
-of formation creation, eight rounds ago, and their seventeenth birthday. Only
-formation participation on/after that date can ground their retrospective facts.
+of formation creation, the configured retrospective window, and their seventeenth
+birthday. Only formation participation on/after that date can ground their
+retrospective facts.
 Use “served with…” for inferred service; never generate unsupported individual
 kills, kinship or a detailed heroic act from aggregate troop data. Emergence's
 distinguishing deed uses the qualifying current event.

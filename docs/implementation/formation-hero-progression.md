@@ -1,8 +1,9 @@
 # Formation recruits earn Hero status
 
-Status: planned implementation handoff, 2026-10-08. No gameplay changes have been
-implemented by this planning task. Source inspected at master commit 5ed5429;
-check the actual checkout and concurrent changes before starting.
+Status: active implementation, 2026-10-08. Stage A's Observer baseline is committed;
+Stage B's vacant-formation emergence passes focused checks. Personal Hero progression,
+presentation and the integrated replay remain. This plan's source investigation used
+master commit 5ed5429; implementation decisions follow the current checkout.
 
 ## 1. Outcome and scope
 

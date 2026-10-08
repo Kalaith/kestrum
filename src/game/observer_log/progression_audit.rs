@@ -2,17 +2,13 @@
 
 use super::person_progression_audit;
 use kestrum::{
-    data::{world::FactionId, GameData},
+    data::GameData,
     state::{
-        evidence::{EvidenceKind, SeasonService},
-        military::FormationId,
-        people::PersonAssignment,
-        relationships::FamilyOrigin,
+        military::FormationId, people::PersonAssignment, relationships::FamilyOrigin,
         StrategicCampaign,
     },
 };
 use serde_json::{json, Value};
-use std::collections::BTreeMap;
 
 pub(super) fn faction_progression_counts(campaign: &StrategicCampaign) -> Value {
     let factions = campaign
@@ -126,11 +122,7 @@ pub(super) fn faction_progression_counts(campaign: &StrategicCampaign) -> Value 
 }
 
 pub(super) fn formation_service_audit(campaign: &StrategicCampaign, data: &GameData) -> Value {
-    let selected_sources = campaign
-        .factions
-        .keys()
-        .map(|faction| (*faction, selected_service_source(campaign, *faction)))
-        .collect::<BTreeMap<_, _>>();
+    let threshold = data.progression.emergence.vacant_slot_engagements;
     let opportunities = campaign
         .formations
         .values()
@@ -140,12 +132,6 @@ pub(super) fn formation_service_audit(campaign: &StrategicCampaign, data: &GameD
                 .then_some((formation, service))
         })
         .map(|(formation, service)| {
-            let selected = selected_sources
-                .get(&formation.faction)
-                .copied()
-                .flatten()
-                == Some(formation.id);
-            let independent = campaign.is_independent(formation.faction);
             let emerged = campaign.people.values().find(|person| {
                 person.career.emergence.as_ref().is_some_and(|record| {
                     record.completed_rounds == campaign.completed_rounds
@@ -167,14 +153,12 @@ pub(super) fn formation_service_audit(campaign: &StrategicCampaign, data: &GameD
                 "emerged"
             } else if formation.headcount == 0 {
                 "no_living_troops"
-            } else if !independent {
-                "faction_not_independent"
-            } else if !selected {
-                "not_selected_as_highest_service"
-            } else if service.xp == 0 {
-                "selected_source_had_no_xp"
+            } else if slot_was_occupied {
+                "named_slot_staffed"
+            } else if formation.service.vacancy_service_progress >= threshold {
+                "threshold_reached_without_current_meaningful_service"
             } else {
-                "chance_not_met"
+                "collecting_vacant_slot_service"
             };
             json!({
                 "faction": formation.faction,
@@ -186,65 +170,22 @@ pub(super) fn formation_service_audit(campaign: &StrategicCampaign, data: &GameD
                 "service_xp": service.xp,
                 "tier": formation.service.tier,
                 "qualifying_encounters": service.encounters.iter().filter(|entry| entry.meaningful).count(),
-                "eligible": formation.headcount > 0 && service.xp > 0 && independent,
-                "selected_source": selected,
-                "slot_occupied_before_attempt": slot_was_occupied,
+                "vacant_slot_service_progress": formation.service.vacancy_service_progress,
+                "vacant_slot_service_required": threshold,
+                "threshold_reached": emerged.is_some() || formation.service.vacancy_service_progress >= threshold,
+                "eligible": formation.headcount > 0 && !slot_was_occupied,
+                "named_slot_occupied_after_boundary": slot_was_occupied,
                 "current_named_members": members,
                 "emerged_person": emerged.map(|person| person_progression_audit(campaign, person.id)),
-                "no_emergence_reason": reason
+                "threshold_outcome": reason
             })
         })
         .collect::<Vec<_>>();
-    let selected = selected_sources
-        .into_iter()
-        .map(|(faction, formation)| {
-            let Some(formation) = formation else {
-                return (faction, Value::Null);
-            };
-            let service = campaign.formations[&formation]
-                .service
-                .recent
-                .last()
-                .expect("selected source has current service");
-            let chance = if service.xp > 0 && campaign.is_independent(faction) {
-                Some(json!({
-                    "adult_roster_count": emergence_roster_count(campaign, faction),
-                    "chance_permille": emergence_chance(campaign, data, faction, formation, service)
-                }))
-            } else {
-                None
-            };
-            (faction, json!({ "formation": formation, "chance": chance }))
-        })
-        .collect::<BTreeMap<_, _>>();
     json!({
         "round": campaign.completed_rounds,
-        "selected_sources": selected,
+        "vacant_slot_service_required": threshold,
         "formation_opportunities": opportunities
     })
-}
-
-fn selected_service_source(
-    campaign: &StrategicCampaign,
-    faction: FactionId,
-) -> Option<FormationId> {
-    campaign
-        .formations
-        .values()
-        .filter(|formation| formation.faction == faction && formation.headcount > 0)
-        .filter_map(|formation| {
-            let service = formation.service.recent.last()?;
-            (service.completed_rounds.saturating_add(1) == campaign.completed_rounds)
-                .then_some((formation, service))
-        })
-        .max_by_key(|(formation, service)| {
-            (
-                service.xp,
-                formation.service.tier,
-                std::cmp::Reverse(formation.id),
-            )
-        })
-        .map(|(formation, _)| formation.id)
 }
 
 fn formation_members(campaign: &StrategicCampaign, formation: FormationId) -> Vec<Value> {
@@ -254,69 +195,4 @@ fn formation_members(campaign: &StrategicCampaign, formation: FormationId) -> Ve
         .filter(|person| person.assignment == (PersonAssignment::Formation { formation }))
         .map(|person| person_progression_audit(campaign, person.id))
         .collect()
-}
-
-fn emergence_chance(
-    campaign: &StrategicCampaign,
-    data: &GameData,
-    faction: FactionId,
-    formation: FormationId,
-    service: &SeasonService,
-) -> u64 {
-    let adults = emergence_roster_count(campaign, faction);
-    let rules = &data.progression.emergence;
-    let curve = u64::from(rules.roster_base).saturating_mul(u64::from(rules.roster_factor))
-        / (u64::from(rules.roster_square_factor)
-            .saturating_mul(adults.saturating_mul(adults))
-            .saturating_add(u64::from(rules.roster_factor))
-            .max(1));
-    let tier_multiplier = match campaign.formations[&formation].service.tier {
-        kestrum::state::evidence::Veterancy::Ordinary => 1000,
-        kestrum::state::evidence::Veterancy::Seasoned => rules.seasoned_multiplier_permille,
-        kestrum::state::evidence::Veterancy::Veteran => rules.veteran_multiplier_permille,
-    } as u64;
-    let exceptional = service
-        .encounters
-        .iter()
-        .any(|encounter| encounter.tags.contains(&EvidenceKind::SurvivedOutnumbered))
-        && service.encounters.iter().any(|encounter| {
-            encounter.tags.contains(&EvidenceKind::CapturedAnchor)
-                || encounter.tags.contains(&EvidenceKind::DefendedAnchor)
-        });
-    let adjusted = curve.saturating_mul(tier_multiplier) / 1000;
-    let adjusted = if exceptional {
-        adjusted.saturating_mul(u64::from(rules.exceptional_multiplier_permille)) / 1000
-    } else {
-        adjusted
-    };
-    adjusted.min(u64::from(rules.maximum_chance_permille))
-}
-
-fn emergence_roster_count(campaign: &StrategicCampaign, faction: FactionId) -> u64 {
-    let adults = campaign
-        .people
-        .values()
-        .filter(|person| {
-            person.faction == faction
-                && person.is_alive()
-                && !person.career.retired
-                && person.age_years(campaign.completed_rounds) >= 18
-        })
-        .count() as u64;
-    let boundary_emergences = campaign
-        .people
-        .values()
-        .filter(|person| {
-            person.faction == faction
-                && person.is_alive()
-                && !person.career.retired
-                && person.age_years(campaign.completed_rounds) >= 18
-                && person
-                    .career
-                    .emergence
-                    .as_ref()
-                    .is_some_and(|record| record.completed_rounds == campaign.completed_rounds)
-        })
-        .count() as u64;
-    adults.saturating_sub(boundary_emergences)
 }

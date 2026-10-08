@@ -66,7 +66,13 @@ qualifying service is enough for the general Battle Service epithet. Recognition
 preserves the person, portrait, Recruit profession and host troop kind, and does
 not appoint them as commander. Army Details labels emerging members Apprentice
 and recognized members Hero. The person's Career detail shows personal Hero
-service as qualifying engagements fought while fit.
+service as qualifying engagements fought while fit. AI battle selection can favor
+their army when a legal hostile opportunity exists; it does not fabricate
+participation. Recognized Heroes can be fielded from a site into uncovered armies,
+and surplus Heroes can move between colocated friendly armies under transfer
+rules. The seed-260926 replay meets the midgame goal with Heroes in 11 of 14
+active armies at round 120; see [verification](verification/formation-hero-progression.md)
+for later checkpoints and limits.
 
 ### Army and person presentation brief
 

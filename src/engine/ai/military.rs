@@ -4,6 +4,7 @@ use crate::{
     engine::{MoveOrder, SiegeRole},
     state::{
         military::{Army, ArmyId},
+        people::PersonAssignment,
         siege::{SiegeAction, SiegeOrder},
     },
 };
@@ -178,15 +179,24 @@ impl Planner<'_> {
             .threats
             .iter()
             .filter_map(|threat| {
-                self.threat_approaches(threat.site)
-                    .first()
-                    .map(|(cost, _, _)| (*cost, self.strategic_priority(threat.site), threat.site))
+                let approaches = self.threat_approaches(threat.site);
+                approaches.first().map(|(cost, _, _)| {
+                    let apprentice_can_approach = approaches
+                        .iter()
+                        .any(|(_, army, _)| self.army_has_pending_hero_service(*army));
+                    (
+                        !apprentice_can_approach,
+                        *cost,
+                        self.strategic_priority(threat.site),
+                        threat.site,
+                    )
+                })
             })
             .collect::<Vec<_>>();
         targets.sort();
         targets
             .into_iter()
-            .find_map(|(_, _, site)| self.clear_threat_at(site))
+            .find_map(|(_, _, _, site)| self.clear_threat_at(site))
     }
     pub(super) fn clear_threat_at(&self, site: SiteId) -> Option<AiDecision> {
         let threat = self
@@ -200,9 +210,9 @@ impl Planner<'_> {
         }) {
             groups.entry(army.site).or_default().push(army.id);
         }
-        groups
-            .into_values()
-            .find_map(|armies| {
+        self.order_contact_groups(groups)
+            .into_iter()
+            .find_map(|(_, armies)| {
                 self.choose(
                     Command::ClearThreat {
                         armies,
@@ -282,15 +292,19 @@ impl Planner<'_> {
                         .any(|threat| threat.site == site.id)
             })
             .map(|site| site.id);
-        self.targets(
+        let mut targets = self.targets(
             self.view
                 .hostile_presence
                 .iter()
                 .copied()
                 .chain(observed_empty),
-        )
-        .into_iter()
-        .find_map(|site| self.attack_at(site))
+        );
+        let mut ranked = targets.drain(..).enumerate().collect::<Vec<_>>();
+        ranked.sort_by_key(|(rank, site)| (!self.has_hero_battle_opportunity(*site), *rank));
+        ranked
+            .into_iter()
+            .map(|(_, site)| site)
+            .find_map(|site| self.attack_at(site))
     }
 
     pub(super) fn recover_lost_territory(&self) -> Option<AiDecision> {
@@ -358,19 +372,66 @@ impl Planner<'_> {
         }) {
             groups.entry(army.site).or_default().push(army.id);
         }
-        groups.into_iter().find_map(|(origin, armies)| {
-            (!self.view.hostile_presence.contains(&site) || self.advantage(&armies, site))
-                .then(|| {
-                    self.choose(
-                        Command::Move(MoveOrder {
-                            armies,
-                            path: vec![origin, site],
-                        }),
-                        Some(self.objective(site, AiObjectiveKind::Attack)),
-                    )
-                })
-                .flatten()
+        self.order_contact_groups(groups)
+            .into_iter()
+            .find_map(|(origin, armies)| {
+                (!self.view.hostile_presence.contains(&site) || self.advantage(&armies, site))
+                    .then(|| {
+                        self.choose(
+                            Command::Move(MoveOrder {
+                                armies,
+                                path: vec![origin, site],
+                            }),
+                            Some(self.objective(site, AiObjectiveKind::Attack)),
+                        )
+                    })
+                    .flatten()
+            })
+    }
+
+    pub(super) fn army_has_pending_hero_service(&self, army_id: ArmyId) -> bool {
+        let Some(army) = self.view.armies.iter().find(|army| army.id == army_id) else {
+            return false;
+        };
+        self.view.people.iter().any(|person| {
+            person.faction == self.owner
+                && !person.career.retired
+                && person.is_fit_for_field(
+                    self.campaign.completed_rounds,
+                    self.data.rules.leadership.field_min_age_years,
+                )
+                && person.career.emergence.is_some()
+                && person.career.recognition.is_none()
+                && person.career.hero_service_progress
+                    < self.data.progression.recognition.personal_engagements
+                && matches!(person.assignment, PersonAssignment::Formation { formation }
+                    if army.formation_ids().any(|member| member == formation))
         })
+    }
+
+    fn has_hero_battle_opportunity(&self, site: SiteId) -> bool {
+        self.view.hostile_presence.contains(&site)
+            && self.view.armies.iter().any(|army| {
+                self.moving(army, false)
+                    && self.army_has_pending_hero_service(army.id)
+                    && self.view.world.connected_route(army.site, site).is_some()
+            })
+    }
+
+    fn order_contact_groups(
+        &self,
+        groups: BTreeMap<SiteId, Vec<ArmyId>>,
+    ) -> Vec<(SiteId, Vec<ArmyId>)> {
+        let mut ordered = groups.into_iter().collect::<Vec<_>>();
+        ordered.sort_by_key(|(origin, armies)| {
+            (
+                !armies
+                    .iter()
+                    .any(|army| self.army_has_pending_hero_service(*army)),
+                *origin,
+            )
+        });
+        ordered
     }
 
     pub(super) fn advantage(&self, armies: &[ArmyId], site: SiteId) -> bool {
@@ -438,5 +499,249 @@ impl Planner<'_> {
             enemy
         };
         own * 100 > estimate * u128::from(self.data.ai.attack_advantage_percent)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::{ObservedRoutes, Planner};
+    use crate::{
+        data::{
+            economy::Resources,
+            world::{DiplomaticState, FactionId},
+            GameData,
+        },
+        engine::{apply, Actor, Command},
+        state::{
+            people::{EmergenceRecord, PersonAssignment, PersonCareer, PersonId},
+            threat::ThreatStatus,
+            StrategicCampaign,
+        },
+    };
+    use std::collections::BTreeSet;
+
+    const NPC: FactionId = FactionId(2);
+
+    #[test]
+    fn attack_prefers_an_existing_hostile_battle_for_an_apprentice_army() {
+        let mut data = GameData::load().unwrap();
+        data.ai.unknown_enemy_power = 1;
+        let mut campaign = StrategicCampaign::new(&data).unwrap();
+        apply(&mut campaign, &data, Actor::Player, Command::EndTurn).unwrap();
+        let round = campaign.completed_rounds;
+        for threat in campaign.threats.values_mut() {
+            threat.headcount = 0;
+            threat.status = ThreatStatus::Cleared {
+                round,
+                by: NPC,
+                payout: Resources {
+                    gold: 0,
+                    wood: 0,
+                    stone: 0,
+                },
+            };
+        }
+
+        let target = campaign
+            .world
+            .sites
+            .iter()
+            .map(|site| site.id)
+            .find(|site| campaign.world.adjacent_sites(*site).len() >= 2)
+            .unwrap();
+        let origins = campaign
+            .world
+            .adjacent_sites(target)
+            .into_iter()
+            .take(2)
+            .collect::<Vec<_>>();
+        let npc_army = campaign
+            .armies
+            .values()
+            .find(|army| army.faction == NPC)
+            .unwrap()
+            .id;
+        let original = campaign.armies[&npc_army].clone();
+        let empty_formations = original
+            .formation_ids()
+            .filter(|formation| {
+                !campaign.people.values().any(|person| {
+                    matches!(person.assignment, PersonAssignment::Formation { formation: assigned }
+                        if assigned == *formation)
+                })
+            })
+            .collect::<Vec<_>>();
+        let apprentice_formation = empty_formations[0];
+        let baseline_formation = empty_formations[1];
+        let baseline_army = apply(
+            &mut campaign,
+            &data,
+            Actor::Npc(NPC),
+            Command::SplitArmy {
+                formation: baseline_formation,
+            },
+        )
+        .unwrap()
+        .split_army
+        .unwrap();
+        campaign.armies.get_mut(&npc_army).unwrap().site = origins[1];
+        campaign.armies.get_mut(&baseline_army).unwrap().site = origins[0];
+
+        let commander = original.commander.expect("the NPC army has its founder");
+        let mut apprentice = campaign.people[&commander].clone();
+        let apprentice_id = campaign.next_ids.person;
+        campaign.next_ids.person = PersonId(apprentice_id.0.checked_add(1).unwrap());
+        apprentice.appearance = crate::engine::portraits::allocate_for_person(
+            &mut campaign,
+            &data.portraits,
+            apprentice_id,
+        )
+        .unwrap();
+        apprentice.id = apprentice_id;
+        apprentice.name = format!("{} Apprentice", apprentice.name);
+        apprentice.class = crate::data::world::PersonClass::Recruit;
+        apprentice.assignment = PersonAssignment::Formation {
+            formation: apprentice_formation,
+        };
+        apprentice.birth_round = -80;
+        apprentice.service_start_round = round;
+        apprentice.movement_spent = 0;
+        apprentice.career = PersonCareer::default();
+        apprentice.career.emergence = Some(EmergenceRecord {
+            completed_rounds: round,
+            source_formation: apprentice_formation,
+            source_troop: campaign.formations[&apprentice_formation].kind,
+            site: origins[1],
+            distinguishing_deed: None,
+        });
+        apprentice.evidence = Default::default();
+        campaign.people.insert(apprentice_id, apprentice);
+
+        let enemy = campaign
+            .armies
+            .values()
+            .find(|army| army.faction != NPC)
+            .unwrap()
+            .clone();
+        let other_factions = campaign
+            .factions
+            .keys()
+            .copied()
+            .filter(|other| *other != NPC)
+            .collect::<Vec<_>>();
+        for other in other_factions {
+            set_relation(
+                &mut campaign,
+                other,
+                if other == enemy.faction {
+                    DiplomaticState::War
+                } else {
+                    DiplomaticState::Peace
+                },
+            );
+        }
+        for army in campaign
+            .armies
+            .values_mut()
+            .filter(|army| army.faction == enemy.faction)
+        {
+            army.site = target;
+        }
+        for formation in campaign
+            .formations
+            .values_mut()
+            .filter(|formation| formation.faction == enemy.faction)
+        {
+            formation.headcount = 1;
+        }
+        for site in &origins {
+            campaign
+                .set_site_control(&data, *site, Some(NPC), false)
+                .unwrap();
+        }
+        campaign
+            .set_site_control(&data, target, Some(enemy.faction), false)
+            .unwrap();
+        campaign.validate(&data).unwrap();
+
+        let battle_planner = planner(&campaign, &data);
+        assert!(battle_planner.at_war(enemy.faction));
+        assert!(battle_planner.army_has_pending_hero_service(npc_army));
+        assert!(
+            battle_planner.advantage(&[npc_army], target),
+            "the Apprentice's full army clears the observed-force estimate"
+        );
+        assert!(
+            battle_planner.has_hero_battle_opportunity(target),
+            "the Apprentice's army can reach the observed enemy"
+        );
+        let preferred = battle_planner.attack_at(target).unwrap();
+        assert!(
+            matches!(&preferred.command, Command::Move(order)
+                if order.armies == [npc_army] && order.path == [origins[1], target]),
+            "an existing reachable battle should favor the Apprentice's army: {preferred:?}"
+        );
+
+        campaign
+            .people
+            .get_mut(&apprentice_id)
+            .unwrap()
+            .career
+            .emergence = None;
+        campaign.validate(&data).unwrap();
+        let ordinary = planner(&campaign, &data).attack_at(target).unwrap();
+        assert!(
+            matches!(&ordinary.command, Command::Move(order)
+                if order.armies == [baseline_army] && order.path == [origins[0], target]),
+            "without an Apprentice, existing target ordering should be retained: {ordinary:?}"
+        );
+    }
+
+    fn planner<'a>(campaign: &'a StrategicCampaign, data: &'a GameData) -> Planner<'a> {
+        let view = super::super::project(campaign, NPC).unwrap();
+        let enemies = campaign
+            .relations
+            .iter()
+            .filter(|relation| {
+                relation.factions.contains(&NPC) && relation.state == DiplomaticState::War
+            })
+            .flat_map(|relation| relation.factions)
+            .filter(|faction| *faction != NPC)
+            .collect::<BTreeSet<_>>();
+        let routes = ObservedRoutes::new(&view, data, &enemies);
+        Planner {
+            campaign,
+            data,
+            owner: NPC,
+            view,
+            objective: None,
+            routes,
+            rejected_candidates: Default::default(),
+            include_diagnostics: false,
+            candidate_trace: Default::default(),
+        }
+    }
+
+    fn set_relation(campaign: &mut StrategicCampaign, other: FactionId, state: DiplomaticState) {
+        let factions = if NPC.0 < other.0 {
+            [NPC, other]
+        } else {
+            [other, NPC]
+        };
+        let round = campaign.completed_rounds;
+        campaign
+            .relations
+            .iter_mut()
+            .find(|relation| relation.factions == factions)
+            .unwrap()
+            .state = state;
+        let pair = campaign
+            .diplomacy
+            .pairs
+            .iter_mut()
+            .find(|pair| pair.factions == factions)
+            .unwrap();
+        pair.peace_since = (state == DiplomaticState::Peace).then_some(round);
+        pair.truce_until = None;
     }
 }

@@ -106,7 +106,8 @@ impl Planner<'_> {
         for person in people {
             if !matches!(person.assignment, PersonAssignment::Site { .. })
                 || (person.class == PersonClass::Recruit
-                    && person.career.completed_mentors.is_empty())
+                    && person.career.completed_mentors.is_empty()
+                    && person.career.recognition.is_none())
                 || person.career.course.is_some()
                 || self.campaign.mentorships.contains_key(&person.id)
             {
@@ -121,6 +122,70 @@ impl Planner<'_> {
                     None,
                 ) {
                     return Some(decision);
+                }
+            }
+        }
+        None
+    }
+
+    pub(super) fn redistribute_heroes(&self, people: &[&Person]) -> Option<AiDecision> {
+        for source in self
+            .view
+            .armies
+            .iter()
+            .filter(|army| army.faction == self.owner)
+        {
+            let heroes = people
+                .iter()
+                .copied()
+                .filter(|person| {
+                    person.is_alive()
+                        && !person.career.retired
+                        && person.career.recognition.is_some()
+                        && matches!(person.assignment, PersonAssignment::Formation { formation }
+                            if source.formation_ids().any(|member| member == formation))
+                })
+                .collect::<Vec<_>>();
+            if heroes.len() < 2 {
+                continue;
+            }
+            for target in self.view.armies.iter().filter(|army| {
+                army.faction == self.owner
+                    && army.id != source.id
+                    && army.site == source.site
+                    && !people.iter().any(|person| {
+                        person.is_alive()
+                            && !person.career.retired
+                            && person.career.recognition.is_some()
+                            && matches!(person.assignment, PersonAssignment::Formation { formation }
+                                if army.formation_ids().any(|member| member == formation))
+                    })
+            }) {
+                let Some(to_formation) = target
+                    .formation_ids()
+                    .find(|formation| self.campaign.formation_person(*formation).is_none())
+                else {
+                    continue;
+                };
+                for person in &heroes {
+                    if source.commander == Some(person.id)
+                        || !person.is_fit_for_field(
+                            self.campaign.completed_rounds,
+                            self.data.rules.leadership.field_min_age_years,
+                        )
+                        || person.career.course.is_some()
+                    {
+                        continue;
+                    }
+                    if let Some(decision) = self.choose(
+                        Command::TransferPerson {
+                            person: person.id,
+                            to_formation,
+                        },
+                        None,
+                    ) {
+                        return Some(decision);
+                    }
                 }
             }
         }
@@ -154,7 +219,13 @@ impl Planner<'_> {
             });
             let missing_role = person.class != PersonClass::Recruit
                 && !members.iter().copied().filter(attached).any(|other| other.class == person.class);
-            (replacement || missing_role).then(|| army.formation_ids()
+            let missing_hero = person.career.recognition.is_some()
+                && !members
+                    .iter()
+                    .copied()
+                    .filter(attached)
+                    .any(|other| other.career.recognition.is_some());
+            (replacement || missing_role || missing_hero).then(|| army.formation_ids()
                 .find(|id| self.campaign.formation_person(*id).is_none())).flatten()
         })
     }

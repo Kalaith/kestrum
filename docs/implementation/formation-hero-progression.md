@@ -1,13 +1,12 @@
 # Formation recruits earn Hero status
 
-Status: active implementation, 2026-10-08. Stages A-D are committed. Stage E's
-threshold tuning, replacement lifecycle scenario and production replay are
-recorded in [verification](../verification/formation-hero-progression.md). The
-earned path works, but the replay has Hero-bearing members in only 6 of 13 armies
-at round 120, so the user's midgame majority target remains open. Full-project
-validation also retains five failing targets listed in that report. This plan's
-source investigation used master commit 5ed5429; implementation decisions follow
-the current checkout.
+Status: implemented, 2026-10-09. Stages A-F are committed. Stage E's threshold
+tuning and replacement lifecycle, plus Stage F's AI deployment and distribution,
+are recorded in [verification](../verification/formation-hero-progression.md).
+The seed-260926 replay now has recognized Heroes in 11 of 14 active armies at
+round 120. Five full-project targets still fail as listed in that report; this
+feature's pacing acceptance passes. The source investigation used master commit
+5ed5429; implementation decisions follow the current checkout.
 
 ## 1. Outcome and scope
 
@@ -315,15 +314,37 @@ candidate-starvation risk; record exact arguments and stop conditions. Do not
 chase an arbitrary total Hero count without checking actual qualifying exposure.
 For the user's midgame pacing goal, require more than half of the campaign's
 active armies to contain at least one recognized Hero at round 120. Count
-Apprentices separately; do not treat them as Heroes. The current 6/13 result
-does not pass, so keep the handoff open and investigate post-emergence exposure
-or distribution without crediting service a person did not witness.
+Apprentices separately; do not treat them as Heroes. Stage F passes this target
+with 11/14 armies in seed 260926. Keep personal service witness-based: direct fit
+Apprentices toward available hostile battles, deploy recognized Heroes into
+vacant formations, and redistribute a surplus Hero only between colocated friendly
+armies. The round-200 faction/army mix varies substantially, so this is a
+reproducible midgame pacing result, not a claim of persistent late-campaign
+coverage.
 
 Update docs/06-character-development.md, docs/08-generations-and-succession.md,
 docs/implementation/people-and-places.md and the relevant decision register/README
 sections to describe the implemented contract. Preserve historical verification
 records. Add the final evidence to docs/verification/formation-hero-progression.md
 and its index. Remove completed work from todo.md; retain genuine open checks.
+
+### F. Improve AI Hero coverage by midgame
+
+When an army has a fit Apprentice and a legal hostile battle opportunity, let the
+AI favor that army for attack selection so the named person can earn recognition
+through witnessed service. Make assigned recognized Recruit-class Heroes eligible
+to return to a formation without requiring mentorship. Prefer deploying them into
+an army that has no recognized Hero. If a fit noncommander Hero is surplus in an
+army with at least two Heroes, allow a same-site transfer to a friendly Hero-free
+army with an open formation. Preserve command, fitness, presence, capacity and
+existing transfer rules; never award Hero status from an engagement the person did
+not participate in.
+
+Replay seed 260926 through round 200 with four factions and require more than half
+of active armies to contain a recognized Hero at round 120. Report Apprentice
+coverage separately and preserve late checkpoints to detect distribution drift.
+Record the AI decision and distribution regressions, update the progression
+contract and evidence index, and remove this completed handoff from todo.md.
 
 ## 6. Acceptance and test plan
 

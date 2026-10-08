@@ -32,6 +32,7 @@ impl Planner<'_> {
         }
         if let Some(decision) = self
             .deploy_learners(&people)
+            .or_else(|| self.redistribute_heroes(&people))
             .or_else(|| self.train_people(&people))
         {
             return Some(decision);

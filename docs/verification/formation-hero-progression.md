@@ -128,6 +128,63 @@ gate passed. The hidden native wrapper recaptured and exited successfully for
 `ui_formation_hero_detail.png` at 1920×1080; all three were visually inspected.
 No physical-touch playtest or publication was performed.
 
-The deterministic discovery and Hero award path is working. The user's
-majority-of-armies-by-midgame goal remains open until campaign rules create
-enough later qualifying exposure for Apprentices spread across the active armies.
+The deterministic discovery and Hero award path worked, but Stage E did not meet
+the user's majority-of-armies-by-midgame goal. Stage F below records the AI
+exposure and distribution changes that close that pacing gap.
+
+## Stage F — AI Hero exposure and distribution (2026-10-09)
+
+Stage E's battle thresholds remain one qualifying engagement on a vacant
+formation for Apprentice emergence, followed by one later qualifying engagement
+personally fought while fit for Hero recognition. Stage F changes AI battle
+selection and deployment so those earned Heroes reach more active armies without
+granting unwitnessed personal service.
+
+- Attack planning favors a fit Apprentice-bearing army when it can reach an
+  existing hostile battle opportunity; diplomacy and legal target checks remain
+  in force.
+- A recognized Recruit-class Hero assigned at a site can re-enter a formation
+  without a mentorship prerequisite. Placement prefers armies without a Hero.
+- A fit noncommander Hero can transfer locally from an army carrying at least two
+  Heroes to a colocated friendly army with no Hero and a vacant formation.
+
+Command:
+
+```powershell
+..\rust_management\cargo.ps1 run -p kestrum --locked --release --example observe_campaign '--' 260926 200 4
+```
+
+The replay completed 4,085 observer steps in 149.858 seconds and reached the
+round cap without naturally ending. Bera Lark was eliminated before round 80;
+Rose was eliminated by round 200. Coverage counts recognized Heroes only.
+
+| Round | Rose | Ashen Lark | Ashen Wren | Total active armies |
+|---:|---:|---:|---:|---:|
+| 80 | 3/4 | 1/3 | 0/2 | 4/9 |
+| 120 | 6/8 | 4/4 | 1/2 | 11/14 |
+| 160 | 3/3 | 3/8 | 3/3 | 9/14 |
+| 200 | Eliminated | 8/8 | 0/1 | 8/9 |
+
+At round 120, 11/14 active armies (78.6%) had a recognized Hero, exceeding the
+more-than-half acceptance target. All three surviving factions had Hero-bearing
+armies. Apprentices are tracked separately: 5/8 Rose armies, 2/4 Ashen Lark
+armies and 0/2 Ashen Wren armies had an Apprentice at round 120. Coverage was
+4/9 at round 80 and 9/14 at round 160. Late coverage remains sensitive to faction
+elimination and replacement: at round 200 Ashen Wren had one active Apprentice-
+only army while Ashen Lark had eight of eight Hero armies. This replay therefore
+establishes the requested midgame result, not stable late-campaign coverage.
+
+Additional checks passed:
+
+- `cargo fmt -p kestrum -- --check`
+- `..\rust_management\cargo.ps1 test -p kestrum --locked --lib attack_prefers_an_existing_hostile_battle_for_an_apprentice_army` (1 passed)
+- `..\rust_management\cargo.ps1 test -p kestrum --locked --test ai_review` (6 passed; before the final local redistribution change)
+- `..\rust_management\cargo.ps1 test -p kestrum --locked --test ai_hero_deployment` (2 passed on the final distribution code)
+- `..\rust_management\cargo.ps1 test -p kestrum --locked --test code_standards`
+- `..\rust_management\cargo.ps1 clippy -p kestrum --locked --all-targets --all-features '--' -D warnings`
+
+The full project suite was not rerun for Stage F. The five failures recorded in
+Stage E remain unclassified against pristine HEAD; the known seed-88 round-240
+production-victory failure remains a documented baseline exception. No physical
+touch playtest, visual recapture, publication or human campaign playtest was
+performed in Stage F.

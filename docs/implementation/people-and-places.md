@@ -100,6 +100,14 @@ formation, and command appointment alone does not change attachment. Emergence
 within Archers therefore reads `Apprentice Name + Archers`, then `Hero Name +
 Archers` after recognition. Founders start as `Lord Name + Warriors`.
 
+AI exposure and distribution preserve this earned progression: fit Apprentices
+are favored for legal hostile battle opportunities; recognized Heroes assigned
+at sites may return to uncovered armies; and surplus noncommander Heroes may
+transfer only to a colocated friendly army with a vacant formation. A transfer
+does not supply combat evidence. The four-faction seed-260926 replay puts Heroes
+in 11/14 active armies by round 120; its late campaign is less evenly distributed
+after faction elimination. See the [progression verification](../verification/formation-hero-progression.md).
+
 Record shared-service seasons and repeated opposing encounters as compact pair
 facts only for tracked people actually present. After two mutual combats, an
 observed opponent can be described as a recurring rival. Initially bonds/rivalry

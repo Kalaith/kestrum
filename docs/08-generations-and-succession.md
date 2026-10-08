@@ -114,6 +114,13 @@ Most people remain abstract population. Deeper simulation is reserved for releva
 
 **Implemented battle progression (P17):** a surviving formation with troops earns an Apprentice after one qualifying meaningful engagement while its named-person slot is vacant. That tracked person earns Hero recognition after one later qualifying engagement personally fought while fit. The thresholds are loaded from progression data; the resulting person stays attached to the existing troop formation and does not add headcount. The deterministic four-faction replay and its mid-game army coverage are recorded in [formation-to-Hero verification](verification/formation-hero-progression.md).
 
+AI deployment and local transfers extend that progression into uncovered armies:
+fit Apprentices receive preference for available hostile battle opportunities,
+recognized Heroes can re-enter formations without mentorship, and surplus
+noncommander Heroes can move between colocated friendly armies. The transfers
+preserve personal history and award no service. In seed 260926, 11 of 14 active
+armies contain a Hero at round 120; later faction losses change the round-200 mix.
+
 ## Generational acceptance cases
 
 1. A founder ages into a useful non-frontline role while a trained junior can take responsibility.

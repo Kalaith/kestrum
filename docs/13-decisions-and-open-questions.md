@@ -48,7 +48,7 @@ with evidence; their earlier “open” labels are not blockers.
 | Construction | Persistent prepaid work, builders, progress, interruption, cancellation and conserved settlers. [Living places](07-living-places.md). |
 | Victory and submission (D04/O07) | Defeat/endings and inactive submission are implemented; submission adds no tributary economy or independent military. [Kingdoms](03-kingdoms-and-economy.md). |
 | Combat and sieges | Prepared deterministic formation resolution, immutable playback, lasting losses and persistent siege orders. [Battles](05-battles-and-sieges.md). |
-| People and generations | Evidence-based emergence, ordinary careers, aging, recovery, retirement, mentorship, households and succession. [Characters](06-character-development.md), [Generations](08-generations-and-succession.md). |
+| People and generations | Evidence-based emergence and Hero recognition, AI placement into uncovered armies, ordinary careers, aging, recovery, retirement, mentorship, households and succession. Seed 260926 reaches 11/14 Hero-bearing armies at round 120; later coverage varies with faction losses. [Characters](06-character-development.md), [Generations](08-generations-and-succession.md), [progression verification](verification/formation-hero-progression.md). |
 | Living places | Growth/decline, occupation, damage, refugees, changing roles and ordinary threats. [Places](07-living-places.md). |
 | Legacy and memory | Factual custody/deeds, witnessed succession, bounded histories and known dates. [History](09-history-and-content.md). |
 | AI and phases | Legal bounded rival orders and observable Pause/Step/Resume; no impossible units or hidden permission bypass. [Kingdoms](03-kingdoms-and-economy.md). |

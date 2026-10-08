@@ -34,6 +34,7 @@ Historical speculative wording does not override the current request or plan.
 | [Campaign notifications](notification-plan.md) | Implemented event rail, durable receipts, controlled-place warnings, delivery settings and acceptance contract |
 | [Hero portrait generator](hero-portrait-generator-plan.md) | Persistent appearance, layered human art, duplicate policy and G03/G04 continuation contracts |
 | [Observer border objective fix](implementation/observer-border-objective-fix.md) | Planned handoff for stopping AI armies from oscillating between peaceful border sites |
+| [Formation recruits earn Hero status](implementation/formation-hero-progression.md) | Planned handoff for troop service, attached apprentices, earned Hero recognition and generational replacements |
 | [01 Vision and experience](01-vision-and-experience.md) | Player role, core loops and generational identity |
 | [02 World, time, and control](02-world-time-and-control.md) | Physical graph, regions, ownership and seasonal turns |
 | [03 Kingdoms and economy](03-kingdoms-and-economy.md) | Setup, resources, development, diplomacy and AI |

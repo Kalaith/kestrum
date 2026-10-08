@@ -100,5 +100,6 @@ fn deed_key(deed: EpithetFact) -> &'static str {
         EpithetFact::TreatedWounded => "deed_treated_wounded",
         EpithetFact::AssumedCommand => "deed_assumed_command",
         EpithetFact::CommandedVictory => "deed_commanded_victory",
+        EpithetFact::BattleService => "deed_battle_service",
     }
 }

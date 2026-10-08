@@ -336,6 +336,7 @@ pub(super) const REQUIRED_TEXT: &[&str] = &[
     "deed_treated_wounded",
     "deed_assumed_command",
     "deed_commanded_victory",
+    "deed_battle_service",
     "recognized_as",
     "relationship_rival",
     "relationship_served_with",

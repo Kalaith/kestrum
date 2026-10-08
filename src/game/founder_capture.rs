@@ -191,13 +191,15 @@ fn roster_archer(data: &GameData, campaign: &mut StrategicCampaign, scene: &str)
         distinguishing_deed: Some(EpithetFact::SurvivedOutnumbered),
     });
     let encounters = if scene == "formation_emerged" {
-        data.progression
-            .recognition
-            .meaningful_encounters
-            .saturating_sub(1)
-            .max(1)
+        u32::from(
+            data.progression
+                .recognition
+                .personal_engagements
+                .saturating_sub(1)
+                .max(1),
+        )
     } else {
-        data.progression.recognition.meaningful_encounters
+        u32::from(data.progression.recognition.personal_engagements)
     };
     archer
         .evidence

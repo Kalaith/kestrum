@@ -155,7 +155,7 @@ impl ObserverLog {
                     "record": "session_started",
                     "written_at_unix_ms": unix_millis(),
                     "seed": seed,
-                    "format_version": 3
+                    "format_version": 4
                 }));
             }
             Err(error) => {
@@ -387,8 +387,9 @@ fn person_progression_audit(campaign: &StrategicCampaign, id: PersonId) -> Value
         "assigned_formation": assigned_formation,
         "assigned_army": assigned_army,
         "emergence": person.career.emergence,
-        "personal_qualifying_participation": person.evidence.counts
+        "meaningful_encounter_evidence_total": person.evidence.counts
             .get(&EvidenceKind::MeaningfulEncounter).copied().unwrap_or_default(),
+        "hero_service_progress": person.career.hero_service_progress,
         "recognition": person.career.recognition
     })
 }

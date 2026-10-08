@@ -51,7 +51,7 @@ pub struct TraitRules {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RecognitionRules {
-    pub meaningful_encounters: u32,
+    pub personal_engagements: u8,
     pub required_facts: Vec<EpithetFact>,
 }
 
@@ -64,6 +64,7 @@ pub enum EpithetFact {
     TreatedWounded,
     AssumedCommand,
     CommandedVictory,
+    BattleService,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -166,7 +167,7 @@ impl HumanNamePool {
                 != self.family_names.len()
             || self.given_names.iter().any(|name| invalid_name(name))
             || self.family_names.iter().any(|name| invalid_name(name))
-            || self.epithets.len() != 4
+            || self.epithets.len() != 5
             || self.epithets.values().any(|epithet| invalid_name(epithet))
         {
             return Err("human_names.json: invalid names or incomplete epithet vocabulary".into());
@@ -222,7 +223,8 @@ impl ProgressionRules {
         require(
             "progression.json",
             "recognition",
-            self.recognition.meaningful_encounters == 3
+            (1..=10).contains(&self.recognition.personal_engagements)
+                && self.recognition.personal_engagements == 3
                 && self
                     .recognition
                     .required_facts
@@ -237,7 +239,7 @@ impl ProgressionRules {
                     ]
                     .into_iter()
                     .collect(),
-            "requires meaningful encounters and supported deeds",
+            "requires personal engagements and supported epithets",
         )
     }
 

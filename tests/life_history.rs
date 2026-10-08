@@ -182,6 +182,15 @@ fn recognition_is_announced_once_and_observers_cannot_read_private_milestones() 
         (EvidenceKind::MeaningfulEncounter, 3),
         (EvidenceKind::DefendedAnchor, 1),
     ]);
+    person.career.hero_service_progress = 3;
+    person
+        .career
+        .hero_service_sites
+        .insert(EpithetFact::BattleService, SiteId(1));
+    person
+        .career
+        .hero_service_sites
+        .insert(EpithetFact::DefendedAnchor, SiteId(1));
     person
         .evidence
         .service_by_troop

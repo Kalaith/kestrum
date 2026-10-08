@@ -117,6 +117,12 @@ pub struct PersonCareer {
     pub notable_sites: BTreeMap<EpithetFact, SiteId>,
     #[serde(default)]
     pub emergence: Option<EmergenceRecord>,
+    /// Meaningful personal field engagements after this record was introduced.
+    #[serde(default)]
+    pub hero_service_progress: u8,
+    /// Post-tracking personal deeds eligible to ground a specific Hero epithet.
+    #[serde(default)]
+    pub hero_service_sites: BTreeMap<EpithetFact, SiteId>,
     pub traits: BTreeSet<PersonTrait>,
     pub recognition: Option<Recognition>,
     pub course: Option<PersonCourse>,

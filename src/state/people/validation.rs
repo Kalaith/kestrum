@@ -109,7 +109,7 @@ impl StrategicCampaign {
     fn validate_career(&self, person: &Person, data: &GameData) -> Result<(), String> {
         let career = &person.career;
         require(
-            career.notable_sites.len() <= 6
+            career.notable_sites.len() <= 7
                 && career.notable_sites.iter().all(|(fact, site)| {
                     self.world.site(*site).is_some()
                         && person
@@ -122,6 +122,35 @@ impl StrategicCampaign {
                 }),
             "career.notable_sites",
             "unknown site or unsupported distinction",
+        )?;
+        require(
+            career.hero_service_progress <= data.progression.recognition.personal_engagements
+                && u32::from(career.hero_service_progress)
+                    <= person
+                        .evidence
+                        .counts
+                        .get(&crate::state::evidence::EvidenceKind::MeaningfulEncounter)
+                        .copied()
+                        .unwrap_or(0)
+                && career.hero_service_sites.len() <= 5
+                && (career.hero_service_progress == 0
+                    || career
+                        .hero_service_sites
+                        .contains_key(&EpithetFact::BattleService))
+                && career.hero_service_sites.iter().all(|(fact, site)| {
+                    self.world.site(*site).is_some()
+                        && (*fact == EpithetFact::BattleService
+                            || data.progression.recognition.required_facts.contains(fact))
+                        && person
+                            .evidence
+                            .counts
+                            .get(&evidence_for(*fact))
+                            .copied()
+                            .unwrap_or(0)
+                            > 0
+                }),
+            "career.hero_service_progress",
+            "invalid personal Hero service or epithet sites",
         )?;
         require(
             career.mentorship_seasons.iter().all(|(discipline, count)| {
@@ -232,17 +261,23 @@ impl StrategicCampaign {
             }
         }
         if let Some(recognition) = &career.recognition {
+            let personal_award = career.hero_service_progress
+                >= data.progression.recognition.personal_engagements
+                && career.hero_service_sites.get(&recognition.cause) == Some(&recognition.site);
+            let legacy_award = recognition.cause != EpithetFact::BattleService
+                && career.hero_service_progress == 0
+                && person
+                    .evidence
+                    .counts
+                    .get(&crate::state::evidence::EvidenceKind::MeaningfulEncounter)
+                    .copied()
+                    .unwrap_or(0)
+                    >= u32::from(data.progression.recognition.personal_engagements);
             require(
                 recognition.completed_rounds <= self.completed_rounds
                     && self.world.site(recognition.site).is_some()
                     && career.notable_sites.get(&recognition.cause) == Some(&recognition.site)
-                    && person
-                        .evidence
-                        .counts
-                        .get(&crate::state::evidence::EvidenceKind::MeaningfulEncounter)
-                        .copied()
-                        .unwrap_or(0)
-                        >= data.progression.recognition.meaningful_encounters
+                    && (personal_award || legacy_award)
                     && person
                         .evidence
                         .counts
@@ -409,6 +444,7 @@ fn evidence_for(fact: EpithetFact) -> crate::state::evidence::EvidenceKind {
         EpithetFact::TreatedWounded => EvidenceKind::TreatedWounded,
         EpithetFact::AssumedCommand => EvidenceKind::AssumedCommand,
         EpithetFact::CommandedVictory => EvidenceKind::CommandedVictory,
+        EpithetFact::BattleService => EvidenceKind::MeaningfulEncounter,
     }
 }
 

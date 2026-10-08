@@ -499,6 +499,7 @@ fn medic_career_witnesses_casualties_then_recovers_a_wounded_commander_once() {
         EpithetFact::DefendedAnchor => EvidenceKind::DefendedAnchor,
         EpithetFact::CapturedAnchor => EvidenceKind::CapturedAnchor,
         EpithetFact::SurvivedOutnumbered => EvidenceKind::SurvivedOutnumbered,
+        EpithetFact::BattleService => EvidenceKind::MeaningfulEncounter,
     };
     assert!(
         campaign.people[&apprentice]

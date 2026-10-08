@@ -1,9 +1,11 @@
 # Formation recruits earn Hero status
 
-Status: active implementation, 2026-10-08. Stage A's Observer baseline is committed;
-Stage B's vacant-formation emergence passes focused checks. Personal Hero progression,
-presentation and the integrated replay remain. This plan's source investigation used
-master commit 5ed5429; implementation decisions follow the current checkout.
+Status: active implementation, 2026-10-08. Stage A's Observer baseline and Stage B's
+vacant-formation emergence are committed. Stage C's personal Hero progression now
+passes focused battle, save/load, transfer, notification and integration checks.
+Presentation, production replay, and full-project validation remain. This plan's
+source investigation used master commit 5ed5429; implementation decisions follow
+the current checkout.
 
 ## 1. Outcome and scope
 
@@ -343,7 +345,7 @@ test, Clippy and replay; do not copy the project or bypass the shared pool:
 ~~~powershell
 cargo fmt -p kestrum -- --check
 ..\rust_management\cargo.ps1 test -p kestrum --locked --test code_standards
-..\rust_management\cargo.ps1 test -p kestrum --locked --test progression --test evidence --test formation_people
+..\rust_management\cargo.ps1 test -p kestrum --locked --test hero_progression --test notifications --test progression --test evidence --test formation_people
 ..\rust_management\cargo.ps1 clippy -p kestrum --locked --all-targets --all-features '--' -D warnings
 ..\rust_management\cargo.ps1 run -p kestrum --locked --release --example observe_campaign '--' 260926 200 4
 ..\rust_management\cargo.ps1 test -p kestrum --locked

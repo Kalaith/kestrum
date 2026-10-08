@@ -110,6 +110,10 @@ impl GameData {
             .required_facts
             .iter()
             .all(|fact| self.human_names.epithets.contains_key(fact))
+            || !self
+                .human_names
+                .epithets
+                .contains_key(&crate::data::progression::EpithetFact::BattleService)
         {
             return Err("human_names.json: missing an epithet for supported recognition".into());
         }

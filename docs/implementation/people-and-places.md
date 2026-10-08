@@ -79,12 +79,17 @@ facts come from actual assignments. Trait effect initially is eligibility/contex
 not an unlisted army multiplier. Retain an earned trait permanently; supporting
 stories may expire while compact evidence remains. No evidence decay initially.
 
-Formal recognition requires three meaningful encounters plus at least one
-assumed_command, survived_outnumbered, defended_anchor or treated_wounded fact.
-Apply once; announce supported deeds and permit a data-authored epithet based on
-one known site/event. A personal name, recognition, class and command appointment
-are distinct. Existing named adults already contribute under P11; recognition
-does not retroactively add phantom formation members or force a class change.
+An unrecognized tracked person earns Hero recognition after three later
+qualifying engagements in which they personally participate while fit. The
+progress counter starts at zero when they are tracked or emerge; retrospective
+formation service supplies biography and traits but cannot award this personal
+rank. Transfers preserve personal progress without importing the receiving
+formation's deeds. Death or retirement prevents delayed recognition. A supported
+personal deed can provide a specific epithet, but is not a prerequisite; when no
+specific deed fits, use the truthful Battle Service epithet. Apply and announce
+recognition once. A personal name, recognition, class and command appointment
+remain distinct, and recognition does not add a formation member, change class,
+or displace a living commander.
 
 Roster identity uses the Lord title for founding nobility and Hero for formal
 recognition; these are presentation of existing status, not additional classes

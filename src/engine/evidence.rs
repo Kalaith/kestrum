@@ -12,7 +12,7 @@ use crate::{
         campaign::{DomainFact, DomainFactKind},
         evidence::*,
         military::FormationId,
-        people::PersonId,
+        people::{PersonId, PersonStatus},
         StrategicCampaign,
     },
 };
@@ -191,6 +191,34 @@ fn consume_side(
                                 .notable_sites
                                 .entry(fact)
                                 .or_insert(report.site);
+                        }
+                    }
+                    if person.starting_status == Some(PersonStatus::Fit)
+                        && tracked.is_alive()
+                        && !tracked.career.retired
+                        && tracked.career.recognition.is_none()
+                    {
+                        let threshold = data.progression.recognition.personal_engagements;
+                        tracked.career.hero_service_progress = tracked
+                            .career
+                            .hero_service_progress
+                            .saturating_add(1)
+                            .min(threshold);
+                        tracked
+                            .career
+                            .hero_service_sites
+                            .entry(crate::data::progression::EpithetFact::BattleService)
+                            .or_insert(report.site);
+                        for tag in &personal.tags {
+                            if let Some(fact) = epithet_fact(*tag) {
+                                if data.progression.recognition.required_facts.contains(&fact) {
+                                    tracked
+                                        .career
+                                        .hero_service_sites
+                                        .entry(fact)
+                                        .or_insert(report.site);
+                                }
+                            }
                         }
                     }
                 }

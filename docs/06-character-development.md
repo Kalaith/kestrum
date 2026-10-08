@@ -42,7 +42,10 @@ An ordinary personal name is not the same as recognized status. Tomas can be nam
 
 ## Emergence from formations
 
-A warrior formation can become “Squire Elian + Warriors” after relevant service. Veteran formations are more likely to produce someone notable because they have survived and accumulated history.
+A warrior formation can become “Apprentice Elian + Warriors” after relevant
+service. This is an earned battle-progression stage, not a profession or active
+mentorship assignment. The recruit remains inside the formation's existing
+headcount and keeps the same identity as they advance.
 
 This is a required roster representation: a named person appears with their
 current host formation, not only in an army Commander summary. An archer emerging
@@ -53,6 +56,16 @@ troop or formation slot. Membership, multiple people, transfers and display
 overflow follow [the formation-slot contract](04-armies-and-logistics.md#characters-belong-inside-formation-slots).
 
 **Implemented battle emergence (O14):** each surviving formation with troops and a vacant named-person slot earns one named Recruit after two distinct meaningful engagements accepted while the slot is vacant. Progress uses the established participation classifier and resolves at the seasonal boundary. Each eligible formation is evaluated in stable ID order; no faction-wide candidate lottery, chance roll, veterancy multiplier, or named-roster pressure can block earned service. Seeded people RNG still selects the recruit's identity and disposition. This threshold is data-validated and is not a hard roster cap; tune against observed campaigns.
+
+**Implemented personal Hero progression (P17):** an emerging Recruit starts with
+zero Hero progress even when their formation has older service evidence. Three
+later meaningful engagements personally fought while fit grant recognition.
+Progress survives save/load and transfers, and never imports the receiving
+formation's history. Specific supported deeds can ground an epithet; ordinary
+qualifying service is enough for the general Battle Service epithet. Recognition
+preserves the person, portrait, Recruit profession and host troop kind, and does
+not appoint them as commander. The detail screen's compact progress display is
+tracked in the presentation slice of the formation-to-Hero plan.
 
 ## Retrospective grounding
 
@@ -81,9 +94,9 @@ Meaningful recognition can come from:
 
 Recognized figures may gain distinctive portrait treatment, a biography, command ability, relationships, rivalries, epithets, political importance, event involvement, battlefield influence, and historical records. Their capture or death carries greater strategic and emotional weight.
 
-**Implemented baseline:** recognition uses actual evidence, notable service and
-progression thresholds, and records its result once. The presentation should
-name the deed and any available role. The
+**Implemented baseline:** recognition uses supported personal evidence and a
+data-defined engagement threshold, then records its result once. The presentation
+should show personal progress, name any supported deed, and keep role separate. The
 [planned portrait generator](hero-portrait-generator-plan.md) assigns stable
 appearance to tracked people before recognition; becoming a Hero preserves the
 face. Portraits are not implemented. Additional political benefits and captivity

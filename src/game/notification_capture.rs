@@ -117,7 +117,7 @@ impl Game {
             let preferences = &mut self.preferences.notifications;
             preferences.restore_defaults();
             for kind in [
-                NotificationKind::NewHero,
+                NotificationKind::PersonEmerged,
                 NotificationKind::PersonClassCompleted,
                 NotificationKind::PersonRecognized,
                 NotificationKind::PersonArrived,
@@ -141,7 +141,7 @@ impl Game {
             let hero_id = append_receipt(
                 campaign,
                 &self.data,
-                NotificationKind::NewHero,
+                NotificationKind::PersonEmerged,
                 1,
                 Some(NotificationSubjectSnapshot::Person(Box::new(hero.clone()))),
                 NotificationDetail::Person {

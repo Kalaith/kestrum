@@ -5,7 +5,7 @@ use crate::state::{
     history::{AnniversarySubject, HistoryKind, LifeEvent},
     legacy::{LegacyItemCustody, LegacyItemId},
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 pub(super) fn collect(
     before: &StrategicCampaign,
@@ -18,28 +18,6 @@ pub(super) fn collect(
         .iter()
         .filter_map(|id| candidate.history.events.get(id).cloned())
         .collect::<Vec<_>>();
-    let emerged_people = life_records
-        .iter()
-        .filter_map(|record| match &record.kind {
-            HistoryKind::Life {
-                person,
-                event: LifeEvent::Emerged { .. },
-                ..
-            } => Some(*person),
-            _ => None,
-        })
-        .collect::<BTreeSet<_>>();
-    let recognitions = life_records
-        .iter()
-        .filter_map(|record| match &record.kind {
-            HistoryKind::Life {
-                person,
-                event: LifeEvent::Recognized { epithet, cause },
-                ..
-            } => Some((*person, (epithet.clone(), *cause))),
-            _ => None,
-        })
-        .collect::<BTreeMap<_, _>>();
     for record in &life_records {
         let HistoryKind::Life {
             owner,
@@ -57,11 +35,8 @@ pub(super) fn collect(
         else {
             continue;
         };
-        if matches!(event, LifeEvent::Recognized { .. }) && emerged_people.contains(person) {
-            continue;
-        }
         let kind = match event {
-            LifeEvent::Emerged { .. } => Some(NotificationKind::NewHero),
+            LifeEvent::Emerged { .. } => Some(NotificationKind::PersonEmerged),
             LifeEvent::Arrived { .. } => Some(NotificationKind::PersonArrived),
             LifeEvent::ClassCompleted { .. } => Some(NotificationKind::PersonClassCompleted),
             LifeEvent::Recognized { .. } => Some(NotificationKind::PersonRecognized),
@@ -71,10 +46,9 @@ pub(super) fn collect(
         };
         let Some(kind) = kind else { continue };
         let (reason_key, reason) = match event {
-            LifeEvent::Emerged { troop } => recognitions
-                .get(person)
-                .map(|(epithet, _)| (Some("emerged_and_recognized".into()), Some(epithet.clone())))
-                .unwrap_or_else(|| (Some("emerged".into()), Some(troop_key(*troop).into()))),
+            LifeEvent::Emerged { troop } => {
+                (Some("emerged".into()), Some(troop_key(*troop).into()))
+            }
             LifeEvent::Arrived { origin } => {
                 (Some("arrived".into()), Some(origin_key(*origin).into()))
             }

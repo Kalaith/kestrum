@@ -59,7 +59,8 @@ pub enum NotificationDelivery {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NotificationKind {
-    NewHero,
+    #[serde(alias = "new_hero")]
+    PersonEmerged,
     PersonClassCompleted,
     PersonRecognized,
     PersonArrived,
@@ -111,7 +112,7 @@ pub type NotificationType = NotificationKind;
 
 impl NotificationKind {
     pub const ALL: [Self; 46] = [
-        Self::NewHero,
+        Self::PersonEmerged,
         Self::PersonClassCompleted,
         Self::PersonRecognized,
         Self::PersonArrived,
@@ -162,7 +163,7 @@ impl NotificationKind {
     pub fn category(self) -> NotificationCategory {
         use NotificationCategory as Category;
         match self {
-            Self::NewHero
+            Self::PersonEmerged
             | Self::PersonClassCompleted
             | Self::PersonRecognized
             | Self::PersonArrived
@@ -209,7 +210,7 @@ impl NotificationKind {
     }
 
     pub fn is_groupable(self) -> bool {
-        !matches!(self, Self::NewHero | Self::ControlLost)
+        !matches!(self, Self::PersonEmerged | Self::ControlLost)
     }
 }
 

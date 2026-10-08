@@ -23,7 +23,7 @@
     "maximum_occasions": 4
   },
   "recognition": {
-    "meaningful_encounters": 3,
+    "personal_engagements": 3,
     "required_facts": [
       "survived_outnumbered",
       "defended_anchor",

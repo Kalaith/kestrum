@@ -180,9 +180,9 @@
   },
   "first_use_help": "Tap an event icon for details. Use Notification settings to choose which messages appear.",
   "kinds": {
-    "new_hero": {
+    "person_emerged": {
       "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": false,
-      "label": "New hero", "title": "A new hero emerges", "body": "{person} is recognized through service. {reason}"
+      "label": "Apprentice emerged", "title": "A named apprentice emerges", "body": "{person} emerged from the ranks of {reason}."
     },
     "person_class_completed": {
       "category": "people", "default_priority": "information", "default_delivery": "top_bar_and_history", "group": true,

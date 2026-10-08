@@ -350,7 +350,7 @@ fn command_deeds_belong_to_the_commander_not_companions_or_emerging_recruits() {
 }
 
 #[test]
-fn genuine_evidence_sets_traits_and_one_place_based_recognition() {
+fn retrospective_evidence_sets_traits_but_does_not_grant_personal_hero_rank() {
     let (data, mut campaign) = fixture();
     let person = campaign.people.get_mut(&PersonId(1)).unwrap();
     person.career.disposition = kestrum::state::people::Disposition {
@@ -386,18 +386,10 @@ fn genuine_evidence_sets_traits_and_one_place_based_recognition() {
         .career
         .traits
         .contains(&PersonTrait::NaturalCommander));
-    let recognition = tracked.career.recognition.as_ref().unwrap();
-    assert_eq!(recognition.site, SiteId(6));
-    assert_eq!(
-        recognition.cause,
-        kestrum::data::progression::EpithetFact::SurvivedOutnumbered
-    );
-    let first_award = recognition.clone();
+    assert_eq!(tracked.career.hero_service_progress, 0);
+    assert!(tracked.career.recognition.is_none());
     finish(&mut campaign, &data);
-    assert_eq!(
-        campaign.people[&PersonId(1)].career.recognition,
-        Some(first_award)
-    );
+    assert!(campaign.people[&PersonId(1)].career.recognition.is_none());
     assert_eq!(campaign.people[&PersonId(1)].career.traits.len(), 3);
 }
 

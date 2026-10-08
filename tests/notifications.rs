@@ -22,15 +22,14 @@ use kestrum::{
 use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
-fn emergence_and_immediate_recognition_merge_into_one_durable_receipt() {
+fn emergence_and_later_recognition_create_separate_durable_receipts() {
     let data = GameData::load().unwrap();
-    let before = StrategicCampaign::new(&data).unwrap();
+    let mut before = StrategicCampaign::new(&data).unwrap();
     let mut candidate = before.clone();
     candidate.accepted_sequence = 1;
     let player = candidate.player;
     let person = *candidate.people.keys().next().unwrap();
     let first = candidate.next_ids.history;
-    let second = HistoryId(first.0 + 1);
     candidate.history.events.insert(
         first,
         record(
@@ -45,6 +44,45 @@ fn emergence_and_immediate_recognition_merge_into_one_durable_receipt() {
             },
         ),
     );
+    candidate.next_ids.history = HistoryId(first.0 + 1);
+    let emergence_outcome = outcome(&candidate, vec![first]);
+
+    engine::notifications::collect(&before, &mut candidate, &data, &emergence_outcome).unwrap();
+    assert_eq!(
+        candidate
+            .notifications
+            .receipts
+            .iter()
+            .filter(|receipt| receipt.kind == NotificationKind::PersonEmerged)
+            .count(),
+        1
+    );
+    assert_eq!(
+        candidate
+            .notifications
+            .receipts
+            .iter()
+            .filter(|receipt| receipt.kind == NotificationKind::PersonRecognized)
+            .count(),
+        0
+    );
+    let NotificationDetail::Person {
+        person: emergence_snapshot,
+        reason,
+        ..
+    } = &candidate.notifications.receipts[0].detail
+    else {
+        panic!("apprentice notice must retain the event-time person snapshot");
+    };
+    assert_eq!(reason.as_deref(), Some("troop_siege_engines"));
+    assert!(emergence_snapshot.age_years.is_some());
+    assert!(emergence_snapshot.appearance.is_some());
+    engine::notifications::collect(&before, &mut candidate, &data, &emergence_outcome).unwrap();
+    assert_eq!(candidate.notifications.receipts.len(), 1);
+
+    before = candidate.clone();
+    candidate.accepted_sequence = 2;
+    let second = candidate.next_ids.history;
     candidate.history.events.insert(
         second,
         record(
@@ -61,16 +99,9 @@ fn emergence_and_immediate_recognition_merge_into_one_durable_receipt() {
         ),
     );
     candidate.next_ids.history = HistoryId(second.0 + 1);
-    let outcome = outcome(&candidate, vec![first, second]);
+    let recognition_outcome = outcome(&candidate, vec![second]);
 
-    engine::notifications::collect(&before, &mut candidate, &data, &outcome).unwrap();
-    let new_heroes: Vec<_> = candidate
-        .notifications
-        .receipts
-        .iter()
-        .filter(|receipt| receipt.kind == NotificationKind::NewHero)
-        .collect();
-    assert_eq!(new_heroes.len(), 1);
+    engine::notifications::collect(&before, &mut candidate, &data, &recognition_outcome).unwrap();
     assert_eq!(
         candidate
             .notifications
@@ -78,22 +109,32 @@ fn emergence_and_immediate_recognition_merge_into_one_durable_receipt() {
             .iter()
             .filter(|receipt| receipt.kind == NotificationKind::PersonRecognized)
             .count(),
-        0
+        1
     );
-    let NotificationDetail::Person { person, reason, .. } = &new_heroes[0].detail else {
-        panic!("new hero notice must retain the event-time person snapshot");
+    assert_eq!(candidate.notifications.receipts.len(), 2);
+    assert_eq!(
+        candidate.notifications.receipts[0].kind,
+        NotificationKind::PersonEmerged
+    );
+    let NotificationDetail::Person {
+        person: snapshot,
+        reason,
+        ..
+    } = &candidate.notifications.receipts[1].detail
+    else {
+        panic!("recognition notice must retain the event-time person snapshot");
     };
     assert_eq!(reason.as_deref(), Some("The Bridge Keeper"));
-    assert!(person.age_years.is_some());
-    assert!(person.appearance.is_some());
+    assert!(snapshot.age_years.is_some());
+    assert!(snapshot.appearance.is_some());
 
-    let ids: Vec<_> = candidate
+    let ids = candidate
         .notifications
         .receipts
         .iter()
         .map(|receipt| receipt.id)
-        .collect();
-    engine::notifications::collect(&before, &mut candidate, &data, &outcome).unwrap();
+        .collect::<Vec<_>>();
+    engine::notifications::collect(&before, &mut candidate, &data, &recognition_outcome).unwrap();
     assert_eq!(
         candidate
             .notifications
@@ -102,6 +143,10 @@ fn emergence_and_immediate_recognition_merge_into_one_durable_receipt() {
             .map(|receipt| receipt.id)
             .collect::<Vec<_>>(),
         ids
+    );
+    assert_eq!(
+        serde_json::from_str::<NotificationKind>("\"new_hero\"").unwrap(),
+        NotificationKind::PersonEmerged
     );
 }
 

@@ -54,13 +54,14 @@ pub(super) fn update_tracked(campaign: &mut StrategicCampaign, data: &GameData) 
             &person.evidence,
             &data.progression.traits,
         );
-        if person.career.recognition.is_none() {
-            person.career.recognition = recognition(
-                data,
-                campaign.completed_rounds,
-                &person.evidence,
-                &person.career.notable_sites,
-            );
+        if person.career.recognition.is_none()
+            && person.is_alive()
+            && !person.career.retired
+            && person.career.hero_service_progress
+                >= data.progression.recognition.personal_engagements
+        {
+            person.career.recognition =
+                recognition(data, campaign.completed_rounds, &mut person.career);
         }
     }
 }
@@ -137,12 +138,6 @@ fn create(
         site,
         distinguishing_deed: deed,
     });
-    career_state.recognition = recognition(
-        data,
-        campaign.completed_rounds,
-        &evidence,
-        &career_state.notable_sites,
-    );
     let appearance = crate::engine::portraits::allocate_for_person(campaign, &data.portraits, id)
         .map_err(RuleError::InvalidState)?;
     campaign.people.insert(
@@ -245,50 +240,38 @@ fn add_traits(
     }
 }
 
-fn recognition(
-    data: &GameData,
-    round: u32,
-    evidence: &EvidenceLedger,
-    sites: &std::collections::BTreeMap<EpithetFact, crate::data::world::SiteId>,
-) -> Option<Recognition> {
-    if evidence
-        .counts
-        .get(&EvidenceKind::MeaningfulEncounter)
-        .copied()
-        .unwrap_or(0)
-        < data.progression.recognition.meaningful_encounters
-    {
+fn recognition(data: &GameData, round: u32, career: &mut PersonCareer) -> Option<Recognition> {
+    if career.hero_service_progress < data.progression.recognition.personal_engagements {
         return None;
     }
-    let facts = [
-        (
-            EpithetFact::SurvivedOutnumbered,
-            EvidenceKind::SurvivedOutnumbered,
-        ),
-        (EpithetFact::DefendedAnchor, EvidenceKind::DefendedAnchor),
-        (EpithetFact::CapturedAnchor, EvidenceKind::CapturedAnchor),
-        (EpithetFact::TreatedWounded, EvidenceKind::TreatedWounded),
-        (EpithetFact::AssumedCommand, EvidenceKind::AssumedCommand),
-        (
-            EpithetFact::CommandedVictory,
-            EvidenceKind::CommandedVictory,
-        ),
-    ];
-    facts
-        .into_iter()
-        .filter(|(fact, _)| data.progression.recognition.required_facts.contains(fact))
-        .find_map(|(cause, kind)| {
-            if evidence.counts.get(&kind).copied().unwrap_or(0) == 0 {
-                return None;
-            }
-            let site = *sites.get(&cause)?;
-            Some(Recognition {
-                completed_rounds: round,
-                epithet: data.human_names.epithets[&cause].clone(),
-                cause,
-                site,
-            })
+    let distinction = data
+        .progression
+        .recognition
+        .required_facts
+        .iter()
+        .find_map(|fact| {
+            career
+                .hero_service_sites
+                .get(fact)
+                .copied()
+                .map(|site| (*fact, site))
         })
+        .or_else(|| {
+            career
+                .hero_service_sites
+                .get(&EpithetFact::BattleService)
+                .copied()
+                .map(|site| (EpithetFact::BattleService, site))
+        })?;
+    let (cause, site) = distinction;
+    let epithet = data.human_names.epithets.get(&cause)?.clone();
+    career.notable_sites.insert(cause, site);
+    Some(Recognition {
+        completed_rounds: round,
+        epithet,
+        cause,
+        site,
+    })
 }
 
 fn notable_sites(

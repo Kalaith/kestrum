@@ -4,6 +4,7 @@
   "period": "full_round",
   "facility_failure_damage": 75,
   "income_damage_divisor": 2,
+  "unsupplied_income_percent": 50,
   "starting_resources": {
     "gold": 500,
     "wood": 200,

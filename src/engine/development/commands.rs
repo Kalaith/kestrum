@@ -259,7 +259,14 @@ pub(super) fn headquarters_check(
             "Headquarters needs a functioning Village or larger settlement.",
         ));
     }
-    if !c.garrison {
+    // A kingdom that lost its seat may re-found it without an army or Training
+    // Ground; otherwise it could never recruit, relocate or be defeated.
+    let displaced = campaign
+        .world
+        .site(faction.headquarters)
+        .is_none_or(|current| current.controller != Some(owner))
+        || campaign.site_is_ruined(faction.headquarters);
+    if !c.garrison && !displaced {
         return Err(blocked(
             "A friendly army must be present to relocate headquarters.",
         ));
@@ -269,7 +276,7 @@ pub(super) fn headquarters_check(
             "Headquarters cannot relocate into a siege or local threat.",
         ));
     }
-    if !location.facilities.contains(&Facility::TrainingGround)
+    if (!location.facilities.contains(&Facility::TrainingGround) && !displaced)
         || c.damage >= data.economy.facility_failure_damage
     {
         return Err(blocked("Headquarters needs a functional Training Ground."));

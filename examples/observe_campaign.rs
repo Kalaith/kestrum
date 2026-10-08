@@ -1,4 +1,6 @@
 //! Replay a production observer campaign without opening a window or writing saves.
+//!
+//! Usage: `observe_campaign [seed] [rounds] [factions] [trace faction id]`.
 
 use std::{collections::BTreeMap, time::Instant};
 
@@ -57,6 +59,8 @@ fn main() -> Result<(), String> {
     let seed = argument(1, 260_926_u64)?;
     let rounds = argument(2, 160_u32)?;
     let factions = argument(3, 4_usize)?;
+    // Optional: print this faction's planner diagnostics when it passes every tenth round.
+    let trace = argument(4, 0_u32)?;
     let data = GameData::load()?;
     let mut campaign = StrategicCampaign::new_production_observer(
         &data,
@@ -75,8 +79,19 @@ fn main() -> Result<(), String> {
     while campaign.completed_rounds < rounds && !campaign.observer_finished() {
         let faction = campaign.active_faction();
         let before_round = campaign.completed_rounds;
-        let step = engine::advance_observer_without_diagnostics(&mut campaign, &data)
-            .map_err(|error| format!("round={before_round} faction={faction:?}: {error}"))?;
+        let traced = faction.0 == trace && before_round.is_multiple_of(10);
+        let step = if traced {
+            engine::advance_observer_diagnosed(&mut campaign, &data)
+        } else {
+            engine::advance_observer_without_diagnostics(&mut campaign, &data)
+        }
+        .map_err(|error| format!("round={before_round} faction={faction:?}: {error}"))?;
+        if traced && step.action.starts_with("EndTurn") {
+            println!("Trace round {before_round}:");
+            for line in &step.diagnostics {
+                println!("    {line}");
+            }
+        }
         steps += 1;
         let entry = activity.entry(faction).or_default();
         let action = step

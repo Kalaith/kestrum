@@ -77,6 +77,32 @@ pub fn peace_desired(
                 .saturating_sub(loss.completed_rounds)
                 < data.diplomacy.recent_loss_rounds
     });
+    // Recent site losses are retained for `recent_loss_rounds`; none taken
+    // from this opponent in an old war means the war is no longer paying.
+    let stalemate = campaign
+        .diplomacy
+        .pair(faction, opponent)
+        .and_then(|pair| pair.war_started_round)
+        .is_some_and(|started| {
+            campaign.completed_rounds.saturating_sub(started) >= data.diplomacy.stalemate_rounds
+        })
+        && !campaign
+            .diplomacy
+            .losses
+            .iter()
+            .any(|loss| loss.faction == opponent && loss.victor == faction);
+    let equivalents = |owner| military_equivalents(campaign, data, owner);
+    loss || stalemate
+        || equivalents(faction) * u128::from(data.diplomacy.peace_strength_denominator)
+            < equivalents(opponent) * u128::from(data.diplomacy.peace_strength_numerator)
+}
+
+/// Surviving troops normalized by formation capacity; a private sovereign aggregate.
+pub(crate) fn military_equivalents(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+) -> u128 {
     let common = data
         .economy
         .formations
@@ -85,18 +111,14 @@ pub fn peace_desired(
             let capacity = u128::from(formation.capacity);
             value / gcd(value, capacity) * capacity
         });
-    let equivalents = |owner| {
-        campaign
-            .formations
-            .values()
-            .filter(|formation| formation.faction == owner)
-            .map(|formation| {
-                u128::from(formation.headcount) * (common / u128::from(formation.capacity))
-            })
-            .sum::<u128>()
-    };
-    loss || equivalents(faction) * u128::from(data.diplomacy.peace_strength_denominator)
-        < equivalents(opponent) * u128::from(data.diplomacy.peace_strength_numerator)
+    campaign
+        .formations
+        .values()
+        .filter(|formation| formation.faction == owner)
+        .map(|formation| {
+            u128::from(formation.headcount) * (common / u128::from(formation.capacity))
+        })
+        .sum::<u128>()
 }
 
 fn gcd(mut a: u128, mut b: u128) -> u128 {

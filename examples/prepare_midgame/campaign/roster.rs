@@ -83,7 +83,13 @@ pub(super) fn develop(
             && campaign.people[&person].assignment == (PersonAssignment::Site { site: home })
         {
             let mut available = campaign.available_person_formation(campaign.player, home);
-            if available.is_none() {
+            let faction = &campaign.factions[&campaign.player];
+            let affordable = faction.last_economy.as_ref().is_none_or(|statement| {
+                statement.income.gold - statement.upkeep_due
+                    >= data.economy.formations[&kestrum::data::economy::TroopKind::Warriors]
+                        .upkeep_gold
+            });
+            if available.is_none() && affordable {
                 let receiving = campaign
                     .armies
                     .values()

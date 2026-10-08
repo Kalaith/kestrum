@@ -14,7 +14,7 @@ The current campaign is single-player. Human-controlled additional kingdoms and 
 
 **Implemented outcome:** victory requires all other independent kingdoms to be resolved by annexation or submission. War, Peace, truces, pending defeat decisions and saved victory/defeat endings are implemented. Submission is a narrow defeat outcome; a full vassal diplomacy simulation remains future scope.
 
-When the player defeats a rival, the kingdom view offers annexation or submission. A submitted kingdom keeps its recorded identity under a sovereign and leaves the independent turn order. These delegated mechanics are implemented; their earlier proposal status is not an approval gate. A playable version must have a reachable victory using its supported actions. The current production victory script fails its 240-round deadline, as recorded in the [implementation README](../README.md); implementation completion does not establish settled campaign balance.
+When the player defeats a rival, the kingdom view offers annexation or submission. A submitted kingdom keeps its recorded identity under a sovereign and leaves the independent turn order. These delegated mechanics are implemented; their earlier proposal status is not an approval gate. A playable version must have a reachable victory using its supported actions. The seed-88 production victory script reaches Victory within its 240-round deadline after the [opening balance](verification/opening-balance.md) rules; one script passing does not establish settled campaign balance.
 
 For v1, an eliminated faction is gone. Restoration wars, exiled governments, claimant factions, breakaway successor states, civil wars, separatist commanders, rebel kingdoms, succession disputes, and kingdom splintering are future scope. Individual displaced people may still have historical records; that does not restore their former faction as an active state.
 
@@ -45,7 +45,7 @@ The explicit resources are **Gold, Wood, and Stone**. They support recruitment, 
 
 [assets/data/economy.json](../assets/data/economy.json) is the authoritative balance table. Toolkit JSON loading and Kestrum schema validation feed the implemented income, upkeep, recruitment, construction and recovery systems. These are tunable working values, not unfinished implementation decisions.
 
-- Each faction starts with 500 Gold, 200 Wood, and 150 Stone. Settlement income and a single headquarters bonus of 40 Gold, 15 Wood, and 10 Stone accrue per full round. The bonus requires control of the headquarters site and adds to its settlement income; a capital title creates no extra income by itself.
+- Each faction starts with 500 Gold, 200 Wood, and 150 Stone. Settlement income and a single headquarters bonus of 40 Gold, 15 Wood, and 10 Stone accrue per full round. The bonus requires control of the headquarters site and adds to its settlement income; a capital title creates no extra income by itself. A holding with no supply path to headquarters pays `unsupplied_income_percent` (currently 50%) of its income, shown as the Supply modifier in Manage.
 - Recruitment costs and full-formation upkeep are listed for human Warriors, Spearmen, Archers, Riders, Medics, and Siege Engines. Upkeep charges the listed Gold rate for each surviving formation, regardless of current headcount. Named people add no separate upkeep initially.
 - Recruitment completes immediately at a valid recruiting site after validation. Population deductions/pressure are disabled initially; enable a separate population model after economy playtesting.
 - Income resolves before upkeep. Pay what is available, clamp Gold at zero, and record any shortfall without carrying debt. A shortfall blocks new recruitment and normal recovery until a later round's upkeep is fully paid. Existing forces remain; the player may disband formations without refund to reduce upkeep. Prepaid construction continues subject to its own conditions.
@@ -102,7 +102,7 @@ This replaces a conventional abstract technology tree where practical. If the ki
 
 Current diplomatic states are War and Peace, with submission as a defeat outcome. Alliances, marriages as diplomatic agreements, tribute, a full vassal diplomacy system, guarantees, negotiated borders, and prisoner exchanges are future extensions. Family relationships already exist independently of diplomatic marriage mechanics.
 
-Temporary peace and truces can divide a historical conflict into separate active campaigns. The current truce is four rounds; recent losses and relative military strength inform peace acceptance through [diplomacy.json](../assets/data/diplomacy.json) and the diplomacy query rules. Narrative siege negotiation remains future scope.
+Temporary peace and truces can divide a historical conflict into separate active campaigns. The current truce is four rounds; recent losses, relative military strength and stalemate inform peace acceptance through [diplomacy.json](../assets/data/diplomacy.json) and the diplomacy query rules. A war at least `stalemate_rounds` old in which a side has taken no site from its opponent within the retained loss window becomes acceptable to end, so holding the line can earn peace. Narrative siege negotiation remains future scope.
 
 ## AI parity
 
@@ -112,13 +112,15 @@ The current Normal difficulty uses a zero-percent AI income bonus in campaign da
 
 **Implemented AI baseline:** rivals choose legal orders for movement, military composition, economy, progression and politics through shared command validation. Their objectives and priorities are data-driven. Map improvements must expose known rival pressure without bypassing those rules or inventing omniscient information.
 
-**Known defect — planned correction:** Observer logs show accepted AI armies
-repeatedly moving between neighboring friendly sites after expansion, including
-during peace. The shared border planner treats any adjacent foreign ownership
-as a target and retargets after its four-round objective expires. The [observer
-border objective handoff](implementation/observer-border-objective-fix.md)
-defines the intended correction and regression coverage; this behavior remains
-uncorrected until that work is implemented.
+**Opening-war rules (2026-10-08):** a rival declares war only on a neighbor whose
+private aggregate strength (the same P08 total used for peace) does not exceed
+its own by more than `war_strength_percent` in [ai.json](../assets/data/ai.json).
+It opens no new war while `maximum_wars` neighbors are already enemies; a distant,
+unreachable war does not count. A rival boxed in by a stronger neighbor raises
+one more army at a time toward parity, still bounded by sustainable income, and
+each stranded army leaves room for one supplied relief force. The border
+oscillation formerly listed here is corrected; see the
+[observer border objective handoff](implementation/observer-border-objective-fix.md).
 
 War, peace and truce decisions and dated knowledge are implemented. Their effectiveness and campaign pacing remain balance work; use the actual planners and current regression results as the baseline rather than treating the original questions as unanswered.
 

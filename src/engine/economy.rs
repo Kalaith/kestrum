@@ -1,4 +1,4 @@
-//! Seasonal income followed by full-formation upkeep, with no debt or attrition.
+//! Seasonal income, reduced for unsupplied holdings, then full-formation upkeep without debt.
 
 use super::RuleError;
 use crate::{
@@ -59,11 +59,12 @@ fn statement(
         },
     };
     if campaign.is_independent(faction) {
+        let supplied = campaign.supplied_sites(faction);
         for site in &campaign.world.sites {
             if site.controller != Some(faction) {
                 continue;
             }
-            let entry = site_income(campaign, data, site)?;
+            let entry = site_income(campaign, data, site, supplied.contains(&site.id))?;
             income = checked_add(income, entry.income)?;
             inputs.sites.push(entry);
         }
@@ -104,6 +105,7 @@ fn site_income(
     campaign: &StrategicCampaign,
     data: &GameData,
     site: &Site,
+    supplied: bool,
 ) -> Result<SiteIncomeStatement, RuleError> {
     let occupation = campaign
         .world
@@ -134,6 +136,11 @@ fn site_income(
         ruined: campaign.site_is_ruined(site.id),
         besieged: campaign.world.contested_sites.contains(&site.id),
         local_threat: campaign.active_threat(site.id).is_some(),
+        supply_percent: if supplied {
+            100
+        } else {
+            data.economy.unsupplied_income_percent
+        },
         income: Resources {
             gold: 0,
             wood: 0,

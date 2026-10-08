@@ -118,18 +118,26 @@ impl Planner<'_> {
             .sites
             .iter()
             .any(|site| self.can_replenish_at(site.id));
-        let all_armies_unsupplied = !armies.is_empty()
-            && armies
-                .iter()
-                .all(|army| !self.view.supplied_armies.contains(&army.id));
-        let relief_target = if supplied_core && all_armies_unsupplied {
-            base.saturating_add(1).min(rules.maximum_armies)
+        // Each stranded army leaves its slot open for one supplied relief force.
+        let unsupplied = armies
+            .iter()
+            .filter(|army| !self.view.supplied_armies.contains(&army.id))
+            .count();
+        let relief_target = if supplied_core {
+            base.saturating_add(unsupplied).min(rules.maximum_armies)
+        } else {
+            base
+        };
+        // An outmatched sovereign adds one force at a time toward parity.
+        let parity_target = if self.outmatched() {
+            armies.len().saturating_add(1)
         } else {
             base
         };
         let desired = holdings_target
             .max(threatened_fronts)
             .max(relief_target)
+            .max(parity_target)
             .min(rules.maximum_armies);
         let supported = base
             .saturating_add(self.growth_supported_by_income())

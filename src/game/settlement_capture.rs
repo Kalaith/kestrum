@@ -23,6 +23,11 @@ impl Game {
             self.help_page = 8;
             return true;
         }
+        if scene == "help_turn" {
+            self.state.overlay = Overlay::Help;
+            self.help_page = 1;
+            return true;
+        }
         if !scene.starts_with("settlement_") {
             return false;
         }

@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 use std::collections::BTreeSet;
+mod campaign_text;
 mod game_text;
 mod life_text;
 mod map_presentation;

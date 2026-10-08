@@ -136,6 +136,8 @@ pub struct Economy {
     pub headquarters_income_bonus: Resources,
     pub facility_failure_damage: u32,
     pub income_damage_divisor: u32,
+    /// Share of a holding's income paid while it has no supply path to headquarters.
+    pub unsupplied_income_percent: u32,
     #[serde(deserialize_with = "unique_table")]
     pub settlement_income: BTreeMap<Habitation, Resources>,
     #[serde(deserialize_with = "unique_table")]
@@ -212,6 +214,12 @@ impl Economy {
             "income_damage_divisor",
             self.income_damage_divisor > 0,
             "must be positive",
+        )?;
+        require(
+            SOURCE,
+            "unsupplied_income_percent",
+            self.unsupplied_income_percent <= 100,
+            "must be within 0..=100",
         )?;
         require(
             SOURCE,

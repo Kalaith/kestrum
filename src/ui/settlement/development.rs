@@ -492,14 +492,21 @@ pub(super) fn income(ctx: &Context<'_>) {
     let detail = if entry.ruined || entry.besieged || entry.local_threat {
         ctx.text("site_income_stopped")
     } else {
-        format!(
-            "{} ×{}% · {} ×{}% · {}",
-            ctx.text("income_damage"),
-            entry.damage_percent,
-            ctx.text("occupation"),
-            entry.occupation_percent,
-            focus
-        )
+        // Only reductions are listed, so a fully paying site shows its focus alone.
+        [
+            ("income_damage", entry.damage_percent),
+            ("occupation", entry.occupation_percent),
+            ("income_supply", entry.supply_percent),
+        ]
+        .into_iter()
+        .filter(|(_, percent)| *percent != 100)
+        .map(|(key, percent)| format!("{} ×{percent}%", ctx.text(key)))
+        .chain(std::iter::once(format!(
+            "{}: {focus}",
+            ctx.text("settlement_focus")
+        )))
+        .collect::<Vec<_>>()
+        .join(" · ")
     };
     lines(ctx, &detail, vec2(652.0, 262.0), 516.0, 1, MUTED);
 }

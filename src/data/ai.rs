@@ -23,6 +23,10 @@ pub struct AiRules {
     pub maximum_armies: usize,
     pub minimum_formations: usize,
     pub war_peace_rounds: u32,
+    /// A sovereign opens no new war while this many neighbors are already enemies.
+    pub maximum_wars: usize,
+    /// Own aggregate strength, as a percentage of a neighbor's, needed to declare war on it.
+    pub war_strength_percent: u32,
     pub neutral_search_edges: usize,
     pub recruitment_order: Vec<TroopKind>,
 }
@@ -41,6 +45,8 @@ impl AiRules {
             || !(self.target_armies..=8).contains(&self.maximum_armies)
             || !(1..=6).contains(&self.minimum_formations)
             || !(1..=80).contains(&self.war_peace_rounds)
+            || !(1..=7).contains(&self.maximum_wars)
+            || !(1..=1000).contains(&self.war_strength_percent)
             || !(1..=16).contains(&self.neutral_search_edges)
             || self.recruitment_order.len() != 6
             || self

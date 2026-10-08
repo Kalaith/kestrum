@@ -183,8 +183,64 @@ Additional checks passed:
 - `..\rust_management\cargo.ps1 test -p kestrum --locked --test code_standards`
 - `..\rust_management\cargo.ps1 clippy -p kestrum --locked --all-targets --all-features '--' -D warnings`
 
-The full project suite was not rerun for Stage F. The five failures recorded in
-Stage E remain unclassified against pristine HEAD; the known seed-88 round-240
-production-victory failure remains a documented baseline exception. No physical
-touch playtest, visual recapture, publication or human campaign playtest was
-performed in Stage F.
+## Final current-worktree audit (2026-10-09)
+
+The final-code replay was repeated with the command above. It completed 4,085
+observer steps in 202.039 seconds and reached round 200 without naturally
+ending. Its round-120 result matches Stage F: Rose 6/8, Ashen Lark 4/4, and
+Ashen Wren 1/2, for 11/14 active armies (78.6%) with recognized Heroes. At
+round 200, Rose had been eliminated, Ashen Lark had 8/8 Hero armies, and Ashen
+Wren had 0/1 Hero armies plus one Apprentice-only army. This confirms the
+midgame target, not stable late-campaign coverage.
+
+Emergence reconciliation at round 200 reports threshold-reached/emerged counts
+of Rose 52/52, Ashen Lark 75/75, Bera Lark 2/2, and Ashen Wren 72/72. Every
+formation vacancy-service threshold reached in this replay produced its named
+person; no threshold-reaching emergence was missing. The per-person service
+report shows the separate later one-engagement Hero threshold and recognition
+round. People still at 0/1 had not personally met that later threshold by the
+round cap; this is pending service, not a failed award. Invites and births remain
+separate from the 201 formation emergences. At round 120, Rose had 15 attached
+Apprentice people across 5/8 armies, Ashen Lark had four across 2/4 armies, and
+Ashen Wren had none across 0/2 armies.
+
+The current-worktree no-fail-fast full suite was rerun:
+
+```powershell
+..\rust_management\cargo.ps1 test -p kestrum --locked --no-fail-fast
+```
+
+It exited 1 with the same five failing targets and fixture symptoms recorded
+above: `ai_growth` (three fixtures need 24 developable sites but only nine are
+available), `ai_recovery` (invalid authored truce date and economy receipt),
+`k18_integrated_people` (the defender formation is destroyed and Mira Dusk
+dies), `k18_production_battle` (seed 88 reaches Defeat at round 240 instead of
+the expected Victory), and `midgame` (fewer than ten supplied settlements).
+The feature's `hero_progression`, `progression`, `notifications`,
+`ai_hero_deployment`, `ai_review`, and `code_standards` targets passed in that
+run. This confirms the failures against the current checkout, but does not
+classify the four non-production failures against pristine HEAD. The seed-88
+production-victory case remains the documented baseline exception.
+
+The current final WASM build also passed:
+
+```powershell
+..\rust_management\cargo.ps1 build -p kestrum --locked --release --target wasm32-unknown-unknown
+```
+
+In a hidden localhost browser session, the fresh WASM build loaded with the
+checked-out game assets and runtime. A new four-faction campaign was started;
+visible taps opened Army Details, People, and Career, then Back returned to
+People. This verifies WASM startup and the ordinary click/touch-input route to
+person detail. It did not run a Hero emergence in the browser. No fullscreen,
+physical-device touch, human campaign playtest, publication, or deployment was
+performed.
+
+The 1920x1080 UI captures from Stage D were visually inspected: [six occupied
+formation rows](ui_formation_members.png), [long names across the rows](ui_formation_long_name.png),
+and [an earned Hero with no appointed commander](ui_formation_hero_earned.png).
+The capture is a real Hero-award state; the separate deterministic lifecycle
+test `hero_command_retirement_and_replacement_resume_deterministically` covers
+retirement and fresh-identity replacement. Stage F made no UI changes, so these
+captures remain the applicable presentation evidence; an aging-replacement
+screen was not separately captured.

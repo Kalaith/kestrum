@@ -13,23 +13,24 @@ do not edit shared policy or apply this exception to other games.
   buildable slice before starting the next independent feature. Update `todo.md`
   with outstanding work only, including checks actually still missing.
 - Each Rust slice: formatting, strict all-target/all-feature Clippy, source-size
-  gate, and the smallest relevant existing behavioral test targets. UI-only
-  changes need an affected binary build and relevant hidden 1920x1080
-  captures/interactions, not unrelated
-  campaign simulations. Documentation uses diff/link/command review.
-- Run the full project suite at a meaningful integration boundary, or sooner
-  for shared state, save/migration, allocator, simulation or public API changes
-  with broad impact. Record why.
-  Reuse unchanged results; rerun only after a relevant change or unresolved
-  failure. Do not run focused suites immediately before a full suite that
-  already contains them unless an earlier fast diagnosis is useful.
-- Keep useful existing deterministic and core gameplay coverage; test count is
-  not a deletion target. Backward save compatibility and migrations are optional
-  for this prototype (Daniel's clarification). Unsupported saves must show a
-  clear recoverable error without crashing. Do not build migration machinery
-  solely to satisfy earlier guidance or remove unrelated working code.
-  Measure wall time separately from compilation and
-  reported test time; consolidate coverage only with a concrete redundancy.
+  gate, and any retained test target that covers the changed area. Gameplay
+  changes are validated by running and exercising the feature, not by tests.
+  UI-only changes need an affected binary build and relevant hidden 1920x1080
+  captures/interactions. Documentation uses diff/link/command review.
+- Tests follow the shared testing policy (`CODE_STANDARDS.md` §11). The
+  2026-10-09 review kept only the enforcement gates (`code_standards`,
+  `asset_registry`), data integrity (`content`, `construction_data`,
+  `persistence`, `atlas_revision`) and settled algorithms (`ai_routes`,
+  `generation`, `portraits`, `portrait_rendering`). Do not write new tests or
+  restore deleted gameplay, AI, UI or scenario suites; when changing behaviour
+  a retained test asserts as experimental, delete that test.
+- Run the full remaining suite when changing content loading, saves, world
+  generation, route planning or portraits, and record why. Reuse unchanged
+  results; rerun only after a relevant change or unresolved failure.
+- Backward save compatibility and migrations are optional for this prototype
+  (Daniel's clarification). Unsupported saves must show a clear recoverable
+  error without crashing. Do not build migration machinery solely to satisfy
+  earlier guidance or remove unrelated working code.
 - Build WASM once when browser acceptance is needed; reuse that exact output
   across independent headless profiles. Capture only affected scenes and reuse
   the current build with the wrapper's `-SkipBuild` when valid. Never treat a
@@ -37,9 +38,8 @@ do not edit shared policy or apply this exception to other games.
 - Do not run `publish.ps1`: its deployment/tracker effects are outside this
   task's authorization. Local pooled builds and headless verification are the
   authorized substitute; report external publication as deliberately unrun.
-- The documented seed-88 round-240 failure remains an authorized baseline
-  exception, not a pass. Other failures need diagnosis; do not weaken tests or
-  claim unrun checks passed. Record blocked checks with their exact command.
+- Failures need diagnosis; do not weaken tests or claim unrun checks passed.
+  Record blocked checks with their exact command.
 
 ## Delegation
 

@@ -126,6 +126,6 @@ impl Planner<'_> {
 
     /// Unclaimed land still joins the home border, so there is no need to fight.
     fn nearby_neutral(&self) -> bool {
-        !self.frontier().is_empty()
+        self.claims().iter().any(|claim| claim.connected)
     }
 }

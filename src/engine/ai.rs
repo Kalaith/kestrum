@@ -2,6 +2,7 @@
 
 mod economy;
 mod eligibility;
+mod expansion;
 mod intent;
 mod military;
 mod objectives;
@@ -520,7 +521,7 @@ impl Planner<'_> {
                     .threats
                     .iter()
                     .any(|threat| threat.site == site.id)
-                    && self.frontier().iter().any(|(_, id)| *id == site.id)
+                    && self.claims().iter().any(|claim| claim.site == site.id)
             }
             AiObjectiveKind::Defend => {
                 site.controller == Some(self.owner) && self.threatened(site.id)

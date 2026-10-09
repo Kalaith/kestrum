@@ -1,6 +1,6 @@
 //! Authored, deterministic sovereign planning limits.
 
-use super::economy::TroopKind;
+use super::economy::{Habitation, TroopKind};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -24,10 +24,55 @@ pub struct AiRules {
     /// Seasonal gold income, as a percentage of upkeep, a realm needs before it
     /// stops claiming land beyond its temperament's expansion reach.
     pub surplus_percent: u32,
+    /// What unclaimed land is worth to a sovereign weighing whether to take it.
+    pub site_value: SiteValue,
+    /// Route cost each point of site value offsets when ranking new land.
+    pub value_cost: u32,
+    /// Route cost a claim off the supply network must overcome: exposed, unsupplied
+    /// holdings invite invasion, so only valuable ones are worth it.
+    pub detached_cost: u32,
     pub recruitment_order: Vec<TroopKind>,
     /// Every sovereign temperament's planning profile.
     #[serde(deserialize_with = "super::economy::unique_table")]
     pub personalities: BTreeMap<AiPersonality, AiPersonalityProfile>,
+}
+
+/// Authored worth of a site's settlement, resources and works.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SiteValue {
+    #[serde(deserialize_with = "super::economy::unique_table")]
+    pub habitation: BTreeMap<Habitation, u32>,
+    pub wood_source: u32,
+    pub stone_source: u32,
+    /// Bridges and passes control movement.
+    pub crossing: u32,
+    pub horse_access: u32,
+    /// Each training ground, stable, infirmary, workshop or temple.
+    pub facility: u32,
+    pub fort: u32,
+    /// A site whose control helps claim a region.
+    pub region_anchor: u32,
+}
+
+impl SiteValue {
+    fn valid(&self) -> bool {
+        // Eight distinct keys name every habitation level.
+        self.habitation.len() == 8
+            && self
+                .habitation
+                .values()
+                .chain([
+                    &self.wood_source,
+                    &self.stone_source,
+                    &self.crossing,
+                    &self.horse_access,
+                    &self.facility,
+                    &self.fort,
+                    &self.region_anchor,
+                ])
+                .all(|value| *value <= 100)
+    }
 }
 
 /// A sovereign's temperament, fixed when the campaign begins.
@@ -89,6 +134,8 @@ pub struct AiPersonalityProfile {
     pub expansion_reach: usize,
     /// Weight of capital distance against army travel when ranking new land.
     pub home_distance_percent: u32,
+    /// Least site value worth claiming where it would not join supplied territory.
+    pub detached_claim_value: u32,
     /// Armies wanted beyond the holdings target, still limited by income.
     pub extra_armies: usize,
     /// Posts armies on threatened borders before claiming or clearing land.
@@ -105,6 +152,7 @@ impl AiPersonalityProfile {
             && (1..=1000).contains(&self.war_strength_percent)
             && (1..=32).contains(&self.expansion_reach)
             && self.home_distance_percent <= 1000
+            && self.detached_claim_value <= 1000
             && self.extra_armies <= 4
     }
 }
@@ -127,6 +175,9 @@ impl AiRules {
             || !(self.target_armies..=8).contains(&self.maximum_armies)
             || !(1..=6).contains(&self.minimum_formations)
             || !(100..=1000).contains(&self.surplus_percent)
+            || !self.site_value.valid()
+            || self.value_cost > 100
+            || self.detached_cost > 1000
             || AiPersonality::ALL
                 .iter()
                 .any(|kind| !self.personalities.get(kind).is_some_and(|p| p.valid()))

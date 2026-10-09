@@ -10,6 +10,27 @@
   "maximum_armies": 8,
   "minimum_formations": 3,
   "surplus_percent": 125,
+  "site_value": {
+    "habitation": {
+      "unsettled": 0,
+      "camp": 0,
+      "outpost": 1,
+      "hamlet": 1,
+      "village": 2,
+      "town": 4,
+      "city": 7,
+      "major_city": 9
+    },
+    "wood_source": 2,
+    "stone_source": 2,
+    "crossing": 1,
+    "horse_access": 1,
+    "facility": 2,
+    "fort": 2,
+    "region_anchor": 3
+  },
+  "value_cost": 2,
+  "detached_cost": 12,
   "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"],
   "personalities": {
     "balanced": {
@@ -20,6 +41,7 @@
       "war_while_land_remains": false,
       "expansion_reach": 6,
       "home_distance_percent": 150,
+      "detached_claim_value": 7,
       "extra_armies": 0,
       "guards_borders": false,
       "seeks_peace": false
@@ -32,6 +54,7 @@
       "war_while_land_remains": true,
       "expansion_reach": 5,
       "home_distance_percent": 100,
+      "detached_claim_value": 6,
       "extra_armies": 1,
       "guards_borders": false,
       "seeks_peace": false
@@ -44,6 +67,7 @@
       "war_while_land_remains": false,
       "expansion_reach": 4,
       "home_distance_percent": 300,
+      "detached_claim_value": 11,
       "extra_armies": 1,
       "guards_borders": true,
       "seeks_peace": false
@@ -56,6 +80,7 @@
       "war_while_land_remains": false,
       "expansion_reach": 5,
       "home_distance_percent": 200,
+      "detached_claim_value": 9,
       "extra_armies": 0,
       "guards_borders": true,
       "seeks_peace": true
@@ -68,6 +93,7 @@
       "war_while_land_remains": false,
       "expansion_reach": 10,
       "home_distance_percent": 75,
+      "detached_claim_value": 4,
       "extra_armies": 0,
       "guards_borders": false,
       "seeks_peace": false

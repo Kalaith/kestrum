@@ -271,7 +271,10 @@ fn credit_formation(
             service.vacancy_service_after_sequence =
                 service.vacancy_service_after_sequence.max(sequence);
         }
-        Some(true) if meaningful && sequence > service.vacancy_service_after_sequence => {
+        Some(true)
+            if (meaningful || participation.first_threat_victory)
+                && sequence > service.vacancy_service_after_sequence =>
+        {
             service.vacancy_service_progress = service
                 .vacancy_service_progress
                 .saturating_add(1)

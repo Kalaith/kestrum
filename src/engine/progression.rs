@@ -6,6 +6,7 @@ mod courses;
 mod emergence;
 mod pricing;
 mod relationships;
+pub(crate) use emergence::has_emerged;
 pub use pricing::course_gold_cost;
 pub(crate) use pricing::refund_departures;
 mod specialization;

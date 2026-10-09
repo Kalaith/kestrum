@@ -16,6 +16,8 @@ pub(super) struct Participation {
     pub troop: TroopKind,
     pub enemy_types: BTreeSet<TroopKind>,
     pub meaningful: bool,
+    /// The kingdom's first victory over a local threat qualifies a vacant slot.
+    pub first_threat_victory: bool,
     pub named_slot_vacant: Option<bool>,
     pub tags: BTreeSet<EvidenceKind>,
     pub xp: u32,
@@ -102,6 +104,10 @@ pub(super) fn classify(
             >= u128::from(formation.start) * u128::from(rules.meaningful_loss_permille)
         || captured
         || defended;
+    let first_threat_victory = victory
+        && rules.emergence.first_threat_victory
+        && matches!(enemy, Opponent::Threat(_))
+        && !crate::engine::progression::has_emerged(campaign, own.faction);
     let tags = encounter_tags(
         context,
         army,
@@ -122,6 +128,7 @@ pub(super) fn classify(
             .map(|formation| formation.kind)
             .collect(),
         meaningful,
+        first_threat_victory,
         named_slot_vacant: formation.named_slot_vacant,
         tags,
         xp,

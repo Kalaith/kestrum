@@ -1,4 +1,5 @@
-//! Opening-campaign rules: supply-dependent income and war restraint.
+//! Opening-campaign rules: supply-dependent income, war restraint and the first
+//! Apprentice.
 
 use kestrum::{
     data::{
@@ -9,7 +10,10 @@ use kestrum::{
         GameData,
     },
     engine::{ai, apply, diplomacy::peace_desired, Actor, Command},
-    state::{diplomacy::SiteLoss, StrategicCampaign},
+    state::{
+        battle::BattleOutcome, diplomacy::SiteLoss, people::PersonAssignment, threat::ThreatStatus,
+        StrategicCampaign,
+    },
 };
 
 const OAK: FactionId = FactionId(2);
@@ -394,4 +398,95 @@ fn raids_spare_small_kingdoms_and_seize_exposed_holdings_of_sprawling_ones() {
     let saved: StrategicCampaign =
         serde_json::from_str(&serde_json::to_string(&campaign).unwrap()).unwrap();
     assert_eq!(saved, campaign);
+}
+
+fn clear_home_bandits(data: &GameData, enabled: bool) -> StrategicCampaign {
+    let (mut data, mut campaign) = (data.clone(), production().1);
+    data.progression.emergence.first_threat_victory = enabled;
+    let player = campaign.player;
+    let home = campaign.factions[&player].headquarters;
+    let army = campaign
+        .armies
+        .values()
+        .find(|army| army.faction == player)
+        .unwrap()
+        .id;
+    let threat = campaign
+        .threats
+        .values()
+        .find(|threat| {
+            threat.status == ThreatStatus::Active
+                && campaign.world.adjacent_sites(home).contains(&threat.site)
+        })
+        .expect("the production opening places a threat beside home")
+        .id;
+    let outcome = apply(
+        &mut campaign,
+        &data,
+        Actor::Player,
+        Command::ClearThreat {
+            armies: vec![army],
+            threat,
+        },
+    )
+    .unwrap();
+    let outcome = if outcome.battle_pending {
+        apply(
+            &mut campaign,
+            &data,
+            Actor::Player,
+            Command::StartPendingBattle,
+        )
+        .unwrap()
+    } else {
+        outcome
+    };
+    assert_eq!(
+        campaign.battles[&outcome.battle.unwrap()].outcome,
+        BattleOutcome::AttackerVictory
+    );
+    finish_round(&mut campaign, &data);
+    campaign
+}
+
+#[test]
+fn the_first_victory_over_local_bandits_raises_one_apprentice() {
+    let data = GameData::load().unwrap();
+    let emerged = |campaign: &StrategicCampaign| {
+        campaign
+            .people
+            .values()
+            .filter(|person| person.faction == campaign.player && person.career.emergence.is_some())
+            .count()
+    };
+    let without = clear_home_bandits(&data, false);
+    assert_eq!(
+        emerged(&without),
+        0,
+        "bandits are not meaningful opposition"
+    );
+    let with = clear_home_bandits(&data, true);
+    assert_eq!(emerged(&with), 1, "one Apprentice, not one per vacant slot");
+    let apprentice = with
+        .people
+        .values()
+        .find(|person| person.faction == with.player && person.career.emergence.is_some())
+        .unwrap();
+    assert!(matches!(
+        apprentice.assignment,
+        PersonAssignment::Formation { .. }
+    ));
+    let xp = |campaign: &StrategicCampaign| {
+        campaign
+            .formations
+            .values()
+            .filter(|formation| formation.faction == campaign.player)
+            .map(|formation| formation.service.xp)
+            .sum::<u32>()
+    };
+    assert_eq!(
+        xp(&with),
+        xp(&without),
+        "the fight still earns no service XP"
+    );
 }

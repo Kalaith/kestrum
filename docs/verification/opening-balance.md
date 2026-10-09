@@ -120,3 +120,27 @@ failing), including all five `midgame` tests and the seed-88 production
 victory. Help explains raids beside Clear Threat; the hidden 1920×1080
 [development help capture](ui_help_development.png) (new `help_development`
 scene) shows it fitting the sheet.
+
+## First Apprentice
+
+Opening bandits and wildlife are never meaningful opposition for a starting
+army (their power is below `meaningful_opposition_permille`), so clearing them
+produced no people and the first Apprentice waited on a war. Now a kingdom with
+no emerged person yet counts a victory over a local threat as a qualifying
+engagement for a vacant formation slot (`progression.json`
+`emergence.first_threat_victory`). The encounter stays non-meaningful: it earns
+no service XP and adds no evidence, so trivial clearances still cannot farm
+experience. Emergence then accepts one formation and the kingdom has emerged,
+so the fight yields one Apprentice even when several slots were vacant. Rivals
+follow the same rule when they clear their own threats.
+
+`tests/opening_rules.rs` clears the bandits beside the production capital with
+the rule off (no Apprentice) and on (one Apprentice in a formation, the same
+service XP).
+
+Validation (proportionate, per the current policy): formatting, strict
+all-target Clippy, the 800-line gate, and focused tests `opening_rules`,
+`progression`, `hero_progression` and `threats`, all passing. The full release
+suite and the scripted-player fixtures (`midgame`, `k18_production_battle`)
+were not run for this slice; rivals now gain an early Apprentice, which shifts
+later people draws.

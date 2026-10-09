@@ -35,6 +35,9 @@ pub struct ProgressionRules {
 #[serde(deny_unknown_fields)]
 pub struct EmergenceRules {
     pub vacant_slot_engagements: u8,
+    /// A kingdom with no emerged person yet counts a victory over a local
+    /// threat as a qualifying engagement, without awarding service XP.
+    pub first_threat_victory: bool,
     pub retrospective_rounds: u32,
     pub minimum_age_years: u32,
     pub maximum_age_years: u32,

@@ -242,7 +242,9 @@ impl Planner<'_> {
             .map(|formation| self.data.economy.formations[&formation.kind].upkeep_gold)
             .fold(0_i64, i64::saturating_add);
         let reserve = upkeep.saturating_mul(i64::from(self.data.ai.reserve_upkeep_rounds));
-        !faction.deficit
+        // A sovereign that never opens wars will not open one to free a stranded army.
+        self.temperament().maximum_wars > 0
+            && !faction.deficit
             && faction.resources.gold >= reserve
             && established >= self.data.ai.target_armies
     }
@@ -276,7 +278,7 @@ impl Planner<'_> {
                     .is_none_or(|until| self.campaign.completed_rounds >= until)
                     && pair.peace_since.is_some_and(|since| {
                         self.campaign.completed_rounds.saturating_sub(since)
-                            >= self.data.ai.war_peace_rounds
+                            >= self.temperament().war_peace_rounds
                     })
             })
     }

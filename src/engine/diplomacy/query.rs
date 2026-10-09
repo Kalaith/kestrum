@@ -8,6 +8,8 @@ pub struct DiplomacyFactionView {
     pub name: String,
     pub status: FactionStatus,
     pub relation: DiplomaticState,
+    /// Public temperament: how this kingdom's ruler plays.
+    pub personality: crate::data::ai::AiPersonality,
     pub truce_until: Option<u32>,
     pub declare_blocked: Option<String>,
     pub offer_blocked: Option<String>,
@@ -44,6 +46,7 @@ pub fn diplomacy_view(
                 name: faction.name.clone(),
                 status: faction.status,
                 relation,
+                personality: faction.personality,
                 truce_until: campaign
                     .diplomacy
                     .pair(observer, faction.id)

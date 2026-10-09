@@ -138,6 +138,7 @@ impl Planner<'_> {
             .max(threatened_fronts)
             .max(parity_target)
             .saturating_add(relief)
+            .saturating_add(self.temperament().extra_armies)
             .min(rules.maximum_armies);
         let supported = base
             .saturating_add(self.growth_supported_by_income())

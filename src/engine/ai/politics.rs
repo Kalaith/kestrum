@@ -33,6 +33,7 @@ impl Planner<'_> {
     }
 
     pub(super) fn declare_war(&self) -> Option<AiDecision> {
+        let temperament = self.temperament();
         if self
             .view
             .armies
@@ -40,19 +41,21 @@ impl Planner<'_> {
             .filter(|army| self.campaign.army_is_supplied(army.id))
             .count()
             < self.data.ai.target_armies
-            || self.nearby_neutral()
+            || (!temperament.war_while_land_remains && self.nearby_neutral())
         {
             return None;
         }
         let adjacent = self.neighbors();
         // A distant war that no army can reach does not occupy a frontier.
-        if adjacent.iter().filter(|other| self.at_war(**other)).count() >= self.data.ai.maximum_wars
+        if adjacent.iter().filter(|other| self.at_war(**other)).count() >= temperament.maximum_wars
         {
             return None;
         }
         let mut rivals: Vec<_> = adjacent
             .into_iter()
-            .filter(|other| !self.at_war(*other) && !self.stronger(*other))
+            .filter(|other| {
+                !self.at_war(*other) && !self.stronger(*other, temperament.war_strength_percent)
+            })
             .collect();
         rivals.sort_by_key(|other| {
             (
@@ -74,7 +77,7 @@ impl Planner<'_> {
                 .is_some_and(|until| self.campaign.completed_rounds < until)
                 || pair.peace_since.is_none_or(|round| {
                     self.campaign.completed_rounds.saturating_sub(round)
-                        < self.data.ai.war_peace_rounds
+                        < temperament.war_peace_rounds
                 })
             {
                 continue;
@@ -103,12 +106,13 @@ impl Planner<'_> {
     }
 
     /// The private sovereign aggregate used for peace (P08) also keeps a
-    /// kingdom from opening a war against a visibly stronger neighbor.
-    fn stronger(&self, other: FactionId) -> bool {
+    /// kingdom from opening a war against a neighbor it cannot match by
+    /// `percent` of that neighbor's strength.
+    fn stronger(&self, other: FactionId, percent: u32) -> bool {
         let strength = |faction| {
             crate::engine::diplomacy::military_equivalents(self.campaign, self.data, faction)
         };
-        strength(self.owner) * 100 < strength(other) * u128::from(self.data.ai.war_strength_percent)
+        strength(self.owner) * 100 < strength(other) * u128::from(percent)
     }
 
     /// Boxed in by a neighbor too strong to challenge: build toward parity.
@@ -117,24 +121,11 @@ impl Planner<'_> {
             && self
                 .neighbors()
                 .into_iter()
-                .any(|other| self.stronger(other))
+                .any(|other| self.stronger(other, 100))
     }
 
+    /// Unclaimed land still joins the home border, so there is no need to fight.
     fn nearby_neutral(&self) -> bool {
-        self.view
-            .world
-            .sites
-            .iter()
-            .filter(|site| {
-                site.controller.is_none() && !self.view.hostile_presence.contains(&site.id)
-            })
-            .any(|site| {
-                self.view.armies.iter().any(|army| {
-                    self.path(army.site, site.id, false)
-                        .is_some_and(|(_, path)| {
-                            path.len().saturating_sub(1) <= self.data.ai.neutral_search_edges
-                        })
-                })
-            })
+        self.claims().iter().any(|claim| claim.connected)
     }
 }

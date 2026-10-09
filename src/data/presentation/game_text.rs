@@ -52,6 +52,16 @@ impl GameTextData {
             ));
         }
 
+        // Each sovereign temperament has a name and a description of its play.
+        let temperaments: Vec<_> = crate::data::ai::AiPersonality::ALL
+            .iter()
+            .flat_map(|kind| {
+                [
+                    kind.text_key().to_owned(),
+                    format!("{}_help", kind.text_key()),
+                ]
+            })
+            .collect();
         for key in REQUIRED_TEXT
             .iter()
             .chain(PROGRESSION_TEXT)
@@ -59,10 +69,12 @@ impl GameTextData {
             .chain(OVERVIEW_TEXT)
             .chain(OBSERVER_TEXT)
             .chain(CAMPAIGN_TEXT)
+            .copied()
+            .chain(temperaments.iter().map(String::as_str))
         {
             if self
                 .text
-                .get(*key)
+                .get(key)
                 .is_none_or(|value| value.trim().is_empty())
             {
                 return Err(format!(

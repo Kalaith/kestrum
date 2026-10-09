@@ -115,7 +115,7 @@ fn list(ctx: &Context<'_>) -> Option<UiAction> {
         {
             ctx.text("kingdom_peace_offered")
         } else {
-            relation(ctx, faction)
+            standing(ctx, faction)
         };
         body(ctx, &state, vec2(126.0, y + 50.0), 18.0, BRASS);
         if ctx.pointer.released_on(rect) && ctx.origin.is_some_and(|p| rect.contains(p)) {
@@ -134,11 +134,15 @@ fn selected(ctx: &Context<'_>) -> Option<UiAction> {
     lines(ctx, &faction.name, vec2(592.0, 220.0), 576.0, 2, CREAM);
     body(
         ctx,
-        &relation(ctx, faction),
+        &standing(ctx, faction),
         vec2(592.0, 280.0),
         20.0,
         BRASS,
     );
+    if faction.status == FactionStatus::Independent {
+        let help = format!("{}_help", faction.personality.text_key());
+        lines(ctx, &ctx.text(&help), vec2(592.0, 310.0), 576.0, 1, MUTED);
+    }
     if let Some(until) = faction.truce_until {
         lines(
             ctx,
@@ -147,9 +151,9 @@ fn selected(ctx: &Context<'_>) -> Option<UiAction> {
                 ctx.text("kingdom_truce_until"),
                 until.saturating_add(1)
             ),
-            vec2(592.0, 310.0),
+            vec2(592.0, 337.0),
             576.0,
-            2,
+            1,
             MUTED,
         );
     }
@@ -172,7 +176,7 @@ fn selected(ctx: &Context<'_>) -> Option<UiAction> {
     for (index, intent) in choices.iter().enumerate() {
         if button(
             ctx,
-            Rect::new(592.0, 350.0 + index as f32 * 60.0, 576.0, 48.0),
+            Rect::new(592.0, 370.0 + index as f32 * 60.0, 576.0, 48.0),
             &ctx.text(intent_key(*intent)),
             true,
             true,
@@ -194,7 +198,7 @@ fn selected(ctx: &Context<'_>) -> Option<UiAction> {
     } else {
         ctx.text("kingdom_inactive_help")
     };
-    lines(ctx, &detail, vec2(592.0, 490.0), 576.0, 3, MUTED);
+    lines(ctx, &detail, vec2(592.0, 510.0), 576.0, 3, MUTED);
     None
 }
 
@@ -265,6 +269,16 @@ fn pages(ctx: &Context<'_>) -> Option<UiAction> {
         }
     }
     None
+}
+
+/// Relation plus the ruler's temperament while the kingdom still acts on its own.
+fn standing(ctx: &Context<'_>, faction: &DiplomacyFactionView) -> String {
+    let relation = relation(ctx, faction);
+    if faction.status == FactionStatus::Independent {
+        format!("{relation} · {}", ctx.text(faction.personality.text_key()))
+    } else {
+        relation
+    }
 }
 
 fn relation(ctx: &Context<'_>, faction: &DiplomacyFactionView) -> String {

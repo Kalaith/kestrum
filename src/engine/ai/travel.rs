@@ -209,21 +209,6 @@ impl Planner<'_> {
         }
     }
 
-    pub(super) fn expand(&self) -> Option<AiDecision> {
-        self.targets(
-            self.view
-                .world
-                .sites
-                .iter()
-                .filter(|site| {
-                    site.controller.is_none() && !self.view.hostile_presence.contains(&site.id)
-                })
-                .map(|site| site.id),
-        )
-        .into_iter()
-        .find_map(|site| self.toward(site, AiObjectiveKind::Expand, false))
-    }
-
     pub(super) fn border_post(&self, id: SiteId) -> bool {
         self.view.world.site(id).is_some_and(|post| {
             post.controller == Some(self.owner)

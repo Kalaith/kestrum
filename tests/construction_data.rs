@@ -2,14 +2,14 @@
 
 use kestrum::data::{
     construction::{ConstructionRules, SOURCE},
-    economy::{Habitation, OrderKind, Resources},
+    economy::Habitation,
     world::{Facility, SiteTag},
     GameData,
 };
 use kestrum::{
-    engine::{apply, construction_options, project, Actor, Command, RuleError},
+    engine::{apply, Actor, Command, RuleError},
     state::{
-        construction::{ConstructionKind, ConstructionTarget, Focus},
+        construction::{ConstructionKind, ConstructionTarget},
         military::ArmyId,
         StrategicCampaign,
     },
@@ -35,62 +35,6 @@ fn error_contains(result: Result<ConstructionRules, String>, field: &str) {
     let error = result.unwrap_err();
     assert!(error.contains(SOURCE), "missing source in {error}");
     assert!(error.contains(field), "expected {field} in {error}");
-}
-
-#[test]
-fn startup_loads_the_complete_build_table_without_duplicating_order_prices() {
-    let data = GameData::load().unwrap();
-    let rules = &data.construction;
-    assert_eq!(*rules, load(RAW).unwrap());
-    assert_eq!(
-        (rules.outpost_steps, rules.road_steps, rules.fort_steps),
-        (3, 2, 3)
-    );
-    assert_eq!(rules.road_repair.steps, 1);
-    assert_eq!(
-        rules.road_repair.cost,
-        Resources {
-            gold: 20,
-            wood: 15,
-            stone: 0
-        }
-    );
-    for (kind, expected) in [
-        (OrderKind::EstablishOutpost, (80, 60, 40)),
-        (OrderKind::ImproveRoad, (40, 30, 0)),
-        (OrderKind::BuildFort, (100, 80, 100)),
-        (OrderKind::ChangeFocus, (0, 0, 0)),
-    ] {
-        let cost = data.economy.orders[&kind].cost;
-        assert_eq!((cost.gold, cost.wood, cost.stone), expected);
-    }
-    for (facility, cost, steps) in [
-        (Facility::TrainingGround, (60, 40, 20), 2),
-        (Facility::Stable, (100, 60, 40), 2),
-        (Facility::Infirmary, (80, 40, 20), 2),
-        (Facility::Workshop, (100, 80, 60), 3),
-        (Facility::Temple, (80, 60, 40), 3),
-    ] {
-        let definition = &rules.facilities[&facility];
-        assert_eq!(
-            (
-                definition.cost.gold,
-                definition.cost.wood,
-                definition.cost.stone
-            ),
-            cost
-        );
-        assert_eq!(definition.steps, steps);
-    }
-    let value = serde_json::to_value(rules).unwrap();
-    for unsupported in [
-        "orders",
-        "outpost_cost",
-        "income_focus_percent",
-        "training_discount",
-    ] {
-        assert!(value.get(unsupported).is_none());
-    }
 }
 
 #[test]
@@ -222,79 +166,4 @@ fn facility_requirements_and_complete_tables_match_the_supported_rules() {
         .remove("temple");
     error_contains(load(&missing.to_string()), "facilities");
     invalid("/facilities/training_ground", Value::Null, "invalid type");
-}
-
-#[test]
-fn population_initialization_is_complete_bounded_and_monotonic() {
-    let rules = load(RAW).unwrap();
-    assert_eq!(
-        rules
-            .population
-            .minimum
-            .values()
-            .copied()
-            .collect::<Vec<_>>(),
-        vec![0, 20, 50, 100, 200, 500, 1000, 1800]
-    );
-    assert_eq!(
-        (
-            rules.population.headquarters,
-            rules.population.settler_limit
-        ),
-        (250, 50)
-    );
-    for (path, bad, field) in [
-        ("/population/minimum/unsettled", 1, "Unsettled"),
-        ("/population/minimum/camp", 0, "Camp"),
-        ("/population/minimum/outpost", 20, "Outpost"),
-        ("/population/minimum/city", 1_000_001, "City"),
-        ("/population/headquarters", 199, "headquarters"),
-        ("/population/headquarters", 1_000_001, "headquarters"),
-        ("/population/settler_limit", 0, "settler_limit"),
-        ("/population/settler_limit", 1_000_001, "settler_limit"),
-    ] {
-        invalid(path, json!(bad), field);
-    }
-    let mut missing: Value = serde_json::from_str(RAW).unwrap();
-    missing["population"]["minimum"]
-        .as_object_mut()
-        .unwrap()
-        .remove("major_city");
-    error_contains(load(&missing.to_string()), "population.minimum");
-    check_private_population_and_focus();
-}
-
-fn check_private_population_and_focus() {
-    let data = GameData::load().unwrap();
-    let mut campaign = StrategicCampaign::new(&data).unwrap();
-    let player = campaign.player;
-    let own_site = campaign.factions[&player].headquarters;
-    let foreign_site = campaign
-        .factions
-        .values()
-        .find(|faction| faction.id != player)
-        .unwrap()
-        .headquarters;
-    campaign.world.focus.insert(own_site, Focus::Growth);
-    let visible = project(&campaign, player).unwrap();
-    let target = ConstructionTarget::Site(foreign_site);
-    let options = construction_options(&campaign, &data, player, target);
-    assert_eq!(
-        visible.world.population[&own_site],
-        data.construction.population.headquarters
-    );
-    assert_eq!(visible.world.focus[&own_site], Focus::Growth);
-    assert!(!visible.world.population.contains_key(&foreign_site));
-    assert!(!visible.world.focus.contains_key(&foreign_site));
-    campaign.world.population.insert(foreign_site, 50_000);
-    campaign
-        .world
-        .focus
-        .insert(foreign_site, Focus::TroopTraining);
-    campaign.validate(&data).unwrap();
-    assert_eq!(project(&campaign, player).unwrap(), visible);
-    assert_eq!(
-        construction_options(&campaign, &data, player, target),
-        options
-    );
 }

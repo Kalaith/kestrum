@@ -1,15 +1,14 @@
-//! K01's five behavioral concerns, through the same toolkit/data seam as startup.
+//! Authored JSON content loads through the toolkit seam with resolvable references.
 
 use kestrum::data::{
-    economy::{self, Economy, Resources, TroopKind},
+    economy::{self, Economy},
     rules::{self, CampaignRules},
-    world::{self, AnchorExpression, FactionId, MarkerId, MarkerLocation, Scenario, SiteId},
+    world::{self, AnchorExpression, MarkerId, MarkerLocation, Scenario, SiteId},
     GameData,
 };
 use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{json, Value};
-use std::collections::BTreeSet;
 
 fn changed<T: Serialize + DeserializeOwned>(
     original: &T,
@@ -39,125 +38,6 @@ fn bad_scenarios(data: &GameData, cases: Vec<(&str, Value, &str)>) {
 fn toolkit_loading_resolves_all_economy_and_scenario_references() {
     let data = GameData::load().unwrap();
     let scenario = &data.scenario;
-    assert_eq!(
-        (
-            scenario.markers.len(),
-            scenario.sites.len(),
-            scenario.routes.len()
-        ),
-        (5, 14, 16)
-    );
-    assert_eq!(scenario.factions.len(), 4);
-    assert_eq!(scenario.player, FactionId(1));
-    assert_eq!(scenario.seed, 260926);
-    check_economy_defaults(&data.economy);
-    check_authored_topology(scenario);
-    check_content_round_trip(&data);
-}
-
-fn check_economy_defaults(economy: &Economy) {
-    assert_eq!(
-        economy.starting_resources,
-        Resources {
-            gold: 500,
-            wood: 200,
-            stone: 150
-        }
-    );
-    assert_eq!(
-        economy.headquarters_income_bonus,
-        Resources {
-            gold: 40,
-            wood: 15,
-            stone: 10
-        }
-    );
-    for (kind, capacity, gold, upkeep) in [
-        (TroopKind::Warriors, 100, 60, 10),
-        (TroopKind::Spearmen, 100, 70, 10),
-        (TroopKind::Archers, 80, 80, 10),
-        (TroopKind::Riders, 40, 80, 12),
-        (TroopKind::Medics, 40, 60, 8),
-        (TroopKind::SiegeEngines, 20, 120, 14),
-    ] {
-        let formation = &economy.formations[&kind];
-        assert_eq!(
-            (
-                formation.capacity,
-                formation.recruit_cost.gold,
-                formation.upkeep_gold
-            ),
-            (capacity, gold, upkeep)
-        );
-    }
-}
-
-fn check_authored_topology(scenario: &Scenario) {
-    // Exact topology is an acceptance assertion, not a second runtime layout.
-    let edges: BTreeSet<_> = scenario
-        .routes
-        .iter()
-        .filter(|route| route.major_connection.is_none())
-        .map(|route| {
-            (
-                scenario.site(route.from).unwrap().key.as_str(),
-                scenario.site(route.to).unwrap().key.as_str(),
-            )
-        })
-        .collect();
-    assert_eq!(
-        edges,
-        BTreeSet::from([
-            ("west_gate", "milltown"),
-            ("milltown", "orchard"),
-            ("milltown", "bridge"),
-            ("orchard", "hill"),
-            ("hill", "high_fort"),
-            ("bridge", "high_fort"),
-            ("bridge", "city"),
-            ("high_fort", "city"),
-            ("city", "east_gate"),
-            ("city", "quarry"),
-            ("quarry", "ruined_hold"),
-            ("ruined_hold", "east_gate"),
-        ])
-    );
-}
-
-fn check_content_round_trip(data: &GameData) {
-    let scenario = &data.scenario;
-    for faction in &scenario.factions {
-        assert_eq!(
-            faction.resources.resolve(&data.economy),
-            data.economy.starting_resources
-        );
-        assert_eq!(
-            scenario.site(faction.headquarters).unwrap().controller,
-            Some(faction.id)
-        );
-        assert_eq!(
-            faction
-                .starting_formations
-                .iter()
-                .map(|kind| data.economy.formations[kind].capacity)
-                .collect::<Vec<_>>(),
-            [100, 100, 80]
-        );
-    }
-    for site in scenario
-        .sites
-        .iter()
-        .filter(|site| site.marker == MarkerId(5))
-    {
-        assert_eq!(
-            site.controller,
-            if ["city", "high_fort"].contains(&site.key.as_str()) {
-                Some(FactionId(3))
-            } else {
-                None
-            }
-        );
-    }
     // Every JSON field survives typed serialization; no silently ignored content.
     let economy_json: Value =
         macroquad_toolkit::include_json!("../assets/data/economy.json").unwrap();

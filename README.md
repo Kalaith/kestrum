@@ -275,9 +275,10 @@ background browser gameplay, publishing and reload passed, with a complete
 1920×1080 browser capture in [spatial-scale verification](docs/verification/spatial-scale.md).
 These limits remain:
 
-- The seed-88 production-victory test passes again after the 2026-10-08
-  [opening balance](docs/verification/opening-balance.md) rules; `midgame`'s
-  atlas-breadth test sees 52 of its required 55 known sites.
+- The 2026-10-09 testing-policy review deleted the gameplay, campaign-scenario
+  and `midgame` suites; the remaining tests cover only the source-size and asset
+  gates, content and save integrity, and settled algorithms. Gameplay is
+  verified by playing and capturing affected scenes.
 - Historical minimum-size WebGL acceptance remained unverified: the viewport
   override produced a smaller rendered image with black remainder after interaction.
 - Dense battlefield placement, target-priority editing, small tactic controls

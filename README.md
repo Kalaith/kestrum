@@ -137,8 +137,10 @@ save/load, settings and help. These are the **current** paths; the map plan brin
 common decisions and context closer to the world.
 
 The introduction starts by managing the capital and paying for city development,
-then enters that capital's region and returns to the Country Map. Movement,
-careers, household review, the first turn and Records follow. It can be dismissed
+then enters that capital's region and returns to the Country Map. Movement
+(which explains claiming), clearing a nearby threat, raising a second army and
+the first End Turn follow; careers, household review and Records come after
+rivals have acted. It can be dismissed
 or resumed from How to Play; an already developed capital does not require a
 second investment. Further contextual teaching remains M04 of the map plan.
 

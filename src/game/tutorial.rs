@@ -21,7 +21,7 @@ impl Game {
             UiAction::DismissTutorial => campaign.tutorial.dismiss(),
             UiAction::ReopenTutorial => {
                 campaign.tutorial.reopen();
-                reconcile_city_development(campaign);
+                reconcile_lessons(campaign);
                 self.state.screen = Screen::Campaign;
                 self.state.overlay = Overlay::None;
             }
@@ -44,7 +44,7 @@ impl Game {
         let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign else {
             return;
         };
-        reconcile_city_development(campaign);
+        reconcile_lessons(campaign);
         let capital = campaign.factions[&campaign.player].capital;
         let capital_marker = campaign.world.site(capital).map(|site| site.marker);
         let step = match action {
@@ -92,6 +92,16 @@ impl Game {
         if let Some(step) = step {
             campaign.tutorial.record(step);
         }
+    }
+}
+
+fn reconcile_lessons(campaign: &mut kestrum::state::StrategicCampaign) {
+    reconcile_city_development(campaign);
+    if campaign.tutorial.current() == Some(TutorialStep::ClearThreat)
+        && kestrum::engine::project(campaign, campaign.player)
+            .is_ok_and(|view| view.threats.is_empty())
+    {
+        campaign.tutorial.record(TutorialStep::ClearThreat);
     }
 }
 

@@ -202,10 +202,61 @@ impl Game {
         )));
         assert_eq!(self.movement.site, Some(destination));
         assert_eq!(self.state.overlay, Overlay::None);
-        self.assert_tutorial(TutorialStep::Career);
-        if scene == "tutorial_route" {
+        self.assert_tutorial(TutorialStep::ClearThreat);
+        if matches!(scene, "tutorial_route" | "tutorial_threat") {
             return true;
         }
+        // Expedition recording is covered by tests; the walk-through only needs the receipt.
+        if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+            campaign.tutorial.record(TutorialStep::ClearThreat);
+        }
+        self.assert_tutorial(TutorialStep::RaiseArmy);
+        if scene == "tutorial_raise_army" {
+            return true;
+        }
+        self.state
+            .command(
+                &self.data,
+                Command::Recruit {
+                    site: headquarters,
+                    army: None,
+                    kind: kestrum::data::economy::TroopKind::Warriors,
+                },
+            )
+            .expect("the capital raises a second army");
+        self.invalidate_projection();
+        self.refresh_projection();
+        self.assert_tutorial(TutorialStep::FirstTurn);
+        if scene == "tutorial_first_turn" {
+            return true;
+        }
+        self.apply(UiAction::EndTurn);
+        self.assert_tutorial(TutorialStep::Career);
+        self.apply(UiAction::PauseNpcs(true));
+        if scene == "tutorial_turn" {
+            return true;
+        }
+        if let Some(Campaign::Strategic(campaign)) = &mut self.state.campaign {
+            while matches!(
+                campaign.phase,
+                kestrum::state::campaign::CampaignPhase::NpcTurn { .. }
+            ) {
+                if let kestrum::state::campaign::CampaignPhase::NpcTurn { paused: true, .. } =
+                    campaign.phase
+                {
+                    engine::apply(
+                        campaign,
+                        &self.data,
+                        engine::Actor::Player,
+                        Command::SetNpcPaused(false),
+                    )
+                    .expect("resume rivals");
+                }
+                engine::advance_npc(campaign, &self.data).expect("rival turn");
+            }
+        }
+        self.invalidate_projection();
+        self.refresh_projection();
         self.apply(UiAction::OpenArmies(destination));
         self.apply(UiAction::ArmyOrders);
         self.apply(UiAction::ArmyPeople);
@@ -223,19 +274,13 @@ impl Game {
             return true;
         }
         self.apply(UiAction::ReviewHousehold(HouseholdAction::Invite));
-        self.assert_tutorial(TutorialStep::FirstTurn);
+        self.assert_tutorial(TutorialStep::Records);
         if scene == "tutorial_review" {
             return true;
         }
         self.apply(UiAction::CancelHouseholdReview);
         self.apply(UiAction::CancelArmyAction);
         self.apply(UiAction::Back);
-        self.apply(UiAction::EndTurn);
-        self.assert_tutorial(TutorialStep::Records);
-        self.apply(UiAction::PauseNpcs(true));
-        if scene == "tutorial_turn" {
-            return true;
-        }
         self.apply(UiAction::OpenRecords);
         assert!(self
             .state

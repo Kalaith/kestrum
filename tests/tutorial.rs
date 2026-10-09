@@ -235,7 +235,7 @@ fn out_of_order_completion_is_idempotent_and_dismissal_does_not_complete_actions
 }
 
 #[test]
-fn lesson_order_places_paid_city_investment_between_headquarters_and_region() {
+fn lesson_order_teaches_the_strategic_loop_before_people_screens() {
     assert_eq!(
         TUTORIAL_STEPS,
         [
@@ -244,9 +244,11 @@ fn lesson_order_places_paid_city_investment_between_headquarters_and_region() {
             TutorialStep::Region,
             TutorialStep::WorldMap,
             TutorialStep::Movement,
+            TutorialStep::ClearThreat,
+            TutorialStep::RaiseArmy,
+            TutorialStep::FirstTurn,
             TutorialStep::Career,
             TutorialStep::Household,
-            TutorialStep::FirstTurn,
             TutorialStep::Records,
         ]
     );
@@ -460,4 +462,82 @@ fn guide_progress_is_local_to_the_saved_campaign() {
     assert!(!guide(&state).completed(TutorialStep::Movement));
     state.load_campaign(previous, &data).unwrap();
     assert!(guide(&state).completed(TutorialStep::Movement));
+}
+
+#[test]
+fn raising_a_new_army_and_clearing_a_threat_are_saved_lessons() {
+    let data = GameData::load().unwrap();
+    // Production openings always place bandits beside the capital.
+    let campaign = StrategicCampaign::new_production(
+        &data,
+        &ProductionSetup {
+            kingdom_name: "Tutorial Rose".into(),
+            emblem: Emblem::Rose,
+            factions: data.rules.min_factions,
+            seed: data.production_layout.default_seed,
+        },
+    )
+    .unwrap();
+    let mut state = GameState::default();
+    state
+        .load_campaign(Campaign::Strategic(Box::new(campaign)), &data)
+        .unwrap();
+    campaign_mut(&mut state).tutorial = TutorialProgress::new();
+    let campaign = state.campaign.as_ref().unwrap().strategic().unwrap();
+    let home = campaign.factions[&campaign.player].headquarters;
+    let army = campaign
+        .armies
+        .values()
+        .find(|army| army.faction == campaign.player)
+        .unwrap()
+        .id;
+    let threat = campaign
+        .threats
+        .values()
+        .find(|threat| {
+            threat.status == ThreatStatus::Active
+                && campaign.world.adjacent_sites(home).contains(&threat.site)
+        })
+        .expect("the production opening places a threat beside home")
+        .id;
+    // Filling an existing army is not the lesson; only a separate force is.
+    let mut filled = GameState::default();
+    filled
+        .load_campaign(state.campaign.clone().unwrap(), &data)
+        .unwrap();
+    filled
+        .command(
+            &data,
+            Command::Recruit {
+                site: home,
+                army: Some(army),
+                kind: kestrum::data::economy::TroopKind::Warriors,
+            },
+        )
+        .unwrap();
+    assert!(!guide(&filled).completed(TutorialStep::RaiseArmy));
+    state
+        .command(
+            &data,
+            Command::ClearThreat {
+                armies: vec![army],
+                threat,
+            },
+        )
+        .unwrap();
+    assert!(guide(&state).completed(TutorialStep::ClearThreat));
+    assert!(!guide(&state).completed(TutorialStep::RaiseArmy));
+    state.command(&data, Command::StartPendingBattle).unwrap();
+
+    state
+        .command(
+            &data,
+            Command::Recruit {
+                site: home,
+                army: None,
+                kind: kestrum::data::economy::TroopKind::Warriors,
+            },
+        )
+        .unwrap();
+    assert!(guide(&state).completed(TutorialStep::RaiseArmy));
 }

@@ -191,8 +191,10 @@ This is planned behavior; current feedback still uses transient notices.
 
 ### Introduction and contextual help
 
-The implemented guide teaches movement, region navigation, careers, households,
-End Turn and Records. M04 replaces it with a useful opening action and visible
+The implemented guide (2026-10-08) teaches the capital investment, region
+navigation, movement and claiming, clearing the nearby threat (satisfied
+automatically once no threat is visible), raising a second army, End Turn with a
+note that rivals attack weaker neighbors, then careers, households and Records. M04 replaces it with a useful opening action and visible
 payoff: secure a nearby opportunity, resolve its consequence, invest the benefit
 and respond to a frontier. Prompts use actual legal choices and exact visible
 control labels; alternative actions can satisfy the lesson.

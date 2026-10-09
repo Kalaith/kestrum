@@ -331,6 +331,8 @@ impl GameState {
         let lesson = match &command {
             Command::Move(_) => Some(tutorial::TutorialStep::Movement),
             Command::EndTurn => Some(tutorial::TutorialStep::FirstTurn),
+            Command::ClearThreat { .. } => Some(tutorial::TutorialStep::ClearThreat),
+            Command::Recruit { army: None, .. } => Some(tutorial::TutorialStep::RaiseArmy),
             _ => None,
         };
         let campaign = self.strategic_campaign()?;

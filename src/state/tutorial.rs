@@ -15,17 +15,23 @@ pub enum TutorialStep {
     Household,
     FirstTurn,
     Records,
+    ClearThreat,
+    RaiseArmy,
 }
 
-pub const TUTORIAL_STEPS: [TutorialStep; 9] = [
+/// Claim, clear the nearby threat and raise a second army before the first
+/// season ends; careers and households follow once rivals have acted.
+pub const TUTORIAL_STEPS: [TutorialStep; 11] = [
     TutorialStep::Headquarters,
     TutorialStep::CityDevelopment,
     TutorialStep::Region,
     TutorialStep::WorldMap,
     TutorialStep::Movement,
+    TutorialStep::ClearThreat,
+    TutorialStep::RaiseArmy,
+    TutorialStep::FirstTurn,
     TutorialStep::Career,
     TutorialStep::Household,
-    TutorialStep::FirstTurn,
     TutorialStep::Records,
 ];
 

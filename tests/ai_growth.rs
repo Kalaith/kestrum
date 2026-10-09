@@ -407,3 +407,71 @@ fn army_cap_deficit_and_full_complement_reserve_bound_growth() {
         "one gold below the full-complement reserve cannot open a partially funded army"
     );
 }
+
+#[test]
+fn a_stranded_army_opens_a_relief_slot_above_the_holdings_target() {
+    let (mut data, mut campaign) = production_fixture();
+    add_developed_holdings(&mut campaign, 24);
+    campaign = enrich_campaign(campaign);
+    create_minimum_army(&mut campaign, &data);
+    create_minimum_army(&mut campaign, &data);
+    next_oak_turn(&mut campaign, &data);
+    campaign.factions.get_mut(&OAK).unwrap().resources = RICH;
+    data.ai.maximum_armies = 8;
+    // Let the planner recruit until the realm reaches its ordinary target.
+    for _ in 0..40 {
+        let decision = ai::propose(&campaign, &data, OAK).unwrap();
+        if !matches!(decision.command, Command::Recruit { .. }) {
+            break;
+        }
+        apply(&mut campaign, &data, Actor::Npc(OAK), decision.command).unwrap();
+        campaign.factions.get_mut(&OAK).unwrap().resources = RICH;
+    }
+    assert!(
+        !has_new_army_recruit(&ai::propose(&campaign, &data, OAK).unwrap()),
+        "a fully supplied realm at its target raises nothing more"
+    );
+    let armies: Vec<_> = campaign
+        .armies
+        .values()
+        .filter(|army| army.faction == OAK)
+        .map(|army| army.id)
+        .collect();
+    assert!(
+        armies.len() > data.ai.target_armies,
+        "the holdings target exceeds the base"
+    );
+
+    // Strand one army on a contested holding away from home.
+    let headquarters = campaign.factions[&OAK].headquarters;
+    let isolated = campaign
+        .world
+        .sites
+        .iter()
+        .find(|site| {
+            site.controller == Some(OAK)
+                && site.id != headquarters
+                && !campaign.world.contested_sites.contains(&site.id)
+        })
+        .unwrap()
+        .id;
+    campaign.world.contested_sites.insert(isolated);
+    campaign
+        .armies
+        .get_mut(armies.last().unwrap())
+        .unwrap()
+        .site = isolated;
+    for formation in campaign
+        .formations
+        .values_mut()
+        .filter(|formation| formation.faction == OAK)
+    {
+        formation.movement_spent = formation.movement_allowance(&data);
+    }
+    campaign.reconcile_region_control();
+    let decision = ai::propose(&campaign, &data, OAK).unwrap();
+    assert!(
+        has_new_army_recruit(&decision),
+        "the stranded army leaves room for a supplied relief force: {decision:?}"
+    );
+}

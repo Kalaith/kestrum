@@ -156,6 +156,12 @@ impl DevelopmentRules {
         )?;
         require(
             SOURCE,
+            "city_development.cost_increase_percent_per_city",
+            self.city_development.cost_increase_percent_per_city <= 1000,
+            "must be within 0..=1000",
+        )?;
+        require(
+            SOURCE,
             "city_development.minimum_habitation",
             matches!(
                 self.city_development.minimum_habitation,

@@ -80,8 +80,11 @@ pub(crate) fn city_cost(
         .iter()
         .filter(|site| site.controller == Some(owner) && site.habitation >= Habitation::City)
         .count() as i64;
-    let percent = 100 + i64::from(rules.cost_increase_percent_per_city) * cities;
-    let scale = |amount: i64| (amount * percent + 99) / 100;
+    // Saturating: authored costs are only checked to be nonnegative.
+    let percent = i64::from(rules.cost_increase_percent_per_city)
+        .saturating_mul(cities)
+        .saturating_add(100);
+    let scale = |amount: i64| amount.saturating_mul(percent).saturating_add(99) / 100;
     Resources {
         gold: scale(rules.cost.gold),
         wood: scale(rules.cost.wood),

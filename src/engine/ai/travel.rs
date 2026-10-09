@@ -209,19 +209,56 @@ impl Planner<'_> {
         }
     }
 
+    /// Unclaimed sites that touch supplied home territory within the realm's
+    /// reach, with their route cost from the capital. Claims made here stay
+    /// joined to the capital instead of opening exposed, disconnected holdings.
+    pub(super) fn frontier(&self) -> Vec<(u32, SiteId)> {
+        let headquarters = self.campaign.factions[&self.owner].headquarters;
+        self.view
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                site.controller.is_none()
+                    && !self.view.hostile_presence.contains(&site.id)
+                    && self
+                        .view
+                        .world
+                        .adjacent_sites(site.id)
+                        .into_iter()
+                        .any(|neighbor| self.view.supplied_sites.contains(&neighbor))
+            })
+            .filter_map(|site| {
+                let (cost, path) = self.path(headquarters, site.id, false)?;
+                (path.len().saturating_sub(1) <= self.data.ai.expansion_reach)
+                    .then_some((cost, site.id))
+            })
+            .collect()
+    }
+
     pub(super) fn expand(&self) -> Option<AiDecision> {
-        self.targets(
-            self.view
-                .world
-                .sites
-                .iter()
-                .filter(|site| {
-                    site.controller.is_none() && !self.view.hostile_presence.contains(&site.id)
-                })
-                .map(|site| site.id),
-        )
-        .into_iter()
-        .find_map(|site| self.toward(site, AiObjectiveKind::Expand, false))
+        let home_weight = u64::from(self.data.ai.home_distance_percent);
+        let mut candidates: Vec<_> = self
+            .frontier()
+            .into_iter()
+            .filter_map(|(home, site)| {
+                let travel = self
+                    .view
+                    .armies
+                    .iter()
+                    .filter(|army| self.moving(army, false))
+                    .filter_map(|army| self.path(army.site, site, false).map(|(cost, _)| cost))
+                    .min()?;
+                // Distance from the capital outweighs the nearest army's walk,
+                // so the realm fills in around home before reaching outward.
+                let score = (u64::from(home) * home_weight / 100).saturating_add(travel.into());
+                Some((score, self.strategic_priority(site), site))
+            })
+            .collect();
+        candidates.sort_unstable();
+        candidates
+            .into_iter()
+            .find_map(|(_, _, site)| self.toward(site, AiObjectiveKind::Expand, false))
     }
 
     pub(super) fn border_post(&self, id: SiteId) -> bool {

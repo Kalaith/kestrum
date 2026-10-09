@@ -201,13 +201,19 @@ fn report(campaign: &StrategicCampaign, activity: &BTreeMap<FactionId, Activity>
             .iter()
             .filter(|site| site.habitation >= Habitation::City)
             .count();
+        // Holdings cut off from the capital's supply network.
+        let supplied_sites = campaign.supplied_sites(faction.id);
+        let detached = sites
+            .iter()
+            .filter(|site| !supplied_sites.contains(&site.id))
+            .count();
         let active = activity
             .get(&faction.id)
             .and_then(|entry| entry.last_active_round);
         let peak = activity
             .get(&faction.id)
             .map_or(0, |entry| entry.peak_armies);
-        println!("  #{} {} {:?}: armies={} supplied={} peak={} sites={} cities={} gold={} last_action={active:?}",
+        println!("  #{} {} {:?}: armies={} supplied={} peak={} sites={} detached={detached} cities={} gold={} last_action={active:?}",
             faction.id.0, faction.name, faction.status, armies.len(), supplied, peak, sites.len(), cities, faction.resources.gold);
         report_personnel(campaign, faction.id, activity.get(&faction.id));
     }

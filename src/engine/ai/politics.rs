@@ -120,21 +120,8 @@ impl Planner<'_> {
                 .any(|other| self.stronger(other))
     }
 
+    /// Unclaimed land still joins the home border, so there is no need to fight.
     fn nearby_neutral(&self) -> bool {
-        self.view
-            .world
-            .sites
-            .iter()
-            .filter(|site| {
-                site.controller.is_none() && !self.view.hostile_presence.contains(&site.id)
-            })
-            .any(|site| {
-                self.view.armies.iter().any(|army| {
-                    self.path(army.site, site.id, false)
-                        .is_some_and(|(_, path)| {
-                            path.len().saturating_sub(1) <= self.data.ai.neutral_search_edges
-                        })
-                })
-            })
+        !self.frontier().is_empty()
     }
 }

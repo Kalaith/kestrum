@@ -500,13 +500,12 @@ impl Planner<'_> {
         let site = self.view.world.site(objective.site)?;
         let valid = match objective.kind {
             AiObjectiveKind::Expand => {
-                site.controller.is_none()
-                    && !self.view.hostile_presence.contains(&site.id)
-                    && !self
-                        .view
-                        .threats
-                        .iter()
-                        .any(|threat| threat.site == site.id)
+                !self
+                    .view
+                    .threats
+                    .iter()
+                    .any(|threat| threat.site == site.id)
+                    && self.frontier().iter().any(|(_, id)| *id == site.id)
             }
             AiObjectiveKind::Defend => {
                 site.controller == Some(self.owner) && self.threatened(site.id)

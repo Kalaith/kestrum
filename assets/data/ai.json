@@ -13,6 +13,7 @@
   "war_peace_rounds": 4,
   "maximum_wars": 1,
   "war_strength_percent": 100,
-  "neutral_search_edges": 2,
+  "expansion_reach": 6,
+  "home_distance_percent": 150,
   "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"]
 }

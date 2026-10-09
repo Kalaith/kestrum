@@ -27,7 +27,10 @@ pub struct AiRules {
     pub maximum_wars: usize,
     /// Own aggregate strength, as a percentage of a neighbor's, needed to declare war on it.
     pub war_strength_percent: u32,
-    pub neutral_search_edges: usize,
+    /// Furthest route edges from the capital at which unclaimed land is taken.
+    pub expansion_reach: usize,
+    /// Weight of capital distance against army travel when ranking new land.
+    pub home_distance_percent: u32,
     pub recruitment_order: Vec<TroopKind>,
 }
 
@@ -47,7 +50,8 @@ impl AiRules {
             || !(1..=80).contains(&self.war_peace_rounds)
             || !(1..=7).contains(&self.maximum_wars)
             || !(1..=1000).contains(&self.war_strength_percent)
-            || !(1..=16).contains(&self.neutral_search_edges)
+            || !(1..=32).contains(&self.expansion_reach)
+            || self.home_distance_percent > 1000
             || self.recruitment_order.len() != 6
             || self
                 .recruitment_order

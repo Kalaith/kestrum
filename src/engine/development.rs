@@ -6,8 +6,8 @@ mod migration;
 mod progress;
 mod query;
 
-pub(crate) use commands::city_development_check;
 pub(crate) use commands::execute;
+pub(crate) use commands::{city_cost, city_development_check};
 pub(crate) use progress::{forecast_step, resolve};
 pub(crate) use query::observed_safety_sites;
 pub use query::{

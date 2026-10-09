@@ -69,3 +69,26 @@ target passes except `midgame`, including the seed-88 `k18_production_battle`
 victory script that failed before this slice. `midgame` passes four of five
 tests; `midgame_reveals_a_broad_connected_atlas_and_known_rivals` sees 52 known
 sites against its 55-site threshold. The threshold is unchanged; see todo.
+
+## Economy follow-up
+
+City investment is still the strongest return in the opening, so its price now
+scales: each City or Major City the investor already holds adds
+`cost_increase_percent_per_city` (50%) to the next one (250/100/75, then
+375/150/113, then 500/200/150). Riders now recruit for 80 Gold with 12 upkeep
+(was 120 and 16); with 40 troopers at 24 attack and 18 resistance they were
+priced well above Warriors for similar damage and less endurance.
+
+Cheaper Outposts (50/40/20) were tried and withdrawn: rivals built many more,
+and the seed-88 production victory script fell back to Defeat. Outposts keep
+their 80/60/40 price.
+
+Generated person names (emergence, households and successors) now step past
+any name a living person already holds, keeping the same random draws, after a
+replay produced two living namesakes in one kingdom.
+
+AI-only observer at round 100 with these changes, most cities held by one
+kingdom: 4, 4, 6 and 2 for seeds 260926, 88, 4242 and 7 (before: 10, 11, 15
+and 2). The full release suite passes every target except `midgame`, where two
+tests now fall short: 53 of 55 known sites, and one of sixteen adults waits at
+an unsupplied holding without a formation. The seed-88 victory script passes.

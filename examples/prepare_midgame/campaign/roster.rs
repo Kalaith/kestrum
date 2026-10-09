@@ -79,21 +79,22 @@ pub(super) fn develop(
                 }
             }
         }
-        if campaign.people[&person].career.course.is_none()
-            && campaign.people[&person].assignment == (PersonAssignment::Site { site: home })
-        {
-            let mut available = campaign.available_person_formation(campaign.player, home);
-            let faction = &campaign.factions[&campaign.player];
-            let affordable = faction.last_economy.as_ref().is_none_or(|statement| {
-                statement.income.gold - statement.upkeep_due
-                    >= data.economy.formations[&kestrum::data::economy::TroopKind::Warriors]
-                        .upkeep_gold
-            });
-            if available.is_none() && affordable {
+        // People left at any supplied holding (after a lost battle, say) rejoin there.
+        let waiting = match campaign.people[&person].assignment {
+            PersonAssignment::Site { site }
+                if site == home || campaign.supplied_sites(campaign.player).contains(&site) =>
+            {
+                Some(site)
+            }
+            _ => None,
+        };
+        if let Some(site) = waiting.filter(|_| campaign.people[&person].career.course.is_none()) {
+            let mut available = campaign.available_person_formation(campaign.player, site);
+            if available.is_none() {
                 let receiving = campaign
                     .armies
                     .values()
-                    .filter(|army| army.faction == campaign.player && army.site == home)
+                    .filter(|army| army.faction == campaign.player && army.site == site)
                     .filter(|army| army.first_empty_slot().is_some())
                     .min_by_key(|army| (army.formation_ids().count(), army.id))
                     .map(|army| army.id);
@@ -101,12 +102,12 @@ pub(super) fn develop(
                     campaign,
                     data,
                     Command::Recruit {
-                        site: home,
+                        site,
                         army: receiving,
                         kind: kestrum::data::economy::TroopKind::Warriors,
                     },
                 )?;
-                available = campaign.available_person_formation(campaign.player, home);
+                available = campaign.available_person_formation(campaign.player, site);
             }
             if let Some(formation) = available {
                 try_order(

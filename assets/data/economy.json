@@ -92,11 +92,11 @@
       "capacity": 40,
       "movement_allowance": 8,
       "recruit_cost": {
-        "gold": 120,
+        "gold": 80,
         "wood": 10,
         "stone": 0
       },
-      "upkeep_gold": 16
+      "upkeep_gold": 12
     },
     "medics": {
       "capacity": 40,

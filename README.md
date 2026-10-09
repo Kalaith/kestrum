@@ -127,7 +127,8 @@ internal threats, participant sieges and hostile contact cues.
 
 Army Details opens composition, recruitment and people. Manage opens a place's
 construction, roads, focus and local actions. Develop City costs 250 Gold,
-100 Wood and 75 Stone. It requires a safe, supplied Village or Town with usable
+100 Wood and 75 Stone for a kingdom's first city; each City or Major City it
+already holds adds 50% to the next investment. It requires a safe, supplied Village or Town with usable
 conditions and no directly neighboring City or Major City. A city then offers
 Enter Region, showing the city and its connected countryside. Fields, woods and
 buildings reflect observed development; country and local views share the same

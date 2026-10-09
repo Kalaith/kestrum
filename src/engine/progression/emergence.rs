@@ -107,15 +107,7 @@ fn create(
                 .saturating_sub(data.progression.emergence.retrospective_rounds),
         )
         .max((birth_round + 68).clamp(0, i64::from(u32::MAX)) as u32);
-    let given = &data.human_names.given_names[campaign
-        .rng
-        .people
-        .below(data.human_names.given_names.len())];
-    let family = &data.human_names.family_names[campaign
-        .rng
-        .people
-        .below(data.human_names.family_names.len())];
-    let name = format!("{given} {family}");
+    let name = crate::engine::succession::fresh_person_name(campaign, data);
     let disposition = Disposition {
         courage: tendency(&mut campaign.rng.people),
         care: tendency(&mut campaign.rng.people),

@@ -365,7 +365,7 @@ impl Planner<'_> {
     }
 
     pub(super) fn develop_city(&self) -> Option<AiDecision> {
-        let cost = self.data.development.city_development.cost;
+        let cost = crate::engine::development::city_cost(self.campaign, self.data, self.owner);
         if !self.reserve(cost, 0, false) {
             return None;
         }

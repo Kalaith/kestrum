@@ -85,7 +85,25 @@ fn assert_blocked_action(
 fn investment_pays_once_preserves_people_and_state_and_roundtrips() {
     let (data, mut campaign) = fixture(None);
     let site = SiteId(5);
-    let cost = data.development.city_development.cost;
+    // Each City or Major City already held raises the price by the authored share.
+    let held = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(FactionId(1)) && site.habitation >= Habitation::City)
+        .count() as i64;
+    let rules = &data.development.city_development;
+    let percent = 100 + i64::from(rules.cost_increase_percent_per_city) * held;
+    let scale = |amount: i64| (amount * percent + 99) / 100;
+    let cost = Resources {
+        gold: scale(rules.cost.gold),
+        wood: scale(rules.cost.wood),
+        stone: scale(rules.cost.stone),
+    };
+    assert!(
+        held > 0,
+        "the fixture already holds a city, so the price rises"
+    );
     let population = campaign.world.population[&site];
     let development = campaign.world.development[&site].clone();
     let starting_resources = campaign.factions[&FactionId(1)].resources;

@@ -29,6 +29,8 @@ pub struct DevelopmentRules {
 #[serde(deny_unknown_fields)]
 pub struct CityDevelopmentRules {
     pub cost: Resources,
+    /// Each City or Major City the investor already holds raises the next cost.
+    pub cost_increase_percent_per_city: u32,
     pub minimum_habitation: Habitation,
     pub messages: CityDevelopmentMessages,
 }

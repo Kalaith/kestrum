@@ -187,20 +187,27 @@ The game must build for:
 
 ### 8.3 Validation
 
-- During a slice, run focused tests for the changed behavior. Before each code-slice commit, review the full diff and affected feature suites, run formatting, Clippy (`--all-targets --all-features -- -D warnings`), source-size gates, and the affected project's full test suite (including relevant member crates). Focused tests do not replace full-suite checks; no catalog-wide test/build is required for a single-game slice.
-- After meaningful game changes, complete the publish and applicable visual review below before committing the slice. Smaller commits do not waive those checks.
-- Documentation-only slices require content/link/reference review, `git diff --check`, and relevant sync/check or documentation-tool tests. No gameplay build or publish is required solely for prose; changed executable tooling still needs its relevant checks.
-- Report exact failing commands and distinguish verified pre-existing failures from regressions and unrun checks. A baseline failure is not a pass or an automatic waiver: fix the real cause within scope, or report a blocker and obtain an explicit user exception before committing a slice whose required checks fail. Never commit newly broken code for cadence.
+Validate proportionately for a prototype; commit each coherent, buildable slice promptly.
 
-After meaningful game changes, run `.\publish.ps1` with no parameters from the affected project directory and report the result. If the script is missing, blocked, or fails for an unrelated environment reason, report that limitation. A local instance or dev server is not a substitute unless the user requests it.
+- **Every Rust slice:** review the full/staged diff; check formatting, strict Clippy (`--all-targets --all-features -- -D warnings`), source-size gates, and focused existing tests for changed behavior in the affected crate(s). Fix errors and warnings; do not suppress them or disable checks to pass. If no behavioral test applies (for example a visual-only change), explain the relevant build/manual evidence instead of adding redundant tests.
+- **Broader checks when justified:** use integration tests or the full affected-project/member suite for cross-cutting state, simulation, shared API/platform changes, a meaningful integration boundary, or release acceptance. State the risk/trigger; a full suite is not required for every slice. Reuse valid results for unchanged code/configuration/dependencies; rerun affected checks after relevant changes or unresolved failures. Avoid running focused tests immediately before a full suite containing them unless useful for diagnosis.
+- **Changed UI only:** inspect affected screens/states and exercise affected interactions. Check normal/minimum sizes where layout, scaling, or input may change, and relevant dense/failure states. Do not refresh or review unrelated screens. See [UI_STYLE.md](UI_STYLE.md#9-review-by-subtraction-then-verify-in-play).
+- **Publishing:** never gate a local code-slice commit on `publish.ps1`. Use pooled local builds and relevant hidden captures/browser checks; build WASM when browser/platform behavior or release acceptance needs it. Publishing is separate and may deploy or contact external services: run it only when authorized by the user. Report deliberately unrun deployment without treating it as a local validation failure.
+- **Documentation only:** review content/links/commands, run `git diff --check` and relevant sync/documentation-tool checks. No game suites, builds, captures, or publication solely for prose; executable tooling changes need their relevant checks.
+- **Failures:** investigate and fix errors, normally in recent/current changes. Distinguish regressions, verified pre-existing failures, and unrun checks with exact commands. Never assume a failure is baseline, hide it, or count it as a pass. If a required check remains blocked outside scope, report it; honor an existing explicit user exception or obtain one before treating the blocked slice as validated. Never commit newly broken code for cadence.
 
-Run all checks against the actual checkout with its real workspace/dependencies.
-Never use isolated copies, temporary clones, alternate manifests, fabricated
-workspaces, detachment, or dependency-path changes to bypass failures. Identify
-the failing path/check, fix the real cause within scope, and rerun there; a pass
-in a copied project is not validation, even when honestly labelled.
+Run checks against the actual checkout and real dependencies. Never bypass failures
+with copied projects, alternate manifests, fabricated workspaces, detachment, or
+dependency-path changes. Fix the cause within scope and rerun there.
 
-Use project-local asset paths and make missing assets and loading failures clear during publishing.
+Demo saves do not have to remain backward compatible. An old/unsupported save
+must produce a clear, recoverable error and let the player start fresh, not crash.
+Implement migration/backward compatibility only when the user explicitly requires
+it. There is no blanket migration or determinism test mandate; select checks for
+the behavior/risk changed. Do not delete useful existing tests merely to reduce
+runtime or hit a test-count target.
+
+Use project-local asset paths and report missing assets/loading failures clearly.
 
 ### 8.4 WebGL Requirements
 The publisher generates `dist/webgl/index.html` from
@@ -230,9 +237,9 @@ Each module should contain a short `//!` comment explaining its purpose:
 - Never fight the formatter  
 
 ### 10.2 Clippy
-- Run `cargo clippy` regularly  
-- Fix warnings unless intentionally ignored  
-- Document any `#[allow]` with a comment
+- Use strict Clippy (`--all-targets --all-features -- -D warnings`) for Rust slices.
+- Fix warnings/errors; do not weaken flags or add lint suppressions to pass.
+- Existing intentional `#[allow]` attributes need explanatory comments; do not expand them to hide new problems.
 
 ### 10.3 Variable Shadowing
 - Avoid variable shadowing (hiding)
@@ -266,7 +273,7 @@ Focus tests on:
 
 ## 12. Verification Artifacts
 
-- For UI changes, follow the visual and interaction review in `UI_STYLE.md` §9; inspect normal and minimum supported sizes and relevant dense states. Compilation and geometry checks alone do not verify usability.
+- For UI changes, follow `UI_STYLE.md` §9 for affected screens/states and interactions only; check relevant sizes and dense states. Do not recapture unrelated screens. Compilation and geometry checks alone do not verify usability.
 - Store verification screenshots directly in `docs/verification/`.
 - Do not create screenshot subfolders under `docs/verification/`.
 - If a new capture represents the same screen or state as an existing screenshot, replace the existing image instead of keeping duplicates.

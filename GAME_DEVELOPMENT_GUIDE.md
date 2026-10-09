@@ -137,7 +137,9 @@ platform handling, and fallback belong to the toolkit; see its JSON examples.
 
 Keep a versioned, Serde-friendly save type. Use toolkit persistence slot APIs;
 the template demonstrates versioned saves, migrations, listing, and deletion.
-Handle errors explicitly and retain compatibility when the schema changes.
+Handle unsupported/old saves with a clear recoverable error, never a crash;
+let the player start fresh. Backward compatibility and migrations are optional
+for demos unless requested. Versioned/migration APIs are available, not mandates.
 
 ### Native/Server Databases
 
@@ -154,9 +156,10 @@ is the deployment and validation authority.
 
 ### Validation
 
-Follow [section 8.3](CODE_STANDARDS.md#83-validation): focused iteration checks
-do not replace full pre-commit checks, visual review, or the affected game's
-parameterless `.\publish.ps1` after meaningful game changes. Report limitations.
+Follow [section 8.3](CODE_STANDARDS.md#83-validation): formatting, strict Clippy,
+source-size gates, focused relevant tests, and review of changed UI only. Broaden
+checks for cross-cutting risk or integration/release acceptance. Publishing is
+separate, needs user authorization, and never gates a local slice commit.
 
 ### Build Targets
 

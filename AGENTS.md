@@ -3,6 +3,10 @@
 Applies to RustGames projects. Edit shared guidance in `rust_management/docs/`;
 keep project rules in README/GDD or `PROJECT_AGENTS.md`. Read those local rules
 and inspect Git status before editing. User instructions take precedence.
+For prototype validation and slice commits, this policy supersedes older generic
+full-suite/publish/all-screen-review or blanket save-migration mandates repeated
+in project notes or skills. Preserve project-specific design and explicit current
+user exceptions; backward save compatibility is optional unless requested.
 
 ## Read for the task
 
@@ -33,8 +37,8 @@ Management-only references use workspace-root paths in code spans.
   content through the toolkit; projects own schemas and semantic validation.
 - Browser play must work through visible touch controls, including tutorials
   and recovery. Plan the current decision and dominant play area; simplify
-  existing screens and recompose template demos. Verify normal/minimum sizes,
-  dense states, and touch interactions; compilation alone is not visual review.
+  existing screens and recompose template demos. Review only affected screens,
+  states, sizes, and touch interactions; compilation alone is not visual review.
 - Use `..\rust_management\cargo.ps1` for build/check/test/Clippy/run; formatting
   may use Cargo directly. Publish/capture use the same three-slot pool. Quote
   PowerShell's separator: `cargo.ps1 clippy '--' -D warnings`.
@@ -51,17 +55,20 @@ Management-only references use workspace-root paths in code spans.
 - Capture directly to stable filenames in `docs/verification/`, no subfolders
   or duplicates. Use the shared wrapper's hidden default, wait, and verify game
   exit; fix/report tool failures instead of inventing alternate capture pipelines.
-- After meaningful game changes, run the affected game's parameterless
-  `.\publish.ps1`; report failures. A local run substitutes only at user request.
-  Documentation-only checks and baseline failures follow the validation reference.
+- Validate slices with formatting, strict Clippy, source-size gates, and focused
+  relevant tests. Broader suites need a cross-cutting/integration/release reason;
+  publishing never gates a local commit and requires user authorization. Follow
+  the validation reference for scope, unchanged results, and failures.
+- Demo saves may break compatibility: reject unsupported old saves with a clear
+  recoverable error, never a crash. Migrations are optional unless requested.
 
 ## Commits
 
 - **Review, validate, and commit each small, coherent, independently useful
   feature slice before starting the next.** Do not wait for several major
   features or a milestone. Keep each slice buildable; never commit broken or
-  exploratory code merely for cadence. Focused tests do not replace required
-  full-project checks ([validation](CODE_STANDARDS.md#83-validation)).
+  exploratory code merely for cadence. Use proportionate
+  [validation](CODE_STANDARDS.md#83-validation), not a full suite/publish per slice.
 - Review status, full and staged diffs. Commit all required code, tests, data,
   docs, and artifacts for the slice. Preserve pre-existing/user/concurrent work;
   include it only with clear ownership/authorization and when it belongs to the

@@ -148,6 +148,13 @@ fn propose_with_diagnostics(
         .or_else(|| planner.peace())
         .or_else(|| {
             planner
+                .temperament()
+                .guards_borders
+                .then(|| planner.border())
+                .flatten()
+        })
+        .or_else(|| {
+            planner
                 .objective
                 .as_ref()
                 .filter(|objective| {
@@ -220,6 +227,13 @@ pub fn rejected(
 }
 
 impl Planner<'_> {
+    /// This sovereign's temperament, which tunes war, expansion and garrisons.
+    fn temperament(&self) -> &crate::data::ai::AiPersonalityProfile {
+        self.data
+            .ai
+            .profile(self.campaign.factions[&self.owner].personality)
+    }
+
     fn choose(&self, command: Command, objective: Option<AiObjective>) -> Option<AiDecision> {
         let intent = intent::of(&command)?;
         if self.include_diagnostics {
@@ -335,9 +349,10 @@ impl Planner<'_> {
                 && state.accepted_commands >= self.data.ai.max_commands_per_phase
         });
         let mut lines = vec![format!(
-            "Faction {} (#{}): resources {:?}, territory {owned}, neutral sites {neutral}, wars {:?}, action budget {}/{}",
+            "Faction {} (#{}, {:?}): resources {:?}, territory {owned}, neutral sites {neutral}, wars {:?}, action budget {}/{}",
             faction.name,
             self.owner.0,
+            faction.personality,
             faction.resources,
             wars,
             budget.map_or(0, |state| state.accepted_commands),

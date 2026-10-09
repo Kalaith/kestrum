@@ -1,19 +1,76 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "max_commands_per_phase": 64,
   "objective_rounds": 4,
   "retreat_capacity_percent": 40,
-  "attack_advantage_percent": 125,
   "unknown_enemy_power": 2000,
   "reserve_upkeep_rounds": 2,
   "target_armies": 2,
   "sites_per_army": 8,
   "maximum_armies": 8,
   "minimum_formations": 3,
-  "war_peace_rounds": 4,
-  "maximum_wars": 1,
-  "war_strength_percent": 100,
-  "expansion_reach": 6,
-  "home_distance_percent": 150,
-  "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"]
+  "surplus_percent": 125,
+  "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"],
+  "personalities": {
+    "balanced": {
+      "attack_advantage_percent": 125,
+      "war_peace_rounds": 4,
+      "maximum_wars": 1,
+      "war_strength_percent": 100,
+      "war_while_land_remains": false,
+      "expansion_reach": 6,
+      "home_distance_percent": 150,
+      "extra_armies": 0,
+      "guards_borders": false,
+      "seeks_peace": false
+    },
+    "aggressive": {
+      "attack_advantage_percent": 110,
+      "war_peace_rounds": 2,
+      "maximum_wars": 2,
+      "war_strength_percent": 80,
+      "war_while_land_remains": true,
+      "expansion_reach": 5,
+      "home_distance_percent": 100,
+      "extra_armies": 1,
+      "guards_borders": false,
+      "seeks_peace": false
+    },
+    "defensive": {
+      "attack_advantage_percent": 140,
+      "war_peace_rounds": 10,
+      "maximum_wars": 1,
+      "war_strength_percent": 150,
+      "war_while_land_remains": false,
+      "expansion_reach": 4,
+      "home_distance_percent": 300,
+      "extra_armies": 1,
+      "guards_borders": true,
+      "seeks_peace": false
+    },
+    "peaceful": {
+      "attack_advantage_percent": 150,
+      "war_peace_rounds": 80,
+      "maximum_wars": 0,
+      "war_strength_percent": 1000,
+      "war_while_land_remains": false,
+      "expansion_reach": 5,
+      "home_distance_percent": 200,
+      "extra_armies": 0,
+      "guards_borders": true,
+      "seeks_peace": true
+    },
+    "expansionist": {
+      "attack_advantage_percent": 125,
+      "war_peace_rounds": 6,
+      "maximum_wars": 1,
+      "war_strength_percent": 120,
+      "war_while_land_remains": false,
+      "expansion_reach": 10,
+      "home_distance_percent": 75,
+      "extra_armies": 0,
+      "guards_borders": false,
+      "seeks_peace": false
+    }
+  }
 }

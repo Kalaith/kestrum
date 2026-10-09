@@ -212,8 +212,16 @@ impl Planner<'_> {
     /// Unclaimed sites that touch supplied home territory within the realm's
     /// reach, with their route cost from the capital. Claims made here stay
     /// joined to the capital instead of opening exposed, disconnected holdings.
+    /// A realm without a comfortable income surplus over upkeep reaches further.
     pub(super) fn frontier(&self) -> Vec<(u32, SiteId)> {
-        let headquarters = self.campaign.factions[&self.owner].headquarters;
+        let faction = &self.campaign.factions[&self.owner];
+        let headquarters = faction.headquarters;
+        let needs_land = faction.deficit
+            || faction.last_economy.as_ref().is_some_and(|statement| {
+                i128::from(statement.income.gold) * 100
+                    < i128::from(statement.upkeep_due) * i128::from(self.data.ai.surplus_percent)
+            });
+        let reach = self.temperament().expansion_reach;
         self.view
             .world
             .sites
@@ -230,14 +238,13 @@ impl Planner<'_> {
             })
             .filter_map(|site| {
                 let (cost, path) = self.path(headquarters, site.id, false)?;
-                (path.len().saturating_sub(1) <= self.data.ai.expansion_reach)
-                    .then_some((cost, site.id))
+                (needs_land || path.len().saturating_sub(1) <= reach).then_some((cost, site.id))
             })
             .collect()
     }
 
     pub(super) fn expand(&self) -> Option<AiDecision> {
-        let home_weight = u64::from(self.data.ai.home_distance_percent);
+        let home_weight = u64::from(self.temperament().home_distance_percent);
         let mut candidates: Vec<_> = self
             .frontier()
             .into_iter()

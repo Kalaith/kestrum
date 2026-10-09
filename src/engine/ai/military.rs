@@ -498,6 +498,6 @@ impl Planner<'_> {
         } else {
             enemy
         };
-        own * 100 > estimate * u128::from(self.data.ai.attack_advantage_percent)
+        own * 100 > estimate * u128::from(self.temperament().attack_advantage_percent)
     }
 }

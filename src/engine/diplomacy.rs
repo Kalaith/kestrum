@@ -69,6 +69,12 @@ pub fn peace_desired(
     {
         return false;
     }
+    // A peace-seeking sovereign wants any war ended that it is not winning by siege.
+    if campaign.factions.get(&faction).is_some_and(|sovereign| {
+        data.ai.validate().is_ok() && data.ai.profile(sovereign.personality).seeks_peace
+    }) {
+        return true;
+    }
     let loss = campaign.diplomacy.losses.iter().any(|loss| {
         loss.faction == faction
             && loss.victor == opponent

@@ -213,8 +213,8 @@ fn report(campaign: &StrategicCampaign, activity: &BTreeMap<FactionId, Activity>
         let peak = activity
             .get(&faction.id)
             .map_or(0, |entry| entry.peak_armies);
-        println!("  #{} {} {:?}: armies={} supplied={} peak={} sites={} detached={detached} cities={} gold={} last_action={active:?}",
-            faction.id.0, faction.name, faction.status, armies.len(), supplied, peak, sites.len(), cities, faction.resources.gold);
+        println!("  #{} {} {:?} {:?}: armies={} supplied={} peak={} sites={} detached={detached} cities={} gold={} last_action={active:?}",
+            faction.id.0, faction.name, faction.personality, faction.status, armies.len(), supplied, peak, sites.len(), cities, faction.resources.gold);
         report_personnel(campaign, faction.id, activity.get(&faction.id));
     }
 }

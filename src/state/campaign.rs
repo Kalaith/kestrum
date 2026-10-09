@@ -65,6 +65,9 @@ pub struct Faction {
     pub last_economy: Option<EconomyStatement>,
     #[serde(default)]
     pub last_recovery: Option<RecoveryStatement>,
+    /// How this kingdom plays when a sovereign planner controls it.
+    #[serde(default)]
+    pub personality: crate::data::ai::AiPersonality,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -359,7 +362,8 @@ impl StrategicCampaign {
         let factions = scenario
             .factions
             .iter()
-            .map(|setup| {
+            .enumerate()
+            .map(|(index, setup)| {
                 (
                     setup.id,
                     Faction {
@@ -374,6 +378,12 @@ impl StrategicCampaign {
                         last_hq_relocation: None,
                         last_economy: None,
                         last_recovery: None,
+                        // The authored prototype keeps its tuned, even-tempered rivals.
+                        personality: if scenario.kind == ScenarioKind::Production {
+                            crate::data::ai::AiPersonality::for_campaign(scenario.seed, index)
+                        } else {
+                            Default::default()
+                        },
                     },
                 )
             })

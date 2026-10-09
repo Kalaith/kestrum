@@ -41,7 +41,18 @@ pub struct ThreatRules {
     pub lawless_rounds: u32,
     #[serde(deserialize_with = "super::economy::unique_table")]
     pub definitions: BTreeMap<ThreatKind, ThreatDefinition>,
+    pub raids: RaidRules,
     pub initial: Vec<InitialThreat>,
+}
+
+/// Bandits periodically seize exposed holdings; sprawling realms suffer more raids.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RaidRules {
+    pub first_round: u32,
+    pub interval_rounds: u32,
+    /// One raid per this many held Hamlets or larger, rounded down.
+    pub settlements_per_raid: u32,
 }
 
 impl ThreatRules {
@@ -51,7 +62,12 @@ impl ThreatRules {
 
     pub fn validate_definitions(&self) -> Result<(), String> {
         let invalid = |reason| format!("{SOURCE}: {reason}");
-        if self.schema_version != 1 || self.leadership_permille != 1000 || self.lawless_rounds == 0
+        if self.schema_version != 1
+            || self.leadership_permille != 1000
+            || self.lawless_rounds == 0
+            || self.raids.first_round == 0
+            || self.raids.interval_rounds == 0
+            || self.raids.settlements_per_raid == 0
         {
             return Err(invalid(
                 "invalid schema, neutral leadership or lawless duration",

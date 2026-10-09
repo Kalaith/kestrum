@@ -39,6 +39,9 @@ pub struct Threat {
     pub status: ThreatStatus,
     /// A per-site ruination transition, absent for authored initial occupants.
     pub ruination: Option<u64>,
+    /// The completed round in which a periodic raid raised these bandits.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raid: Option<u32>,
 }
 
 impl StrategicCampaign {
@@ -70,6 +73,7 @@ pub fn initialize_threats(
                     headcount: data.threats.definitions[&initial.kind].headcount,
                     status: ThreatStatus::Active,
                     ruination: None,
+                    raid: None,
                 },
             ))
         })

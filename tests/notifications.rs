@@ -449,6 +449,7 @@ fn known_local_threat_start_and_clear_are_dated_once() {
             headcount: 18,
             status: ThreatStatus::Active,
             ruination: None,
+            raid: None,
         },
     );
     let collected = outcome(&candidate, Vec::new());

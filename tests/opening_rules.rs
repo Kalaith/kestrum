@@ -315,3 +315,83 @@ fn a_kingdom_without_its_seat_or_armies_can_refound_headquarters() {
     assert_eq!(campaign.factions[&player].headquarters, refuge);
     assert!(campaign.supplied_sites(player).contains(&refuge));
 }
+
+#[test]
+fn raids_spare_small_kingdoms_and_seize_exposed_holdings_of_sprawling_ones() {
+    let (data, mut campaign) = production();
+    let player = campaign.player;
+    let rules = data.threats.raids;
+    let raids = |campaign: &StrategicCampaign| {
+        campaign
+            .threats
+            .values()
+            .filter(|threat| threat.raid.is_some())
+            .count()
+    };
+    // Grant the player enough settled holdings for exactly two raids.
+    let wanted = rules.settlements_per_raid as usize * 2;
+    let grants: Vec<_> = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller.is_none() && campaign.active_threat(site.id).is_none())
+        .map(|site| site.id)
+        .take(wanted)
+        .collect();
+    assert_eq!(grants.len(), wanted);
+    for site in grants {
+        let entry = campaign
+            .world
+            .sites
+            .iter_mut()
+            .find(|entry| entry.id == site)
+            .unwrap();
+        entry.habitation = Habitation::Village;
+        campaign.world.population.insert(
+            site,
+            data.construction.population.minimum[&Habitation::Village],
+        );
+        campaign
+            .set_site_control(&data, site, Some(player), false)
+            .unwrap();
+    }
+    campaign.validate(&data).unwrap();
+    while campaign.completed_rounds < rules.first_round {
+        assert_eq!(raids(&campaign), 0, "no raid before the first raid round");
+        finish_round(&mut campaign, &data);
+    }
+    let raised: Vec<_> = campaign
+        .threats
+        .values()
+        .filter(|threat| threat.raid == Some(rules.first_round))
+        .collect();
+    let owners: Vec<_> = raised
+        .iter()
+        .map(|threat| campaign.world.site(threat.site).unwrap().controller)
+        .collect();
+    assert_eq!(
+        owners
+            .iter()
+            .filter(|owner| **owner == Some(player))
+            .count(),
+        2,
+        "one raid per {} settlements: {raised:?}",
+        rules.settlements_per_raid
+    );
+    assert!(
+        owners.iter().all(|owner| *owner == Some(player)),
+        "rivals with a single settlement are spared: {owners:?}"
+    );
+    for threat in &raised {
+        let home = campaign.factions[&player].headquarters;
+        assert_ne!(threat.site, home);
+        assert!(!campaign
+            .armies
+            .values()
+            .any(|army| army.site == threat.site));
+    }
+    campaign.validate(&data).unwrap();
+    let saved: StrategicCampaign =
+        serde_json::from_str(&serde_json::to_string(&campaign).unwrap()).unwrap();
+    assert_eq!(saved, campaign);
+}

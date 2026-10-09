@@ -23,9 +23,13 @@ impl Game {
             self.help_page = 8;
             return true;
         }
-        if scene == "help_turn" {
+        if let Some(page) = match scene {
+            "help_turn" => Some(1),
+            "help_development" => Some(10),
+            _ => None,
+        } {
             self.state.overlay = Overlay::Help;
-            self.help_page = 1;
+            self.help_page = page;
             return true;
         }
         if !scene.starts_with("settlement_") {

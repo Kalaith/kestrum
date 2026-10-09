@@ -923,7 +923,7 @@
     "threat_combat_rules": "Neutral leadership: 100%. Threats cannot retreat; routed remnants are destroyed.",
     "help_development": "Manage shows pressure, population and the conditions behind growth or decline. Growth reaches Town; a City needs a separate resource investment. Focus changes one local priority.",
     "help_local_actions": "Manage > Local Actions offers Develop City, Rename, Resettle, Move Capital and Relocate HQ. Review the cost, then Confirm Action.",
-    "help_threats": "Tap an observed threat, then Clear Threat. Select adjacent armies, Review Expedition and Confirm Clear Threat.",
+    "help_threats": "Tap an observed threat, then Clear Threat. Select adjacent armies, Review Expedition and Confirm Clear Threat. Every few years bandits raid exposed holdings of large realms.",
     "focus_effect_growth": "Growth adds 2 development pressure each season. Population and geography limit habitation; a City needs a separate resource investment.",
     "focus_effect_fortification": "Safe supplied places repair 5 extra fort damage each season. This does not build a fort.",
     "focus_effect_training": "Local class and formation courses cost 25% less Gold, with the total rounded up when ordered. Courses still advance once per eligible season.",

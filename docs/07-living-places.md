@@ -77,7 +77,7 @@ Battles and occupation can create structural damage, population loss, supply dis
 
 Winning control does not instantly produce cultural stability. A new occupation may face unrest, resistance, low supply, sabotage, and population flight. Long-term control can normalize gradually. This creates costs beyond the battle itself.
 
-Occupation is an implemented numeric condition with seasonal stabilization; a garrison and safe conditions affect its decay, and occupation can reduce income and development. Broader civilian policies, rebellion and breakaway factions remain outside current scope. Existing ordinary local threats are distinct from an implied full resistance simulation.
+Occupation is an implemented numeric condition with seasonal stabilization; a garrison and safe conditions affect its decay, and occupation can reduce income and development. Broader civilian policies, rebellion and breakaway factions remain outside current scope. Existing ordinary local threats are distinct from an implied full resistance simulation. Periodic bandit raids (2026-10-08) seize exposed, ungarrisoned holdings of large realms, one per twenty settlements every twelve rounds; see [opening balance](verification/opening-balance.md#raids).
 
 ## Refugees and population movement
 

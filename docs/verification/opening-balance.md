@@ -92,3 +92,31 @@ kingdom: 4, 4, 6 and 2 for seeds 260926, 88, 4242 and 7 (before: 10, 11, 15
 and 2). The full release suite passes every target except `midgame`, where two
 tests now fall short: 53 of 55 known sites, and one of sixteen adults waits at
 an unsupplied holding without a formation. The seed-88 victory script passes.
+
+## Raids
+
+Seasons were otherwise uneventful after the two opening threats were cleared.
+Every `interval_rounds` (12) from `first_round` (12), bandits seize exposed
+holdings: one per `settlements_per_raid` (20) Hamlets or larger, so small
+kingdoms are spared and sprawling realms pay for their frontier
+(`threats.json` `raids`). A raid targets a held Hamlet or larger that is not
+headquarters or capital, has no army, siege, contest or existing threat, and
+borders land the kingdom does not hold. The place is chosen with a local
+generator keyed by seed, round and faction, so the shared random streams are
+unchanged. A raid is a saved threat origin (`raid: Some(round)`) beside authored
+occupants and ruins; older saves have none. The existing local-threat
+notification, map marker, income stop and Clear Threat order apply.
+
+A first version raised one raid per kingdom regardless of size; it tipped both
+scripted player fixtures into failure. Scaling by realm size restored them.
+
+AI-only observer at round 100 (sites held by survivors; Clear Threat orders per
+kingdom, including the two opening threats): seed 260926 107 / 29 (2 eliminated;
+5, 2, 2, 3); seed 88 51 / 44 / 29 / 28 (4, 2, 2, 6); seed 4242 75 / 47 / 30
+(1 eliminated; 2, 8, 5, 3); seed 7 54 / 43 / 41 / 5 (2, 5, 3, 2).
+
+With raids, the full release suite passes every target (89 test targets, none
+failing), including all five `midgame` tests and the seed-88 production
+victory. Help explains raids beside Clear Threat; the hidden 1920×1080
+[development help capture](ui_help_development.png) (new `help_development`
+scene) shows it fitting the sheet.

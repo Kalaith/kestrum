@@ -36,4 +36,6 @@ pub const TUTORIAL_TEXT: &[&str] = &[
     "tutorial_npc",
     "tutorial_npc_back",
     "tutorial_records",
+    "tutorial_threat",
+    "tutorial_raise_army",
 ];

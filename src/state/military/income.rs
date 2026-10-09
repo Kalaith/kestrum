@@ -24,7 +24,14 @@ pub struct SiteIncomeStatement {
     pub ruined: bool,
     pub besieged: bool,
     pub local_threat: bool,
+    /// 100 while supplied; older receipts predate the supply modifier.
+    #[serde(default = "full_percent")]
+    pub supply_percent: u32,
     pub income: Resources,
+}
+
+fn full_percent() -> u32 {
+    100
 }
 
 impl SiteIncomeStatement {
@@ -47,8 +54,9 @@ impl SiteIncomeStatement {
                 i128::from(amount)
                     * i128::from(self.damage_percent)
                     * i128::from(self.occupation_percent)
+                    * i128::from(self.supply_percent)
                     * i128::from(multiplier)
-                    / 1_000_000,
+                    / 100_000_000,
             )
             .ok()
         };
@@ -92,6 +100,7 @@ impl super::super::StrategicCampaign {
                 || entry.damage_percent > 100
                 || entry.occupation_percent > 100
                 || entry.focus_bonus_percent > 100
+                || entry.supply_percent > 100
             {
                 return Err("campaign.income: invalid saved site inputs".into());
             }
@@ -105,6 +114,7 @@ impl super::super::StrategicCampaign {
                         100
                     }
                 || entry.focus_bonus_percent != data.development.income_focus_bonus_percent
+                || ![100, data.economy.unsupplied_income_percent].contains(&entry.supply_percent)
             {
                 return Err("campaign.income: saved modifiers do not match rules".into());
             }

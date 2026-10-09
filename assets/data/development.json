@@ -17,6 +17,7 @@
       "wood": 100,
       "stone": 75
     },
+    "cost_increase_percent_per_city": 50,
     "minimum_habitation": "village",
     "messages": {
       "ruined": "A ruined site cannot receive a city investment.",

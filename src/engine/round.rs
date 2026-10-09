@@ -69,6 +69,7 @@ fn complete_round(
             .ok_or(RuleError::Overflow {
                 field: "completed rounds",
             })?;
+    super::threats::raise_raids(campaign, data)?;
     outcome.automatic_retirements = super::lifecycle::resolve_boundary(campaign, data)?;
     outcome
         .new_people

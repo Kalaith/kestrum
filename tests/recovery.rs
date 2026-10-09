@@ -29,7 +29,7 @@ fn supplied_recovery_uses_the_cap_missing_headcount_and_post_upkeep_gold() {
         (TroopKind::Warriors, 20, 6, 1),
         (TroopKind::Spearmen, 20, 7, 1),
         (TroopKind::Archers, 16, 8, 1),
-        (TroopKind::Riders, 8, 12, 2),
+        (TroopKind::Riders, 8, 8, 1),
         (TroopKind::Medics, 8, 6, 1),
         (TroopKind::SiegeEngines, 4, 12, 3),
     ] {

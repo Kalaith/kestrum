@@ -76,7 +76,7 @@ fn check_economy_defaults(economy: &Economy) {
         (TroopKind::Warriors, 100, 60, 10),
         (TroopKind::Spearmen, 100, 70, 10),
         (TroopKind::Archers, 80, 80, 10),
-        (TroopKind::Riders, 40, 120, 16),
+        (TroopKind::Riders, 40, 80, 12),
         (TroopKind::Medics, 40, 60, 8),
         (TroopKind::SiegeEngines, 20, 120, 14),
     ] {

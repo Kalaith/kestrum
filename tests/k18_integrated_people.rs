@@ -27,7 +27,9 @@ fn medic_career_witnesses_casualties_then_recovers_a_wounded_commander_once() {
     let mut campaign = StrategicCampaign::new(&data).expect("Rosemarch campaign");
     // A fixed stream makes the limited commander-casualty rule reproducible;
     // campaign entities, evidence, and all movement still come from legal actions.
-    campaign.rng.combat = SeededRng::new(9);
+    // Vacant-slot emergence adds enemy people to the final battle, so the stream
+    // is chosen for the current rules rather than an older roll order.
+    campaign.rng.combat = SeededRng::new(18);
 
     assert_eq!(campaign.seed, data.scenario.seed);
     assert_eq!(campaign.world.site(WEST_GATE).unwrap().key, "west_gate");

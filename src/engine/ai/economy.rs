@@ -118,18 +118,26 @@ impl Planner<'_> {
             .sites
             .iter()
             .any(|site| self.can_replenish_at(site.id));
-        let all_armies_unsupplied = !armies.is_empty()
-            && armies
+        // Each stranded army leaves its slot open for one supplied relief force,
+        // on top of whatever target the realm would otherwise hold.
+        let relief = if supplied_core {
+            armies
                 .iter()
-                .all(|army| !self.view.supplied_armies.contains(&army.id));
-        let relief_target = if supplied_core && all_armies_unsupplied {
-            base.saturating_add(1).min(rules.maximum_armies)
+                .filter(|army| !self.view.supplied_armies.contains(&army.id))
+                .count()
+        } else {
+            0
+        };
+        // An outmatched sovereign adds one force at a time toward parity.
+        let parity_target = if self.outmatched() {
+            armies.len().saturating_add(1)
         } else {
             base
         };
         let desired = holdings_target
             .max(threatened_fronts)
-            .max(relief_target)
+            .max(parity_target)
+            .saturating_add(relief)
             .min(rules.maximum_armies);
         let supported = base
             .saturating_add(self.growth_supported_by_income())
@@ -357,7 +365,7 @@ impl Planner<'_> {
     }
 
     pub(super) fn develop_city(&self) -> Option<AiDecision> {
-        let cost = self.data.development.city_development.cost;
+        let cost = crate::engine::development::city_cost(self.campaign, self.data, self.owner);
         if !self.reserve(cost, 0, false) {
             return None;
         }

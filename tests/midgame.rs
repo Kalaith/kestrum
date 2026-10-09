@@ -152,7 +152,11 @@ fn midgame_has_ten_distinct_living_named_people_with_service() {
     assert_eq!(
         slots.len(),
         people.len(),
-        "every midgame hero has their own formation"
+        "every midgame hero has their own formation: {:?}",
+        people
+            .iter()
+            .map(|person| (&person.name, person.assignment))
+            .collect::<Vec<_>>()
     );
     assert!(
         campaign

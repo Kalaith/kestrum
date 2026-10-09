@@ -15,8 +15,19 @@ use kestrum::{
 };
 
 const MIDGAME_ROUNDS: u32 = 60;
+/// The review realm turns from settlement to conquest after this many seasons.
+const WAR_AFTER_ROUNDS: u32 = 30;
 
 pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
+    play(data, MIDGAME_ROUNDS, |_| {})
+}
+
+/// Play the review kingdom through `rounds` seasons, observing each player turn.
+pub fn play(
+    data: &GameData,
+    rounds: u32,
+    mut observe: impl FnMut(&StrategicCampaign),
+) -> Result<StrategicCampaign, String> {
     let mut campaign = StrategicCampaign::new_production(
         data,
         &ProductionSetup {
@@ -34,6 +45,8 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
         .ok_or("The review campaign has no founding army")?
         .id;
     let home = campaign.factions[&campaign.player].headquarters;
+    // Follow the guided opening: invest in the capital before filling the host.
+    issue(&mut campaign, data, Command::DevelopCity { site: home })?;
     for _ in 0..3 {
         issue(
             &mut campaign,
@@ -92,7 +105,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
             continue;
         }
         match campaign.phase {
-            CampaignPhase::PlayerTurn if campaign.completed_rounds >= MIDGAME_ROUNDS => {
+            CampaignPhase::PlayerTurn if campaign.completed_rounds >= rounds => {
                 if !campaign.armies.contains_key(&army) {
                     return Err("The review army was lost before midgame.".into());
                 }
@@ -101,6 +114,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
                 return Ok(campaign);
             }
             CampaignPhase::PlayerTurn => {
+                observe(&campaign);
                 if !opening_complete {
                     if stage_local_battle(&mut campaign, data, army)? {
                         issue(&mut campaign, data, Command::StartPendingBattle)?;
@@ -111,6 +125,7 @@ pub fn generate(data: &GameData) -> Result<StrategicCampaign, String> {
                         continue;
                     }
                 }
+                diplomacy(&mut campaign, data)?;
                 roster::develop(&mut campaign, data, home)?;
                 expansion::develop(&mut campaign, data, army, home)?;
                 issue(&mut campaign, data, Command::EndTurn)?;
@@ -227,6 +242,63 @@ fn approach_threat(
         return Ok(true);
     }
     Ok(false)
+}
+
+/// Surviving troops; the review script may read every faction's totals.
+fn troops(campaign: &StrategicCampaign, faction: kestrum::data::world::FactionId) -> u32 {
+    campaign
+        .formations
+        .values()
+        .filter(|formation| formation.faction == faction)
+        .map(|formation| formation.headcount)
+        .sum()
+}
+
+/// Make war on the weakest neighbor once the realm has room to grow, and offer
+/// peace to a stronger enemy; a rival accepts peace only on its own terms.
+fn diplomacy(campaign: &mut StrategicCampaign, data: &GameData) -> Result<(), String> {
+    use kestrum::data::world::DiplomaticState;
+    let player = campaign.player;
+    let enemies: Vec<_> = campaign
+        .relations
+        .iter()
+        .filter(|relation| {
+            relation.state == DiplomaticState::War && relation.factions.contains(&player)
+        })
+        .flat_map(|relation| relation.factions)
+        .filter(|faction| *faction != player)
+        .collect();
+    for faction in enemies.iter().copied() {
+        if troops(campaign, faction) > troops(campaign, player) {
+            let command = Command::OfferPeace { faction };
+            if engine::preview(campaign, data, Actor::Player, command.clone()).is_ok() {
+                issue(campaign, data, command)?;
+            }
+        }
+    }
+    if !enemies.is_empty() || campaign.completed_rounds < WAR_AFTER_ROUNDS {
+        return Ok(());
+    }
+    let neighbors: std::collections::BTreeSet<_> = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(player))
+        .flat_map(|site| campaign.world.adjacent_sites(site.id))
+        .filter_map(|site| campaign.world.site(site)?.controller)
+        .filter(|owner| *owner != player && campaign.is_independent(*owner))
+        .collect();
+    let target = neighbors
+        .into_iter()
+        .filter(|faction| troops(campaign, *faction) < troops(campaign, player))
+        .min_by_key(|faction| (troops(campaign, *faction), *faction));
+    if let Some(faction) = target {
+        let command = Command::DeclareWar { faction };
+        if engine::preview(campaign, data, Actor::Player, command.clone()).is_ok() {
+            issue(campaign, data, command)?;
+        }
+    }
+    Ok(())
 }
 
 fn issue(

@@ -35,7 +35,8 @@ impl StrategicCampaign {
                 || threat.name != definition.name
                 || threat.headcount > definition.headcount
                 || threat.ruination == Some(0)
-                || !origins.insert((threat.site, threat.ruination))
+                || (threat.ruination.is_some() && threat.raid.is_some())
+                || !origins.insert((threat.site, threat.ruination, threat.raid))
             {
                 return Err(invalid());
             }
@@ -51,6 +52,12 @@ impl StrategicCampaign {
                     || (transition == development.ruination && !development.threat_created)
                     || (threat.status == ThreatStatus::Active
                         && (!development.ruined || transition != development.ruination))
+                {
+                    return Err(invalid());
+                }
+            } else if let Some(round) = threat.raid {
+                if threat.kind != crate::data::threats::ThreatKind::Bandits
+                    || round > self.completed_rounds
                 {
                     return Err(invalid());
                 }

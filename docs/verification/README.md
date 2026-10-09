@@ -23,6 +23,10 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
+[Opening guide](opening-guide.md) records the guide's new strategic lessons (threat, second army, rival aggression) and moves careers and households after the first End Turn.
+
+[Opening balance](opening-balance.md) records the first-100-turn rule changes: supply-dependent income, stalemate peace, strength-gated AI wars with parity build-up, relief armies and headquarters re-founding, with before/after observer measurements.
+
 [Observer household abandonment](household-abandonment.md) records the
 Year 24 validation error, the distinction from NPC defeat, and household
 cleanup when a settlement becomes uninhabited.

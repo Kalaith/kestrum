@@ -575,7 +575,7 @@ fn adopt_ward(
     validate_adoption(campaign, data, owner, guardian, site)?;
     let id = new_person_id(campaign)?;
     let household = active_household_for(campaign, guardian).map(|entry| entry.id);
-    let name = generated_name(campaign, data);
+    let name = super::fresh_person_name(campaign, data);
     let population = campaign
         .world
         .population
@@ -651,7 +651,7 @@ fn invite_apprentice(
         .apprentice_last_invited_year
         .insert(owner, campaign.completed_rounds / 4);
     let birth_round = i64::from(campaign.completed_rounds) - 17 * 4;
-    let name = generated_name(campaign, data);
+    let name = super::fresh_person_name(campaign, data);
     let service_start_round = campaign.completed_rounds;
     insert_family_person(
         campaign,
@@ -712,21 +712,6 @@ fn designate(
             site,
         },
     );
-}
-
-fn generated_name(campaign: &mut StrategicCampaign, data: &GameData) -> String {
-    let given = campaign
-        .rng
-        .people
-        .below(data.human_names.given_names.len());
-    let family = campaign
-        .rng
-        .people
-        .below(data.human_names.family_names.len());
-    format!(
-        "{} {}",
-        data.human_names.given_names[given], data.human_names.family_names[family]
-    )
 }
 
 fn new_person_id(campaign: &mut StrategicCampaign) -> Result<PersonId, RuleError> {

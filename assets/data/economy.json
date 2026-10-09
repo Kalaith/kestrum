@@ -4,6 +4,7 @@
   "period": "full_round",
   "facility_failure_damage": 75,
   "income_damage_divisor": 2,
+  "unsupplied_income_percent": 50,
   "starting_resources": {
     "gold": 500,
     "wood": 200,
@@ -91,11 +92,11 @@
       "capacity": 40,
       "movement_allowance": 8,
       "recruit_cost": {
-        "gold": 120,
+        "gold": 80,
         "wood": 10,
         "stone": 0
       },
-      "upkeep_gold": 16
+      "upkeep_gold": 12
     },
     "medics": {
       "capacity": 40,

@@ -299,7 +299,12 @@ pub(super) fn assert_income_eligibility_and_overflow(data: &GameData) {
     campaign
         .set_site_control(data, SiteId(2), Some(campaign.player), false)
         .unwrap();
+    assert!(!campaign
+        .supplied_sites(campaign.player)
+        .contains(&SiteId(2)));
     finish_round(&mut campaign, data);
+    // Home village plus bonus (50), and the cut-off village at its supply share.
+    let village = data.economy.settlement_income[&Habitation::Village].gold;
     assert_eq!(
         campaign.factions[&campaign.player]
             .last_economy
@@ -307,7 +312,7 @@ pub(super) fn assert_income_eligibility_and_overflow(data: &GameData) {
             .unwrap()
             .income
             .gold,
-        60,
+        50 + village * i64::from(data.economy.unsupplied_income_percent) / 100,
         "captured foreign HQ is only a settlement"
     );
     assert_eq!(

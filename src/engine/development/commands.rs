@@ -67,6 +67,31 @@ fn can_pay(
     Ok(())
 }
 
+/// The investment price for the owner's next city.
+pub(crate) fn city_cost(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    owner: FactionId,
+) -> Resources {
+    let rules = &data.development.city_development;
+    let cities = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| site.controller == Some(owner) && site.habitation >= Habitation::City)
+        .count() as i64;
+    // Saturating: authored costs are only checked to be nonnegative.
+    let percent = i64::from(rules.cost_increase_percent_per_city)
+        .saturating_mul(cities)
+        .saturating_add(100);
+    let scale = |amount: i64| amount.saturating_mul(percent).saturating_add(99) / 100;
+    Resources {
+        gold: scale(rules.cost.gold),
+        wood: scale(rules.cost.wood),
+        stone: scale(rules.cost.stone),
+    }
+}
+
 pub(crate) fn city_development_check(
     campaign: &StrategicCampaign,
     data: &GameData,
@@ -113,7 +138,7 @@ pub(crate) fn city_development_check(
     {
         return Err(blocked(&rules.messages.adjacent_city));
     }
-    can_pay(campaign, owner, rules.cost)
+    can_pay(campaign, owner, city_cost(campaign, data, owner))
 }
 
 fn develop_city(
@@ -124,7 +149,7 @@ fn develop_city(
     outcome: &mut ActionOutcome,
 ) -> Result<(), RuleError> {
     city_development_check(campaign, data, owner, site)?;
-    let cost = data.development.city_development.cost;
+    let cost = city_cost(campaign, data, owner);
     let from = owned(campaign, owner, site)?.habitation;
     pay(campaign, owner, cost)?;
     campaign
@@ -259,7 +284,14 @@ pub(super) fn headquarters_check(
             "Headquarters needs a functioning Village or larger settlement.",
         ));
     }
-    if !c.garrison {
+    // A kingdom that lost its seat may re-found it without an army or Training
+    // Ground; otherwise it could never recruit, relocate or be defeated.
+    let displaced = campaign
+        .world
+        .site(faction.headquarters)
+        .is_none_or(|current| current.controller != Some(owner))
+        || campaign.site_is_ruined(faction.headquarters);
+    if !c.garrison && !displaced {
         return Err(blocked(
             "A friendly army must be present to relocate headquarters.",
         ));
@@ -269,7 +301,7 @@ pub(super) fn headquarters_check(
             "Headquarters cannot relocate into a siege or local threat.",
         ));
     }
-    if !location.facilities.contains(&Facility::TrainingGround)
+    if (!location.facilities.contains(&Facility::TrainingGround) && !displaced)
         || c.damage >= data.economy.facility_failure_damage
     {
         return Err(blocked("Headquarters needs a functional Training Ground."));

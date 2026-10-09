@@ -29,6 +29,8 @@ pub struct DevelopmentRules {
 #[serde(deny_unknown_fields)]
 pub struct CityDevelopmentRules {
     pub cost: Resources,
+    /// Each City or Major City the investor already holds raises the next cost.
+    pub cost_increase_percent_per_city: u32,
     pub minimum_habitation: Habitation,
     pub messages: CityDevelopmentMessages,
 }
@@ -151,6 +153,12 @@ impl DevelopmentRules {
                 || self.city_development.cost.wood > 0
                 || self.city_development.cost.stone > 0,
             "must include a positive resource cost",
+        )?;
+        require(
+            SOURCE,
+            "city_development.cost_increase_percent_per_city",
+            self.city_development.cost_increase_percent_per_city <= 1000,
+            "must be within 0..=1000",
         )?;
         require(
             SOURCE,

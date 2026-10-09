@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::economy::Habitation;
+use crate::data::world::FactionId;
 
 impl Planner<'_> {
     pub(super) fn peace(&self) -> Option<AiDecision> {
@@ -43,19 +44,15 @@ impl Planner<'_> {
         {
             return None;
         }
-        let adjacent: std::collections::BTreeSet<_> = self
-            .view
-            .world
-            .sites
-            .iter()
-            .filter(|site| site.controller == Some(self.owner))
-            .flat_map(|site| self.view.world.adjacent_sites(site.id))
-            .filter_map(|site| self.view.world.site(site)?.controller)
-            .filter(|owner| *owner != self.owner)
-            .collect();
+        let adjacent = self.neighbors();
+        // A distant war that no army can reach does not occupy a frontier.
+        if adjacent.iter().filter(|other| self.at_war(**other)).count() >= self.data.ai.maximum_wars
+        {
+            return None;
+        }
         let mut rivals: Vec<_> = adjacent
             .into_iter()
-            .filter(|other| !self.at_war(*other) && self.campaign.is_independent(*other))
+            .filter(|other| !self.at_war(*other) && !self.stronger(*other))
             .collect();
         rivals.sort_by_key(|other| {
             (
@@ -90,6 +87,37 @@ impl Planner<'_> {
             }
         }
         None
+    }
+
+    /// Neighboring independent kingdoms, from this sovereign's known border.
+    fn neighbors(&self) -> std::collections::BTreeSet<FactionId> {
+        self.view
+            .world
+            .sites
+            .iter()
+            .filter(|site| site.controller == Some(self.owner))
+            .flat_map(|site| self.view.world.adjacent_sites(site.id))
+            .filter_map(|site| self.view.world.site(site)?.controller)
+            .filter(|owner| *owner != self.owner && self.campaign.is_independent(*owner))
+            .collect()
+    }
+
+    /// The private sovereign aggregate used for peace (P08) also keeps a
+    /// kingdom from opening a war against a visibly stronger neighbor.
+    fn stronger(&self, other: FactionId) -> bool {
+        let strength = |faction| {
+            crate::engine::diplomacy::military_equivalents(self.campaign, self.data, faction)
+        };
+        strength(self.owner) * 100 < strength(other) * u128::from(self.data.ai.war_strength_percent)
+    }
+
+    /// Boxed in by a neighbor too strong to challenge: build toward parity.
+    pub(super) fn outmatched(&self) -> bool {
+        !self.nearby_neutral()
+            && self
+                .neighbors()
+                .into_iter()
+                .any(|other| self.stronger(other))
     }
 
     fn nearby_neutral(&self) -> bool {

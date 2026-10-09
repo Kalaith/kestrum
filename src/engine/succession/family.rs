@@ -172,23 +172,13 @@ fn add_birth(
     campaign.next_ids.person = PersonId(id.0.checked_add(1).ok_or(RuleError::Overflow {
         field: "person identifiers",
     })?);
-    let given = campaign
-        .rng
-        .people
-        .below(data.human_names.given_names.len());
-    let family = campaign
-        .rng
-        .people
-        .below(data.human_names.family_names.len());
+    let name = super::fresh_person_name(campaign, data);
     let appearance = crate::engine::portraits::allocate_for_person(campaign, &data.portraits, id)
         .map_err(RuleError::InvalidState)?;
     let person = Person::new_recruit(
         id,
         household.faction,
-        format!(
-            "{} {}",
-            data.human_names.given_names[given], data.human_names.family_names[family]
-        ),
+        name,
         i64::from(campaign.completed_rounds),
         campaign.completed_rounds,
         PersonAssignment::Dependent {

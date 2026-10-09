@@ -33,7 +33,10 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
     let step = campaign.tutorial.current()?;
     let show_capital = matches!(
         step,
-        TutorialStep::Headquarters | TutorialStep::CityDevelopment | TutorialStep::Region
+        TutorialStep::Headquarters
+            | TutorialStep::CityDevelopment
+            | TutorialStep::Region
+            | TutorialStep::RaiseArmy
     );
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
     draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 1.0, BRASS);
@@ -113,6 +116,9 @@ pub(super) fn prompt(ctx: &Context<'_>, step: TutorialStep) -> String {
                 MoveStage::Inactive if in_army => "tutorial_back_roster",
                 MoveStage::Inactive => "tutorial_find_army",
             },
+            TutorialStep::ClearThreat if in_army => "tutorial_back_map",
+            TutorialStep::ClearThreat => "tutorial_threat",
+            TutorialStep::RaiseArmy => "tutorial_raise_army",
             TutorialStep::Region if in_army => "tutorial_back_map",
             TutorialStep::Region => region_prompt(ctx, campaign),
             TutorialStep::WorldMap if in_army => "tutorial_back_map",

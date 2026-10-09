@@ -13,6 +13,7 @@
   "veteran_permille": 1200,
   "emergence": {
     "vacant_slot_engagements": 1,
+    "first_threat_victory": true,
     "retrospective_rounds": 8,
     "minimum_age_years": 18,
     "maximum_age_years": 30

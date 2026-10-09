@@ -2,7 +2,9 @@
 
 mod commands;
 mod family;
+mod names;
 mod options;
+pub(crate) use names::fresh_person_name;
 pub use options::{household_option, HouseholdAction, HouseholdOption, HouseholdSelection};
 
 use crate::{

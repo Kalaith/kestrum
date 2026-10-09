@@ -97,6 +97,7 @@ fn active_warning_budget_and_episode_ids_survive_clear_and_save_reload() {
             headcount: 12,
             status: ThreatStatus::Active,
             ruination: None,
+            raid: None,
         },
     );
     let collected = outcome(&candidate);

@@ -27,6 +27,8 @@ have at least one intervening node, regardless of who owns the other city.
 
 The player begins from a headquarters or equivalent core territory. It initially supplies recruits, military units, supplies, promotions, training, and command structure. Expansion follows connected routes, creating additional safe settlements and logistical positions.
 
+**Claiming (2026-10-08):** an army moving into an unowned place takes it, including every unowned place it passes. A holding with no secure path to headquarters pays reduced income (see [economy](03-kingdoms-and-economy.md#provisional-economy-defaults)), so contiguous expansion is worth more than a scattered rush.
+
 Headquarters is a functional role. The capital is a separate, relocatable seat of government. Capital capture alone does not cause defeat: the implemented defeat check considers surviving settled holdings and military strength. See [kingdom outcomes](03-kingdoms-and-economy.md#victory-defeat-and-continuity).
 
 ## City regions

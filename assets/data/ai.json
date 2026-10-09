@@ -11,6 +11,8 @@
   "maximum_armies": 8,
   "minimum_formations": 3,
   "war_peace_rounds": 4,
+  "maximum_wars": 1,
+  "war_strength_percent": 100,
   "neutral_search_edges": 2,
   "recruitment_order": ["warriors", "spearmen", "archers", "medics", "riders", "siege_engines"]
 }

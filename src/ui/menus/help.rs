@@ -4,7 +4,7 @@ use macroquad_toolkit::ui::wrap_text_ex;
 
 const PAGES: &[&[&str]] = &[
     &["help_select", "help_region", "help_navigation"],
-    &["help_turn", "help_menu", "help_scope"],
+    &["help_turn", "help_claim", "help_scope", "help_menu"],
     &["help_army", "help_recruit", "help_slots"],
     &["help_economy", "help_disband", "help_leadership"],
     &["help_move", "help_route", "help_spent"],

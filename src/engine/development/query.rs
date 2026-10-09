@@ -51,7 +51,7 @@ pub fn city_development_option(
 ) -> Option<CityDevelopmentOption> {
     commands::owned(campaign, observer, site).ok()?;
     Some(CityDevelopmentOption {
-        cost: data.development.city_development.cost,
+        cost: commands::city_cost(campaign, data, observer),
         blocked: commands::city_development_check(campaign, data, observer, site)
             .err()
             .map(|error| error.to_string()),

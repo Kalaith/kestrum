@@ -35,6 +35,8 @@ pub(super) fn develop(
             issue(campaign, data, command)?;
         }
     }
+    relieve_deficit(campaign, data)?;
+    reinforce_at_home(campaign, data, home)?;
     let garrison = campaign
         .armies
         .values()
@@ -69,7 +71,26 @@ pub(super) fn develop(
         })
         .map(|army| army.id)
         .collect();
+    let at_war = campaign.relations.iter().any(|relation| {
+        relation.state == DiplomaticState::War && relation.factions.contains(&campaign.player)
+    });
     for army in travelers {
+        // Wartime travellers advance on the nearest enemy-held ground, else defend home.
+        if at_war {
+            if counterattack(campaign, data, army)? {
+                continue;
+            }
+            if campaign.armies[&army].site != home {
+                if let Ok(preview) =
+                    engine::movement_preview(campaign, data, campaign.player, &[army], home)
+                {
+                    if preview.can_confirm() && preview.reachable_steps > 0 {
+                        move_order(campaign, data, preview.order)?;
+                    }
+                }
+            }
+            continue;
+        }
         // A bounded number of orders lets the host clear threats without
         // spending the entire season revisiting the same protected site.
         for _ in 0..6 {
@@ -82,6 +103,120 @@ pub(super) fn develop(
             if !march(campaign, data, army)? {
                 break;
             }
+        }
+    }
+    Ok(())
+}
+
+fn counterattack(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    army: ArmyId,
+) -> Result<bool, String> {
+    let enemies: Vec<_> = campaign
+        .relations
+        .iter()
+        .filter(|relation| {
+            relation.state == DiplomaticState::War && relation.factions.contains(&campaign.player)
+        })
+        .flat_map(|relation| relation.factions)
+        .filter(|faction| *faction != campaign.player)
+        .collect();
+    let known = engine::explored_sites(campaign, campaign.player);
+    let target = campaign
+        .world
+        .sites
+        .iter()
+        .filter(|site| {
+            known.contains(&site.id)
+                && site
+                    .controller
+                    .is_some_and(|owner| enemies.contains(&owner))
+        })
+        .filter_map(|site| {
+            engine::movement_preview(campaign, data, campaign.player, &[army], site.id)
+                .ok()
+                .filter(|preview| preview.can_confirm() && preview.reachable_steps > 0)
+        })
+        .min_by_key(|preview| (preview.total_cost, preview.order.path.last().copied()));
+    let Some(preview) = target else {
+        return Ok(false);
+    };
+    move_order(campaign, data, preview.order)?;
+    Ok(true)
+}
+
+/// A shortfall blocks recovery, so release the newest unnamed formation until upkeep fits.
+fn relieve_deficit(campaign: &mut StrategicCampaign, data: &GameData) -> Result<(), String> {
+    let Some(statement) = campaign.factions[&campaign.player].last_economy.clone() else {
+        return Ok(());
+    };
+    let mut excess = statement.upkeep_due - statement.income.gold;
+    while excess > 0 {
+        let Some(formation) = campaign
+            .formations
+            .values()
+            .filter(|formation| {
+                formation.faction == campaign.player
+                    && formation.headcount > 0
+                    && campaign.formation_person(formation.id).is_none()
+            })
+            .max_by_key(|formation| (formation.created_round, formation.id))
+            .map(|formation| formation.id)
+        else {
+            return Ok(());
+        };
+        let upkeep = data.economy.formations[&campaign.formations[&formation].kind].upkeep_gold;
+        let command = Command::Disband { formation };
+        if engine::preview(campaign, data, engine::Actor::Player, command.clone()).is_err() {
+            return Ok(());
+        }
+        issue(campaign, data, command)?;
+        excess -= upkeep;
+    }
+    Ok(())
+}
+
+/// Fill free slots at headquarters while seasonal income still covers the upkeep.
+fn reinforce_at_home(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+    home: SiteId,
+) -> Result<(), String> {
+    const ROTATION: [TroopKind; 3] = [TroopKind::Spearmen, TroopKind::Warriors, TroopKind::Archers];
+    for _ in 0..6 {
+        let faction = &campaign.factions[&campaign.player];
+        let Some(statement) = faction.last_economy.as_ref() else {
+            return Ok(());
+        };
+        let spare = statement.income.gold - statement.upkeep_due;
+        if spare < 2 * data.economy.formations[&TroopKind::Spearmen].upkeep_gold
+            || faction.resources.gold < 300
+        {
+            return Ok(());
+        }
+        let Some((army, slots)) = campaign
+            .armies
+            .values()
+            .filter(|army| army.faction == campaign.player && army.site == home)
+            .filter(|army| army.first_empty_slot().is_some())
+            .map(|army| (army.id, army.formation_ids().count()))
+            .min_by_key(|(id, count)| (*count, *id))
+        else {
+            return Ok(());
+        };
+        let command = Command::Recruit {
+            site: home,
+            army: Some(army),
+            kind: ROTATION[slots % ROTATION.len()],
+        };
+        if engine::preview(campaign, data, engine::Actor::Player, command.clone()).is_err() {
+            return Ok(());
+        }
+        issue(campaign, data, command)?;
+        // Upkeep is assessed at the boundary; keep this season's additions modest.
+        if slots % 2 == 1 {
+            return Ok(());
         }
     }
     Ok(())
@@ -161,6 +296,7 @@ fn advance_patrol(
 
 fn march(campaign: &mut StrategicCampaign, data: &GameData, army: ArmyId) -> Result<bool, String> {
     let known = engine::explored_sites(campaign, campaign.player);
+    let supplied = campaign.supplied_sites(campaign.player);
     let origin = campaign.armies[&army].site;
     let destination = campaign
         .world
@@ -180,7 +316,18 @@ fn march(campaign: &mut StrategicCampaign, data: &GameData, army: ArmyId) -> Res
                     })
                 })
         })
-        .min_by_key(|preview| (preview.total_cost, preview.order.path.last().copied()));
+        // Contiguous claims keep supply and full income; distant ones only as a fallback.
+        .min_by_key(|preview| {
+            let destination = preview.order.path.last().copied();
+            let contiguous = destination.is_some_and(|site| {
+                campaign
+                    .world
+                    .adjacent_sites(site)
+                    .iter()
+                    .any(|near| supplied.contains(near))
+            });
+            (!contiguous, preview.total_cost, destination)
+        });
     let Some(preview) = destination else {
         return Ok(false);
     };

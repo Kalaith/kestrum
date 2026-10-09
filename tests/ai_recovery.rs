@@ -96,27 +96,40 @@ fn a_supply_lost_label_does_not_cancel_work_at_a_supplied_site() {
 
 #[test]
 fn a_corridor_war_waits_for_truce_then_reconnects_city_supply() {
-    let (data, mut campaign, middle, enclave, army) = corridor_fixture();
-    let truce = campaign.completed_rounds + 1;
-    campaign
+    let (data, mut campaign, middle, enclave, _) = corridor_fixture();
+    let settled = campaign
+        .diplomacy
+        .pairs
+        .iter()
+        .find(|pair| pair.factions == [ROSE, OAK])
+        .unwrap()
+        .clone();
+    // A valid truce begins with the accepted peace offer that created it.
+    let round = campaign.completed_rounds;
+    let truce = kestrum::state::diplomacy::PairDiplomacy {
+        peace_since: Some(round),
+        last_offer_round: Some(round),
+        truce_until: Some(round + data.diplomacy.truce_rounds),
+        ..settled.clone()
+    };
+    *campaign
         .diplomacy
         .pairs
         .iter_mut()
         .find(|pair| pair.factions == [ROSE, OAK])
-        .unwrap()
-        .truce_until = Some(truce);
+        .unwrap() = truce;
     campaign.validate(&data).unwrap();
 
     let during_truce = ai::propose(&campaign, &data, OAK).unwrap();
     assert_ne!(during_truce.command, Command::DeclareWar { faction: ROSE });
 
-    campaign
+    *campaign
         .diplomacy
         .pairs
         .iter_mut()
         .find(|pair| pair.factions == [ROSE, OAK])
-        .unwrap()
-        .truce_until = None;
+        .unwrap() = settled;
+    campaign.validate(&data).unwrap();
     let declaration = ai::propose(&campaign, &data, OAK).unwrap();
     assert_eq!(declaration.command, Command::DeclareWar { faction: ROSE });
     apply(&mut campaign, &data, Actor::Npc(OAK), declaration.command).unwrap();
@@ -130,25 +143,36 @@ fn a_corridor_war_waits_for_truce_then_reconnects_city_supply() {
         DiplomaticState::War
     );
 
+    // Either the cut-off army or the supplied home army may retake the corridor.
+    let headquarters = campaign.factions[&OAK].headquarters;
     let movement = ai::propose(&campaign, &data, OAK).unwrap();
     assert!(
         matches!(
             movement.command,
             Command::Move(MoveOrder { ref armies, ref path })
-                if armies == &[army] && path == &[enclave, middle]
+                if armies.len() == 1
+                    && campaign.armies[&armies[0]].faction == OAK
+                    && (path == &[enclave, middle] || path == &[headquarters, middle])
         ),
         "{movement:?}"
     );
     apply(&mut campaign, &data, Actor::Npc(OAK), movement.command).unwrap();
 
     assert!(campaign.supplied_sites(OAK).contains(&enclave));
-    assert!(preview(
-        &campaign,
+    // The fixture withholds Wood and Stone to keep construction out of the
+    // planner; funding the investment isolates the restored supply condition.
+    let mut funded = campaign.clone();
+    let cost = data.development.city_development.cost;
+    let resources = &mut funded.factions.get_mut(&OAK).unwrap().resources;
+    resources.wood = cost.wood;
+    resources.stone = cost.stone;
+    let city = preview(
+        &funded,
         &data,
         Actor::Npc(OAK),
         Command::DevelopCity { site: enclave },
-    )
-    .is_ok());
+    );
+    assert!(city.is_ok(), "{city:?}");
 }
 
 #[test]
@@ -157,7 +181,14 @@ fn corridor_opening_requires_funded_nonweak_forces_without_a_deficit() {
     let mut variants = Vec::new();
 
     let mut deficit = campaign.clone();
-    deficit.factions.get_mut(&OAK).unwrap().deficit = true;
+    let faction = deficit.factions.get_mut(&OAK).unwrap();
+    faction.deficit = true;
+    // The saved receipt must record the unpaid upkeep that set the flag.
+    let statement = faction.last_economy.as_mut().unwrap();
+    statement.upkeep_due = statement.upkeep_due.max(1);
+    statement.upkeep_paid = statement.upkeep_due - 1;
+    statement.shortfall = 1;
+    deficit.validate(&data).unwrap();
     variants.push(deficit);
 
     let mut underfunded = campaign.clone();

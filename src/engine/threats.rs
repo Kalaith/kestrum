@@ -123,6 +123,102 @@ pub(crate) fn execute(
     Ok(())
 }
 
+/// Every raid interval, bandits seize exposed, ungarrisoned holdings: one per
+/// `settlements_per_raid` settlements, so small kingdoms are spared and sprawling
+/// ones pay for their frontier. A local generator keyed by seed, round and
+/// faction keeps the shared random streams unchanged.
+pub(crate) fn raise_raids(
+    campaign: &mut StrategicCampaign,
+    data: &GameData,
+) -> Result<(), RuleError> {
+    let rules = data.threats.raids;
+    let round = campaign.completed_rounds;
+    if round < rules.first_round
+        || !(round - rules.first_round).is_multiple_of(rules.interval_rounds)
+    {
+        return Ok(());
+    }
+    let definition = &data.threats.definitions[&ThreatKind::Bandits];
+    for faction in campaign.independent_order() {
+        let owner = &campaign.factions[&faction];
+        let (headquarters, capital) = (owner.headquarters, owner.capital);
+        let settlements = campaign
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                site.controller == Some(faction)
+                    && site.habitation >= crate::data::economy::Habitation::Hamlet
+            })
+            .count();
+        let raids = settlements / rules.settlements_per_raid as usize;
+        let mut candidates: Vec<_> = campaign
+            .world
+            .sites
+            .iter()
+            .filter(|site| {
+                site.controller == Some(faction)
+                    && site.habitation >= crate::data::economy::Habitation::Hamlet
+                    && site.id != headquarters
+                    && site.id != capital
+                    && !campaign.site_is_ruined(site.id)
+                    && !campaign.world.contested_sites.contains(&site.id)
+                    && !campaign.sieges.contains_key(&site.id)
+                    && campaign.active_threat(site.id).is_none()
+                    && !campaign.armies.values().any(|army| army.site == site.id)
+                    && campaign
+                        .world
+                        .adjacent_sites(site.id)
+                        .into_iter()
+                        .any(|near| {
+                            campaign
+                                .world
+                                .site(near)
+                                .is_some_and(|near| near.controller != Some(faction))
+                        })
+            })
+            .map(|site| site.id)
+            .collect();
+        let mut rng = macroquad_toolkit::rng::SeededRng::new(
+            campaign.seed ^ (u64::from(round) << 32) ^ u64::from(faction.0),
+        );
+        for _ in 0..raids {
+            if candidates.is_empty() {
+                break;
+            }
+            let site = candidates.swap_remove(rng.below(candidates.len()));
+            raise(campaign, definition, site, round)?;
+        }
+    }
+    Ok(())
+}
+
+fn raise(
+    campaign: &mut StrategicCampaign,
+    definition: &crate::data::threats::ThreatDefinition,
+    site: SiteId,
+    round: u32,
+) -> Result<(), RuleError> {
+    let id = campaign.next_ids.threat;
+    campaign.next_ids.threat = ThreatId(id.0.checked_add(1).ok_or(RuleError::Overflow {
+        field: "threat identifiers",
+    })?);
+    campaign.threats.insert(
+        id,
+        Threat {
+            id,
+            site,
+            kind: ThreatKind::Bandits,
+            name: definition.name.clone(),
+            headcount: definition.headcount,
+            status: ThreatStatus::Active,
+            ruination: None,
+            raid: Some(round),
+        },
+    );
+    Ok(())
+}
+
 pub(crate) fn spawn_ruin(
     campaign: &mut StrategicCampaign,
     data: &GameData,
@@ -169,6 +265,7 @@ pub(crate) fn spawn_ruin(
             headcount: data.threats.definitions[&ThreatKind::Bandits].headcount,
             status: ThreatStatus::Active,
             ruination: Some(transition),
+            raid: None,
         },
     );
     campaign.next_ids.threat = ThreatId(next);

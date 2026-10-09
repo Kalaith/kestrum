@@ -1,8 +1,9 @@
 //! Authored player-facing copy for Kestrum's title, calendar, atlas and UI.
 
 use super::{
-    observer_text::OBSERVER_TEXT, overview_text::OVERVIEW_TEXT, progression_text::PROGRESSION_TEXT,
-    required_text::REQUIRED_TEXT, tutorial_text::TUTORIAL_TEXT, GeographyLabel,
+    campaign_text::CAMPAIGN_TEXT, observer_text::OBSERVER_TEXT, overview_text::OVERVIEW_TEXT,
+    progression_text::PROGRESSION_TEXT, required_text::REQUIRED_TEXT, tutorial_text::TUTORIAL_TEXT,
+    GeographyLabel,
 };
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -57,6 +58,7 @@ impl GameTextData {
             .chain(TUTORIAL_TEXT)
             .chain(OVERVIEW_TEXT)
             .chain(OBSERVER_TEXT)
+            .chain(CAMPAIGN_TEXT)
         {
             if self
                 .text

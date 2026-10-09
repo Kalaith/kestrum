@@ -9,7 +9,8 @@ M01A of the [map playability plan](docs/map-playability-plan.md) is complete und
 its [recorded scope](docs/verification/spatial-scale.md): spatial scale and map
 navigation use the sole 1920×1080 spec. Engineering checks, 14 native captures,
 automated native actions, background browser gameplay, publishing and reload
-are recorded. The full suite retains one inherited production-victory failure.
+are recorded. The later [opening balance](docs/verification/opening-balance.md)
+record supersedes the inherited production-victory failure.
 It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
 M02's map orders and seasonal consequences follow, then regional geography and
 the opening guide in M03/M04.
@@ -74,7 +75,9 @@ and the latest scoped evidence take precedence over old milestone prose.
 
 ## Map controls
 
-Tap an Army marker, then a destination to move immediately. Long orders use the
+Tap an Army marker, then a destination to move immediately. Moving into an
+unowned place claims it; holdings without a supply path to headquarters pay
+half income. Long orders use the
 available allowance and save their remaining physical route. End Turn refreshes
 movement and continues those orders; encounters and changed access can pause them.
 A destination can also be queued when no movement remains. Cancel Route stops
@@ -124,7 +127,8 @@ internal threats, participant sieges and hostile contact cues.
 
 Army Details opens composition, recruitment and people. Manage opens a place's
 construction, roads, focus and local actions. Develop City costs 250 Gold,
-100 Wood and 75 Stone. It requires a safe, supplied Village or Town with usable
+100 Wood and 75 Stone for a kingdom's first city; each City or Major City it
+already holds adds 50% to the next investment. It requires a safe, supplied Village or Town with usable
 conditions and no directly neighboring City or Major City. A city then offers
 Enter Region, showing the city and its connected countryside. Fields, woods and
 buildings reflect observed development; country and local views share the same
@@ -133,8 +137,10 @@ save/load, settings and help. These are the **current** paths; the map plan brin
 common decisions and context closer to the world.
 
 The introduction starts by managing the capital and paying for city development,
-then enters that capital's region and returns to the Country Map. Movement,
-careers, household review, the first turn and Records follow. It can be dismissed
+then enters that capital's region and returns to the Country Map. Movement
+(which explains claiming), clearing a nearby threat, raising a second army and
+the first End Turn follow; careers, household review and Records come after
+rivals have acted. It can be dismissed
 or resumed from How to Play; an already developed capital does not require a
 second investment. Further contextual teaching remains M04 of the map plan.
 
@@ -269,8 +275,9 @@ background browser gameplay, publishing and reload passed, with a complete
 1920×1080 browser capture in [spatial-scale verification](docs/verification/spatial-scale.md).
 These limits remain:
 
-- The unchanged seed-88 production-victory test fails at its 240-round cap after
-  corrected combat reactions/routs. The failure remains a balance issue.
+- The seed-88 production-victory test passes again after the 2026-10-08
+  [opening balance](docs/verification/opening-balance.md) rules; `midgame`'s
+  atlas-breadth test sees 52 of its required 55 known sites.
 - Historical minimum-size WebGL acceptance remained unverified: the viewport
   override produced a smaller rendered image with black remainder after interaction.
 - Dense battlefield placement, target-priority editing, small tactic controls

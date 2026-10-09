@@ -4,7 +4,9 @@ use crate::{
     data::{progression::EpithetFact, world::PersonClass, GameData},
     engine::RuleError,
     state::{
-        evidence::{EvidenceKind, EvidenceLedger, FormationService, SeasonService},
+        evidence::{
+            EncounterOpponent, EvidenceKind, EvidenceLedger, FormationService, SeasonService,
+        },
         military::FormationId as MilitaryFormationId,
         people::{
             Disposition, EmergenceRecord, Person, PersonAssignment, PersonCareer, PersonId,
@@ -28,12 +30,15 @@ pub(super) fn advance(campaign: &mut StrategicCampaign, data: &GameData) -> Resu
         if source.service.vacancy_service_progress < threshold {
             continue;
         }
+        let first_threat_victory = data.progression.emergence.first_threat_victory
+            && !has_emerged(campaign, source.faction);
         let Some(season) = source.service.recent.last().filter(|season| {
             season.completed_rounds.saturating_add(1) == campaign.completed_rounds
-                && season
-                    .encounters
-                    .iter()
-                    .any(|encounter| encounter.meaningful)
+                && season.encounters.iter().any(|encounter| {
+                    encounter.meaningful
+                        || (first_threat_victory
+                            && matches!(encounter.opponent, EncounterOpponent::Threat { .. }))
+                })
         }) else {
             super::reset_formation_vacancy_progress(campaign, formation);
             continue;
@@ -43,6 +48,17 @@ pub(super) fn advance(campaign: &mut StrategicCampaign, data: &GameData) -> Resu
         super::reset_formation_vacancy_progress(campaign, formation);
     }
     Ok(())
+}
+
+/// Whether any person of the kingdom, living or dead, emerged from its formations.
+pub(crate) fn has_emerged(
+    campaign: &StrategicCampaign,
+    faction: crate::data::world::FactionId,
+) -> bool {
+    campaign
+        .people
+        .values()
+        .any(|person| person.faction == faction && person.career.emergence.is_some())
 }
 
 pub(super) fn update_tracked(campaign: &mut StrategicCampaign, data: &GameData) {
@@ -107,15 +123,7 @@ fn create(
                 .saturating_sub(data.progression.emergence.retrospective_rounds),
         )
         .max((birth_round + 68).clamp(0, i64::from(u32::MAX)) as u32);
-    let given = &data.human_names.given_names[campaign
-        .rng
-        .people
-        .below(data.human_names.given_names.len())];
-    let family = &data.human_names.family_names[campaign
-        .rng
-        .people
-        .below(data.human_names.family_names.len())];
-    let name = format!("{given} {family}");
+    let name = crate::engine::succession::fresh_person_name(campaign, data);
     let disposition = Disposition {
         courage: tendency(&mut campaign.rng.people),
         care: tendency(&mut campaign.rng.people),

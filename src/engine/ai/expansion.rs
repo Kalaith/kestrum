@@ -59,6 +59,18 @@ impl Planner<'_> {
                 i128::from(statement.income.gold) * 100
                     < i128::from(statement.upkeep_due) * i128::from(self.data.ai.surplus_percent)
             });
+        // Distance is measured from the capital while it is held; a realm
+        // that has lost its capital centres on the headquarters it fell back to.
+        let home = if self
+            .view
+            .world
+            .site(faction.capital)
+            .is_some_and(|site| site.controller == Some(self.owner))
+        {
+            faction.capital
+        } else {
+            faction.headquarters
+        };
         let temperament = self.temperament();
         let anchors = self.anchors();
         self.view
@@ -79,7 +91,7 @@ impl Planner<'_> {
                 if !connected && value < temperament.detached_claim_value {
                     return None;
                 }
-                let (home, path) = self.path(faction.headquarters, site.id, false)?;
+                let (home, path) = self.path(home, site.id, false)?;
                 (needs_land || path.len().saturating_sub(1) <= temperament.expansion_reach)
                     .then_some(Claim {
                         site: site.id,

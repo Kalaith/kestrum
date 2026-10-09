@@ -20,6 +20,7 @@ Management-only references use workspace-root paths in code spans.
 | Change Rust, data, assets, or behavior | [CODE_STANDARDS.md](CODE_STANDARDS.md) |
 | Design/change screens, controls, camera, or rendering | [UI_STYLE.md](UI_STYLE.md) and relevant [toolkit modules](MACROQUAD_TOOLKIT.md#modules) |
 | Add/change a shared runtime, input, asset, platform, or UI capability | Relevant [MACROQUAD_TOOLKIT.md](MACROQUAD_TOOLKIT.md) sections; consider a toolkit upgrade before a local alternative |
+| Add, change, or delete tests | [Testing policy](CODE_STANDARDS.md#11-testing-policy) |
 | Validate or capture; encounter workspace failures | [Validation](CODE_STANDARDS.md#83-validation) and [artifact hygiene](CODE_STANDARDS.md#12-verification-artifacts) |
 | Create/migrate a game | [GAME_DEVELOPMENT_GUIDE.md](GAME_DEVELOPMENT_GUIDE.md) and the template README rename steps |
 | Change build/workspace/dependency configuration | `rust_management/docs/CARGO_WORKSPACE.md` |
@@ -56,9 +57,15 @@ Management-only references use workspace-root paths in code spans.
   or duplicates. Use the shared wrapper's hidden default, wait, and verify game
   exit; fix/report tool failures instead of inventing alternate capture pipelines.
 - Validate slices with formatting, strict Clippy, source-size gates, and focused
-  relevant tests. Broader suites need a cross-cutting/integration/release reason;
+  existing tests. Broader suites need a cross-cutting/integration/release reason;
   publishing never gates a local commit and requires user authorization. Follow
   the validation reference for scope, unchanged results, and failures.
+- Projects are prototypes: **do not write tests by default**, even once
+  released. Add one only for a settled complex algorithm, data integrity, or a
+  recurring regression; never for UI layout, experimental rules, temporary
+  balancing, or implementation details. When changing experimental behaviour, delete the tests that asserted
+  it rather than rewriting them. Keep the source-size and asset-registry gates.
+  Report what was and was not verified. See [Testing](CODE_STANDARDS.md#11-testing-policy).
 - Demo saves may break compatibility: reject unsupported old saves with a clear
   recoverable error, never a crash. Migrations are optional unless requested.
 

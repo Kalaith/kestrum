@@ -189,7 +189,7 @@ The game must build for:
 
 Validate proportionately for a prototype; commit each coherent, buildable slice promptly.
 
-- **Every Rust slice:** review the full/staged diff; check formatting, strict Clippy (`--all-targets --all-features -- -D warnings`), source-size gates, and focused existing tests for changed behavior in the affected crate(s). Fix errors and warnings; do not suppress them or disable checks to pass. If no behavioral test applies (for example a visual-only change), explain the relevant build/manual evidence instead of adding redundant tests.
+- **Every Rust slice:** review the full/staged diff; check formatting, strict Clippy (`--all-targets --all-features -- -D warnings`), source-size gates, and focused existing tests for changed behavior in the affected crate(s); do not write new ones by default (§11). Fix errors and warnings; do not suppress them or disable checks to pass. If no behavioral test applies (for example a visual-only change), explain the relevant build/manual evidence instead of adding redundant tests.
 - **Broader checks when justified:** use integration tests or the full affected-project/member suite for cross-cutting state, simulation, shared API/platform changes, a meaningful integration boundary, or release acceptance. State the risk/trigger; a full suite is not required for every slice. Reuse valid results for unchanged code/configuration/dependencies; rerun affected checks after relevant changes or unresolved failures. Avoid running focused tests immediately before a full suite containing them unless useful for diagnosis.
 - **Changed UI only:** inspect affected screens/states and exercise affected interactions. Check normal/minimum sizes where layout, scaling, or input may change, and relevant dense/failure states. Do not refresh or review unrelated screens. See [UI_STYLE.md](UI_STYLE.md#9-review-by-subtraction-then-verify-in-play).
 - **Publishing:** never gate a local code-slice commit on `publish.ps1`. Use pooled local builds and relevant hidden captures/browser checks; build WASM when browser/platform behavior or release acceptance needs it. Publishing is separate and may deploy or contact external services: run it only when authorized by the user. Report deliberately unrun deployment without treating it as a local validation failure.
@@ -204,8 +204,9 @@ Demo saves do not have to remain backward compatible. An old/unsupported save
 must produce a clear, recoverable error and let the player start fresh, not crash.
 Implement migration/backward compatibility only when the user explicitly requires
 it. There is no blanket migration or determinism test mandate; select checks for
-the behavior/risk changed. Do not delete useful existing tests merely to reduce
-runtime or hit a test-count target.
+the behavior/risk changed. Write no new tests by default, and delete tests that
+assert discarded experimental behaviour (§11); do not delete useful tests merely
+to reduce runtime.
 
 Use project-local asset paths and report missing assets/loading failures clearly.
 
@@ -245,31 +246,50 @@ Each module should contain a short `//!` comment explaining its purpose:
 - Avoid variable shadowing (hiding)
 - Do not declare a new variable with the same name as an existing one in the same scope
 
-## 11. Testing Guidelines
+## 11. Testing Policy
 
-### 11.1 What to Test
-Focus tests on:  
-- Core game calculations  
-- State machine transitions  
-- JSON data loading  
-- UI and rendering generally do not need unit tests.
+These games are prototypes in active development. Rapid iteration, experimentation, and playable functionality come first. Testing supports development; it does not dictate design. The policy stays the same after a game is released (§11.6).
 
-### 11.2 Test Style
-- Tests should read like rules  
-- Avoid complex setups  
-- If a test is hard to write, the code is probably too tangled.
+### 11.1 Default: No New Tests
+- Do not write unit, integration, snapshot, or end-to-end tests by default, including for new features, bug fixes, and refactors.
+- Do not add coverage targets, testing frameworks, test-only dependencies, or public API that exists only so a test can reach it, unless the user explicitly asks.
+- Validate changes by compiling, running, and exercising the affected feature instead (§11.5).
 
-### 11.3 Feature Test Target
-- Strongly target no more than five `#[test]` cases per major feature: one cohesive responsibility, regardless of how its tests are split or named.
-- Prefer high-value behavior and regression tests. Consolidate related inputs with table-driven assertions; do not bundle unrelated checks or delete useful coverage to meet the target.
-- Before committing, review affected feature suites. If more than five cases are needed, briefly explain why distinct coverage warrants them.
+### 11.2 When a Test Earns Its Place
+A test is justified only where it gives clear, lasting value:
+- **Stable, complex algorithms** whose design has settled, such as pathfinding, procedural generation, or simulation math.
+- **Data integrity**, such as JSON content loading with resolvable cross-references, save/load round-trips, and asset registry coverage.
+- **Recurring regressions**: a bug that has come back, not one fixed once.
 
-### 11.4 Test Placement
+State the reason in the commit body. Keep each suite as small as the concern allows, using table-driven assertions for related inputs. Five `#[test]` cases per protected responsibility is a hard ceiling, not a target: there is no test-count or coverage goal, and fewer is better.
+
+The source-size gate (`tests/code_standards.rs`, §2.2) and the asset-registry integrity test are enforcement gates, not behaviour tests. Every crate keeps them.
+
+### 11.3 What Not to Test
+- UI layout, rendering, widget geometry, colours, and copy.
+- Experimental gameplay rules and temporary balancing, including tunable values in `assets/*.json`.
+- Implementation details: private helpers, internal struct shapes, call order, and state or screen wiring that running the game exercises.
+
+### 11.4 Existing Tests
+- Do not preserve behaviour solely because a test asserts it.
+- When you deliberately change experimental behaviour, delete the tests that asserted the old behaviour rather than rewriting them to protect a discarded design. Update a test only when it still covers a §11.2 concern.
+- A failing test means either your change broke a real invariant (fix the code) or the test encodes an obsolete decision (delete it). Never weaken an assertion just to make it pass.
+- While working in an area, remove its tests that §11.3 rules out. Leave unrelated suites for a separate change.
+
+### 11.5 Validation Instead of Tests
+- Run the slice checks in §8.3: formatting, strict Clippy, source-size gates, and the existing tests that cover the changed behaviour.
+- Exercise the change for real: run the game, and for UI changes capture and review the affected screens (§12, `UI_STYLE.md` §9). Publishing stays separate and needs user authorization (§8.3).
+- Do not replace validation with assumptions. Report what was verified and what was not, for example: "captured the market screen and bought two items; did not play through a full season."
+
+### 11.6 Release and Production
+This policy does not relax when a game nears release or is in production. Do not add coverage passes, suites, or tests for a release. A released game may gain a test only for a specific, demonstrated risk such as save corruption, a progression blocker, or data loss, only after agreeing it with the user, and within the §11.2 rules and ceiling.
+
+### 11.7 Test Placement
 - Each crate owns a `tests/` directory beside its `Cargo.toml`, including member crates in multi-crate repositories. Keep all tests and test-only helpers there.
 - Do not add `#[cfg(test)]`, `mod tests`, test helpers, or test source files under `src/`.
-- Tests exercise the crate's public API. For a binary-only game, expose testable logic through `src/lib.rs` and have `main.rs` use that library; keep internals private unless an intentional public seam is needed.
-- Existing `src/**/tests.rs` files are legacy migration work. Migrate them as a separate change before expanding coverage.
-- Split large suites by responsibility while preserving the feature target (§11.3) and file-size rule (§2.2).
+- Tests exercise the crate's public API. For a binary-only game, expose logic through `src/lib.rs` and have `main.rs` use that library; keep internals private unless an intentional public seam is needed.
+- Existing `src/**/tests.rs` files and inline `mod tests` are legacy. Delete the cases this policy rules out when you work in that area; migrate any that remain to `tests/` as a separate change.
+- Split a large retained suite by responsibility while respecting the file-size rule (§2.2).
 
 ## 12. Verification Artifacts
 

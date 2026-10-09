@@ -157,7 +157,8 @@ is the deployment and validation authority.
 ### Validation
 
 Follow [section 8.3](CODE_STANDARDS.md#83-validation): formatting, strict Clippy,
-source-size gates, focused relevant tests, and review of changed UI only. Broaden
+source-size gates, focused existing tests, and review of changed UI only. Write
+no new tests by default ([section 11](CODE_STANDARDS.md#11-testing-policy)). Broaden
 checks for cross-cutting risk or integration/release acceptance. Publishing is
 separate, needs user authorization, and never gates a local slice commit.
 

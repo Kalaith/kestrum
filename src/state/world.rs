@@ -30,6 +30,8 @@ pub struct BoundaryCrossing {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CampaignWorld {
+    #[serde(default = "original_production_topology_revision")]
+    pub topology_revision: u32,
     #[serde(default = "original_layout_revision")]
     pub layout_revision: u32,
     #[serde(default)]
@@ -56,6 +58,7 @@ pub struct CampaignWorld {
 impl CampaignWorld {
     pub fn from_scenario(scenario: &Scenario) -> Self {
         let mut world = Self {
+            topology_revision: original_production_topology_revision(),
             layout_revision: 1,
             atlas_paths: BTreeMap::new(),
             development: scenario
@@ -277,5 +280,9 @@ impl CampaignWorld {
 }
 
 fn original_layout_revision() -> u32 {
+    1
+}
+
+fn original_production_topology_revision() -> u32 {
     1
 }

@@ -6,11 +6,29 @@ use super::{
         AtlasPath, MajorMarker, MarkerId, MarkerLocation, RouteId, Scenario, ScenarioKind, SiteId,
         WorldLayout, LAYOUT_SOURCE,
     },
+    GameData,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 const COUNTRY_LAYOUT_REVISION: u32 = 4;
 const COUNTRY_CLUSTER_RADIUS: f32 = 0.05;
+pub(crate) const CURRENT_PRODUCTION_TOPOLOGY_REVISION: u32 = 1;
+
+impl GameData {
+    /// Resolves a saved production topology to its durable authored source.
+    /// New revisions must be explicitly mapped to their own authored content.
+    pub(crate) fn production_topology_for_revision(
+        &self,
+        revision: u32,
+    ) -> Result<&WorldLayout, String> {
+        match revision {
+            1 => Ok(&self.production_layout),
+            _ => Err(format!(
+                "campaign.world.topology_revision: unsupported production topology revision {revision}"
+            )),
+        }
+    }
+}
 
 impl WorldLayout {
     /// Flattens nested authored regions without changing physical identities or routes.

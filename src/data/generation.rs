@@ -61,7 +61,9 @@ impl WorldLayout {
         setup.validate(data)?;
         data.rules.validate()?;
         self.validate(&data.rules, &data.economy)?;
-        let topology = self.flat_country_topology(&data.economy)?;
+        let authored_topology =
+            data.production_topology_for_revision(super::CURRENT_PRODUCTION_TOPOLOGY_REVISION)?;
+        let topology = authored_topology.flat_country_topology(&data.economy)?;
         let mut rng = SeededRng::new(setup.seed);
         let mut candidates = topology.headquarters_candidates.clone();
         shuffle(&mut rng, &mut candidates);

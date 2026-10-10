@@ -4,16 +4,32 @@ use crate::data::world::{MajorMarker, Route, Site};
 
 impl StrategicCampaign {
     pub(super) fn validate_world(&self, data: &GameData) -> Result<(), String> {
+        let production_source = match self.scenario_kind {
+            ScenarioKind::Production => {
+                Some(data.production_topology_for_revision(self.world.topology_revision)?)
+            }
+            ScenarioKind::RosemarchPrototype => {
+                require(
+                    self.world.topology_revision == 1,
+                    "world.topology_revision",
+                    "unsupported production topology revision",
+                )?;
+                None
+            }
+        };
         let flat_production =
             if self.scenario_kind == ScenarioKind::Production && self.world.layout_revision == 4 {
                 Some(
-                    data.production_layout
+                    production_source
+                        .unwrap()
                         .flat_country_topology(&data.economy)?,
                 )
             } else {
                 None
             };
-        let authored_production = flat_production.as_ref().unwrap_or(&data.production_layout);
+        let authored_production = flat_production
+            .as_ref()
+            .unwrap_or_else(|| production_source.unwrap_or(&data.production_layout));
         let (markers, sites, routes): (&[_], &[_], &[_]) = match self.scenario_kind {
             ScenarioKind::RosemarchPrototype => (
                 &data.scenario.markers,

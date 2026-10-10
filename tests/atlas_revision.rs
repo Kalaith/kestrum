@@ -22,40 +22,50 @@ fn campaign(data: &GameData) -> StrategicCampaign {
     .unwrap()
 }
 
-fn old_layout(data: &GameData) -> StrategicCampaign {
+fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
     let mut old = campaign(data);
-    old.world.layout_revision = 1;
-    old.world.atlas_paths.clear();
-    old.world.markers = data.production_layout.markers.clone();
-    old.world.routes = data.production_layout.routes.clone();
-    for site in &mut old.world.sites {
-        let authored = data.production_layout.site(site.id).unwrap();
-        site.marker = authored.marker;
-        site.position = authored.position;
-        site.tags.clone_from(&authored.tags);
-        if data
-            .production_layout
-            .headquarters_candidates
-            .contains(&site.id)
-        {
-            site.tags
-                .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
+    old.world.topology_revision = 1;
+    old.world.layout_revision = revision;
+    if revision < 4 {
+        old.world.atlas_paths = if revision == 1 {
+            Default::default()
+        } else {
+            data.production_layout.atlas_paths.clone()
+        };
+        old.world.markers = data.production_layout.markers.clone();
+        old.world.routes = data.production_layout.routes.clone();
+        for site in &mut old.world.sites {
+            let authored = data.production_layout.site(site.id).unwrap();
+            site.marker = authored.marker;
+            site.position = authored.position;
+            site.tags.clone_from(&authored.tags);
+            if revision < 3
+                && data
+                    .production_layout
+                    .headquarters_candidates
+                    .contains(&site.id)
+            {
+                site.tags
+                    .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
+            }
         }
-    }
-    for marker in &mut old.world.markers {
-        if let Some(position) = data
-            .production_layout
-            .legacy_marker_positions
-            .get(&marker.id)
-        {
-            marker.position = *position;
-            if let MarkerLocation::Site { site } = marker.location {
-                old.world
-                    .sites
-                    .iter_mut()
-                    .find(|entry| entry.id == site)
-                    .unwrap()
-                    .position = *position;
+        if revision == 1 {
+            for marker in &mut old.world.markers {
+                if let Some(position) = data
+                    .production_layout
+                    .legacy_marker_positions
+                    .get(&marker.id)
+                {
+                    marker.position = *position;
+                    if let MarkerLocation::Site { site } = marker.location {
+                        old.world
+                            .sites
+                            .iter_mut()
+                            .find(|entry| entry.id == site)
+                            .unwrap()
+                            .position = *position;
+                    }
+                }
             }
         }
     }
@@ -67,12 +77,23 @@ fn old_layout(data: &GameData) -> StrategicCampaign {
 fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let data = GameData::load().unwrap();
     let original = campaign(&data);
-    for revision in [0, 1, 2, 3, 5] {
+    for revision in [0, 99] {
+        let mut invalid = original.clone();
+        invalid.world.topology_revision = revision;
+        assert!(invalid.validate(&data).is_err());
+    }
+    let mut prototype = StrategicCampaign::new(&data).unwrap();
+    prototype.world.topology_revision = 2;
+    assert!(prototype.validate(&data).is_err());
+    for revision in [0, 5] {
         let mut invalid = original.clone();
         invalid.world.layout_revision = revision;
         assert!(invalid.validate(&data).is_err());
     }
-    let mut invalid = old_layout(&data);
+    let mut invalid = original.clone();
+    invalid.world.layout_revision = 3;
+    assert!(invalid.validate(&data).is_err());
+    let mut invalid = saved_layout(&data, 1);
     invalid
         .world
         .sites
@@ -90,6 +111,33 @@ fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
         .waypoints
         .clear();
     assert!(invalid.validate(&data).is_err());
+}
+
+#[test]
+fn supported_layout_revisions_keep_their_authored_site_and_route_references() {
+    let data = GameData::load().unwrap();
+    for revision in 1..=4 {
+        saved_layout(&data, revision)
+            .validate(&data)
+            .unwrap_or_else(|error| panic!("layout revision {revision} failed: {error}"));
+    }
+}
+
+#[test]
+fn saves_without_a_topology_revision_keep_the_legacy_authored_graph() {
+    let data = GameData::load().unwrap();
+    let original = campaign(&data);
+    let expected_world = original.world.clone();
+    let mut saved = serde_json::to_value(original).unwrap();
+    saved["world"]
+        .as_object_mut()
+        .unwrap()
+        .remove("topology_revision");
+
+    let loaded: StrategicCampaign = serde_json::from_value(saved).unwrap();
+    assert_eq!(loaded.world.topology_revision, 1);
+    assert_eq!(loaded.world, expected_world);
+    loaded.validate(&data).unwrap();
 }
 
 #[test]

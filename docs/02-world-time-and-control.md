@@ -31,6 +31,17 @@ The player begins from a headquarters or equivalent core territory. It initially
 
 Headquarters is a functional role. The capital is a separate, relocatable seat of government. Capital capture alone does not cause defeat: the implemented defeat check considers surviving settled holdings and military strength. See [kingdom outcomes](03-kingdoms-and-economy.md#victory-defeat-and-continuity).
 
+## Saved topology
+
+`CampaignWorld.topology_revision` identifies the physical graph independently
+of `layout_revision` (presentation) and the rules `content_version`. Saves that
+predate this field default to topology revision 1. The unchanged
+`world_layout.json` remains its durable authored source, including supported
+layout revisions 1-4. Validation rejects unknown topology revisions and mixed
+geometry; it never replaces a saved graph with current generation content.
+Saved route endpoints, travel costs, road work, movement orders and encounter
+references retain their original identities.
+
 ## City regions
 
 The country map is the main view. A functioning City or Major City unlocks a

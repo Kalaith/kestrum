@@ -464,6 +464,7 @@ impl StrategicCampaign {
         if scenario.kind == ScenarioKind::Production {
             let topology =
                 production_topology.ok_or("production campaign is missing its derived topology")?;
+            campaign.world.topology_revision = crate::data::CURRENT_PRODUCTION_TOPOLOGY_REVISION;
             campaign.world.layout_revision = topology.layout_revision;
             campaign.world.atlas_paths = topology.atlas_paths.clone();
         }

@@ -77,6 +77,8 @@ pub use tutorial::{bounds as tutorial_bounds, draw as draw_tutorial};
 pub use typography::prepare_dynamic_text;
 pub use world::{banner_visible, important_target};
 
+pub(crate) const MAP_CONTEXT_PAGE_SIZE: usize = 3;
+
 #[derive(Debug, Clone, Copy)]
 pub enum UiAction {
     Notification(NotificationAction),
@@ -108,6 +110,7 @@ pub enum UiAction {
     ConfirmSiege,
     SiegeBack,
     OpenSettlement(SiteId),
+    ContextSettlement(SiteId, SettlementMode),
     SelectLocalAction(LocalAction),
     SelectResettleDestination(SiteId),
     EditPlaceName(macroquad_toolkit::ui::text_entry::TextEntryAction),
@@ -197,6 +200,9 @@ pub enum UiAction {
     ConfirmTransfer,
     SplitArmy(FormationId),
     OpenArmies(SiteId),
+    ContextRecruit(SiteId),
+    ContextRecruitArmy(ArmyId),
+    ContextRecruitPage(i32),
     ArmyPage(i32),
     SelectFormation(FormationId),
     BeginRecruit(Option<ArmyId>),
@@ -307,6 +313,7 @@ impl UiAction {
         matches!(
             self,
             Self::OpenSettlement(_)
+                | Self::ContextSettlement(_, _)
                 | Self::SelectLocalAction(_)
                 | Self::SelectResettleDestination(_)
                 | Self::EditPlaceName(_)

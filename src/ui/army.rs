@@ -72,6 +72,7 @@ pub enum ArmyMode {
 pub struct ArmyView {
     pub site: Option<SiteId>,
     pub page: usize,
+    pub recruit_page: usize,
     pub selected: Option<FormationId>,
     pub mode: ArmyMode,
     pub options: Vec<RecruitOption>,
@@ -99,6 +100,7 @@ impl Default for ArmyView {
         Self {
             site: None,
             page: 0,
+            recruit_page: 0,
             selected: None,
             mode: ArmyMode::Roster,
             options: Vec::new(),

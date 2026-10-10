@@ -4,6 +4,9 @@ use super::{Context, SaveMode};
 use kestrum::state::Overlay;
 
 pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
+    if ctx.state.overlay == Overlay::None {
+        super::selection::prepare_text(ctx);
+    }
     if ctx.notifications.is_open
         && ctx.state.screen == kestrum::state::Screen::Campaign
         && ctx.state.overlay == Overlay::None
@@ -39,6 +42,8 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     };
     let mut samples = Vec::with_capacity(16);
     let mut titles = Vec::new();
+    let recruit_site_reason = ctx.text("recruit_site_required");
+    samples.push((18, recruit_site_reason.as_str()));
     let tutorial = ctx
         .state
         .campaign
@@ -86,6 +91,8 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     for size in [18, 20] {
         samples.push((size, ctx.movement.status.as_str()));
     }
+    samples.push((19, ctx.settlement.status.as_str()));
+    samples.push((18, ctx.army.status.as_str()));
     overlay_samples(ctx, &mut samples);
     macroquad_toolkit::ui::prepare_font_text(font, &samples);
     if let Some(font) = ctx.font() {

@@ -1,6 +1,7 @@
 //! Bounded previews refresh only on state or navigation changes.
 
 use super::*;
+use kestrum::navigation::{MapScope, MapSelection};
 use kestrum::state::{
     construction::{ConstructionOrder, Focus},
     StrategicCampaign,
@@ -8,7 +9,33 @@ use kestrum::state::{
 
 impl Game {
     pub(in crate::game) fn refresh_settlement(&mut self) {
-        if self.state.overlay != Overlay::Settlement {
+        let context_site = self.settlement.site.filter(|site| {
+            self.state.overlay == Overlay::None
+                && matches!(
+                    self.settlement.mode,
+                    SettlementMode::Build
+                        | SettlementMode::Roads
+                        | SettlementMode::Review
+                        | SettlementMode::Builders
+                        | SettlementMode::Focus
+                )
+                && self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .and_then(Campaign::strategic)
+                    .and_then(|campaign| campaign.world.site(*site))
+                    .is_some_and(|site_data| match self.navigation.scope() {
+                        MapScope::World => {
+                            self.navigation.selection()
+                                == Some(MapSelection::Marker(site_data.marker))
+                        }
+                        MapScope::Region(_) => {
+                            self.navigation.selection() == Some(MapSelection::Site(*site))
+                        }
+                    })
+        });
+        if self.state.overlay != Overlay::Settlement && context_site.is_none() {
             return;
         }
         let Some(site) = self.settlement.site else {
@@ -22,7 +49,14 @@ impl Game {
             .site(site)
             .is_some_and(|s| s.controller == Some(campaign.player))
         {
-            self.state.overlay = Overlay::None;
+            if self.state.overlay == Overlay::Settlement {
+                self.state.overlay = Overlay::None;
+            } else {
+                self.settlement.mode = SettlementMode::Overview;
+                self.settlement.options.clear();
+                self.settlement.builders.clear();
+                self.settlement.focuses.clear();
+            }
             return;
         }
         let targets = std::iter::once(ConstructionTarget::Site(site)).chain(
@@ -177,10 +211,19 @@ impl Game {
                 .unwrap_or(0),
             _ => 1,
         };
+        let page_size = if self.state.overlay == Overlay::None
+            && matches!(
+                self.settlement.mode,
+                SettlementMode::Build | SettlementMode::Roads | SettlementMode::Builders
+            ) {
+            ui::MAP_CONTEXT_PAGE_SIZE
+        } else {
+            ui::SETTLEMENT_PAGE_SIZE
+        };
         self.settlement.page = self
             .settlement
             .page
-            .min(count.div_ceil(ui::SETTLEMENT_PAGE_SIZE).saturating_sub(1));
+            .min(count.div_ceil(page_size).saturating_sub(1));
     }
 }
 

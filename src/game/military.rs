@@ -4,6 +4,7 @@ mod households;
 use super::*;
 use kestrum::{
     data::world::SiteId,
+    navigation::{MapScope, MapSelection},
     state::military::{ArmyId, FormationId},
 };
 
@@ -66,7 +67,26 @@ impl Game {
     }
 
     pub(super) fn refresh_army(&mut self) {
-        if self.state.overlay != Overlay::Armies {
+        let context_site = self.army.site.filter(|site| {
+            self.state.overlay == Overlay::None
+                && matches!(self.army.mode, ui::ArmyMode::Recruit { .. })
+                && self
+                    .state
+                    .campaign
+                    .as_ref()
+                    .and_then(Campaign::strategic)
+                    .and_then(|campaign| campaign.world.site(*site))
+                    .is_some_and(|site_data| match self.navigation.scope() {
+                        MapScope::World => {
+                            self.navigation.selection()
+                                == Some(MapSelection::Marker(site_data.marker))
+                        }
+                        MapScope::Region(_) => {
+                            self.navigation.selection() == Some(MapSelection::Site(*site))
+                        }
+                    })
+        });
+        if self.state.overlay != Overlay::Armies && context_site.is_none() {
             return;
         }
         let armies = self.local_armies();
@@ -142,8 +162,78 @@ impl Game {
 
     pub(super) fn begin_recruit(&mut self, army: Option<ArmyId>) {
         self.army.mode = ui::ArmyMode::Recruit { army, kind: None };
+        self.army.recruit_page = 0;
         self.army.status.clear();
         self.refresh_army();
+    }
+
+    pub(super) fn begin_context_recruit(&mut self, site: SiteId, army: Option<ArmyId>) {
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        if campaign.observer_mode
+            || (army.is_none()
+                && !campaign
+                    .world
+                    .site(site)
+                    .is_some_and(|site| site.controller == Some(campaign.player)))
+            || army.is_some_and(|id| {
+                campaign
+                    .armies
+                    .get(&id)
+                    .is_none_or(|army| army.faction != campaign.player || army.site != site)
+            })
+        {
+            return;
+        }
+        if self.army.site != Some(site) {
+            self.army = ui::ArmyView {
+                site: Some(site),
+                ..Default::default()
+            };
+        }
+        let selection = match self.navigation.scope() {
+            MapScope::World => campaign
+                .world
+                .site(site)
+                .map(|site| MapSelection::Marker(site.marker)),
+            MapScope::Region(_) => Some(MapSelection::Site(site)),
+        };
+        let Some(selection) = selection else {
+            return;
+        };
+        if let Err(error) = self.navigation.select(&campaign.world, selection) {
+            self.error = Some(error);
+            return;
+        }
+        self.movement = ui::MoveView::default();
+        self.state.overlay = Overlay::None;
+        self.settlement.mode = ui::SettlementMode::Overview;
+        self.settlement.choice = None;
+        self.settlement.order = None;
+        self.settlement.builder = None;
+        self.settlement.status.clear();
+        self.army.site = Some(site);
+        self.army.page = 0;
+        self.army.recruit_page = 0;
+        self.army.mode = ui::ArmyMode::Recruit { army, kind: None };
+        self.army.status.clear();
+        self.refresh_army();
+    }
+
+    pub(super) fn begin_context_recruit_in_army(&mut self, id: ArmyId) {
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        let Some(site) = campaign
+            .armies
+            .get(&id)
+            .filter(|army| army.faction == campaign.player)
+            .map(|army| army.site)
+        else {
+            return;
+        };
+        self.begin_context_recruit(site, Some(id));
     }
 
     pub(super) fn confirm_recruit(&mut self) {
@@ -162,7 +252,7 @@ impl Game {
             .command(&self.data, Command::Recruit { site, army, kind })
         {
             Ok(outcome) => {
-                self.army.mode = ui::ArmyMode::Roster;
+                let map_context = self.state.overlay == Overlay::None;
                 if let Some(recruited) = outcome.recruited {
                     self.army.page = self
                         .local_armies()
@@ -170,6 +260,16 @@ impl Game {
                         .position(|id| *id == recruited.army)
                         .unwrap_or(0);
                     self.army.selected = Some(recruited.formation);
+                    self.army.mode = if map_context {
+                        ui::ArmyMode::Recruit {
+                            army: Some(recruited.army),
+                            kind: None,
+                        }
+                    } else {
+                        ui::ArmyMode::Roster
+                    };
+                } else {
+                    self.army.mode = ui::ArmyMode::Roster;
                 }
                 self.army.status = self.data.game_text.text("recruit_success").into();
                 self.refresh_army();

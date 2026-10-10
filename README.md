@@ -218,6 +218,14 @@ camera, and Recenter focuses a selected army or home. Map Key explains scale
 and symbols. Tutorial prompts share the quiet top strip and disappear when
 completed or dismissed.
 
+An owned-place inspector keeps Recruit, Build and Focus beside the selected
+place. Recruitment shows costs and blockers, lets the player choose a local
+army or a new army, and can be opened for the selected army from its movement
+card. Construction choices and builder review keep costs, progress steps and
+eligibility visible; Back returns to the same map selection. Successful place
+orders leave their status in the inspector. Foreign places keep the Kingdom
+entry for detailed war and peace review.
+
 ### Management and setup sheets
 
 The current decision is the selected army, place, record, save or setup choice.

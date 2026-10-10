@@ -248,6 +248,18 @@ impl Game {
             self.error = Some(error);
             return;
         }
+        if self.state.overlay == Overlay::None {
+            self.settlement.mode = ui::SettlementMode::Overview;
+            self.settlement.choice = None;
+            self.settlement.order = None;
+            self.settlement.builder = None;
+            self.settlement.status.clear();
+            if matches!(self.army.mode, ui::ArmyMode::Recruit { .. }) {
+                self.army.mode = ui::ArmyMode::Roster;
+                self.army.recruit_page = 0;
+                self.army.status.clear();
+            }
+        }
         self.notifications.clear_card();
         if !self.is_observer() && self.movement.stage == ui::MoveStage::Map {
             match selection {

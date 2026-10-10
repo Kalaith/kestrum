@@ -129,6 +129,9 @@ impl Game {
             | UiAction::ConfirmTransfer
             | UiAction::SplitArmy(_)
             | UiAction::OpenArmies(_)
+            | UiAction::ContextRecruit(_)
+            | UiAction::ContextRecruitArmy(_)
+            | UiAction::ContextRecruitPage(_)
             | UiAction::ArmyPage(_)
             | UiAction::SelectFormation(_)
             | UiAction::BeginRecruit(_)
@@ -172,7 +175,26 @@ impl Game {
             | UiAction::RetrySave
             | UiAction::ContinueUnsaved
             | UiAction::EditSaveName(_) => self.apply_save_action(action),
-            UiAction::EndTurn => self.apply_campaign_command(Command::EndTurn),
+            UiAction::EndTurn => {
+                self.apply_campaign_command(Command::EndTurn);
+                if self.state.overlay == Overlay::None
+                    && self
+                        .state
+                        .campaign
+                        .as_ref()
+                        .and_then(Campaign::strategic)
+                        .is_some_and(|campaign| {
+                            campaign.phase != kestrum::state::CampaignPhase::PlayerTurn
+                        })
+                {
+                    self.army.mode = ui::ArmyMode::Roster;
+                    self.army.status.clear();
+                    self.settlement.mode = ui::SettlementMode::Overview;
+                    self.settlement.choice = None;
+                    self.settlement.builder = None;
+                    self.settlement.status.clear();
+                }
+            }
             UiAction::PauseNpcs(paused) => {
                 self.apply_campaign_command(Command::SetNpcPaused(paused))
             }
@@ -193,6 +215,21 @@ impl Game {
 
     fn apply_army_action(&mut self, action: UiAction) {
         match action {
+            UiAction::ContextRecruit(site) => self.begin_context_recruit(site, None),
+            UiAction::ContextRecruitArmy(army) => self.begin_context_recruit_in_army(army),
+            UiAction::ContextRecruitPage(delta) => {
+                let pages = self
+                    .army
+                    .options
+                    .len()
+                    .div_ceil(ui::MAP_CONTEXT_PAGE_SIZE)
+                    .max(1);
+                self.army.recruit_page = self
+                    .army
+                    .recruit_page
+                    .saturating_add_signed(delta as isize)
+                    .min(pages - 1);
+            }
             UiAction::ArmyOrders => self.army.mode = ui::ArmyMode::Orders,
             UiAction::ArmyPeople => {
                 self.army.mode = ui::ArmyMode::People;
@@ -454,7 +491,16 @@ impl Game {
                 self.navigation.show_world(&mut self.view);
                 self.refresh_move_options();
             }
-            UiAction::CloseSelection => self.navigation.clear_selection(),
+            UiAction::CloseSelection => {
+                self.navigation.clear_selection();
+                self.settlement.mode = ui::SettlementMode::Overview;
+                self.settlement.choice = None;
+                self.settlement.order = None;
+                self.settlement.builder = None;
+                self.settlement.status.clear();
+                self.army.mode = ui::ArmyMode::Roster;
+                self.army.status.clear();
+            }
             _ => unreachable!("navigation action dispatch"),
         }
     }

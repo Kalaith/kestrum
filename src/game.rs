@@ -10,6 +10,7 @@ mod battlefield_capture;
 mod campaign;
 mod city_capture;
 mod composition;
+mod context_capture;
 mod development_capture;
 mod founder_capture;
 mod history;
@@ -220,6 +221,9 @@ impl Game {
             return;
         }
         if self.capture_spatial(scene) {
+            return;
+        }
+        if self.capture_context_scene(scene) {
             return;
         }
         if self.capture_overview(scene) {

@@ -3,7 +3,7 @@
 use super::*;
 use kestrum::{
     navigation::{MapNavigation, MapScope, MapView, WIDTH},
-    state::{world::CampaignWorld, Overlay},
+    state::{military::ArmyId, world::CampaignWorld, Overlay},
 };
 
 pub fn panel_bounds(
@@ -29,11 +29,14 @@ pub fn panel_bounds(
     } else {
         390.0
     };
+    let has_recruit_action = movement.armies.len() == 1 && movement.remaining.len() <= 1;
     Rect::new(
         if left { 24.0 } else { WIDTH - 382.0 },
         180.0,
         358.0,
-        height + if region.is_some() { 56.0 } else { 0.0 },
+        height
+            + if region.is_some() { 56.0 } else { 0.0 }
+            + if has_recruit_action { 56.0 } else { 0.0 },
     )
 }
 
@@ -320,7 +323,10 @@ fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
     let region = ctx
         .campaign_view
         .and_then(|campaign| order_region(ctx.movement, ctx.navigation, &campaign.world));
-    let secondary_y = rect.bottom() - if region.is_some() { 146.0 } else { 90.0 };
+    let has_recruit_action = ctx.movement.armies.len() == 1 && ctx.movement.remaining.len() <= 1;
+    let secondary_y = rect.bottom()
+        - if region.is_some() { 146.0 } else { 90.0 }
+        - if has_recruit_action { 8.0 } else { 0.0 };
     if button(
         ctx,
         Rect::new(x, secondary_y, 158.0, 48.0),
@@ -340,30 +346,60 @@ fn draw_order_controls(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
         ) {
             return Some(UiAction::EditMoveGroup);
         }
-    } else if let Some(preview) = &ctx.movement.preview {
-        lines(
-            ctx,
-            &ctx.text(if preview.supplied_after {
-                "map_supply_connected"
-            } else {
-                "map_supply_cutoff"
-            }),
-            vec2(x + 168.0, rect.y + 408.0),
-            158.0,
-            2,
-            MUTED,
-        );
+    } else if let Some(army) = ctx.movement.armies.first().copied() {
+        if let Some(action) = recruit_into_selected_army(ctx, x, secondary_y, army) {
+            return Some(action);
+        }
     }
     if let Some(region) = region {
         if button(
             ctx,
-            Rect::new(x, rect.bottom() - 90.0, rect.w - 32.0, 48.0),
+            Rect::new(
+                x,
+                rect.bottom() - if has_recruit_action { 48.0 } else { 90.0 },
+                rect.w - 32.0,
+                48.0,
+            ),
             &ctx.text("enter_region"),
             active,
             ctx.movement.preview.is_none() && ctx.movement.planned_destination.is_none(),
         ) {
             return Some(UiAction::EnterRegion(region));
         }
+    }
+    None
+}
+
+fn recruit_into_selected_army(ctx: &Context<'_>, x: f32, y: f32, army: ArmyId) -> Option<UiAction> {
+    let campaign = ctx.campaign_view?;
+    let can_recruit = ctx.movement.site.is_some_and(|site| {
+        campaign
+            .world
+            .site(site)
+            .is_some_and(|site| site.controller == Some(campaign.player))
+    });
+    if button(
+        ctx,
+        Rect::new(x + 168.0, y, 158.0, 48.0),
+        &ctx.text("recruit"),
+        ctx.state.overlay == Overlay::None && campaign.player_turn && can_recruit,
+        false,
+    ) {
+        return Some(UiAction::ContextRecruitArmy(army));
+    }
+    let detail = if !can_recruit {
+        Some(ctx.text("recruit_site_required"))
+    } else {
+        ctx.movement.preview.as_ref().map(|preview| {
+            ctx.text(if preview.supplied_after {
+                "map_supply_connected"
+            } else {
+                "map_supply_cutoff"
+            })
+        })
+    };
+    if let Some(detail) = detail {
+        lines(ctx, &detail, vec2(x + 168.0, y + 52.0), 158.0, 2, MUTED);
     }
     None
 }

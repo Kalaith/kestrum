@@ -1,5 +1,11 @@
 //! Dismissible information about a selected public place.
 
+mod actions;
+
+pub(super) fn prepare_text(ctx: &Context<'_>) {
+    actions::prepare_text(ctx);
+}
+
 use super::{components::*, world::is_anchor, Context, UiAction};
 use kestrum::{
     data::world::{
@@ -51,7 +57,15 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
             (site.name.as_str(), world.marker(site.marker)?, Some(site))
         }
     };
+    if actions::active(ctx) {
+        return actions::draw(ctx, rect, name);
+    }
     let mut sections = Vec::new();
+    if site.is_some_and(|site| ctx.settlement.site == Some(site.id))
+        && !ctx.settlement.status.is_empty()
+    {
+        sections.push(ctx.settlement.status.clone());
+    }
     if campaign.observer_mode {
         observer_army_details(ctx, marker.id, site.map(|site| site.id), &mut sections);
     }
@@ -339,7 +353,40 @@ fn owned_controls(
     } else {
         ("settlement_manage", UiAction::OpenSettlement(site))
     };
-    let mut actions = vec![
+    let enabled = ctx.state.overlay == Overlay::None;
+    let player_turn = ctx
+        .campaign_view
+        .is_some_and(|campaign| campaign.player_turn && !campaign.observer_mode);
+    for (index, (key, action)) in [
+        ("recruit", UiAction::ContextRecruit(site)),
+        (
+            "settlement_build",
+            UiAction::ContextSettlement(site, super::SettlementMode::Build),
+        ),
+        (
+            "settlement_focus",
+            UiAction::ContextSettlement(site, super::SettlementMode::Focus),
+        ),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        if button(
+            ctx,
+            Rect::new(
+                rect.x + 16.0 + index as f32 * 111.0,
+                rect.bottom() - 174.0,
+                104.0,
+                48.0,
+            ),
+            &ctx.text(key),
+            enabled && player_turn,
+            true,
+        ) {
+            return Some(action);
+        }
+    }
+    let actions = vec![
         primary,
         ("armies", UiAction::OpenArmies(site)),
         (
@@ -347,34 +394,50 @@ fn owned_controls(
             UiAction::OpenHistory(kestrum::state::history::HistorySubject::Site(site)),
         ),
     ];
-    if can_enter_region {
-        actions.push((
-            "enter_region",
-            UiAction::EnterRegion(ctx.campaign_view?.world.site(site)?.marker),
-        ));
-    }
-    actions.push(("close", UiAction::CloseSelection));
     for (index, (key, action)) in actions.into_iter().enumerate() {
-        let bounds = if can_enter_region && index == 4 {
-            Rect::new(rect.x + 16.0, rect.bottom() - 62.0, rect.w - 32.0, 48.0)
-        } else {
-            Rect::new(
-                rect.x + 16.0 + (index % 2) as f32 * 170.0,
-                rect.bottom() - if can_enter_region { 174.0 } else { 118.0 }
-                    + (index / 2) as f32 * 56.0,
-                154.0,
-                48.0,
-            )
-        };
         if button(
             ctx,
-            bounds,
+            Rect::new(
+                rect.x + 16.0 + index as f32 * 111.0,
+                rect.bottom() - 118.0,
+                104.0,
+                48.0,
+            ),
             &ctx.text(key),
-            ctx.state.overlay == Overlay::None,
+            enabled,
             index == 0,
         ) {
             return Some(action);
         }
+    }
+    if can_enter_region {
+        let marker = ctx.campaign_view?.world.site(site)?.marker;
+        if button(
+            ctx,
+            Rect::new(rect.x + 16.0, rect.bottom() - 62.0, 154.0, 48.0),
+            &ctx.text("enter_region"),
+            enabled,
+            false,
+        ) {
+            return Some(UiAction::EnterRegion(marker));
+        }
+        if button(
+            ctx,
+            Rect::new(rect.x + 188.0, rect.bottom() - 62.0, 154.0, 48.0),
+            &ctx.text("close"),
+            enabled,
+            false,
+        ) {
+            return Some(UiAction::CloseSelection);
+        }
+    } else if button(
+        ctx,
+        Rect::new(rect.x + 16.0, rect.bottom() - 62.0, rect.w - 32.0, 48.0),
+        &ctx.text("close"),
+        enabled,
+        false,
+    ) {
+        return Some(UiAction::CloseSelection);
     }
     None
 }
@@ -402,8 +465,12 @@ fn panel(ctx: &Context<'_>, rect: Rect, name: &str, sections: Vec<String>) {
         BRASS,
     );
     y += 14.0;
+    let bottom = rect.bottom() - 190.0;
     for section in sections {
         for line in wrap_text_ex(&section, rect.w - 32.0, ctx.body_font(), 18.0) {
+            if y + 23.0 > bottom {
+                return;
+            }
             body(ctx, &line, vec2(rect.x + 16.0, y), 18.0, CREAM);
             y += 23.0;
         }

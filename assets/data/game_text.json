@@ -727,6 +727,7 @@
     "troops": "troops",
     "upkeep": "Upkeep",
     "recruit_ready": "Requirements met",
+    "recruit_site_required": "Requires a site you control",
     "confirm_recruit": "Confirm Recruit",
     "disband_warning": "Disband this formation? Its troops leave service. Recruitment costs are not refunded.",
     "disband_people": "Named people stay at this site, joining another friendly formation when available.",

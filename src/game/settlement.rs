@@ -6,6 +6,7 @@ mod refresh;
 use super::*;
 use kestrum::{
     data::world::SiteId,
+    navigation::{MapScope, MapSelection},
     state::{
         construction::{ConstructionKind, ConstructionTarget},
         military::ArmyId,
@@ -47,6 +48,10 @@ impl Game {
         }
         self.settlement.status.clear();
         match action {
+            UiAction::ContextSettlement(site, mode) => {
+                self.enter_context_settlement(site, mode);
+                return;
+            }
             UiAction::OpenSettlement(site) => {
                 self.open_settlement(site);
                 return;
@@ -94,6 +99,58 @@ impl Game {
             }
             _ => unreachable!("construction action dispatch"),
         }
+        self.refresh_settlement();
+    }
+
+    fn enter_context_settlement(&mut self, site: SiteId, mode: SettlementMode) {
+        if !matches!(
+            mode,
+            SettlementMode::Build | SettlementMode::Roads | SettlementMode::Focus
+        ) {
+            return;
+        }
+        let Some(campaign) = self.state.campaign.as_ref().and_then(Campaign::strategic) else {
+            return;
+        };
+        if campaign.observer_mode
+            || !campaign
+                .world
+                .site(site)
+                .is_some_and(|site| site.controller == Some(campaign.player))
+        {
+            return;
+        }
+        let selection = match self.navigation.scope() {
+            MapScope::World => campaign
+                .world
+                .site(site)
+                .map(|site| MapSelection::Marker(site.marker)),
+            MapScope::Region(_) => Some(MapSelection::Site(site)),
+        };
+        let Some(selection) = selection else {
+            return;
+        };
+        if let Err(error) = self.navigation.select(&campaign.world, selection) {
+            self.error = Some(error);
+            return;
+        }
+        self.movement = ui::MoveView::default();
+        self.state.overlay = Overlay::None;
+        self.army.mode = ui::ArmyMode::Roster;
+        self.army.recruit_page = 0;
+        self.army.status.clear();
+        if self.settlement.site != Some(site) {
+            self.settlement = ui::SettlementView {
+                site: Some(site),
+                ..Default::default()
+            };
+        }
+        self.settlement.mode = mode;
+        self.settlement.page = 0;
+        self.settlement.choice = None;
+        self.settlement.order = None;
+        self.settlement.builder = None;
+        self.settlement.status.clear();
         self.refresh_settlement();
     }
 
@@ -156,6 +213,8 @@ impl Game {
             | SettlementMode::Build
             | SettlementMode::Roads
             | SettlementMode::Focus => {
+                self.settlement.mode = SettlementMode::Overview;
+                self.settlement.page = 0;
                 self.state.overlay = Overlay::None;
                 return;
             }

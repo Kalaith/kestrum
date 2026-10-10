@@ -136,6 +136,7 @@ impl Game {
             }
             NotificationAction::Open(id) => self.open_notification(id, false),
             NotificationAction::OpenGroup(id) => self.open_notification(id, true),
+            NotificationAction::OpenMapGroup(id) => self.open_map_notification_group(id),
             NotificationAction::SelectGroupItem(id) => {
                 if self.notifications.select_group_item(id) {
                     self.mark_notification_read(id);
@@ -236,6 +237,52 @@ impl Game {
         self.mutate_notification_inbox(|inbox| {
             inbox.mark_read(id);
         });
+    }
+
+    fn open_map_notification_group(&mut self, id: NotificationId) {
+        if !self.notification_map_visible() {
+            return;
+        }
+        self.refresh_notification_projection();
+        let Some(campaign) = self.projection.as_ref() else {
+            return;
+        };
+        let ids = ui::map_receipt_group(
+            &ui::MapStatusInput {
+                campaign,
+                projection: self.notification_projection.as_ref(),
+                notifications: &self.notifications,
+                navigation: &self.navigation,
+                view: &self.view,
+                movement: &self.movement,
+                overview: self.overview.as_ref(),
+                overview_ui: &self.overview_ui,
+                state: &self.state,
+            },
+            id,
+        );
+        if ids.is_empty() {
+            return;
+        }
+        let Some(projection) = self.notification_projection.as_ref() else {
+            return;
+        };
+        let snapshots = ids
+            .iter()
+            .filter_map(|id| {
+                projection
+                    .recent
+                    .iter()
+                    .find(|item| item.id == *id)
+                    .cloned()
+            })
+            .collect();
+        self.open_notification(id, false);
+        if self.notifications.selected_id == Some(id) {
+            self.notifications.group_page = ids.iter().position(|item| *item == id).unwrap_or(0);
+            self.notifications.group_ids = ids;
+            self.notifications.group_snapshots = snapshots;
+        }
     }
 
     fn mutate_notification_inbox(
@@ -587,30 +634,46 @@ fn notification_site(item: &RenderedNotification, view: &VisibleCampaign) -> Opt
             .into_iter()
             .find(|site| view.world.site(*site).is_some()),
         NotificationSubjectSnapshot::Construction(work) => {
-            let order = view
+            if work.owner != view.player {
+                return None;
+            }
+            let target = view
                 .construction
                 .iter()
-                .find(|order| order.id == work.id && order.owner == view.player)?;
-            match order.target {
-                ConstructionTarget::Site(site) => view.world.site(site).map(|site| site.id),
-                ConstructionTarget::Route(route) => route_site(&view.world, route),
+                .find(|order| order.id == work.id && order.owner == view.player)
+                .map_or(work.target, |order| order.target);
+            // Completed work may leave the live order register before its receipt.
+            // The saved target still anchors feedback, within current discovery.
+            match target {
+                ConstructionTarget::Site(site) => view
+                    .world
+                    .site(site)
+                    .filter(|site| view.known_sites.contains(&site.id))
+                    .map(|site| site.id),
+                ConstructionTarget::Route(route) => route_site(view, route),
             }
         }
-        NotificationSubjectSnapshot::Battle(battle) => view
-            .battles
-            .iter()
-            .find(|current| current.id == battle.id)
-            .and_then(|current| view.world.site(current.site).map(|site| site.id)),
+        NotificationSubjectSnapshot::Battle(battle) => {
+            let site = view
+                .battles
+                .iter()
+                .find(|current| current.id == battle.id)
+                .map_or(battle.site.id, |current| current.site);
+            view.world
+                .site(site)
+                .filter(|site| view.known_sites.contains(&site.id))
+                .map(|site| site.id)
+        }
         NotificationSubjectSnapshot::History { .. }
         | NotificationSubjectSnapshot::Faction { .. } => None,
     }
 }
 
-fn route_site(world: &kestrum::state::world::CampaignWorld, id: RouteId) -> Option<SiteId> {
-    let route = world.routes.iter().find(|route| route.id == id)?;
+fn route_site(view: &VisibleCampaign, id: RouteId) -> Option<SiteId> {
+    let route = view.world.routes.iter().find(|route| route.id == id)?;
     [route.from, route.to]
         .into_iter()
-        .find(|site| world.site(*site).is_some())
+        .find(|site| view.known_sites.contains(site) && view.world.site(*site).is_some())
 }
 
 fn live_person_site(view: &VisibleCampaign, id: PersonId) -> Option<SiteId> {

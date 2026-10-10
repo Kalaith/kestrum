@@ -23,8 +23,8 @@ result still describes the recorded run.
 
 ## Latest relevant records
 
-[Map orders and consequences](map-orders.md) records M02's contextual order
-slice and its native action and visual evidence.
+[Map orders and consequences](map-orders.md) records M02's contextual orders,
+persistent routes and local outcomes, with scoped action and visual evidence.
 
 [Opening guide](opening-guide.md) records the guide's new strategic lessons (threat, second army, rival aggression) and moves careers and households after the first End Turn.
 

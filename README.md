@@ -12,8 +12,9 @@ automated native actions, background browser gameplay, publishing and reload
 are recorded. The later [opening balance](docs/verification/opening-balance.md)
 record supersedes the inherited production-victory failure.
 It builds on M01's [kingdom overview](docs/verification/kingdom-overview.md).
-M02's map orders and seasonal consequences follow, then regional geography and
-the opening guide in M03/M04.
+M02's contextual orders, persistent routes and local seasonal consequences are
+implemented; [its verification record](docs/verification/map-orders.md) owns
+the acceptance scope. Regional geography and the opening guide follow in M03/M04.
 The [notification feature plan](docs/notification-plan.md) is implemented:
 durable receipts, conditional forecasts, the compact event rail/card and local
 delivery settings. The [hero portrait generator](docs/hero-portrait-generator-plan.md)
@@ -133,8 +134,8 @@ conditions and no directly neighboring City or Major City. A city then offers
 Enter Region, showing the city and its connected countryside. Fields, woods and
 buildings reflect observed development; country and local views share the same
 places, routes and resources. Menu contains Kingdom, Records,
-save/load, settings and help. These are the **current** paths; the map plan brings
-common decisions and context closer to the world.
+save/load, settings and help. Recruit, Build and Focus also open directly from
+an owned place's compact map inspector.
 
 The introduction starts by managing the capital and paying for city development,
 then enters that capital's region and returns to the Country Map. Movement
@@ -146,12 +147,12 @@ second investment. Further contextual teaching remains M04 of the map plan.
 
 ## Current map limitations
 
-M01A provides spatial navigation; common management actions and full seasonal
-consequences still need M02's contextual inspector and outcome work. Saved routes
-retain their existing selection-based detail; an unselected force mark reports a
-queued route without displaying its full destination/path. The current
-city-region change replaces the eight pre-unlocked production regions with
-country nodes and local views earned through investment. The underlying
+M02 brings common orders and local outcomes onto M01A's spatial map. Collision
+avoidance can suppress a badge in crowded views; zoom in or use Attention and
+the event rail to inspect it. Detailed army composition, diplomacy and histories
+retain their dedicated views. The current city-region change replaces the eight
+pre-unlocked production regions with country nodes and local views earned
+through investment. The underlying
 authored route clusters remain; broader route variety remains M03 work.
 
 These are known design problems addressed by the active plan. The map's full
@@ -194,8 +195,8 @@ portraits framed by faction color, settlement symbols and importance-based
 labels explain the known world. Camera controls, Menu and End Turn remain
 reachable; the selected-place inspector and movement card retain direct
 destination-tap movement. M01A establishes useful working and overview scales
-with smaller unselected symbols and fewer full cards. M02 brings common actions
-and seasonal consequences into that context.
+with smaller unselected symbols and fewer full cards. M02 keeps common actions,
+remaining routes, work and seasonal consequences in that context.
 Known political borders show each kingdom's color on its own side of a dark
 outline. They retain the existing fog rules and world atlas shoreline mask.
 
@@ -225,6 +226,14 @@ card. Construction choices and builder review keep costs, progress steps and
 eligibility visible; Back returns to the same map selection. Successful place
 orders leave their status in the inspector. Foreign places keep the Kingdom
 entry for detailed war and peace review.
+
+Saved orders draw their remaining directed route after selection is dismissed;
+the selected force's route is emphasized. Overview retains aggregate force marks
+and suppresses unselected route lines. Work badges show progress and pause
+reasons, and supply cutoffs sit beside affected known places. Seasonal badges
+group eligible outcomes at the same place or route; tap the whole badge to open
+the existing event card and step through the group. Active warnings take priority.
+Delivery settings, discovery and acknowledgement still govern which receipts appear.
 
 ### Management and setup sheets
 

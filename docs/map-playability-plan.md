@@ -1,7 +1,7 @@
 # Map playability implementation plan
 
-Updated 2026-10-04. **Status: M01, M01A and city-created regions are implemented
-under their recorded scope and verification; M02–M05 remain unstarted.**
+Updated 2026-10-10. **Status: M01, M01A, M02 and city-created regions are
+implemented under their recorded scope and verification; M03–M05 remain next.**
 
 The 2026-10-03 request supersedes the eight fixed production regions assumed
 below. New campaigns show all physical nodes on the country map, with no region
@@ -37,7 +37,9 @@ The user requested this plan and the documentation reconciliation. M01's
 implementation decisions are recorded below and in the owning chapters;
 [verification](verification/kingdom-overview.md) records its scoped acceptance
 and inherited limits. The subsequent request for a more spacious world adds
-M01A before M02. M01A implementation and its scoped validation are recorded in [spatial scale verification](verification/spatial-scale.md). M02–M05 remain unstarted.
+M01A before M02. M01A implementation and its scoped validation are recorded in
+[spatial scale verification](verification/spatial-scale.md); M02's are recorded
+in [map orders and consequences](verification/map-orders.md). M03–M05 remain next.
 Ordinary design tuning is resolved during implementation and recorded in the
 owning chapter.
 
@@ -216,15 +218,14 @@ and tap equivalents. Color is always paired with shape, symbol or text.
 ## Delivery sequence
 
 Each milestone is independently useful. Finish its validation and commit before
-starting the next major change. M01 and M01A are complete under their recorded
-scope. M02 is the next unfinished milestone, adding map actions and route detail
-to the implemented camera and information hierarchy.
+starting the next major change. M01, M01A and M02 are implemented under their
+recorded scope. M03 is next, extending the authored regional geography.
 
 | Milestone | Result | Dependency | Status |
 | --- | --- | --- | --- |
 | M01 | Readable kingdom overview and truthful map information | Reconciled baseline `3073c18` | Complete; [evidence and limits](verification/kingdom-overview.md) |
 | M01A | Spacious navigable geography, useful camera defaults and detail appropriate to scale | M01 | Complete; [evidence and limits](verification/spatial-scale.md) |
-| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01A | Not started |
+| M02 | Orders, common actions and seasonal consequences stay connected to the map | M01A | Implemented; [evidence and limits](verification/map-orders.md) |
 | M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | Not started |
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
 | M05 | Integrated early and developed campaign acceptance | M01, M01A, M02–M04 | Not started |
@@ -232,7 +233,7 @@ to the implemented camera and information hierarchy.
 The [hero portrait generator](hero-portrait-generator-plan.md#remaining-delivery)
 adds G01-G04 as a planned companion graphics workstream after M01A. It starts with
 stable saved appearance and People/Career portraits, then expands authored parts
-and eligible identity contexts. M02 remains next; portraits neither replace these
+and eligible identity contexts. Portraits neither replace these
 milestones nor become a new M05 prerequisite. Review portrait recognition in M05
 if that work has shipped. Detailed asset, compatibility and acceptance TODOs live
 only in the portrait plan.
@@ -431,6 +432,14 @@ that affects the supported 1920×1080 canvas; historical 720p failures remain
 recorded without creating a second resolution requirement.
 
 ### M02 Map orders and consequences
+
+**Implemented 2026-10-10:** compact contextual recruitment, construction and
+focus; persistent directed routes; local work progress, pause and supply badges;
+and location-grouped seasonal receipts using the existing event card. Existing
+foreign-place and blocked-border diplomatic entry points are retained. The
+[verification record](verification/map-orders.md) distinguishes checked behavior,
+visual evidence and remaining platform limits. The brief below retains the
+milestone's design and acceptance criteria.
 
 Keep the selected place or army visible beside a compact inspector. Bring common
 recruitment, construction, focus and diplomatic entry points into that context;

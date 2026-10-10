@@ -263,7 +263,29 @@ fn draw_pick_destination(ctx: &Context<'_>, rect: Rect) -> Option<UiAction> {
             .site(destination)
             .map(|site| site.name.as_str())
             .unwrap_or_default();
-        ctx.text("move_planned_destination").replace("{site}", name)
+        let steps = campaign
+            .movement_plans
+            .iter()
+            .find(|plan| {
+                plan.armies
+                    .iter()
+                    .any(|army| ctx.movement.armies.contains(army))
+            })
+            .map_or(0, |plan| plan.path.len().saturating_sub(1));
+        let planned = ctx
+            .text("move_planned_destination")
+            .replace("{site}", name)
+            .replace("{steps}", &steps.to_string());
+        if ctx
+            .movement
+            .armies
+            .iter()
+            .any(|id| !campaign.supplied_armies.contains(id))
+        {
+            format!("{}\n{planned}", ctx.text("map_army_supply_cutoff"))
+        } else {
+            planned
+        }
     } else if ctx.movement.status.is_empty() {
         let instruction = ctx.text(if remaining == 0 {
             "map_move_exhausted"

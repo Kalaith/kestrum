@@ -30,6 +30,7 @@ pub enum NotificationAction {
     SetTab(NotificationTab),
     Open(NotificationId),
     OpenGroup(NotificationId),
+    OpenMapGroup(NotificationId),
     SelectGroupItem(NotificationId),
     Page(i32),
     OpenRecords,

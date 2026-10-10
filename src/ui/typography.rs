@@ -72,6 +72,11 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
             titles.push((24, name));
             titles.push((28, name));
         }
+        if let Some(projection) = ctx.notification_projection {
+            for receipt in &projection.recent {
+                samples.push((16, receipt.title.as_str()));
+            }
+        }
         for name in view
             .armies
             .iter()
@@ -95,9 +100,49 @@ pub fn prepare_dynamic_text(ctx: &Context<'_>, feedback: Option<&str>) {
     samples.push((18, ctx.army.status.as_str()));
     overlay_samples(ctx, &mut samples);
     macroquad_toolkit::ui::prepare_font_text(font, &samples);
+    map_status_samples(ctx, font);
     if let Some(font) = ctx.font() {
         macroquad_toolkit::ui::prepare_font_text(font, &titles);
     }
+}
+
+fn map_status_samples(ctx: &Context<'_>, font: &macroquad::prelude::Font) {
+    let mut text = [
+        "map_work_progress",
+        "map_work_paused",
+        "map_place_supply_cutoff",
+        "construction_pause_builder_missing",
+        "construction_pause_builder_away",
+        "construction_pause_supply_lost",
+        "construction_pause_contested",
+        "construction_pause_combat",
+        "construction_pause_no_settlers",
+        "construction_pause_threat",
+        "construction_pause_ruined",
+        "map_category_people",
+        "map_category_places",
+        "map_category_security",
+        "map_category_orders",
+        "map_category_military",
+        "map_category_economy",
+        "map_category_remembrance",
+    ]
+    .into_iter()
+    .map(|key| ctx.text(key))
+    .collect::<Vec<_>>();
+    if let Some(projection) = ctx.notification_projection {
+        text.extend(
+            projection
+                .recent
+                .iter()
+                .map(|receipt| receipt.title.clone()),
+        );
+    }
+    let samples = text
+        .iter()
+        .map(|sample| (16, sample.as_str()))
+        .collect::<Vec<_>>();
+    macroquad_toolkit::ui::prepare_font_text(font, &samples);
 }
 
 fn overlay_samples<'a>(ctx: &'a Context<'_>, samples: &mut Vec<(u16, &'a str)>) {

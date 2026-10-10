@@ -7,7 +7,9 @@ decisions and visible consequences. M01's kingdom overview and M01A's spatial
 scale/navigation are complete under their recorded scope. M01A's
 [verification](verification/spatial-scale.md) records engineering checks, actual
 1920×1080 native/browser captures, automated native actions, browser gameplay,
-publishing and reload, with explicit inherited limits. M02 is next.
+publishing and reload, with explicit inherited limits. M02's contextual orders,
+persistent routes and local outcomes are implemented; its
+[verification record](verification/map-orders.md) records the acceptance scope.
 The [hero portrait plan](hero-portrait-generator-plan.md) adds a companion
 graphics workstream; the [agent queue](../todo.md) records its unfinished work
 and remaining event acceptance. It does not reorder M02-M05.

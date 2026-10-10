@@ -66,6 +66,7 @@ pub fn project(
         std::cmp::Reverse((priority_rank(receipt.priority), receipt.occurred_order))
     });
     let top_bar_unread_count = top_bar.iter().filter(|receipt| !receipt.is_read).count();
+    let map_receipt_ids = top_bar.iter().map(|receipt| receipt.id).collect();
     for receipt in top_bar {
         let rule = rules
             .kind(receipt.kind)
@@ -107,6 +108,7 @@ pub fn project(
         rail,
         rail_overflow_count,
         recent,
+        map_receipt_ids,
         unread_count,
         top_bar_unread_count,
         omitted_count: campaign.notifications.pruned_count,

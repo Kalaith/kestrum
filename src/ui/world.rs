@@ -16,10 +16,15 @@ mod armies;
 mod fog;
 mod labels;
 mod local_terrain;
+mod orders;
+mod receipts;
 mod routes;
+mod status;
 mod symbols;
 mod territory;
 pub use fog::{draw as draw_fog, exploration as map_exploration};
+pub use receipts::map_receipt_group;
+pub use status::{layout as map_status_layout, map_control_contains, MapStatusInput};
 
 pub(super) fn draw_local_terrain_background(ctx: &Context<'_>) -> bool {
     local_terrain::draw_background(ctx)
@@ -58,7 +63,10 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
         selection::bounds(ctx.navigation, world, ctx.view)
     };
     territory::draw(ctx, exploration);
-    routes::draw(ctx, exploration);
+    routes::draw_roads(ctx, exploration);
+    let status = status::layout_for_context(ctx);
+    orders::draw_saved_routes(ctx);
+    routes::draw_preview(ctx);
     for target in &targets {
         if panel.is_some_and(|panel| {
             panel.contains(target.center) && ctx.navigation.selection() != Some(target.selection)
@@ -92,6 +100,7 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
         );
     }
     armies::draw(ctx, panel);
+    status::draw(ctx, &status);
     let label_targets: Vec<_> = targets
         .into_iter()
         .filter(|target| {
@@ -101,7 +110,17 @@ pub fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
                     .any(|group| group.selections.contains(&target.selection))
         })
         .collect();
-    labels::draw(ctx, &label_targets, panel, exploration);
+    labels::draw(
+        ctx,
+        &label_targets,
+        panel,
+        exploration,
+        status.reserved_rects(),
+    );
+}
+
+pub fn map_status_action(ctx: &Context<'_>) -> Option<UiAction> {
+    status::action(ctx)
 }
 
 /// Capital, danger and selection stay visible inside a crowded place group.

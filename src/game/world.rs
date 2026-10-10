@@ -75,6 +75,22 @@ impl Game {
         {
             return true;
         }
+        if let Some(campaign) = self.projection.as_ref() {
+            let input = ui::MapStatusInput {
+                campaign,
+                projection: self.notification_projection.as_ref(),
+                notifications: &self.notifications,
+                navigation: &self.navigation,
+                view: &self.view,
+                movement: &self.movement,
+                overview: self.overview.as_ref(),
+                overview_ui: &self.overview_ui,
+                state: &self.state,
+            };
+            if ui::map_status_control_contains(point, input) {
+                return true;
+            }
+        }
         let world = self
             .state
             .campaign

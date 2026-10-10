@@ -1,8 +1,12 @@
 //! The normal road, selected route and bridge marks share authored atlas geometry.
 use super::*;
-use kestrum::{data::world::Route, navigation::MAP_RECT, state::world::CampaignWorld};
+use kestrum::{
+    data::world::Route,
+    navigation::{MapView, MAP_RECT},
+    state::world::CampaignWorld,
+};
 
-pub(super) fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
+pub(super) fn draw_roads(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
     let Some(campaign) = ctx.campaign_view else {
         return;
     };
@@ -14,29 +18,75 @@ pub(super) fn draw(ctx: &Context<'_>, exploration: Option<&MapExploration>) {
         }
     }
     for route in &world.routes {
-        let Some((from, to)) = endpoints(ctx, world, route) else {
+        let Some(points) = projected_points(ctx, world, route) else {
             continue;
         };
         let geometry = overview.then(|| world.atlas_paths.get(&route.id)).flatten();
-        let points = std::iter::once(from)
-            .chain(
-                geometry
-                    .into_iter()
-                    .flat_map(|path| path.waypoints.iter().copied()),
-            )
-            .chain(std::iter::once(to))
-            .map(|point| ctx.view.project_normalized(point))
-            .collect::<Vec<_>>();
         let detail = ctx.view.band() == MapScaleBand::Detail;
         stroke(&points, if detail { 4.0 } else { 3.0 }, INK);
         stroke(&points, if detail { 1.5 } else { 1.0 }, BRASS);
-        selected_route(ctx, route, &points);
         if let Some(geometry) = geometry {
             for position in &geometry.bridges {
                 bridge(ctx.view.project_normalized(*position), &points);
             }
         }
     }
+}
+
+pub(super) fn draw_preview(ctx: &Context<'_>) {
+    if ctx.movement.stage == super::super::MoveStage::Inactive {
+        return;
+    }
+    let Some(campaign) = ctx.campaign_view else {
+        return;
+    };
+    for route in &campaign.world.routes {
+        let Some(points) = projected_points(ctx, &campaign.world, route) else {
+            continue;
+        };
+        selected_route(ctx, route, &points);
+    }
+}
+
+pub(super) fn projected_points(
+    ctx: &Context<'_>,
+    world: &CampaignWorld,
+    route: &Route,
+) -> Option<Vec<Vec2>> {
+    projected_polyline(world, route, ctx.navigation.scope(), ctx.view)
+}
+
+pub(super) fn projected_polyline(
+    world: &CampaignWorld,
+    route: &Route,
+    scope: MapScope,
+    view: &MapView,
+) -> Option<Vec<Vec2>> {
+    let (from, to) = match scope {
+        MapScope::World => route.major_connection.and_then(|[from, to]| {
+            world
+                .marker(from)
+                .zip(world.marker(to))
+                .map(|(from, to)| (from.position, to.position))
+        })?,
+        MapScope::Region(region) => world
+            .region_site_position(region, route.from)
+            .zip(world.region_site_position(region, route.to))?,
+    };
+    let geometry = (scope == MapScope::World)
+        .then(|| world.atlas_paths.get(&route.id))
+        .flatten();
+    Some(
+        std::iter::once(from)
+            .chain(
+                geometry
+                    .into_iter()
+                    .flat_map(|path| path.waypoints.iter().copied()),
+            )
+            .chain(std::iter::once(to))
+            .map(|point| view.project_normalized(point))
+            .collect(),
+    )
 }
 
 fn frontier(ctx: &Context<'_>, exploration: &MapExploration, points: &[Vec2]) {
@@ -62,7 +112,7 @@ fn frontier(ctx: &Context<'_>, exploration: &MapExploration, points: &[Vec2]) {
     }
 }
 
-fn endpoints(
+pub(super) fn endpoints(
     ctx: &Context<'_>,
     world: &CampaignWorld,
     route: &Route,
@@ -80,7 +130,7 @@ fn endpoints(
     }
 }
 
-fn stroke(points: &[Vec2], width: f32, color: Color) {
+pub(super) fn stroke(points: &[Vec2], width: f32, color: Color) {
     for segment in points.windows(2) {
         // Cull the segment's extent, never its endpoints: long roads can cross
         // the viewport while both places are outside it. The renderer clips.
@@ -137,7 +187,7 @@ fn selected_route(ctx: &Context<'_>, route: &Route, points: &[Vec2]) {
     );
 }
 
-fn midpoint(points: &[Vec2]) -> Vec2 {
+pub(super) fn midpoint(points: &[Vec2]) -> Vec2 {
     let mut remaining = points.windows(2).map(|p| p[0].distance(p[1])).sum::<f32>() * 0.5;
     for segment in points.windows(2) {
         let length = segment[0].distance(segment[1]);

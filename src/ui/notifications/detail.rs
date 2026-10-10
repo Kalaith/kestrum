@@ -566,13 +566,25 @@ fn subject_actions(
                     current.is_some(),
                     Some(NotificationAction::OpenRecords),
                 ),
-                None => (false, false, Some(NotificationAction::OpenRecords)),
+                None => {
+                    let known = work.owner == view.player
+                        && match work.target {
+                            kestrum::state::construction::ConstructionTarget::Site(site) => {
+                                view.known_sites.contains(&site) && view.world.site(site).is_some()
+                            }
+                            kestrum::state::construction::ConstructionTarget::Route(route) => {
+                                route_site(view, route).is_some()
+                            }
+                        };
+                    (known, true, Some(NotificationAction::OpenRecords))
+                }
             }
         }
         Some(NotificationSubjectSnapshot::Battle(battle)) => {
             let current = view.battles.iter().find(|entry| entry.id == battle.id);
             (
-                current.is_some_and(|entry| view.world.site(entry.site).is_some()),
+                view.known_sites.contains(&battle.site.id)
+                    && view.world.site(battle.site.id).is_some(),
                 true,
                 Some(if current.is_some() {
                     NotificationAction::FollowSubject(item.id)
@@ -609,7 +621,7 @@ fn route_site(view: &VisibleCampaign, route: kestrum::data::world::RouteId) -> O
         .find(|current| current.id == route)?;
     [route.from, route.to]
         .into_iter()
-        .find(|site| view.world.site(*site).is_some())
+        .find(|site| view.known_sites.contains(site) && view.world.site(*site).is_some())
 }
 
 fn follow_label<'a>(ctx: &'a Context<'_>, item: &RenderedNotification) -> &'a str {

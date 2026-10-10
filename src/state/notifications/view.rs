@@ -39,6 +39,8 @@ pub struct NotificationProjection {
     pub rail: Vec<NotificationGroup>,
     pub rail_overflow_count: usize,
     pub recent: Vec<RenderedNotification>,
+    /// Top-bar delivery receipts before rail grouping and truncation.
+    pub map_receipt_ids: Vec<super::NotificationId>,
     pub unread_count: usize,
     pub top_bar_unread_count: usize,
     pub omitted_count: u64,

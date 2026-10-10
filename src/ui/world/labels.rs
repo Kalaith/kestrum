@@ -12,12 +12,14 @@ pub(super) fn draw(
     targets: &[MapTarget],
     panel: Option<Rect>,
     exploration: Option<&MapExploration>,
+    map_status_reserved: &[Rect],
 ) {
     let (Some(campaign), Some(overview)) = (ctx.campaign_view, ctx.overview) else {
         return;
     };
     let (candidates, names) = candidates(ctx, targets);
     let mut reserved: Vec<_> = panel.into_iter().collect();
+    reserved.extend_from_slice(map_status_reserved);
     reserved.push(super::super::overview::attention_bounds(
         ctx.overview_ui,
         panel.is_some(),

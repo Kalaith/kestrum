@@ -76,6 +76,10 @@ pub use threat::{ThreatPanel, ThreatStage, THREAT_PAGE_SIZE};
 pub use tutorial::{bounds as tutorial_bounds, draw as draw_tutorial};
 pub use typography::prepare_dynamic_text;
 pub use world::{banner_visible, important_target};
+pub use world::{
+    map_control_contains as map_status_control_contains, map_receipt_group, map_status_layout,
+    MapStatusInput,
+};
 
 pub(crate) const MAP_CONTEXT_PAGE_SIZE: usize = 3;
 
@@ -421,6 +425,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         return centered_sheet(ctx, battlefield::draw);
     }
     atlas::draw_landscape(ctx);
+    let status_action = world::map_status_action(ctx);
     let action = if ctx.state.screen == Screen::Title {
         menus::title(ctx)
     } else if ctx
@@ -432,7 +437,7 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         atlas::hud(ctx)
     };
     if ctx.state.overlay == Overlay::None {
-        return draw_notification_overlay(ctx).or(action);
+        return draw_notification_overlay(ctx).or(status_action).or(action);
     }
     centered_sheet(ctx, draw_sheet)
 }

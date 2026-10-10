@@ -17,6 +17,7 @@ mod history;
 mod history_capture;
 mod kingdom;
 mod kingdom_capture;
+mod m02_capture;
 mod map_capture;
 mod midgame_capture;
 mod military;
@@ -224,6 +225,9 @@ impl Game {
             return;
         }
         if self.capture_context_scene(scene) {
+            return;
+        }
+        if self.capture_m02_map(scene) {
             return;
         }
         if self.capture_overview(scene) {

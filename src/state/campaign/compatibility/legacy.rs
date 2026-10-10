@@ -34,7 +34,7 @@ pub(super) fn initialize(value: &mut Value) -> Result<Migration, serde_json::Err
         _ => {
             return Err(serde_json::Error::custom(
                 "campaign: incomplete K16 item custody state",
-            ))
+            ));
         }
     };
     let era_dates_missing = campaign

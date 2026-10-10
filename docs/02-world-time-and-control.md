@@ -17,7 +17,8 @@ Capital ---- Farmland ---- Rosemarch ---- Eastern Pass
 **Current decision (2026-10-03):** new production campaigns begin with no regions.
 All 152 physical sites appear as country-map nodes. The eight older authored
 clusters supply geography, not pre-unlocked regions. Seeded setup assigns
-contents while retaining physical site IDs, connections and travel costs.
+contents while retaining physical site IDs and revision-specific connections
+and travel costs.
 Each eligible node can become a city through resource investment; cities must
 have at least one intervening node, regardless of who owns the other city.
 
@@ -42,10 +43,15 @@ geometry; it never replaces a saved graph with current generation content.
 Saved route endpoints, travel costs, road work, movement orders and encounter
 references retain their original identities.
 
+Topology revision 2 uses country layout 5 and layers the Northwatch, Alder Vale
+and Westmere prototypes from `regional_geography.json` over that baseline.
+Their landforms, site geography and added connections belong to that revision;
+existing route IDs, endpoints and costs remain unchanged.
+
 ## City regions
 
 The country map is the main view. A functioning City or Major City unlocks a
-local view of its own node and connected countryside. This is another view of
+local view of its own node and nearby countryside. This is another view of
 the same physical places, armies, ownership and resources, never extra land or
 duplicate income. Villages, outposts and other smaller settlements do not open
 regions. Decline below City, or ruination, closes regional access while retaining
@@ -103,19 +109,20 @@ or discovered state. Physical travel remains governed by authored connections.
 The [map plan](map-playability-plan.md#m01a-spatial-scale-and-map-navigation)
 owns the camera and scale work.
 
-Production now exposes 152 separate country nodes. A developed city uses its
-country position and actual route neighbors to frame a local view. Fields,
+Production now exposes 152 separate country nodes. In layout 5 a developed city
+uses a fixed geographic vicinity and one affine country-to-region transform.
+Discovery never rearranges places; routes, bends, bridges and terrain use the
+same coordinates. Historical layout 4 cities retain their neighbor views. Fields,
 woods and settlement buildings reflect observed geography and development;
 they do not create extra holdings, facilities or income. Authored prototype
 regions retain their existing local coordinates and continental background.
 
-The original eight clusters still influence the physical route network.
-Broader route variety remains work for the
-[map playability plan](map-playability-plan.md): branching approaches,
-defensible crossings and different relationships between an objective and its
-supply route. Preserve fixed identities and deterministic movement. New graph
-content needs revision-specific topology validation; a layout-revision bump
-alone is insufficient. Supported historical saves retain their graph and routes.
+The original eight clusters still influence the physical route network, without
+granting regions at startup. Northwatch prototypes a forest/ridge corridor with
+a defended direct route and a longer bypass; Alder Vale a broad productive
+basin with lateral routes; Westmere river banks, marsh and coast with explicit
+crossings. The [map playability plan](map-playability-plan.md) owns the remaining
+country expansion. Supported historical saves retain their graph and routes.
 
 ## Occupancy, control, and ownership
 

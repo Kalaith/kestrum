@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "areas": [
+    {
+      "key": "northwatch",
+      "introduced_revision": 2,
+      "marker": 73,
+      "headquarters_site": 1005,
+      "sites": [
+        { "site": 1001, "position": [0.12, 0.20], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1002, "position": [0.30, 0.15], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1003, "position": [0.47, 0.23], "geography": "forest", "tags": ["wood_source"], "military": "fort" },
+        { "site": 1004, "position": [0.60, 0.38], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1005, "position": [0.76, 0.49], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1006, "position": [0.81, 0.67], "geography": "marsh", "tags": [], "military": "none" },
+        { "site": 1007, "position": [0.68, 0.82], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1008, "position": [0.49, 0.88], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+        { "site": 1009, "position": [0.31, 0.78], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1010, "position": [0.16, 0.62], "geography": "forest", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 192, "from": 1004, "to": 1009, "terrain_cost": 4 },
+        { "id": 193, "from": 1002, "to": 1007, "terrain_cost": 4 }
+      ],
+      "paths": [
+        { "route": 13, "waypoints": [[0.20, 0.16]], "bridges": [] },
+        { "route": 14, "waypoints": [[0.40, 0.15]], "bridges": [] },
+        { "route": 15, "waypoints": [[0.50, 0.31]], "bridges": [] },
+        { "route": 16, "waypoints": [[0.69, 0.36]], "bridges": [] },
+        { "route": 17, "waypoints": [[0.85, 0.57]], "bridges": [] },
+        { "route": 18, "waypoints": [[0.81, 0.77]], "bridges": [] },
+        { "route": 19, "waypoints": [[0.58, 0.84]], "bridges": [] },
+        { "route": 20, "waypoints": [[0.40, 0.84]], "bridges": [] },
+        { "route": 21, "waypoints": [[0.23, 0.68]], "bridges": [] },
+        { "route": 192, "waypoints": [[0.53, 0.48], [0.42, 0.63]], "bridges": [] },
+        { "route": 193, "waypoints": [[0.40, 0.28], [0.58, 0.57]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "northwatch_forest_belt", "anchor": 1003, "kind": "forest", "points": [[0.12, 0.24], [0.25, 0.29], [0.38, 0.31], [0.48, 0.40]], "width": 0.17 },
+        { "key": "northwatch_ridge", "anchor": 1008, "kind": "ridge", "points": [[0.24, 0.74], [0.39, 0.80], [0.53, 0.80], [0.69, 0.75]], "width": 0.065 },
+        { "key": "northwatch_green", "anchor": 1005, "kind": "fields", "points": [[0.70, 0.43], [0.78, 0.49], [0.87, 0.50]], "width": 0.12 }
+      ]
+    },
+    {
+      "key": "alder_vale",
+      "introduced_revision": 2,
+      "marker": 74,
+      "headquarters_site": 1015,
+      "sites": [
+        { "site": 1011, "position": [0.12, 0.30], "geography": "plains", "tags": [], "military": "none" },
+        { "site": 1012, "position": [0.28, 0.52], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1013, "position": [0.45, 0.65], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+        { "site": 1014, "position": [0.64, 0.70], "geography": "plains", "tags": [], "military": "none" },
+        { "site": 1015, "position": [0.78, 0.54], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1016, "position": [0.86, 0.34], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1017, "position": [0.73, 0.19], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1018, "position": [0.56, 0.12], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+        { "site": 1019, "position": [0.36, 0.18], "geography": "plains", "tags": [], "military": "fort" },
+        { "site": 1020, "position": [0.16, 0.11], "geography": "valley", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 194, "from": 1012, "to": 1017, "terrain_cost": 4 },
+        { "id": 195, "from": 1018, "to": 1014, "terrain_cost": 4 }
+      ],
+      "paths": [
+        { "route": 36, "waypoints": [[0.18, 0.40]], "bridges": [] },
+        { "route": 37, "waypoints": [[0.36, 0.59]], "bridges": [] },
+        { "route": 38, "waypoints": [[0.54, 0.70]], "bridges": [] },
+        { "route": 39, "waypoints": [[0.73, 0.66]], "bridges": [] },
+        { "route": 40, "waypoints": [[0.88, 0.45]], "bridges": [] },
+        { "route": 41, "waypoints": [[0.80, 0.24]], "bridges": [] },
+        { "route": 42, "waypoints": [[0.63, 0.10]], "bridges": [] },
+        { "route": 43, "waypoints": [[0.44, 0.12]], "bridges": [] },
+        { "route": 44, "waypoints": [[0.23, 0.24]], "bridges": [] },
+        { "route": 194, "waypoints": [[0.30, 0.40], [0.51, 0.43], [0.67, 0.30]], "bridges": [] },
+        { "route": 195, "waypoints": [[0.53, 0.30], [0.62, 0.46]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "alder_vale_fields", "anchor": 1015, "kind": "fields", "points": [[0.20, 0.48], [0.34, 0.56], [0.50, 0.55], [0.67, 0.48], [0.82, 0.43]], "width": 0.16 },
+        { "key": "alder_vale_woodline", "anchor": 1013, "kind": "forest", "points": [[0.31, 0.61], [0.39, 0.70], [0.47, 0.65]], "width": 0.065 },
+        { "key": "alder_vale_ridge", "anchor": 1018, "kind": "ridge", "points": [[0.47, 0.13], [0.58, 0.10], [0.69, 0.14], [0.78, 0.20]], "width": 0.055 }
+      ]
+    },
+    {
+      "key": "westmere",
+      "introduced_revision": 2,
+      "marker": 75,
+      "headquarters_site": 1025,
+      "sites": [
+        { "site": 1021, "position": [0.10, 0.17], "geography": "coast", "tags": [], "military": "none" },
+        { "site": 1022, "position": [0.27, 0.29], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1023, "position": [0.40, 0.43], "geography": "marsh", "tags": ["wood_source"], "military": "none" },
+        { "site": 1024, "position": [0.64, 0.36], "geography": "river", "tags": ["bridge"], "military": "none" },
+        { "site": 1025, "position": [0.79, 0.46], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1026, "position": [0.88, 0.64], "geography": "river", "tags": [], "military": "none" },
+        { "site": 1027, "position": [0.73, 0.79], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1028, "position": [0.61, 0.84], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+        { "site": 1029, "position": [0.35, 0.75], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1030, "position": [0.14, 0.64], "geography": "coast", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 196, "from": 1022, "to": 1027, "terrain_cost": 4 }
+      ],
+      "paths": [
+        { "route": 59, "waypoints": [[0.17, 0.23]], "bridges": [] },
+        { "route": 60, "waypoints": [[0.33, 0.37]], "bridges": [] },
+        { "route": 61, "waypoints": [[0.48, 0.41]], "bridges": [[0.54, 0.39125]] },
+        { "route": 62, "waypoints": [[0.72, 0.39]], "bridges": [] },
+        { "route": 63, "waypoints": [[0.86, 0.54]], "bridges": [] },
+        { "route": 64, "waypoints": [[0.81, 0.75]], "bridges": [] },
+        { "route": 65, "waypoints": [[0.65, 0.83]], "bridges": [] },
+        { "route": 66, "waypoints": [[0.45, 0.78]], "bridges": [[0.54, 0.816]] },
+        { "route": 67, "waypoints": [[0.24, 0.71]], "bridges": [] },
+        { "route": 196, "waypoints": [[0.40, 0.42], [0.54, 0.56], [0.66, 0.69]], "bridges": [[0.54, 0.56]] }
+      ],
+      "terrain_features": [
+        { "key": "westmere_river", "anchor": 1024, "kind": "river", "points": [[0.54, 0.05], [0.52, 0.15], [0.54, 0.27], [0.54, 0.39], [0.52, 0.48], [0.53, 0.60], [0.55, 0.72], [0.53, 0.90]], "width": 0.04 },
+        { "key": "westmere_marsh", "anchor": 1023, "kind": "marsh", "points": [[0.27, 0.41], [0.34, 0.47], [0.42, 0.46], [0.46, 0.40]], "width": 0.11 },
+        { "key": "westmere_coast", "anchor": 1021, "kind": "coast", "points": [[0.04, 0.12], [0.08, 0.27], [0.07, 0.46], [0.11, 0.67]], "width": 0.08 },
+        { "key": "westmere_ridge", "anchor": 1028, "kind": "ridge", "points": [[0.57, 0.78], [0.64, 0.82], [0.73, 0.81], [0.82, 0.76]], "width": 0.05 }
+      ]
+    }
+  ]
+}

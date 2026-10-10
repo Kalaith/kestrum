@@ -21,14 +21,11 @@ pub(super) fn draw_roads(ctx: &Context<'_>, exploration: Option<&MapExploration>
         let Some(points) = projected_points(ctx, world, route) else {
             continue;
         };
-        let geometry = overview.then(|| world.atlas_paths.get(&route.id)).flatten();
         let detail = ctx.view.band() == MapScaleBand::Detail;
         stroke(&points, if detail { 4.0 } else { 3.0 }, INK);
         stroke(&points, if detail { 1.5 } else { 1.0 }, BRASS);
-        if let Some(geometry) = geometry {
-            for position in &geometry.bridges {
-                bridge(ctx.view.project_normalized(*position), &points);
-            }
+        for position in projected_bridges(ctx, world, route, overview) {
+            bridge(position, &points);
         }
     }
 }
@@ -69,24 +66,78 @@ pub(super) fn projected_polyline(
                 .zip(world.marker(to))
                 .map(|(from, to)| (from.position, to.position))
         })?,
+        MapScope::Region(region) if world.layout_revision >= 5 => {
+            endpoints_for_region(world, region, route)?
+        }
         MapScope::Region(region) => world
             .region_site_position(region, route.from)
             .zip(world.region_site_position(region, route.to))?,
     };
-    let geometry = (scope == MapScope::World)
-        .then(|| world.atlas_paths.get(&route.id))
-        .flatten();
+    let geometry = world.atlas_paths.get(&route.id);
+    let waypoints = match scope {
+        MapScope::World => geometry
+            .into_iter()
+            .flat_map(|path| path.waypoints.iter().copied())
+            .collect::<Vec<_>>(),
+        MapScope::Region(region) if world.layout_revision >= 5 => geometry
+            .into_iter()
+            .flat_map(|path| path.waypoints.iter().copied())
+            .filter_map(|point| world.region_position(region, point))
+            .collect(),
+        MapScope::Region(_) => Vec::new(),
+    };
     Some(
         std::iter::once(from)
-            .chain(
-                geometry
-                    .into_iter()
-                    .flat_map(|path| path.waypoints.iter().copied()),
-            )
+            .chain(waypoints)
             .chain(std::iter::once(to))
             .map(|point| view.project_normalized(point))
             .collect(),
     )
+}
+
+fn endpoints_for_region(
+    world: &CampaignWorld,
+    region: kestrum::data::world::MarkerId,
+    route: &Route,
+) -> Option<([f32; 2], [f32; 2])> {
+    let touches_vicinity = world.region_site_position(region, route.from).is_some()
+        || world.region_site_position(region, route.to).is_some();
+    if !touches_vicinity {
+        return None;
+    }
+    world
+        .site(route.from)
+        .and_then(|site| world.region_position(region, site.position))
+        .zip(
+            world
+                .site(route.to)
+                .and_then(|site| world.region_position(region, site.position)),
+        )
+}
+
+fn projected_bridges(
+    ctx: &Context<'_>,
+    world: &CampaignWorld,
+    route: &Route,
+    overview: bool,
+) -> Vec<Vec2> {
+    let Some(path) = world.atlas_paths.get(&route.id) else {
+        return Vec::new();
+    };
+    match ctx.navigation.scope() {
+        MapScope::World if overview => path
+            .bridges
+            .iter()
+            .map(|point| ctx.view.project_normalized(*point))
+            .collect(),
+        MapScope::Region(region) if world.layout_revision >= 5 => path
+            .bridges
+            .iter()
+            .filter_map(|point| world.region_position(region, *point))
+            .map(|point| ctx.view.project_normalized(point))
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 fn frontier(ctx: &Context<'_>, exploration: &MapExploration, points: &[Vec2]) {
@@ -124,6 +175,9 @@ pub(super) fn endpoints(
                 .zip(world.marker(to))
                 .map(|(a, b)| (a.position, b.position))
         }),
+        MapScope::Region(region) if world.layout_revision >= 5 => {
+            endpoints_for_region(world, region, route)
+        }
         MapScope::Region(region) => world
             .region_site_position(region, route.from)
             .zip(world.region_site_position(region, route.to)),

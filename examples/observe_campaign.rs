@@ -6,7 +6,11 @@ use std::{collections::BTreeMap, time::Instant};
 
 use kestrum::{
     data::{
-        economy::Habitation, generation::ProductionSetup, rules::Emblem, world::FactionId, GameData,
+        economy::Habitation,
+        generation::ProductionSetup,
+        rules::Emblem,
+        world::{FactionId, RouteId},
+        GameData,
     },
     engine,
     state::{
@@ -72,6 +76,7 @@ fn main() -> Result<(), String> {
         },
     )?;
     let mut activity = BTreeMap::<FactionId, Activity>::new();
+    let mut route_traversals = BTreeMap::<RouteId, u64>::new();
     let start = Instant::now();
     let mut steps = 0_u64;
     let mut last_reported_round = 0;
@@ -86,6 +91,7 @@ fn main() -> Result<(), String> {
             engine::advance_observer_without_diagnostics(&mut campaign, &data)
         }
         .map_err(|error| format!("round={before_round} faction={faction:?}: {error}"))?;
+        record_route_traversals(&step.outcome, &campaign, &mut route_traversals);
         if traced && step.action.starts_with("EndTurn") {
             println!("Trace round {before_round}:");
             for line in &step.diagnostics {
@@ -130,8 +136,80 @@ fn main() -> Result<(), String> {
     for (faction, entry) in activity {
         println!("Faction {} actions: {:?}", faction.0, entry.actions);
     }
+    report_geography(&campaign, &data, &route_traversals);
     report_hero_service_detail(&campaign, &data);
     Ok(())
+}
+
+fn record_route_traversals(
+    outcome: &engine::ActionOutcome,
+    campaign: &StrategicCampaign,
+    traversals: &mut BTreeMap<RouteId, u64>,
+) {
+    for movement in outcome
+        .movement
+        .iter()
+        .chain(outcome.continued_movements.iter())
+    {
+        for pair in movement.path.windows(2) {
+            if let Some(route) = campaign.world.connected_route(pair[0], pair[1]) {
+                *traversals.entry(route.id).or_default() += 1;
+            }
+        }
+    }
+}
+
+fn report_geography(
+    campaign: &StrategicCampaign,
+    data: &GameData,
+    traversals: &BTreeMap<RouteId, u64>,
+) {
+    let baseline_route_max = data
+        .production_layout
+        .routes
+        .iter()
+        .map(|route| route.id.0)
+        .max()
+        .unwrap_or_default();
+    let new_route_traversals = traversals
+        .iter()
+        .filter(|(route, _)| route.0 > baseline_route_max)
+        .map(|(route, count)| (route.0, *count))
+        .collect::<Vec<_>>();
+    let traversal_count = new_route_traversals
+        .iter()
+        .map(|(_, count)| *count)
+        .sum::<u64>();
+    let siege_history = campaign
+        .history
+        .events
+        .values()
+        .filter(|record| {
+            matches!(
+                &record.kind,
+                kestrum::state::history::HistoryKind::Siege { .. }
+            )
+        })
+        .count();
+    let completed_road_orders = campaign
+        .construction
+        .values()
+        .filter(|order| {
+            order.kind == kestrum::state::construction::ConstructionKind::Road
+                && matches!(
+                    order.status,
+                    kestrum::state::construction::ConstructionStatus::Completed { .. }
+                )
+        })
+        .count();
+    println!(
+        "Geography: topology_revision={} layout_revision={} new_route_traversals={traversal_count} new_route_ids={} route_counts={new_route_traversals:?} battles={} siege_history={} completed_road_orders={completed_road_orders}",
+        campaign.world.topology_revision,
+        campaign.world.layout_revision,
+        new_route_traversals.len(),
+        campaign.battles.len(),
+        siege_history,
+    );
 }
 
 fn report_hero_service_detail(campaign: &StrategicCampaign, data: &GameData) {

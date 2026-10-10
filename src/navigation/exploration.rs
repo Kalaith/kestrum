@@ -100,7 +100,24 @@ fn connection_hints(
                     .map(|(a, b)| (a.position, b.position))
             }),
             MapScope::Region(region) => {
-                if local_sites.contains(&route.from) && local_sites.contains(&route.to) {
+                if world.layout_revision >= 5 {
+                    let from_inside = world.region_site_position(region, route.from).is_some();
+                    let to_inside = world.region_site_position(region, route.to).is_some();
+                    if !from_inside && !to_inside {
+                        continue;
+                    }
+                    world
+                        .site(route.from)
+                        .and_then(|site| world.region_position(region, site.position))
+                        .zip(
+                            world
+                                .site(route.to)
+                                .and_then(|site| world.region_position(region, site.position)),
+                        )
+                        .filter(|_| {
+                            visible.site(route.from).is_some() || visible.site(route.to).is_some()
+                        })
+                } else if local_sites.contains(&route.from) && local_sites.contains(&route.to) {
                     world
                         .region_site_position(region, route.from)
                         .zip(world.region_site_position(region, route.to))
@@ -115,16 +132,22 @@ fn connection_hints(
         let Some((from, to)) = endpoints else {
             continue;
         };
-        let geometry = (scope == MapScope::World)
-            .then(|| world.atlas_paths.get(&route.id))
-            .flatten();
+        let geometry = world.atlas_paths.get(&route.id);
+        let waypoints = match scope {
+            MapScope::World => geometry
+                .into_iter()
+                .flat_map(|path| path.waypoints.iter().copied())
+                .collect::<Vec<_>>(),
+            MapScope::Region(region) if world.layout_revision >= 5 => geometry
+                .into_iter()
+                .flat_map(|path| path.waypoints.iter().copied())
+                .filter_map(|point| world.region_position(region, point))
+                .collect(),
+            MapScope::Region(_) => Vec::new(),
+        };
         hints.push(
             std::iter::once(from)
-                .chain(
-                    geometry
-                        .into_iter()
-                        .flat_map(|path| path.waypoints.iter().copied()),
-                )
+                .chain(waypoints)
                 .chain(std::iter::once(to))
                 .map(|point| view.normalized_world(point))
                 .collect(),

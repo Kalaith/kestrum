@@ -137,8 +137,7 @@ impl Scenario {
                     .contains(&faction.founder.age_years)
             } else {
                 faction.founder.age_years == 24
-            })
-                && faction.founder.class == PersonClass::Officer
+            }) && faction.founder.class == PersonClass::Officer
                 && faction.founder.attached_to == TroopKind::Warriors
                 && faction.founder.commander,
             "founder must have the scenario's starting age, be an Officer attached to Warriors, and command the army",

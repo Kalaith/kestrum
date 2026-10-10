@@ -2,6 +2,7 @@
   "version": 1,
   "assets": [
     "assets/art/kestrum_atlas.png",
+    "assets/data/regional_geography.json",
     "assets/fonts/Cinzel.ttf",
     "assets/fonts/OFL.txt",
     "assets/fonts/DejaVuSans.ttf",

@@ -5,8 +5,8 @@ use super::{
     rules::Emblem,
     threats::{InitialThreat, ThreatKind},
     world::{
-        DiplomaticState, FactionId, FactionSetup, FounderClass, FounderGrant, Relation,
-        ResourceGrant, Scenario, ScenarioKind, SiteId, WorldLayout,
+        DiplomaticState, FactionId, FactionSetup, FounderClass, FounderGrant, Geography, Relation,
+        ResourceGrant, Scenario, ScenarioKind, SiteId, SiteTag, WorldLayout,
     },
     GameData,
 };
@@ -61,9 +61,10 @@ impl WorldLayout {
         setup.validate(data)?;
         data.rules.validate()?;
         self.validate(&data.rules, &data.economy)?;
-        let authored_topology =
-            data.production_topology_for_revision(super::CURRENT_PRODUCTION_TOPOLOGY_REVISION)?;
-        let topology = authored_topology.flat_country_topology(&data.economy)?;
+        let topology = data.production_topology(
+            super::CURRENT_PRODUCTION_TOPOLOGY_REVISION,
+            super::CURRENT_PRODUCTION_LAYOUT_REVISION,
+        )?;
         let mut rng = SeededRng::new(setup.seed);
         let mut candidates = topology.headquarters_candidates.clone();
         shuffle(&mut rng, &mut candidates);
@@ -75,7 +76,13 @@ impl WorldLayout {
             if candidate_set.contains(&site.id) {
                 site.habitation = Habitation::Village;
             } else {
-                site.habitation = generated_habitation(&mut rng);
+                let geography = if site.tags.contains(&SiteTag::Pass) {
+                    Geography::Pass
+                } else {
+                    site.geography
+                };
+                let cap = data.development.geography_caps[&geography];
+                site.habitation = generated_habitation(&mut rng).min(cap);
             }
         }
 

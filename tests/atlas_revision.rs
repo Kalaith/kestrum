@@ -26,45 +26,48 @@ fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
     let mut old = campaign(data);
     old.world.topology_revision = 1;
     old.world.layout_revision = revision;
-    if revision < 4 {
-        old.world.atlas_paths = if revision == 1 {
-            Default::default()
-        } else {
-            data.production_layout.atlas_paths.clone()
-        };
-        old.world.markers = data.production_layout.markers.clone();
-        old.world.routes = data.production_layout.routes.clone();
-        for site in &mut old.world.sites {
-            let authored = data.production_layout.site(site.id).unwrap();
-            site.marker = authored.marker;
-            site.position = authored.position;
-            site.tags.clone_from(&authored.tags);
-            if revision < 3
-                && data
-                    .production_layout
-                    .headquarters_candidates
-                    .contains(&site.id)
-            {
-                site.tags
-                    .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
-            }
+    let layout = data.production_topology(1, revision).unwrap();
+    old.world.atlas_paths = if revision == 1 {
+        Default::default()
+    } else {
+        layout.atlas_paths.clone()
+    };
+    old.world.terrain_features = layout.terrain_features.clone();
+    old.world.markers = layout.markers.clone();
+    old.world.routes = layout.routes.clone();
+    for site in &mut old.world.sites {
+        let authored = layout.site(site.id).unwrap();
+        site.key.clone_from(&authored.key);
+        site.marker = authored.marker;
+        site.position = authored.position;
+        site.geography = authored.geography;
+        site.tags.clone_from(&authored.tags);
+        site.military = authored.military;
+        if revision < 3
+            && data
+                .production_layout
+                .headquarters_candidates
+                .contains(&site.id)
+        {
+            site.tags
+                .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
         }
-        if revision == 1 {
-            for marker in &mut old.world.markers {
-                if let Some(position) = data
-                    .production_layout
-                    .legacy_marker_positions
-                    .get(&marker.id)
-                {
-                    marker.position = *position;
-                    if let MarkerLocation::Site { site } = marker.location {
-                        old.world
-                            .sites
-                            .iter_mut()
-                            .find(|entry| entry.id == site)
-                            .unwrap()
-                            .position = *position;
-                    }
+    }
+    if revision == 1 {
+        for marker in &mut old.world.markers {
+            if let Some(position) = data
+                .production_layout
+                .legacy_marker_positions
+                .get(&marker.id)
+            {
+                marker.position = *position;
+                if let MarkerLocation::Site { site } = marker.location {
+                    old.world
+                        .sites
+                        .iter_mut()
+                        .find(|entry| entry.id == site)
+                        .unwrap()
+                        .position = *position;
                 }
             }
         }
@@ -85,7 +88,7 @@ fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let mut prototype = StrategicCampaign::new(&data).unwrap();
     prototype.world.topology_revision = 2;
     assert!(prototype.validate(&data).is_err());
-    for revision in [0, 5] {
+    for revision in [0, 4] {
         let mut invalid = original.clone();
         invalid.world.layout_revision = revision;
         assert!(invalid.validate(&data).is_err());
@@ -126,7 +129,7 @@ fn supported_layout_revisions_keep_their_authored_site_and_route_references() {
 #[test]
 fn saves_without_a_topology_revision_keep_the_legacy_authored_graph() {
     let data = GameData::load().unwrap();
-    let original = campaign(&data);
+    let original = saved_layout(&data, 4);
     let expected_world = original.world.clone();
     let mut saved = serde_json::to_value(original).unwrap();
     saved["world"]

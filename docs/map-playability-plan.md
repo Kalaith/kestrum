@@ -226,7 +226,7 @@ recorded scope. M03 is next, extending the authored regional geography.
 | M01 | Readable kingdom overview and truthful map information | Reconciled baseline `3073c18` | Complete; [evidence and limits](verification/kingdom-overview.md) |
 | M01A | Spacious navigable geography, useful camera defaults and detail appropriate to scale | M01 | Complete; [evidence and limits](verification/spatial-scale.md) |
 | M02 | Orders, common actions and seasonal consequences stay connected to the map | M01A | Implemented; [evidence and limits](verification/map-orders.md) |
-| M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | Not started |
+| M03 | Distinct regional geography with coherent terrain and compatible saves | M02 | In progress; topology compatibility committed |
 | M04 | Opening play teaches a complete strategic loop | M03 | Not started |
 | M05 | Integrated early and developed campaign acceptance | M01, M01A, M02–M04 | Not started |
 
@@ -476,6 +476,25 @@ seasonal receipts and persistent urgent conditions. Include app-action guards,
 not only direct engine tests. Review multiple armies and simultaneous outcomes.
 
 ### M03 Distinct regions and local terrain
+
+The compatibility boundary is implemented in `c72d15c`; supported historical
+layouts retain topology revision 1. Topology 2 / layout 5 prototypes Northwatch,
+Alder Vale and Westmere with paid city access, branching travel, supply and
+completed road work. Country expansion follows in a separate slice.
+[Regional geography evidence](verification/regional-geography.md) records checks
+and remaining acceptance.
+
+#### Regional screen brief
+
+| Question | Current decision |
+| --- | --- |
+| Decision | Secure the direct approach or spend more movement on a bypass. |
+| Dominant focus | The city's connected countryside, visible roads and their terrain. |
+| Primary action | Select an army and tap a known destination; inspect actual route costs and queued travel. |
+| Supporting information | Observed forts, crossings, resources, ownership and supply. |
+| Deferred information | Unknown countryside and foreign plans remain concealed; details stay in the existing inspector. |
+| Layout and camera | Existing 1920x1080 canvas and local extent, with fixed geography transforms and deliberate Overview framing. |
+| Input and feedback | Visible city investment, Enter Region, Country Map and camera controls; route geometry matches destinations and bridges. |
 
 Implement the compatibility boundary below before changing physical topology.
 Prototype city regions in three contrasting landscapes, then extend their

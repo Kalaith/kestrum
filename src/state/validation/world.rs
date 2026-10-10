@@ -4,10 +4,10 @@ use crate::data::world::{MajorMarker, Route, Site};
 
 impl StrategicCampaign {
     pub(super) fn validate_world(&self, data: &GameData) -> Result<(), String> {
-        let production_source = match self.scenario_kind {
-            ScenarioKind::Production => {
-                Some(data.production_topology_for_revision(self.world.topology_revision)?)
-            }
+        let authored_production = match self.scenario_kind {
+            ScenarioKind::Production => Some(
+                data.production_topology(self.world.topology_revision, self.world.layout_revision)?,
+            ),
             ScenarioKind::RosemarchPrototype => {
                 require(
                     self.world.topology_revision == 1,
@@ -17,19 +17,9 @@ impl StrategicCampaign {
                 None
             }
         };
-        let flat_production =
-            if self.scenario_kind == ScenarioKind::Production && self.world.layout_revision == 4 {
-                Some(
-                    production_source
-                        .unwrap()
-                        .flat_country_topology(&data.economy)?,
-                )
-            } else {
-                None
-            };
-        let authored_production = flat_production
+        let authored_production_layout = authored_production
             .as_ref()
-            .unwrap_or_else(|| production_source.unwrap_or(&data.production_layout));
+            .unwrap_or(&data.production_layout);
         let (markers, sites, routes): (&[_], &[_], &[_]) = match self.scenario_kind {
             ScenarioKind::RosemarchPrototype => (
                 &data.scenario.markers,
@@ -37,12 +27,18 @@ impl StrategicCampaign {
                 &data.scenario.routes,
             ),
             ScenarioKind::Production => (
-                &authored_production.markers,
-                &authored_production.sites,
-                &authored_production.routes,
+                &authored_production_layout.markers,
+                &authored_production_layout.sites,
+                &authored_production_layout.routes,
             ),
         };
-        self.validate_layout_revision(data, flat_production.as_ref())?;
+        self.validate_layout_revision(data, authored_production.as_ref())?;
+        let expected_features = authored_production_layout.terrain_features.as_slice();
+        require(
+            self.world.terrain_features == expected_features,
+            "world.terrain_features",
+            "fixed authored terrain changed",
+        )?;
         require(
             self.world.sites.len() == sites.len()
                 && self.world.routes.len() == routes.len()
@@ -181,7 +177,7 @@ impl StrategicCampaign {
     fn validate_layout_revision(
         &self,
         data: &GameData,
-        flat_production: Option<&crate::data::world::WorldLayout>,
+        authored_production: Option<&crate::data::world::WorldLayout>,
     ) -> Result<(), String> {
         let valid = match (self.scenario_kind, self.world.layout_revision) {
             (ScenarioKind::RosemarchPrototype, 1) | (ScenarioKind::Production, 1) => {
@@ -190,9 +186,8 @@ impl StrategicCampaign {
             (ScenarioKind::Production, 2 | 3) => {
                 self.world.atlas_paths == data.production_layout.atlas_paths
             }
-            (ScenarioKind::Production, 4) => {
-                flat_production.is_some_and(|layout| self.world.atlas_paths == layout.atlas_paths)
-            }
+            (ScenarioKind::Production, 4 | 5) => authored_production
+                .is_some_and(|layout| self.world.atlas_paths == layout.atlas_paths),
             _ => false,
         };
         require(

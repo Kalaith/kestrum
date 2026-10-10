@@ -153,7 +153,8 @@ the event rail to inspect it. Detailed army composition, diplomacy and histories
 retain their dedicated views. The current city-region change replaces the eight
 pre-unlocked production regions with country nodes and local views earned
 through investment. The underlying
-authored route clusters remain; broader route variety remains M03 work.
+authored route clusters remain. M03 now prototypes distinctive Northwatch,
+Alder Vale and Westmere geography; the remaining country expansion follows.
 
 These are known design problems addressed by the active plan. The map's full
 canvas and unclipped controls alone do not establish strategic readability.
@@ -369,7 +370,7 @@ hidden and omit fullscreen/visible options.
 - `assets/fonts/`: Cinzel (SIL OFL) and DejaVu Sans (Bitstream Vera license).
 - `catalog_thumbnail.png`: stable publishing thumbnail.
 
-Current new campaigns use derived country layout revision 4 from the authored
-revision-3 geography. Existing saves retain their supported geography. The map
-plan requires versioned topology compatibility before new physical connections
-are introduced.
+Current new campaigns use topology revision 2 and country layout revision 5.
+`regional_geography.json` layers three contrasting landscapes and five new
+connections over the unchanged authored baseline. Existing saves retain their
+supported topology and geography, including saves without a topology field.

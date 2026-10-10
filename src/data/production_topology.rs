@@ -12,35 +12,104 @@ use std::collections::{BTreeMap, BTreeSet};
 
 const COUNTRY_LAYOUT_REVISION: u32 = 4;
 const COUNTRY_CLUSTER_RADIUS: f32 = 0.05;
-pub(crate) const CURRENT_PRODUCTION_TOPOLOGY_REVISION: u32 = 1;
+pub(crate) const CURRENT_PRODUCTION_TOPOLOGY_REVISION: u32 = 2;
+pub(crate) const CURRENT_PRODUCTION_LAYOUT_REVISION: u32 = 5;
 
 impl GameData {
-    /// Resolves a saved production topology to its durable authored source.
-    /// New revisions must be explicitly mapped to their own authored content.
-    pub(crate) fn production_topology_for_revision(
+    /// Resolves a saved production topology and layout to durable authored content.
+    pub fn production_topology(
         &self,
-        revision: u32,
-    ) -> Result<&WorldLayout, String> {
-        match revision {
-            1 => Ok(&self.production_layout),
+        topology_revision: u32,
+        layout_revision: u32,
+    ) -> Result<WorldLayout, String> {
+        match (topology_revision, layout_revision) {
+            (1, 1..=3) => {
+                let mut layout = self.production_layout.clone();
+                layout.layout_revision = layout_revision;
+                Ok(layout)
+            }
+            (1, COUNTRY_LAYOUT_REVISION) => {
+                self.production_layout.flat_country_topology(&self.economy)
+            }
+            (2, CURRENT_PRODUCTION_LAYOUT_REVISION) => self.regional_geography.resolve(
+                &self.production_layout,
+                topology_revision,
+                &self.rules,
+                &self.economy,
+            ),
             _ => Err(format!(
-                "campaign.world.topology_revision: unsupported production topology revision {revision}"
+                "campaign.world: unsupported production topology/layout revision {topology_revision}/{layout_revision}"
             )),
         }
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(super) struct CountryRegionProjection {
+    center: [f32; 2],
+    origin: [f32; 2],
+    pub(super) scale: f32,
+}
+
+impl CountryRegionProjection {
+    pub(super) fn project(self, point: [f32; 2]) -> [f32; 2] {
+        [
+            self.center[0] + (point[0] - self.origin[0]) * self.scale,
+            self.center[1] + (point[1] - self.origin[1]) * self.scale,
+        ]
+    }
+}
+
+pub(super) fn country_region_projection(
+    layout: &WorldLayout,
+    marker: MarkerId,
+    headquarters: SiteId,
+    local_positions: &[[f32; 2]],
+) -> Result<CountryRegionProjection, String> {
+    let center = layout
+        .marker(marker)
+        .ok_or("production topology: regional marker disappeared")?
+        .position;
+    let origin = layout
+        .site(headquarters)
+        .ok_or("production topology: regional headquarters disappeared")?
+        .position;
+    let scale = country_cluster_scale(center, origin, local_positions)?;
+    Ok(CountryRegionProjection {
+        center,
+        origin,
+        scale,
+    })
+}
+
 impl WorldLayout {
     /// Flattens nested authored regions without changing physical identities or routes.
     pub(crate) fn flat_country_topology(&self, economy: &Economy) -> Result<Self, String> {
+        self.flat_country_topology_for_revision(economy, COUNTRY_LAYOUT_REVISION)
+    }
+
+    pub(super) fn flat_country_topology_for_revision(
+        &self,
+        economy: &Economy,
+        layout_revision: u32,
+    ) -> Result<Self, String> {
+        if !matches!(
+            layout_revision,
+            COUNTRY_LAYOUT_REVISION | CURRENT_PRODUCTION_LAYOUT_REVISION
+        ) {
+            return Err(format!(
+                "{LAYOUT_SOURCE}: unsupported country layout revision"
+            ));
+        }
         let headquarters_by_region = self.region_headquarters()?;
         let marker_by_site = self.marker_ids_by_site(&headquarters_by_region)?;
         let mut country = self.clone();
-        country.layout_revision = COUNTRY_LAYOUT_REVISION;
+        country.layout_revision = layout_revision;
         country.sites = self.country_sites(&headquarters_by_region, &marker_by_site)?;
         country.markers = country_markers(&country.sites);
         country.routes = self.country_routes(&marker_by_site)?;
-        country.atlas_paths = self.country_atlas_paths(&country)?;
+        country.atlas_paths = self.country_atlas_paths(&country, &headquarters_by_region)?;
+        country.terrain_features = self.country_terrain_features(&headquarters_by_region)?;
         country.validate_country_geometry(economy)?;
         Ok(country)
     }
@@ -157,18 +226,14 @@ impl WorldLayout {
                     marker.id
                 )
             })?;
-            let origin = self
-                .site(headquarters)
-                .ok_or("production markers: headquarters site disappeared")?;
-            let scale = country_cluster_scale(marker.position, origin.position, sites, self)?;
+            let local_positions = self.region_geometry_positions(marker.id, sites)?;
+            let projection =
+                country_region_projection(self, marker.id, headquarters, &local_positions)?;
             for site_id in sites {
                 let site = self
                     .site(*site_id)
                     .ok_or("production markers: region site disappeared")?;
-                let position = [
-                    marker.position[0] + (site.position[0] - origin.position[0]) * scale,
-                    marker.position[1] + (site.position[1] - origin.position[1]) * scale,
-                ];
+                let position = projection.project(site.position);
                 positions.insert(*site_id, position);
             }
         }
@@ -186,6 +251,55 @@ impl WorldLayout {
                 Ok(country_site)
             })
             .collect()
+    }
+
+    fn region_geometry_positions(
+        &self,
+        marker: MarkerId,
+        sites: &[SiteId],
+    ) -> Result<Vec<[f32; 2]>, String> {
+        let mut positions = sites
+            .iter()
+            .map(|site_id| {
+                self.site(*site_id)
+                    .map(|site| site.position)
+                    .ok_or("production markers: region site disappeared")
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        for (route_id, path) in &self.atlas_paths {
+            let route = self
+                .routes
+                .iter()
+                .find(|route| route.id == *route_id)
+                .ok_or("production atlas paths: route disappeared")?;
+            if self
+                .site(route.from)
+                .is_some_and(|site| site.marker == marker)
+                && self
+                    .site(route.to)
+                    .is_some_and(|site| site.marker == marker)
+            {
+                positions.extend(path.waypoints.iter().copied());
+                positions.extend(path.bridges.iter().copied());
+            }
+        }
+        for feature in &self.terrain_features {
+            if self
+                .site(feature.anchor)
+                .is_some_and(|site| site.marker == marker)
+            {
+                let half_width = feature.width * 0.5;
+                for point in &feature.points {
+                    positions.extend([
+                        [point[0] - half_width, point[1]],
+                        [point[0] + half_width, point[1]],
+                        [point[0], point[1] - half_width],
+                        [point[0], point[1] + half_width],
+                    ]);
+                }
+            }
+        }
+        Ok(positions)
     }
 
     fn country_routes(
@@ -211,6 +325,7 @@ impl WorldLayout {
     fn country_atlas_paths(
         &self,
         country: &WorldLayout,
+        headquarters_by_region: &BTreeMap<MarkerId, SiteId>,
     ) -> Result<BTreeMap<RouteId, AtlasPath>, String> {
         let mut paths = BTreeMap::new();
         for (route_id, path) in &self.atlas_paths {
@@ -219,15 +334,32 @@ impl WorldLayout {
                 .iter()
                 .find(|route| route.id == *route_id)
                 .ok_or("production atlas paths: route disappeared")?;
-            let [old_from, old_to] = route
-                .major_connection
-                .ok_or("production atlas paths: authored route has no major endpoints")?;
             let from_site = self
                 .site(route.from)
                 .ok_or("production atlas paths: route origin disappeared")?;
             let to_site = self
                 .site(route.to)
                 .ok_or("production atlas paths: route destination disappeared")?;
+            if route.major_connection.is_none() && from_site.marker == to_site.marker {
+                let headquarters = *headquarters_by_region
+                    .get(&from_site.marker)
+                    .ok_or("production atlas paths: region headquarters disappeared")?;
+                let MarkerLocation::Region { sites, .. } = &self
+                    .marker(from_site.marker)
+                    .ok_or("production atlas paths: region marker disappeared")?
+                    .location
+                else {
+                    return Err("production atlas paths: internal route is outside a region".into());
+                };
+                let positions = self.region_geometry_positions(from_site.marker, sites)?;
+                let projection =
+                    country_region_projection(self, from_site.marker, headquarters, &positions)?;
+                paths.insert(*route_id, project_path(path, projection));
+                continue;
+            }
+            let [old_from, old_to] = route
+                .major_connection
+                .ok_or("production atlas paths: authored route has no major endpoints")?;
             let new_from = country
                 .marker(country_site_marker(country, from_site.id)?)
                 .ok_or("production atlas paths: derived origin marker disappeared")?;
@@ -256,9 +388,49 @@ impl WorldLayout {
         Ok(paths)
     }
 
-    fn validate_country_geometry(&self, economy: &Economy) -> Result<(), String> {
-        if self.layout_revision != COUNTRY_LAYOUT_REVISION
-            || self.markers.len() != self.sites.len()
+    fn country_terrain_features(
+        &self,
+        headquarters_by_region: &BTreeMap<MarkerId, SiteId>,
+    ) -> Result<Vec<super::world::TerrainFeature>, String> {
+        self.terrain_features
+            .iter()
+            .map(|feature| {
+                let marker = self
+                    .site(feature.anchor)
+                    .ok_or("production terrain: feature anchor disappeared")?
+                    .marker;
+                let headquarters = *headquarters_by_region
+                    .get(&marker)
+                    .ok_or("production terrain: feature is outside a region")?;
+                let MarkerLocation::Region { sites, .. } = &self
+                    .marker(marker)
+                    .ok_or("production terrain: region marker disappeared")?
+                    .location
+                else {
+                    return Err("production terrain: feature is outside a region".into());
+                };
+                let positions = self.region_geometry_positions(marker, sites)?;
+                let projection = country_region_projection(self, marker, headquarters, &positions)?;
+                Ok(super::world::TerrainFeature {
+                    key: feature.key.clone(),
+                    anchor: feature.anchor,
+                    kind: feature.kind,
+                    points: feature
+                        .points
+                        .iter()
+                        .map(|point| projection.project(*point))
+                        .collect(),
+                    width: feature.width * projection.scale,
+                })
+            })
+            .collect()
+    }
+
+    pub(super) fn validate_country_geometry(&self, economy: &Economy) -> Result<(), String> {
+        if !matches!(
+            self.layout_revision,
+            COUNTRY_LAYOUT_REVISION | CURRENT_PRODUCTION_LAYOUT_REVISION
+        ) || self.markers.len() != self.sites.len()
             || self
                 .markers
                 .iter()
@@ -319,16 +491,14 @@ fn country_markers(sites: &[super::world::Site]) -> Vec<MajorMarker> {
 fn country_cluster_scale(
     origin: [f32; 2],
     headquarters: [f32; 2],
-    sites: &[SiteId],
-    layout: &WorldLayout,
+    local_positions: &[[f32; 2]],
 ) -> Result<f32, String> {
-    let max_delta = sites
+    let max_delta = local_positions
         .iter()
-        .filter_map(|id| layout.site(*id))
-        .flat_map(|site| {
+        .flat_map(|position| {
             [
-                (site.position[0] - headquarters[0]).abs(),
-                (site.position[1] - headquarters[1]).abs(),
+                (position[0] - headquarters[0]).abs(),
+                (position[1] - headquarters[1]).abs(),
             ]
         })
         .fold(0.0f32, f32::max);
@@ -338,12 +508,9 @@ fn country_cluster_scale(
         ));
     }
     let mut scale = COUNTRY_CLUSTER_RADIUS / max_delta;
-    for site_id in sites {
-        let site = layout
-            .site(*site_id)
-            .ok_or("production topology: region site disappeared")?;
+    for position in local_positions {
         for axis in 0..2 {
-            let offset = site.position[axis] - headquarters[axis];
+            let offset = position[axis] - headquarters[axis];
             if offset > 0.0 {
                 scale = scale.min((1.0 - origin[axis]) / offset);
             } else if offset < 0.0 {
@@ -379,5 +546,20 @@ fn reanchor_path(
     AtlasPath {
         waypoints,
         bridges: path.bridges.clone(),
+    }
+}
+
+fn project_path(path: &AtlasPath, projection: CountryRegionProjection) -> AtlasPath {
+    AtlasPath {
+        waypoints: path
+            .waypoints
+            .iter()
+            .map(|point| projection.project(*point))
+            .collect(),
+        bridges: path
+            .bridges
+            .iter()
+            .map(|point| projection.project(*point))
+            .collect(),
     }
 }

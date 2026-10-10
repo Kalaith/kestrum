@@ -25,7 +25,10 @@ mod world_validation;
 mod presentation;
 pub use presentation::{GameTextData, GeographyLabel, MapCameraSettings, PresentationData};
 mod production_topology;
-pub(crate) use production_topology::CURRENT_PRODUCTION_TOPOLOGY_REVISION;
+pub(crate) use production_topology::{
+    CURRENT_PRODUCTION_LAYOUT_REVISION, CURRENT_PRODUCTION_TOPOLOGY_REVISION,
+};
+mod regional_geography;
 
 #[derive(Debug, Clone)]
 pub struct GameData {
@@ -52,6 +55,7 @@ pub struct GameData {
     /// Small authored warfare fixture retained for tests and captures.
     pub scenario: world::Scenario,
     pub production_layout: world::WorldLayout,
+    regional_geography: regional_geography::RegionalGeography,
 }
 
 impl GameData {
@@ -82,6 +86,9 @@ impl GameData {
             scenario: macroquad_toolkit::include_json!("../assets/data/scenarios/rosemarch.json")?,
             production_layout: macroquad_toolkit::include_json!(
                 "../assets/data/world_layout.json"
+            )?,
+            regional_geography: macroquad_toolkit::include_json!(
+                "../assets/data/regional_geography.json"
             )?,
         };
         data.presentation.map =
@@ -125,6 +132,12 @@ impl GameData {
         self.economy.validate()?;
         self.rules.validate()?;
         self.scenario.validate(&self.rules, &self.economy)?;
-        self.production_layout.validate(&self.rules, &self.economy)
+        self.production_layout
+            .validate(&self.rules, &self.economy)?;
+        self.production_topology(
+            CURRENT_PRODUCTION_TOPOLOGY_REVISION,
+            CURRENT_PRODUCTION_LAYOUT_REVISION,
+        )
+        .map(|_| ())
     }
 }

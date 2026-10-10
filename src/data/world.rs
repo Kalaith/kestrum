@@ -36,6 +36,8 @@ pub struct WorldLayout {
     pub layout_revision: u32,
     pub legacy_marker_positions: std::collections::BTreeMap<MarkerId, [f32; 2]>,
     pub atlas_paths: std::collections::BTreeMap<RouteId, AtlasPath>,
+    #[serde(default)]
+    pub terrain_features: Vec<TerrainFeature>,
     pub schema_version: u32,
     pub content_version: u32,
     pub default_seed: u64,
@@ -43,6 +45,29 @@ pub struct WorldLayout {
     pub sites: Vec<Site>,
     pub routes: Vec<Route>,
     pub headquarters_candidates: Vec<SiteId>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TerrainFeatureKind {
+    Forest,
+    River,
+    Marsh,
+    Ridge,
+    Coast,
+    Fields,
+}
+
+/// Authored landform ribbon in normalized map coordinates, revealed with its anchor site.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TerrainFeature {
+    pub key: String,
+    pub anchor: SiteId,
+    pub kind: TerrainFeatureKind,
+    pub points: Vec<[f32; 2]>,
+    /// Full corridor width as a fraction of the map's normalized X extent.
+    pub width: f32,
 }
 
 /// Authored display geometry; movement still follows the fixed route endpoints and cost.

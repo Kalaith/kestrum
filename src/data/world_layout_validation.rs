@@ -154,10 +154,18 @@ impl WorldLayout {
         require(
             LAYOUT_SOURCE,
             "sites.geography",
-            [Geography::Valley, Geography::Coast, Geography::Pass, Geography::Plains,
-                Geography::Forest, Geography::Hill, Geography::River, Geography::Marsh]
-                .iter()
-                .all(|geography| geographies.contains(geography)),
+            [
+                Geography::Valley,
+                Geography::Coast,
+                Geography::Pass,
+                Geography::Plains,
+                Geography::Forest,
+                Geography::Hill,
+                Geography::River,
+                Geography::Marsh,
+            ]
+            .iter()
+            .all(|geography| geographies.contains(geography)),
             "ordinary land layout must cover valley, coast, pass, plains, forest, hill, river and marsh terrain",
         )
     }

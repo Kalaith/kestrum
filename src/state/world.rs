@@ -6,6 +6,7 @@ mod supply;
 
 use crate::data::world::{
     FactionId, MajorMarker, MarkerId, MarkerLocation, Route, RouteId, Scenario, Site, SiteId,
+    TerrainFeature,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -36,6 +37,8 @@ pub struct CampaignWorld {
     pub layout_revision: u32,
     #[serde(default)]
     pub atlas_paths: BTreeMap<RouteId, crate::data::world::AtlasPath>,
+    #[serde(default)]
+    pub terrain_features: Vec<TerrainFeature>,
     pub development: BTreeMap<SiteId, super::development::SiteDevelopment>,
     pub fort_damage: BTreeMap<SiteId, u32>,
     pub population: BTreeMap<SiteId, u32>,
@@ -61,6 +64,7 @@ impl CampaignWorld {
             topology_revision: original_production_topology_revision(),
             layout_revision: 1,
             atlas_paths: BTreeMap::new(),
+            terrain_features: Vec::new(),
             development: scenario
                 .sites
                 .iter()

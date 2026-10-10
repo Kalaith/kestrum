@@ -7,14 +7,14 @@ impl WorldLayout {
     }
 
     pub(in crate::data) fn validate_country_atlas(&self) -> Result<(), String> {
-        self.validate_atlas_revision(4)
+        self.validate_atlas_revision(self.layout_revision)
     }
 
     fn validate_atlas_revision(&self, revision: u32) -> Result<(), String> {
         require(
             LAYOUT_SOURCE,
             "layout_revision",
-            self.layout_revision == revision,
+            self.layout_revision == revision && (revision == 3 || matches!(revision, 4 | 5)),
             "unsupported atlas revision",
         )?;
         for (marker, position) in &self.legacy_marker_positions {
@@ -26,17 +26,32 @@ impl WorldLayout {
             )?;
         }
         for (id, path) in &self.atlas_paths {
-            let pair = self
+            let route = self
                 .routes
                 .iter()
                 .find(|route| route.id == *id)
-                .and_then(|route| route.major_connection)
-                .and_then(|[from, to]| self.marker(from).zip(self.marker(to)))
-                .ok_or_else(|| format!("{LAYOUT_SOURCE}: atlas path needs an external route"))?;
+                .ok_or_else(|| format!("{LAYOUT_SOURCE}: atlas path route is missing"))?;
+            let (from, to) = match route.major_connection {
+                Some([from, to]) => self
+                    .marker(from)
+                    .zip(self.marker(to))
+                    .map(|(from, to)| (from.position, to.position))
+                    .ok_or_else(|| format!("{LAYOUT_SOURCE}: atlas path marker is missing"))?,
+                None if revision == 5 => self
+                    .site(route.from)
+                    .zip(self.site(route.to))
+                    .map(|(from, to)| (from.position, to.position))
+                    .ok_or_else(|| format!("{LAYOUT_SOURCE}: atlas path site is missing"))?,
+                None => {
+                    return Err(format!(
+                        "{LAYOUT_SOURCE}: atlas path needs an external route"
+                    ));
+                }
+            };
             require(
                 LAYOUT_SOURCE,
                 "atlas_paths",
-                path.waypoints.len() <= if revision == 4 { 8 } else { 6 }
+                path.waypoints.len() <= if matches!(revision, 4 | 5) { 8 } else { 6 }
                     && path.bridges.len() <= 4
                     && (!path.waypoints.is_empty() || !path.bridges.is_empty())
                     && path
@@ -46,9 +61,9 @@ impl WorldLayout {
                         .all(|point| normalized(*point)),
                 "invalid or excessive route geometry",
             )?;
-            let points = std::iter::once(pair.0.position)
+            let points = std::iter::once(from)
                 .chain(path.waypoints.iter().copied())
-                .chain(std::iter::once(pair.1.position))
+                .chain(std::iter::once(to))
                 .collect::<Vec<_>>();
             for bridge in &path.bridges {
                 require(

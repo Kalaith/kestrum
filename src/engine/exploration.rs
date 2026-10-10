@@ -109,6 +109,9 @@ pub fn project_map(
     view.factions
         .retain(|faction| contacts.contains(&faction.id));
     view.world.sites.retain(|site| known.contains(&site.id));
+    view.world
+        .terrain_features
+        .retain(|feature| known.contains(&feature.anchor));
     let markers: BTreeSet<_> = view.world.sites.iter().map(|site| site.marker).collect();
     view.world
         .markers

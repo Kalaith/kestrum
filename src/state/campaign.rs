@@ -467,6 +467,7 @@ impl StrategicCampaign {
             campaign.world.topology_revision = crate::data::CURRENT_PRODUCTION_TOPOLOGY_REVISION;
             campaign.world.layout_revision = topology.layout_revision;
             campaign.world.atlas_paths = topology.atlas_paths.clone();
+            campaign.world.terrain_features = topology.terrain_features.clone();
         }
         campaign.relations.sort_by_key(|relation| relation.factions);
         campaign.initialize_diplomacy();

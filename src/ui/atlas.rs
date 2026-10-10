@@ -105,6 +105,7 @@ pub fn draw_landscape(ctx: &Context<'_>) {
         {
             geography(ctx);
         }
+        world::draw_authored_terrain(ctx);
         if local_city {
             world::draw_local_terrain(ctx);
         }

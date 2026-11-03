@@ -88,7 +88,7 @@ impl CountryGeography {
                 let source_site = source
                     .site(patch.site)
                     .ok_or_else(|| format!("{SOURCE}: missing country site {:?}", patch.site))?;
-                if source_site.marker != patch.site || source.marker(patch.site).is_none() {
+                if source.marker(source_site.marker).is_none() {
                     return Err(format!(
                         "{SOURCE}: country site {:?} lost its marker",
                         patch.site
@@ -340,6 +340,11 @@ fn reanchor_existing_paths(
     layout: &mut WorldLayout,
     old_positions: &BTreeMap<SiteId, [f32; 2]>,
 ) -> Result<(), String> {
+    let new_positions: BTreeMap<_, _> = layout
+        .sites
+        .iter()
+        .map(|site| (site.id, site.position))
+        .collect();
     for (route_id, path) in &mut layout.atlas_paths {
         let route = layout
             .routes
@@ -352,8 +357,12 @@ fn reanchor_existing_paths(
         let old_to = *old_positions
             .get(&route.to)
             .ok_or_else(|| format!("{SOURCE}: old route destination disappeared"))?;
-        let new_from = layout.site(route.from).unwrap().position;
-        let new_to = layout.site(route.to).unwrap().position;
+        let new_from = *new_positions
+            .get(&route.from)
+            .ok_or_else(|| format!("{SOURCE}: route origin disappeared"))?;
+        let new_to = *new_positions
+            .get(&route.to)
+            .ok_or_else(|| format!("{SOURCE}: route destination disappeared"))?;
         if old_from == new_from && old_to == new_to {
             continue;
         }
@@ -404,9 +413,9 @@ fn validate_resolved_river_crossings(layout: &WorldLayout) -> Result<(), String>
                 .collect();
             if let Some(path) = path {
                 for bridge in &path.bridges {
-                    if point_polyline_distance(*bridge, &river.points) > river.width * 0.5 + 0.006
-                        || point_polyline_distance(*bridge, &road) > 0.006
-                    {
+                    let on_river = point_polyline_distance(*bridge, &river.points)
+                        <= river.width * 0.5 + 0.006;
+                    if on_river && point_polyline_distance(*bridge, &road) > 0.006 {
                         return Err(format!(
                             "{SOURCE}: route {:?} bridge must sit on its road and a river",
                             route.id

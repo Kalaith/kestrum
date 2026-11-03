@@ -349,7 +349,7 @@
           { "site": 24, "position": [0.63, 0.32], "geography": "river", "tags": ["bridge"], "military": "none" },
           { "site": 25, "position": [0.535, 0.40], "geography": "marsh", "tags": [], "military": "none" },
           { "site": 26, "position": [0.58, 0.40], "geography": "plains", "tags": ["stone_source"], "military": "none" },
-          { "site": 27, "position": [0.64, 0.40], "geography": "river", "tags": ["bridge"], "military": "none" }
+          { "site": 27, "position": [0.639, 0.40], "geography": "river", "tags": ["bridge"], "military": "none" }
         ],
         "routes": [
           { "id": 211, "from": 22, "to": 24, "terrain_cost": 2 },
@@ -436,7 +436,7 @@
           { "site": 49, "position": [0.29, 0.68], "geography": "valley", "tags": [], "military": "none" },
           { "site": 50, "position": [0.34, 0.68], "geography": "plains", "tags": ["horse_access"], "military": "none" },
           { "site": 51, "position": [0.40, 0.69], "geography": "marsh", "tags": [], "military": "fort" },
-          { "site": 52, "position": [0.32, 0.75], "geography": "marsh", "tags": [], "military": "none" },
+          { "site": 52, "position": [0.321, 0.75], "geography": "marsh", "tags": [], "military": "none" },
           { "site": 53, "position": [0.38, 0.75], "geography": "hill", "tags": ["stone_source"], "military": "none" },
           { "site": 54, "position": [0.43, 0.73], "geography": "valley", "tags": [], "military": "none" }
         ],
@@ -460,12 +460,12 @@
           { "site": 55, "position": [0.53, 0.60], "geography": "pass", "tags": ["pass"], "military": "none" },
           { "site": 56, "position": [0.57, 0.59], "geography": "forest", "tags": ["wood_source"], "military": "none" },
           { "site": 57, "position": [0.61, 0.61], "geography": "pass", "tags": ["pass"], "military": "none" },
-          { "site": 58, "position": [0.52, 0.68], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 58, "position": [0.521, 0.68], "geography": "hill", "tags": [], "military": "none" },
           { "site": 59, "position": [0.58, 0.68], "geography": "valley", "tags": ["horse_access"], "military": "none" },
-          { "site": 60, "position": [0.64, 0.69], "geography": "pass", "tags": ["pass"], "military": "fort" },
-          { "site": 61, "position": [0.54, 0.76], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 60, "position": [0.639, 0.69], "geography": "pass", "tags": ["pass"], "military": "fort" },
+          { "site": 61, "position": [0.541, 0.76], "geography": "hill", "tags": [], "military": "none" },
           { "site": 62, "position": [0.60, 0.77], "geography": "hill", "tags": ["stone_source"], "military": "none" },
-          { "site": 63, "position": [0.66, 0.75], "geography": "valley", "tags": [], "military": "none" }
+          { "site": 63, "position": [0.65, 0.74], "geography": "valley", "tags": [], "military": "none" }
         ],
         "routes": [
           { "id": 219, "from": 55, "to": 60, "terrain_cost": 4 },

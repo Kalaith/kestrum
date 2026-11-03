@@ -159,6 +159,8 @@ impl Game {
 
     fn capture_m03_country_overview(&mut self) -> bool {
         self.start_m03_expansion_observer(self.data.production_layout.default_seed);
+        self.navigation.clear_selection();
+        self.notice = None;
         let campaign = self.live_m03_expansion_campaign();
         assert_eq!(campaign.world.topology_revision, 3);
         assert_eq!(campaign.world.layout_revision, 5);
@@ -180,8 +182,6 @@ impl Game {
                 Some(MarkerLocation::Region { .. })
             ));
         }
-        self.navigation.clear_selection();
-        self.notice = None;
         eprintln!(
             "M03_CAPTURE topology={} layout={} view=observer_overview seed={} sites={} terrain_features={}",
             campaign.world.topology_revision,

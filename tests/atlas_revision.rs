@@ -22,12 +22,18 @@ fn campaign(data: &GameData) -> StrategicCampaign {
     .unwrap()
 }
 
-fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
+fn saved_topology(
+    data: &GameData,
+    topology_revision: u32,
+    layout_revision: u32,
+) -> StrategicCampaign {
     let mut old = campaign(data);
-    old.world.topology_revision = 1;
-    old.world.layout_revision = revision;
-    let layout = data.production_topology(1, revision).unwrap();
-    old.world.atlas_paths = if revision == 1 {
+    old.world.topology_revision = topology_revision;
+    old.world.layout_revision = layout_revision;
+    let layout = data
+        .production_topology(topology_revision, layout_revision)
+        .unwrap();
+    old.world.atlas_paths = if topology_revision == 1 && layout_revision == 1 {
         Default::default()
     } else {
         layout.atlas_paths.clone()
@@ -43,7 +49,7 @@ fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
         site.geography = authored.geography;
         site.tags.clone_from(&authored.tags);
         site.military = authored.military;
-        if revision < 3
+        if layout_revision < 3
             && data
                 .production_layout
                 .headquarters_candidates
@@ -53,7 +59,7 @@ fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
                 .retain(|tag| *tag != kestrum::data::world::SiteTag::HorseAccess);
         }
     }
-    if revision == 1 {
+    if topology_revision == 1 && layout_revision == 1 {
         for marker in &mut old.world.markers {
             if let Some(position) = data
                 .production_layout
@@ -80,14 +86,18 @@ fn saved_layout(data: &GameData, revision: u32) -> StrategicCampaign {
 fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let data = GameData::load().unwrap();
     let original = campaign(&data);
+    original.validate(&data).unwrap();
     for revision in [0, 99] {
         let mut invalid = original.clone();
         invalid.world.topology_revision = revision;
         assert!(invalid.validate(&data).is_err());
     }
-    let mut prototype = StrategicCampaign::new(&data).unwrap();
-    prototype.world.topology_revision = 2;
-    assert!(prototype.validate(&data).is_err());
+    let prototype = StrategicCampaign::new(&data).unwrap();
+    for revision in [2, 3] {
+        let mut invalid = prototype.clone();
+        invalid.world.topology_revision = revision;
+        assert!(invalid.validate(&data).is_err());
+    }
     for revision in [0, 4] {
         let mut invalid = original.clone();
         invalid.world.layout_revision = revision;
@@ -96,7 +106,7 @@ fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
     let mut invalid = original.clone();
     invalid.world.layout_revision = 3;
     assert!(invalid.validate(&data).is_err());
-    let mut invalid = saved_layout(&data, 1);
+    let mut invalid = saved_topology(&data, 1, 1);
     invalid
         .world
         .sites
@@ -117,19 +127,31 @@ fn unknown_or_mixed_revisions_and_changed_geometry_are_rejected() {
 }
 
 #[test]
-fn supported_layout_revisions_keep_their_authored_site_and_route_references() {
+fn supported_topology_and_layout_revisions_keep_their_authored_references() {
     let data = GameData::load().unwrap();
-    for revision in 1..=4 {
-        saved_layout(&data, revision)
-            .validate(&data)
-            .unwrap_or_else(|error| panic!("layout revision {revision} failed: {error}"));
+    for (topology_revision, layout_revision) in [(1, 1), (1, 2), (1, 3), (1, 4), (2, 5), (3, 5)] {
+        let saved = saved_topology(&data, topology_revision, layout_revision);
+        saved.validate(&data).unwrap_or_else(|error| {
+            panic!("topology/layout revision {topology_revision}/{layout_revision} failed: {error}")
+        });
+        let bytes = serde_json::to_vec(&saved).unwrap();
+        let restored: StrategicCampaign = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            restored, saved,
+            "roundtrip changed topology/layout revision {topology_revision}/{layout_revision}"
+        );
+        restored.validate(&data).unwrap_or_else(|error| {
+            panic!(
+                "roundtripped topology/layout revision {topology_revision}/{layout_revision} failed: {error}"
+            )
+        });
     }
 }
 
 #[test]
 fn saves_without_a_topology_revision_keep_the_legacy_authored_graph() {
     let data = GameData::load().unwrap();
-    let original = saved_layout(&data, 4);
+    let original = saved_topology(&data, 1, 4);
     let expected_world = original.world.clone();
     let mut saved = serde_json::to_value(original).unwrap();
     saved["world"]

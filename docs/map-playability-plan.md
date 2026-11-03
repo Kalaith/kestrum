@@ -1,7 +1,8 @@
 # Map playability implementation plan
 
 Updated 2026-10-10. **Status: M01, M01A, M02 and city-created regions are
-implemented under their recorded scope and verification; M03–M05 remain next.**
+implemented under their recorded scope and verification; M03 country expansion
+is in progress after the committed three-landscape prototype. M04-M05 follow.**
 
 The 2026-10-03 request supersedes the eight fixed production regions assumed
 below. New campaigns show all physical nodes on the country map, with no region
@@ -39,7 +40,9 @@ implementation decisions are recorded below and in the owning chapters;
 and inherited limits. The subsequent request for a more spacious world adds
 M01A before M02. M01A implementation and its scoped validation are recorded in
 [spatial scale verification](verification/spatial-scale.md); M02's are recorded
-in [map orders and consequences](verification/map-orders.md). M03–M05 remain next.
+in [map orders and consequences](verification/map-orders.md). M03's three-city
+prototype is committed in `8c77426`; country expansion is in progress. M04-M05
+remain next.
 Ordinary design tuning is resolved during implementation and recorded in the
 owning chapter.
 
@@ -219,7 +222,8 @@ and tap equivalents. Color is always paired with shape, symbol or text.
 
 Each milestone is independently useful. Finish its validation and commit before
 starting the next major change. M01, M01A and M02 are implemented under their
-recorded scope. M03 is next, extending the authored regional geography.
+recorded scope. M03 extends the authored regional geography, with its prototype
+committed before the country expansion.
 
 | Milestone | Result | Dependency | Status |
 | --- | --- | --- | --- |

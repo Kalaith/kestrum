@@ -11,6 +11,10 @@ use super::{
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod country;
+
+use country::CountryGeography;
+
 const SOURCE: &str = "assets/data/regional_geography.json";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -18,6 +22,7 @@ const SOURCE: &str = "assets/data/regional_geography.json";
 pub(super) struct RegionalGeography {
     schema_version: u32,
     areas: Vec<RegionalArea>,
+    country: CountryGeography,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -68,7 +73,7 @@ impl RegionalGeography {
         rules: &CampaignRules,
         economy: &Economy,
     ) -> Result<WorldLayout, String> {
-        if topology_revision != 2 {
+        if !matches!(topology_revision, 2 | 3) {
             return Err(format!(
                 "{SOURCE}: unsupported authored regional topology revision {topology_revision}"
             ));
@@ -113,7 +118,12 @@ impl RegionalGeography {
                 .terrain_features
                 .extend(area.terrain_features.iter().cloned());
         }
-        authored.flat_country_topology_for_revision(economy, 5)
+        let mut country = authored.flat_country_topology_for_revision(economy, 5)?;
+        if topology_revision >= 3 {
+            self.country.apply(&mut country)?;
+            self.country.validate_resolved_layout(&country, economy)?;
+        }
+        Ok(country)
     }
 
     fn areas_for_revision(&self, revision: u32) -> impl Iterator<Item = &RegionalArea> {
@@ -126,7 +136,16 @@ impl RegionalGeography {
         if self.schema_version != 1 {
             return Err(format!("{SOURCE}: unsupported schema_version"));
         }
-        let expected = BTreeSet::from([MarkerId(73), MarkerId(74), MarkerId(75)]);
+        let expected = BTreeSet::from([
+            MarkerId(73),
+            MarkerId(74),
+            MarkerId(75),
+            MarkerId(76),
+            MarkerId(77),
+            MarkerId(78),
+            MarkerId(79),
+            MarkerId(80),
+        ]);
         let mut keys = BTreeSet::new();
         let mut markers = BTreeSet::new();
         let mut route_ids = BTreeSet::new();
@@ -139,7 +158,12 @@ impl RegionalGeography {
             .max()
             .unwrap_or(0);
         for area in &self.areas {
-            if area.introduced_revision != 2
+            let expected_revision = if (73..=75).contains(&area.marker.0) {
+                2
+            } else {
+                3
+            };
+            if area.introduced_revision != expected_revision
                 || !keys.insert(area.key.as_str())
                 || !markers.insert(area.marker)
                 || area.key.trim().is_empty()
@@ -265,9 +289,25 @@ impl RegionalGeography {
         }
         if markers != expected {
             return Err(format!(
-                "{SOURCE}: topology revision 2 requires Northwatch, Alder Vale and Westmere"
+                "{SOURCE}: authored regional areas must cover markers 73 through 80"
             ));
         }
+        let regional_route_ids = self
+            .areas
+            .iter()
+            .flat_map(|area| area.routes.iter().map(|route| route.id))
+            .collect::<BTreeSet<_>>();
+        let regional_route_pairs = self
+            .areas
+            .iter()
+            .flat_map(|area| {
+                area.routes
+                    .iter()
+                    .map(|route| ordered_pair(route.from, route.to))
+            })
+            .collect::<BTreeSet<_>>();
+        self.country
+            .validate(source, &regional_route_ids, &regional_route_pairs)?;
         Ok(())
     }
 

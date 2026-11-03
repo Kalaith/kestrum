@@ -119,6 +119,401 @@
         { "key": "westmere_coast", "anchor": 1021, "kind": "coast", "points": [[0.04, 0.12], [0.08, 0.27], [0.07, 0.46], [0.11, 0.67]], "width": 0.08 },
         { "key": "westmere_ridge", "anchor": 1028, "kind": "ridge", "points": [[0.57, 0.78], [0.64, 0.82], [0.73, 0.81], [0.82, 0.76]], "width": 0.05 }
       ]
+    },
+    {
+      "key": "riverfold",
+      "introduced_revision": 3,
+      "marker": 76,
+      "headquarters_site": 1035,
+      "sites": [
+        { "site": 1031, "position": [0.08, 0.28], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+        { "site": 1032, "position": [0.24, 0.16], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1033, "position": [0.40, 0.30], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1034, "position": [0.57, 0.13], "geography": "pass", "tags": ["pass"], "military": "fort" },
+        { "site": 1035, "position": [0.74, 0.40], "geography": "valley", "tags": ["horse_access", "bridge"], "military": "none" },
+        { "site": 1036, "position": [0.88, 0.61], "geography": "river", "tags": [], "military": "none" },
+        { "site": 1037, "position": [0.70, 0.80], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1038, "position": [0.46, 0.67], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+        { "site": 1039, "position": [0.26, 0.80], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1040, "position": [0.10, 0.55], "geography": "valley", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 197, "from": 1033, "to": 1038, "terrain_cost": 4 },
+        { "id": 198, "from": 1031, "to": 1035, "terrain_cost": 3 }
+      ],
+      "paths": [
+        { "route": 85, "waypoints": [], "bridges": [[0.64, 0.241]] },
+        { "route": 197, "waypoints": [[0.42, 0.46]], "bridges": [] },
+        { "route": 198, "waypoints": [[0.35, 0.34], [0.55, 0.36]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "riverfold_river", "anchor": 1035, "kind": "river", "points": [[0.64, 0.18], [0.64, 0.23], [0.64, 0.29]], "width": 0.018 },
+        { "key": "riverfold_high_ridge", "anchor": 1034, "kind": "ridge", "points": [[0.48, 0.08], [0.57, 0.11], [0.68, 0.09], [0.79, 0.13]], "width": 0.07 },
+        { "key": "riverfold_low_vale", "anchor": 1038, "kind": "fields", "points": [[0.31, 0.55], [0.43, 0.61], [0.56, 0.58], [0.69, 0.63]], "width": 0.12 }
+      ]
+    },
+    {
+      "key": "lakeward",
+      "introduced_revision": 3,
+      "marker": 77,
+      "headquarters_site": 1045,
+      "sites": [
+        { "site": 1041, "position": [0.18, 0.20], "geography": "coast", "tags": [], "military": "none" },
+        { "site": 1042, "position": [0.32, 0.15], "geography": "forest", "tags": [], "military": "none" },
+        { "site": 1043, "position": [0.50, 0.29], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1044, "position": [0.70, 0.40], "geography": "coast", "tags": [], "military": "none" },
+        { "site": 1045, "position": [0.78, 0.54], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1046, "position": [0.68, 0.69], "geography": "coast", "tags": [], "military": "none" },
+        { "site": 1047, "position": [0.47, 0.77], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1048, "position": [0.30, 0.70], "geography": "forest", "tags": ["stone_source"], "military": "none" },
+        { "site": 1049, "position": [0.15, 0.76], "geography": "coast", "tags": [], "military": "none" },
+        { "site": 1050, "position": [0.08, 0.52], "geography": "coast", "tags": ["wood_source"], "military": "none" }
+      ],
+      "routes": [
+        { "id": 199, "from": 1042, "to": 1046, "terrain_cost": 4 },
+        { "id": 200, "from": 1044, "to": 1049, "terrain_cost": 3 }
+      ],
+      "paths": [
+        { "route": 199, "waypoints": [[0.45, 0.40], [0.62, 0.55]], "bridges": [] },
+        { "route": 200, "waypoints": [[0.50, 0.47], [0.37, 0.64]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "lakeward_shore", "anchor": 1050, "kind": "coast", "points": [[0.04, 0.34], [0.07, 0.48], [0.06, 0.62], [0.12, 0.76]], "width": 0.06 },
+        { "key": "lakeward_inland_wood", "anchor": 1048, "kind": "forest", "points": [[0.24, 0.62], [0.31, 0.68], [0.39, 0.67]], "width": 0.075 },
+        { "key": "lakeward_shelf", "anchor": 1045, "kind": "fields", "points": [[0.47, 0.38], [0.57, 0.44], [0.67, 0.43]], "width": 0.09 }
+      ]
+    },
+    {
+      "key": "rosevale",
+      "introduced_revision": 3,
+      "marker": 78,
+      "headquarters_site": 1055,
+      "sites": [
+        { "site": 1051, "position": [0.15, 0.25], "geography": "marsh", "tags": [], "military": "none" },
+        { "site": 1052, "position": [0.27, 0.15], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+        { "site": 1053, "position": [0.40, 0.21], "geography": "marsh", "tags": [], "military": "none" },
+        { "site": 1054, "position": [0.58, 0.27], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1055, "position": [0.70, 0.43], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1056, "position": [0.58, 0.48], "geography": "marsh", "tags": [], "military": "none" },
+        { "site": 1057, "position": [0.49, 0.63], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1058, "position": [0.34, 0.72], "geography": "valley", "tags": ["stone_source"], "military": "none" },
+        { "site": 1059, "position": [0.19, 0.60], "geography": "marsh", "tags": [], "military": "none" },
+        { "site": 1060, "position": [0.05, 0.43], "geography": "marsh", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 201, "from": 1052, "to": 1058, "terrain_cost": 4 },
+        { "id": 202, "from": 1054, "to": 1059, "terrain_cost": 3 }
+      ],
+      "paths": [
+        { "route": 201, "waypoints": [[0.38, 0.32], [0.45, 0.52]], "bridges": [] },
+        { "route": 202, "waypoints": [[0.49, 0.35], [0.36, 0.52]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "rosevale_marshes", "anchor": 1053, "kind": "marsh", "points": [[0.12, 0.31], [0.28, 0.36], [0.43, 0.32], [0.57, 0.39], [0.70, 0.42]], "width": 0.11 },
+        { "key": "rosevale_causeway", "anchor": 1055, "kind": "fields", "points": [[0.18, 0.48], [0.33, 0.46], [0.48, 0.50], [0.65, 0.47]], "width": 0.055 },
+        { "key": "rosevale_outcrop", "anchor": 1058, "kind": "ridge", "points": [[0.25, 0.70], [0.35, 0.75], [0.46, 0.73]], "width": 0.05 }
+      ]
+    },
+    {
+      "key": "eastfold",
+      "introduced_revision": 3,
+      "marker": 79,
+      "headquarters_site": 1065,
+      "sites": [
+        { "site": 1061, "position": [0.12, 0.20], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1062, "position": [0.24, 0.15], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+        { "site": 1063, "position": [0.38, 0.28], "geography": "pass", "tags": ["pass"], "military": "none" },
+        { "site": 1064, "position": [0.55, 0.18], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1065, "position": [0.67, 0.36], "geography": "pass", "tags": ["horse_access", "pass"], "military": "none" },
+        { "site": 1066, "position": [0.82, 0.49], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1067, "position": [0.76, 0.68], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1068, "position": [0.58, 0.82], "geography": "hill", "tags": [], "military": "none" },
+        { "site": 1069, "position": [0.40, 0.72], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+        { "site": 1070, "position": [0.22, 0.85], "geography": "forest", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 203, "from": 1062, "to": 1067, "terrain_cost": 4 },
+        { "id": 204, "from": 1064, "to": 1069, "terrain_cost": 3 }
+      ],
+      "paths": [
+        { "route": 203, "waypoints": [[0.43, 0.24], [0.62, 0.38], [0.71, 0.56]], "bridges": [] },
+        { "route": 204, "waypoints": [[0.49, 0.37], [0.47, 0.56]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "eastfold_spine", "anchor": 1064, "kind": "ridge", "points": [[0.47, 0.07], [0.57, 0.16], [0.65, 0.31], [0.78, 0.44]], "width": 0.075 },
+        { "key": "eastfold_pass", "anchor": 1065, "kind": "fields", "points": [[0.55, 0.25], [0.63, 0.34], [0.71, 0.31]], "width": 0.045 },
+        { "key": "eastfold_scree", "anchor": 1069, "kind": "ridge", "points": [[0.31, 0.72], [0.42, 0.78], [0.55, 0.75]], "width": 0.06 }
+      ]
+    },
+    {
+      "key": "southplain",
+      "introduced_revision": 3,
+      "marker": 80,
+      "headquarters_site": 1075,
+      "sites": [
+        { "site": 1071, "position": [0.12, 0.24], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1072, "position": [0.28, 0.18], "geography": "plains", "tags": ["wood_source"], "military": "none" },
+        { "site": 1073, "position": [0.42, 0.26], "geography": "plains", "tags": [], "military": "none" },
+        { "site": 1074, "position": [0.57, 0.18], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1075, "position": [0.72, 0.32], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+        { "site": 1076, "position": [0.84, 0.47], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1077, "position": [0.76, 0.63], "geography": "plains", "tags": [], "military": "none" },
+        { "site": 1078, "position": [0.57, 0.72], "geography": "valley", "tags": [], "military": "none" },
+        { "site": 1079, "position": [0.37, 0.64], "geography": "plains", "tags": ["stone_source"], "military": "none" },
+        { "site": 1080, "position": [0.18, 0.72], "geography": "forest", "tags": [], "military": "none" }
+      ],
+      "routes": [
+        { "id": 205, "from": 1072, "to": 1077, "terrain_cost": 2 },
+        { "id": 206, "from": 1074, "to": 1079, "terrain_cost": 3 }
+      ],
+      "paths": [
+        { "route": 205, "waypoints": [[0.49, 0.39], [0.64, 0.52]], "bridges": [] },
+        { "route": 206, "waypoints": [[0.52, 0.35], [0.44, 0.51]], "bridges": [] }
+      ],
+      "terrain_features": [
+        { "key": "southplain_fields", "anchor": 1075, "kind": "fields", "points": [[0.19, 0.38], [0.36, 0.44], [0.53, 0.42], [0.71, 0.49], [0.84, 0.47]], "width": 0.12 },
+        { "key": "southplain_wood", "anchor": 1072, "kind": "forest", "points": [[0.18, 0.11], [0.28, 0.16], [0.39, 0.13]], "width": 0.065 },
+        { "key": "southplain_low_ridge", "anchor": 1079, "kind": "ridge", "points": [[0.29, 0.68], [0.38, 0.72], [0.48, 0.70]], "width": 0.045 }
+      ]
     }
-  ]
+  ],
+  "country": {
+    "introduced_revision": 3,
+    "sectors": [
+      {
+        "key": "northwatch",
+        "sites": [
+          { "site": 1, "position": [0.07, 0.235], "geography": "forest", "tags": [], "military": "none" },
+          { "site": 2, "position": [0.10, 0.23], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 3, "position": [0.13, 0.24], "geography": "hill", "tags": [], "military": "fort" },
+          { "site": 4, "position": [0.06, 0.31], "geography": "forest", "tags": [], "military": "none" },
+          { "site": 5, "position": [0.10, 0.315], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+          { "site": 6, "position": [0.14, 0.32], "geography": "forest", "tags": [], "military": "none" },
+          { "site": 7, "position": [0.07, 0.385], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 8, "position": [0.11, 0.39], "geography": "forest", "tags": ["stone_source"], "military": "none" },
+          { "site": 9, "position": [0.15, 0.385], "geography": "forest", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 207, "from": 4, "to": 9, "terrain_cost": 4 },
+          { "id": 208, "from": 1, "to": 8, "terrain_cost": 4 }
+        ],
+        "paths": [
+          { "route": 8, "waypoints": [[0.125, 0.35], [0.15, 0.355]], "bridges": [] },
+          { "route": 207, "waypoints": [[0.08, 0.34], [0.12, 0.37]], "bridges": [] },
+          { "route": 208, "waypoints": [[0.055, 0.29], [0.09, 0.36]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "northwatch_woodland", "anchor": 2, "kind": "forest", "points": [[0.035, 0.22], [0.07, 0.27], [0.11, 0.30], [0.15, 0.37]], "width": 0.045 },
+          { "key": "northwatch_winter_ridge", "anchor": 3, "kind": "ridge", "points": [[0.06, 0.20], [0.09, 0.22], [0.12, 0.21], [0.16, 0.24]], "width": 0.035 },
+          { "key": "northwatch_clearings", "anchor": 8, "kind": "fields", "points": [[0.07, 0.36], [0.11, 0.37], [0.15, 0.35]], "width": 0.045 }
+        ]
+      },
+      {
+        "key": "alder_vale",
+        "sites": [
+          { "site": 10, "position": [0.29, 0.235], "geography": "plains", "tags": [], "military": "none" },
+          { "site": 11, "position": [0.325, 0.23], "geography": "plains", "tags": ["wood_source"], "military": "none" },
+          { "site": 12, "position": [0.36, 0.25], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 13, "position": [0.31, 0.32], "geography": "plains", "tags": [], "military": "none" },
+          { "site": 14, "position": [0.345, 0.33], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+          { "site": 15, "position": [0.385, 0.315], "geography": "plains", "tags": [], "military": "fort" },
+          { "site": 16, "position": [0.33, 0.405], "geography": "forest", "tags": [], "military": "none" },
+          { "site": 17, "position": [0.37, 0.39], "geography": "valley", "tags": ["stone_source"], "military": "none" },
+          { "site": 18, "position": [0.41, 0.40], "geography": "plains", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 209, "from": 11, "to": 16, "terrain_cost": 3 },
+          { "id": 210, "from": 12, "to": 17, "terrain_cost": 4 }
+        ],
+        "paths": [
+          { "route": 32, "waypoints": [[0.36, 0.35]], "bridges": [] },
+          { "route": 34, "waypoints": [[0.35, 0.37]], "bridges": [] },
+          { "route": 35, "waypoints": [[0.39, 0.37]], "bridges": [] },
+          { "route": 209, "waypoints": [[0.34, 0.30], [0.34, 0.37]], "bridges": [] },
+          { "route": 210, "waypoints": [[0.38, 0.29], [0.37, 0.35]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "alder_vale_fields", "anchor": 14, "kind": "fields", "points": [[0.27, 0.27], [0.31, 0.29], [0.35, 0.28], [0.39, 0.30], [0.43, 0.28]], "width": 0.065 },
+          { "key": "alder_vale_woodline", "anchor": 16, "kind": "forest", "points": [[0.30, 0.38], [0.34, 0.41], [0.38, 0.39]], "width": 0.05 },
+          { "key": "alder_vale_rise", "anchor": 15, "kind": "ridge", "points": [[0.37, 0.22], [0.40, 0.24], [0.44, 0.23]], "width": 0.035 }
+        ]
+      },
+      {
+        "key": "westmere",
+        "sites": [
+          { "site": 19, "position": [0.53, 0.24], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 20, "position": [0.57, 0.25], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 21, "position": [0.62, 0.25], "geography": "river", "tags": ["bridge"], "military": "none" },
+          { "site": 22, "position": [0.535, 0.32], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 23, "position": [0.58, 0.32], "geography": "river", "tags": ["horse_access"], "military": "none" },
+          { "site": 24, "position": [0.63, 0.32], "geography": "river", "tags": ["bridge"], "military": "none" },
+          { "site": 25, "position": [0.535, 0.40], "geography": "marsh", "tags": [], "military": "none" },
+          { "site": 26, "position": [0.58, 0.40], "geography": "plains", "tags": ["stone_source"], "military": "none" },
+          { "site": 27, "position": [0.64, 0.40], "geography": "river", "tags": ["bridge"], "military": "none" }
+        ],
+        "routes": [
+          { "id": 211, "from": 22, "to": 24, "terrain_cost": 2 },
+          { "id": 212, "from": 25, "to": 27, "terrain_cost": 4 }
+        ],
+        "paths": [
+          { "route": 49, "waypoints": [], "bridges": [[0.60, 0.25]] },
+          { "route": 54, "waypoints": [], "bridges": [[0.60, 0.32]] },
+          { "route": 58, "waypoints": [], "bridges": [[0.60, 0.40]] },
+          { "route": 68, "waypoints": [[0.66, 0.235], [0.62, 0.255]], "bridges": [[0.60, 0.252]] },
+          { "route": 211, "waypoints": [], "bridges": [[0.60, 0.32]] },
+          { "route": 212, "waypoints": [], "bridges": [[0.60, 0.40]] }
+        ],
+        "terrain_features": [
+          { "key": "westmere_river", "anchor": 24, "kind": "river", "points": [[0.60, 0.18], [0.60, 0.26], [0.60, 0.34], [0.60, 0.45]], "width": 0.02 },
+          { "key": "westmere_wet_meadow", "anchor": 25, "kind": "marsh", "points": [[0.51, 0.36], [0.54, 0.38], [0.57, 0.37]], "width": 0.04 },
+          { "key": "westmere_ridge", "anchor": 20, "kind": "ridge", "points": [[0.51, 0.20], [0.54, 0.22], [0.57, 0.21]], "width": 0.035 }
+        ]
+      },
+      {
+        "key": "riverfold",
+        "sites": [
+          { "site": 28, "position": [0.76, 0.235], "geography": "pass", "tags": ["pass"], "military": "none" },
+          { "site": 29, "position": [0.80, 0.23], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 30, "position": [0.84, 0.245], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 31, "position": [0.78, 0.315], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 32, "position": [0.82, 0.32], "geography": "valley", "tags": ["horse_access"], "military": "none" },
+          { "site": 33, "position": [0.86, 0.31], "geography": "pass", "tags": ["pass"], "military": "fort" },
+          { "site": 34, "position": [0.77, 0.395], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 35, "position": [0.82, 0.40], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+          { "site": 36, "position": [0.87, 0.39], "geography": "pass", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 213, "from": 28, "to": 35, "terrain_cost": 4 },
+          { "id": 214, "from": 30, "to": 34, "terrain_cost": 3 }
+        ],
+        "paths": [
+          { "route": 213, "waypoints": [[0.79, 0.28], [0.81, 0.35]], "bridges": [] },
+          { "route": 214, "waypoints": [[0.81, 0.27], [0.78, 0.35]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "riverfold_north_ridge", "anchor": 33, "kind": "ridge", "points": [[0.84, 0.20], [0.88, 0.25], [0.91, 0.31], [0.89, 0.39]], "width": 0.055 },
+          { "key": "riverfold_vale", "anchor": 32, "kind": "fields", "points": [[0.77, 0.29], [0.81, 0.30], [0.85, 0.29]], "width": 0.06 },
+          { "key": "riverfold_wooded_spur", "anchor": 29, "kind": "forest", "points": [[0.78, 0.20], [0.82, 0.22], [0.85, 0.21]], "width": 0.04 }
+        ]
+      },
+      {
+        "key": "lakeward",
+        "sites": [
+          { "site": 37, "position": [0.13, 0.50], "geography": "coast", "tags": [], "military": "none" },
+          { "site": 38, "position": [0.165, 0.495], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 39, "position": [0.20, 0.50], "geography": "coast", "tags": [], "military": "none" },
+          { "site": 40, "position": [0.14, 0.57], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 41, "position": [0.18, 0.57], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+          { "site": 42, "position": [0.225, 0.58], "geography": "coast", "tags": [], "military": "none" },
+          { "site": 43, "position": [0.15, 0.65], "geography": "forest", "tags": [], "military": "none" },
+          { "site": 44, "position": [0.19, 0.66], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+          { "site": 45, "position": [0.23, 0.65], "geography": "coast", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 215, "from": 37, "to": 42, "terrain_cost": 3 },
+          { "id": 216, "from": 39, "to": 43, "terrain_cost": 4 }
+        ],
+        "paths": [
+          { "route": 99, "waypoints": [[0.19, 0.55], [0.21, 0.60]], "bridges": [] },
+          { "route": 101, "waypoints": [[0.20, 0.60], [0.21, 0.64]], "bridges": [] },
+          { "route": 102, "waypoints": [[0.22, 0.60], [0.23, 0.63]], "bridges": [] },
+          { "route": 103, "waypoints": [[0.18, 0.65]], "bridges": [] },
+          { "route": 215, "waypoints": [[0.16, 0.54], [0.20, 0.57]], "bridges": [] },
+          { "route": 216, "waypoints": [[0.22, 0.55], [0.18, 0.62]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "lakeward_shoreline", "anchor": 37, "kind": "coast", "points": [[0.045, 0.47], [0.065, 0.54], [0.075, 0.63], [0.12, 0.73]], "width": 0.04 },
+          { "key": "lakeward_inlet", "anchor": 42, "kind": "coast", "points": [[0.21, 0.48], [0.25, 0.54], [0.24, 0.61]], "width": 0.035 },
+          { "key": "lakeward_wooded_bluff", "anchor": 44, "kind": "ridge", "points": [[0.16, 0.63], [0.19, 0.68], [0.23, 0.70]], "width": 0.04 }
+        ]
+      },
+      {
+        "key": "rosevale",
+        "sites": [
+          { "site": 46, "position": [0.30, 0.60], "geography": "marsh", "tags": [], "military": "none" },
+          { "site": 47, "position": [0.34, 0.58], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 48, "position": [0.39, 0.61], "geography": "marsh", "tags": [], "military": "none" },
+          { "site": 49, "position": [0.29, 0.68], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 50, "position": [0.34, 0.68], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+          { "site": 51, "position": [0.40, 0.69], "geography": "marsh", "tags": [], "military": "fort" },
+          { "site": 52, "position": [0.32, 0.75], "geography": "marsh", "tags": [], "military": "none" },
+          { "site": 53, "position": [0.38, 0.75], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+          { "site": 54, "position": [0.43, 0.73], "geography": "valley", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 217, "from": 46, "to": 51, "terrain_cost": 4 },
+          { "id": 218, "from": 48, "to": 53, "terrain_cost": 3 }
+        ],
+        "paths": [
+          { "route": 217, "waypoints": [[0.34, 0.62], [0.37, 0.66]], "bridges": [] },
+          { "route": 218, "waypoints": [[0.40, 0.65], [0.39, 0.71]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "rosevale_marsh_basin", "anchor": 50, "kind": "marsh", "points": [[0.27, 0.62], [0.31, 0.65], [0.36, 0.64], [0.41, 0.67], [0.44, 0.71]], "width": 0.07 },
+          { "key": "rosevale_causeway", "anchor": 51, "kind": "fields", "points": [[0.28, 0.70], [0.33, 0.69], [0.38, 0.70], [0.43, 0.68]], "width": 0.035 },
+          { "key": "rosevale_wood_island", "anchor": 47, "kind": "forest", "points": [[0.31, 0.55], [0.35, 0.58], [0.38, 0.56]], "width": 0.04 }
+        ]
+      },
+      {
+        "key": "eastfold",
+        "sites": [
+          { "site": 55, "position": [0.53, 0.60], "geography": "pass", "tags": ["pass"], "military": "none" },
+          { "site": 56, "position": [0.57, 0.59], "geography": "forest", "tags": ["wood_source"], "military": "none" },
+          { "site": 57, "position": [0.61, 0.61], "geography": "pass", "tags": ["pass"], "military": "none" },
+          { "site": 58, "position": [0.52, 0.68], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 59, "position": [0.58, 0.68], "geography": "valley", "tags": ["horse_access"], "military": "none" },
+          { "site": 60, "position": [0.64, 0.69], "geography": "pass", "tags": ["pass"], "military": "fort" },
+          { "site": 61, "position": [0.54, 0.76], "geography": "hill", "tags": [], "military": "none" },
+          { "site": 62, "position": [0.60, 0.77], "geography": "hill", "tags": ["stone_source"], "military": "none" },
+          { "site": 63, "position": [0.66, 0.75], "geography": "valley", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 219, "from": 55, "to": 60, "terrain_cost": 4 },
+          { "id": 220, "from": 57, "to": 61, "terrain_cost": 3 }
+        ],
+        "paths": [
+          { "route": 143, "waypoints": [[0.63, 0.64]], "bridges": [] },
+          { "route": 145, "waypoints": [[0.53, 0.72]], "bridges": [] },
+          { "route": 146, "waypoints": [[0.62, 0.71]], "bridges": [] },
+          { "route": 219, "waypoints": [[0.58, 0.62], [0.61, 0.66]], "bridges": [] },
+          { "route": 220, "waypoints": [[0.62, 0.65], [0.57, 0.72]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "eastfold_spine", "anchor": 60, "kind": "ridge", "points": [[0.65, 0.56], [0.69, 0.62], [0.67, 0.70], [0.70, 0.77]], "width": 0.045 },
+          { "key": "eastfold_switchback", "anchor": 55, "kind": "fields", "points": [[0.49, 0.57], [0.55, 0.62], [0.61, 0.59]], "width": 0.035 },
+          { "key": "eastfold_scree", "anchor": 62, "kind": "ridge", "points": [[0.55, 0.74], [0.60, 0.80], [0.66, 0.79]], "width": 0.04 }
+        ]
+      },
+      {
+        "key": "southplain",
+        "sites": [
+          { "site": 64, "position": [0.77, 0.60], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 65, "position": [0.81, 0.59], "geography": "plains", "tags": ["wood_source"], "military": "none" },
+          { "site": 66, "position": [0.85, 0.61], "geography": "plains", "tags": [], "military": "none" },
+          { "site": 67, "position": [0.78, 0.68], "geography": "valley", "tags": [], "military": "none" },
+          { "site": 68, "position": [0.82, 0.68], "geography": "plains", "tags": ["horse_access"], "military": "none" },
+          { "site": 69, "position": [0.86, 0.69], "geography": "valley", "tags": [], "military": "fort" },
+          { "site": 70, "position": [0.78, 0.76], "geography": "plains", "tags": [], "military": "none" },
+          { "site": 71, "position": [0.82, 0.77], "geography": "valley", "tags": ["stone_source"], "military": "none" },
+          { "site": 72, "position": [0.87, 0.75], "geography": "forest", "tags": [], "military": "none" }
+        ],
+        "routes": [
+          { "id": 221, "from": 64, "to": 69, "terrain_cost": 2 },
+          { "id": 222, "from": 66, "to": 70, "terrain_cost": 3 }
+        ],
+        "paths": [
+          { "route": 164, "waypoints": [[0.84, 0.58]], "bridges": [] },
+          { "route": 165, "waypoints": [[0.82, 0.63]], "bridges": [] },
+          { "route": 167, "waypoints": [[0.80, 0.66]], "bridges": [] },
+          { "route": 221, "waypoints": [[0.81, 0.63], [0.84, 0.67]], "bridges": [] },
+          { "route": 222, "waypoints": [[0.84, 0.66], [0.80, 0.73]], "bridges": [] }
+        ],
+        "terrain_features": [
+          { "key": "southplain_field_run", "anchor": 68, "kind": "fields", "points": [[0.74, 0.58], [0.78, 0.64], [0.83, 0.65], [0.88, 0.69]], "width": 0.06 },
+          { "key": "southplain_low_wood", "anchor": 65, "kind": "forest", "points": [[0.79, 0.55], [0.83, 0.57], [0.86, 0.55]], "width": 0.035 },
+          { "key": "southplain_hub_rise", "anchor": 71, "kind": "ridge", "points": [[0.78, 0.74], [0.82, 0.79], [0.86, 0.76]], "width": 0.035 }
+        ]
+      }
+    ]
+  }
 }

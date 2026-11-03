@@ -5,3 +5,7 @@
 * AI conquest still opens disconnected holdings: expansion weighs a detachment cost against site value, but attack targets ignore supply connection, so wartime captures (and enemy captures behind the line) still leave detached sites late in observer replays (e.g. seed 4242 round 120, Balanced Hesta Evers: 42 sites, 20 detached after eliminating a rival). Consider preferring attack targets adjacent to supplied land, or a reconnection priority for detached holdings.
 * Tune AI temperaments by play: Defensive and Peaceful kingdoms develop few cities on some seeds (777) because recruitment fills armies until upkeep meets income. Capture the Kingdom screen with a production world so a non-Balanced temperament is shown; the `diplomacy_relations` capture uses the authored prototype, whose rivals stay Balanced.
 * Finish M03 country expansion after the Northwatch, Alder Vale and Westmere prototype slice: author the remaining five landscapes under a new topology revision, then validate their routes, regional views and browser rendering.
+
+## Settings and display
+
+- [ ] Expose the Fullscreen toggle in the Web Settings build; the current toggle is compiled only for non-WASM targets.

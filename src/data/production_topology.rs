@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 const COUNTRY_LAYOUT_REVISION: u32 = 4;
 const COUNTRY_CLUSTER_RADIUS: f32 = 0.05;
-pub(crate) const CURRENT_PRODUCTION_TOPOLOGY_REVISION: u32 = 2;
+pub(crate) const CURRENT_PRODUCTION_TOPOLOGY_REVISION: u32 = 3;
 pub(crate) const CURRENT_PRODUCTION_LAYOUT_REVISION: u32 = 5;
 
 impl GameData {
@@ -32,6 +32,12 @@ impl GameData {
                 self.production_layout.flat_country_topology(&self.economy)
             }
             (2, CURRENT_PRODUCTION_LAYOUT_REVISION) => self.regional_geography.resolve(
+                &self.production_layout,
+                topology_revision,
+                &self.rules,
+                &self.economy,
+            ),
+            (3, CURRENT_PRODUCTION_LAYOUT_REVISION) => self.regional_geography.resolve(
                 &self.production_layout,
                 topology_revision,
                 &self.rules,

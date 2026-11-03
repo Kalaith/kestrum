@@ -1,8 +1,10 @@
 //! Application coordination, toolkit persistence, and routed atlas gestures.
 
 mod actions;
+mod display;
 
 use crate::ui::{self, UiAction};
+use display::DisplaySettings;
 mod battle;
 mod battle_capture;
 mod battlefield;
@@ -116,8 +118,7 @@ pub struct Game {
     capture: bool,
     notice: Option<(String, f32)>,
     error: Option<String>,
-    #[cfg(not(target_arch = "wasm32"))]
-    fullscreen: bool,
+    display_settings: DisplaySettings,
     pub running: bool,
 }
 
@@ -126,6 +127,7 @@ impl Game {
         let data = GameData::load()?;
         let capture = macroquad_toolkit::capture::CaptureConfig::all_from_env("KESTRUM").is_some()
             || crate::profiling::benchmark_frames() > 0;
+        let display_settings = DisplaySettings::load(&data.presentation.game_id, capture);
         let assets = resources::load(&data).await?;
         let portraits = portraits::PortraitCache::load(&data.portraits, &assets).await?;
         for error in portraits.asset_errors() {
@@ -196,8 +198,7 @@ impl Game {
             capture,
             notice: None,
             error: None,
-            #[cfg(not(target_arch = "wasm32"))]
-            fullscreen: false,
+            display_settings,
             running: true,
         };
         if !capture && json_key_exists("kestrum", "preferences") {
@@ -441,10 +442,15 @@ impl Game {
             warn!("Portrait composition unavailable: {error}");
         }
         self.poll_storage();
-        self.progress_observer(dt);
-        self.sync_pending_battle();
-        self.progress_npcs(dt);
-        self.advance_battlefield(dt);
+        if self.display_settings.update(dt) {
+            self.notice = Some((self.data.game_text.text("display_reverted").to_owned(), 3.5));
+        }
+        if !self.display_settings.is_previewing() {
+            self.progress_observer(dt);
+            self.sync_pending_battle();
+            self.progress_npcs(dt);
+            self.advance_battlefield(dt);
+        }
         if self.state.overlay == Overlay::Saves {
             if let Some(error) = self.error.take() {
                 self.saves.status = error;
@@ -510,6 +516,7 @@ impl Game {
             help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,
+            fullscreen: self.display_settings.fullscreen(),
             view: &self.view,
             navigation: &self.navigation,
             assets: &self.assets,
@@ -536,10 +543,26 @@ impl Game {
             .or(self.notice.as_ref().map(|(message, _)| message))
             .filter(|_| !matches!(self.state.overlay, Overlay::Saves | Overlay::SaveRecovery));
         ui::prepare_dynamic_text(&ctx, message.map(String::as_str));
-        let action = ui::draw(&ctx);
-        let tutorial_action = ui::draw_tutorial(&ui::Context { pointer, ..ctx });
-        let map_action = self.map_selection_action(pointer);
-        let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
+        let (tutorial_action, feedback_action, action, map_action) =
+            if let Some(remaining) = self.display_settings.preview_remaining() {
+                let background = ui::Context {
+                    pointer: pointer.suppressed(),
+                    ..ctx
+                };
+                let _ = ui::draw(&background);
+                (
+                    None,
+                    None,
+                    ui::draw_display_preview(&ui::Context { pointer, ..ctx }, remaining),
+                    None,
+                )
+            } else {
+                let action = ui::draw(&ctx);
+                let tutorial_action = ui::draw_tutorial(&ui::Context { pointer, ..ctx });
+                let map_action = self.map_selection_action(pointer);
+                let feedback_action = message.and_then(|message| ui::feedback(&ctx, message));
+                (tutorial_action, feedback_action, action, map_action)
+            };
         end_virtual_ui_frame();
         if let Some(intent) = tutorial_action
             .or(feedback_action)
@@ -619,6 +642,21 @@ impl Game {
         let mut pointer = Pointer::read(|position| viewport.screen_to_ui(position));
         if self.capture {
             return pointer.suppressed();
+        }
+        if self.display_settings.is_previewing() {
+            if is_key_pressed(KeyCode::Escape) {
+                self.display_settings.revert_preview();
+                self.notice = Some((self.data.game_text.text("display_reverted").to_owned(), 3.5));
+                return pointer.suppressed();
+            }
+            let started = is_mouse_button_pressed(MouseButton::Left)
+                || touches()
+                    .iter()
+                    .any(|touch| touch.phase == TouchPhase::Started);
+            if !self.was_down && (pointer.down || started) {
+                self.origin = Some(pointer.position);
+            }
+            return pointer;
         }
         if is_key_pressed(KeyCode::Escape) {
             self.go_back();

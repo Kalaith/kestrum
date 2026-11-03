@@ -332,15 +332,74 @@ fn settings(ctx: &Context<'_>) -> Option<UiAction> {
             super::NotificationAction::OpenGlobalSettings,
         ));
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    let fullscreen_label = format!(
+        "{} · {}",
+        ctx.text("fullscreen"),
+        ctx.text(if ctx.fullscreen { "on" } else { "off" })
+    );
     if button(
         ctx,
         Rect::new(478.0, 445.0, 324.0, 48.0),
-        &ctx.text("fullscreen"),
+        &fullscreen_label,
         true,
         false,
     ) {
         return Some(UiAction::Fullscreen);
+    }
+    None
+}
+
+pub(super) fn draw_display_preview(ctx: &Context<'_>, remaining: f32) -> Option<UiAction> {
+    use kestrum::navigation::{HEIGHT, WIDTH};
+
+    draw_rectangle(0.0, 0.0, WIDTH, HEIGHT, Color::new(0.02, 0.04, 0.04, 0.86));
+    let rect = Rect::new(WIDTH * 0.5 - 360.0, HEIGHT * 0.5 - 144.0, 720.0, 288.0);
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, INK);
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, BRASS);
+    centered(
+        ctx,
+        &ctx.text("display_confirm_title"),
+        vec2(WIDTH * 0.5, rect.y + 48.0),
+        28.0,
+        CREAM,
+    );
+    horizontal_rule(vec2(WIDTH * 0.5, rect.y + 64.0), 260.0);
+    body(
+        ctx,
+        &ctx.text("display_keep_prompt"),
+        vec2(rect.x + 42.0, rect.y + 112.0),
+        22.0,
+        CREAM,
+    );
+    let countdown = ctx
+        .text("display_reverting")
+        .replace("{seconds}", &remaining.ceil().max(0.0).to_string());
+    body(
+        ctx,
+        &countdown,
+        vec2(rect.x + 42.0, rect.y + 154.0),
+        19.0,
+        MUTED,
+    );
+
+    let button_y = rect.y + 200.0;
+    if button(
+        ctx,
+        Rect::new(rect.x + 42.0, button_y, 286.0, 52.0),
+        &ctx.text("continue"),
+        true,
+        true,
+    ) {
+        return Some(UiAction::KeepDisplay);
+    }
+    if button(
+        ctx,
+        Rect::new(rect.right() - 328.0, button_y, 286.0, 52.0),
+        &ctx.text("back"),
+        true,
+        false,
+    ) {
+        return Some(UiAction::RevertDisplay);
     }
     None
 }

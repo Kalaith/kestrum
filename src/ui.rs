@@ -269,8 +269,9 @@ pub enum UiAction {
     ToggleLabels,
     ToggleContrast,
     DismissFeedback,
-    #[cfg(not(target_arch = "wasm32"))]
     Fullscreen,
+    KeepDisplay,
+    RevertDisplay,
     #[cfg(not(target_arch = "wasm32"))]
     Quit,
 }
@@ -392,6 +393,7 @@ pub struct Context<'a> {
     pub help_page: usize,
     pub state: &'a GameState,
     pub preferences: &'a Preferences,
+    pub fullscreen: bool,
     pub view: &'a MapView,
     pub navigation: &'a MapNavigation,
     pub assets: &'a AssetManager,
@@ -440,6 +442,10 @@ pub fn draw(ctx: &Context<'_>) -> Option<UiAction> {
         return draw_notification_overlay(ctx).or(status_action).or(action);
     }
     centered_sheet(ctx, draw_sheet)
+}
+
+pub fn draw_display_preview(ctx: &Context<'_>, remaining: f32) -> Option<UiAction> {
+    menus::draw_display_preview(ctx, remaining)
 }
 
 /// Management content has a fixed pixel size within the larger map canvas.

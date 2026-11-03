@@ -207,8 +207,11 @@ impl Game {
             | UiAction::ToggleLabels
             | UiAction::ToggleContrast
             | UiAction::DismissFeedback => self.apply_view_action(action),
+            UiAction::Fullscreen | UiAction::KeepDisplay | UiAction::RevertDisplay => {
+                self.apply_view_action(action)
+            }
             #[cfg(not(target_arch = "wasm32"))]
-            UiAction::Fullscreen | UiAction::Quit => self.apply_view_action(action),
+            UiAction::Quit => self.apply_view_action(action),
             _ => unreachable!("history actions handled above"),
         }
     }
@@ -533,10 +536,23 @@ impl Game {
                 self.error = None;
                 self.notice = None;
             }
-            #[cfg(not(target_arch = "wasm32"))]
             UiAction::Fullscreen => {
-                self.fullscreen = !self.fullscreen;
-                set_fullscreen(self.fullscreen);
+                self.display_settings.begin_preview();
+            }
+            UiAction::KeepDisplay => match self.display_settings.keep_preview() {
+                Ok(()) => {
+                    self.notice = Some((self.data.game_text.text("display_saved").to_owned(), 3.5));
+                }
+                Err(error) => {
+                    self.error = Some(format!(
+                        "{}: {error}",
+                        self.data.game_text.text("settings_failed")
+                    ));
+                }
+            },
+            UiAction::RevertDisplay => {
+                self.display_settings.revert_preview();
+                self.notice = Some((self.data.game_text.text("display_reverted").to_owned(), 3.5));
             }
             #[cfg(not(target_arch = "wasm32"))]
             UiAction::Quit => self.running = false,

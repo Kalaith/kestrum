@@ -206,6 +206,7 @@ impl Game {
             help_page: self.help_page,
             state: &self.state,
             preferences: &self.preferences,
+            fullscreen: self.display_settings.fullscreen(),
             view: &self.view,
             navigation: &self.navigation,
             assets: &self.assets,

@@ -8,4 +8,6 @@
 
 ## Settings and display
 
-- [ ] Expose the Fullscreen toggle in the Web Settings build; the current toggle is compiled only for non-WASM targets.
+- [x] Expose a persisted Fullscreen choice in Web Settings with a timed Keep/Revert preview.
+- [ ] Verify the browser fullscreen gesture, Keep, Revert, and timeout recovery.
+- [ ] Fix the startup validation failure `headquarters SiteId(1005) needs accessible WoodSource`; it blocks the Settings capture.
